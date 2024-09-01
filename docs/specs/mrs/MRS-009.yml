@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To ensure the following properties: consistent and reproducible environments, isolation, resource efficiency, scalability, portability, fast spawning and shutdown, improved CI/CD, support of micro services architecture, improved dependency management.
+ref: ''
+release: Alpha
+reviewed: f_1pfbnF3bgJktoHaCXT08MfESdbYEbf5oXtPaCGI1M=
+text: |
+  The IDPS-ESCAPE end-point monitoring components MAY be deployed in Docker containers.
+type: O
+urgency: '3'
+vm: R

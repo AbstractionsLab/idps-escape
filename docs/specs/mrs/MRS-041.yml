@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: |
+  To ensure autonomy, self-sufficiency, extensibility, flexibility, and to minimize dependency on third-party tools.
+ref: ''
+release: Alpha
+reviewed: y8mj4oHfwFhaVQebBfNa9p9DRhqS88bd8RS1i3nzQW0=
+text: |
+  The AD subsystem SHALL run as an independent process, i.e., as a standalone UNIX process.
+type: A
+urgency: '3'
+vm: T

@@ -1,0 +1,43 @@
+active: true
+authors: 'MZA'
+complexity: '2'
+derived: false
+execution_type: M
+header: |
+  Install ADBox as dev container
+level: 3
+links: []
+normative: true
+platform: 'Ubuntu 22.04.4 LTS '
+ref: ''
+release: alpha
+reviewed: k-qiqZwfrU6e0_j3Hcnbh1kj8LZS8sB-BsHAwh7Q5x8=
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Docker engine version 26.1.3
+  - Docker desktop version 1.0.35
+  - Visual Studio Code version 1.83.1 (system setup)
+  - Dev Containers extension for VS Code by Microsoft version v0.315.1
+  - at least 26GB storage on the machine
+  ## Test steps
+  1. Clone this repository:
+  `git clone https://github.com/AbstractionsLab/idps-escape.git`
+  2. Start Docker Desktop if not already running.
+  3. Open the project folder in VS Code.
+  4. Select the "Reopen in Container" option in the notification that pops up in VS Code.
+  5. Open a terminal in VS Code and run `poetry install`
+   in the container to install all dependencies.
+  6. And then run the ADBox using its entrypoint.
+  ```
+   poetry run adbox
+  ```
+
+  ## Expected outcome
+  1. repository creation
+  4. Container created and terminal open
+  5. Poetry install terminatwe with `Installing the current project: siem-mtad-gat (0.1.0)`
+  5. ADBox interactive console should be opened.
+verification_method: T

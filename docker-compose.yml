@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  siem-mtad-gat: 
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile  
+    image: siem-mtad-gat:v0.1.0
+    user: root
+    container_name: siem-mtad-gat-container
+    volumes:
+      - ./siem_mtad_gat/assets:/home/root/siem-mtad-gat/siem_mtad_gat/assets 
+      - ./siem_mtad_gat/logs:/home/root/siem-mtad-gat/siem_mtad_gat/logs 
+    network_mode: host
+    stdin_open: true
+    tty: true
+    privileged: true 
+
+

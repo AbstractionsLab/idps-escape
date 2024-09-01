@@ -1,0 +1,33 @@
+settings:
+  digits: 3
+  itemformat: yaml
+  parent: TST
+  prefix: TRA
+  sep: '-'
+
+attributes:
+  defaults:
+    test_date: 'dd-mm-yyyy'
+    tester: ''
+    defect_category: '[0-4]'
+    defect_description: ''
+    comments: ''
+    text: |
+      Test execution results for the test case (TST) referred in the parent link.
+      ## Test environment details
+      - OS
+      - ..
+
+  publish:
+    - test_date
+    - tester
+    - defect_category
+    - defect_description
+    - comments
+  
+  # attributes to be considered for the item's fingerprint,
+  # the fingerprint is used to detect unreviewed changes to an item
+  reviewed:
+    - test_date
+    - defect_category
+    - defect_description

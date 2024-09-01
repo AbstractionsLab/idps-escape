@@ -1,0 +1,114 @@
+{
+  "window_size": {
+    "type": "int",
+    "default": 10
+  },
+  "spec_res": {
+    "type": "bool",
+    "default": false
+  },
+  "kernel_size": {
+    "type": "int",
+    "default": 7
+  },
+  "use_gatv2": {
+    "type": "bool",
+    "default": true
+  },
+  "feat_gat_embed_dim": {
+    "type": "int",
+    "default": null
+  },
+  "time_gat_embed_dim": {
+    "type": "int",
+    "default": null
+  },
+  "gru_n_layers": {
+    "type": "int",
+    "default": 1
+  },
+  "gru_hid_dim": {
+    "type": "int",
+    "default": 150
+  },
+  "fc_n_layers": {
+    "type": "int",
+    "default": 3
+  },
+  "fc_hid_dim": {
+    "type": "int",
+    "default": 150
+  },
+  "recon_n_layers": {
+    "type": "int",
+    "default": 1
+  },
+  "recon_hid_dim": {
+    "type": "int",
+    "default": 150
+  },
+  "alpha": {
+    "type": "float",
+    "default": 0.2
+  },
+  "epochs": {
+    "type": "int",
+    "default": 30
+  },
+  "val_split": {
+    "type": "float",
+    "default": 0.1
+  },
+  "bs": {
+    "type": "int",
+    "default": 256
+  },
+  "init_lr": {
+    "type": "float",
+    "default": 0.001
+  },
+  "shuffle_dataset": {
+    "type": "bool",
+    "default": true
+  },
+  "dropout": {
+    "type": "float",
+    "default": 0.3
+  },
+  "use_cuda": {
+    "type": "bool",
+    "default": true
+  },
+  "print_every": {
+    "type": "int",
+    "default": 1
+  },
+  "log_tensorboard": {
+    "type": "bool",
+    "default": true
+  },
+  "scale_scores": {
+    "type": "bool",
+    "default": false
+  },
+  "use_mov_av": {
+    "type": "bool",
+    "default": false
+  },
+  "gamma": {
+    "type": "float",
+    "default": 1
+  },
+  "level": {
+    "type": "float",
+    "default": 1.0
+  },
+  "q": {
+    "type": "float",
+    "default": 0.001
+  },
+  "dynamic_pot": {
+    "type": "bool",
+    "default": false
+  }
+}

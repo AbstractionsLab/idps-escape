@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '2'
+level: 1
+links: []
+normative: true
+rationale: |
+  To foster adoption, improve data management efficiency and robustness, enable code reuse (parsing, (de)serialization, and marshalling libraries), and to avoid proprietary formats and vendor lock-in.
+ref: ''
+release: Alpha
+reviewed: -B5EwHV8NHBjJqX9tYvWsVJjQ7MO_Q9Sv_cGUvsuhjo=
+text: |
+  Security events and alerts used as raw input to the AD subsystem SHALL either follow a standardized data scheme or an open-source specification (e.g., syslog).
+type: C
+urgency: '1'
+vm: I

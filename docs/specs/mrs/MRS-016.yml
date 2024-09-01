@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: To enable a non-static configuration of monitored nodes.
+ref: ''
+release: Alpha
+reviewed: BfDouEhEYpGpUkobupMtaH7QVGJKHSWZi0lS4wmxXzg=
+text: |
+  The SCM mechanism SHALL provide a (de)registration solution for the removal and addition of end-point monitoring agents.
+type: F
+urgency: '3'
+vm: T

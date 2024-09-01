@@ -1,0 +1,32 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '1'
+header: ''
+importance: '5'
+level: 1.16
+links:
+- MRS-015: null
+normative: true
+outlay: ''
+rationale: 'To connect ADBox to a specific data source containing data of interest, possibly different from the default one'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '4'
+status: ''
+text: |
+  As a user,
+  I want to define a ADBox to fetch data from an indexer at specific host address.
+
+  1. Access C&C server
+  2. Access ADBox
+  3. Modify IP address in  `../siem_mtad_gat/assets/secrets/wazuh_credentials.json`
+
+type: 'F'
+urgency: '4'
+version: '0.1'

@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: To ensure confidentiality and integrity with respect to adversaries.
+ref: ''
+release: Alpha
+reviewed: r052QflFNFcrWndesGUqVQcvdLeTXbD78rTu0RkY9Aw=
+text: |
+  The C&C subsystem SHALL store pcap files (if any) on nodes located within the same trust boundary as the C&C subsystem.
+type: S
+urgency: '3'
+vm: A

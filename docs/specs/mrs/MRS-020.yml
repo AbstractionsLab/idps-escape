@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: To ensure cross-platform compatibility and portability.
+ref: ''
+release: Alpha
+reviewed: Y0EQ-_vRDGXOkkPcR-vf-PXnXWBPCg1bp-vp-1RNm_0=
+text: |
+  The IDPS-ESCAPE architecture SHALL rely on a platform-independent solution (e.g., containerization-based) enabling the C&C subsystem and endpoint monitoring agents to run on the following operating systems: Windows 10/11 64-bit, MacOS 10.12 above and GNU/Linux-based distributions based on Debian such as Ubuntu.
+type: A
+urgency: '1'
+vm: R

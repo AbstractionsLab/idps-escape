@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: To ensure confidentiality and integrity with respect to adversaries.
+ref: ''
+release: Alpha
+reviewed: REDadCB-4jYNbxVc6Q8j2gWDrjP_C3hb1VbWKd-ukYQ=
+text: |
+  The C&C subsystem SHALL store log files containing anomaly detection events as well as detection and observation data originating from endpoint monitoring agents on nodes located within the same trust boundary as the C&C subsystem.
+type: S
+urgency: '3'
+vm: A

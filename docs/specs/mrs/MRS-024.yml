@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: |
+  To enhance cyber threat Intelligence capabilities by capitalizing on mature TIPs.
+ref: ''
+release: Alpha
+reviewed: thhjEv2kNjRBEbMgID76g078P1VHCKchNC8qtHm6kdw=
+text: |
+  The IDPS-ESCAPE system architecture SHOULD include a mechanism for an API-based integration with at least one threat intelligence platform (TIP), e.g., MISP, with integration here referring to sending detection alert information to a TIP and receiving additional threat intelligence from the said TIP.
+type: I
+urgency: '3'
+vm: T

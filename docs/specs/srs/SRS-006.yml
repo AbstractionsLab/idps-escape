@@ -1,0 +1,31 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '4'
+header: ''
+importance: '2'
+level: 1.5
+links:
+- MRS-007: null
+normative: true
+outlay: ''
+rationale: ' 	To be able to take reactive corrective measures and mitigate intrusions'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '4'
+status: ''
+text: |
+  As a sys admin user,
+  I want a centralized NIDPS in the C&C server.
+
+  1.  Access C&C server
+  2.  Deploy C-CyFORT-Suricata
+  3.  Activate prevention in the config and set up actions behavior.
+type: F
+urgency: '1'
+version: '0.1'

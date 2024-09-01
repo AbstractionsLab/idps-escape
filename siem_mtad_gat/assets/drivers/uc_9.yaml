@@ -1,0 +1,27 @@
+training:
+  aggregation: true
+  aggregation_config:
+    features:
+      data.cpu_usage_%:
+      - average
+      data.memory_usage_%:
+      - average
+      rule.firedtimes:
+      - "count"
+    fill_na_method: Zero
+    granularity: 30s
+    padding_value: 0
+  categorical_features: false
+  columns:
+  - data.cpu_usage_%
+  - data.memory_usage_%
+  - rule.firedtimes
+  display_name: detector_Example_3min
+  index_date: '2024-08-*'
+  train_config:
+    epochs: 8
+    window_size: 6
+
+prediction: 
+    run_mode: BATCH
+    batch_size: 12

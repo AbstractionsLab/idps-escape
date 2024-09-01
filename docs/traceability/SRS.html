@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html>
+<head><title>Doorstop</title>
+  <meta charset="utf-8" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="assets/doorstop/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/doorstop/general.css" />
+  <link type="text/css" rel="stylesheet" href="assets/doorstop/sidebar.css" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+  });
+  </script>
+</head>
+<body>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-2 hidden-sm hidden-xs">
+          <nav id="TOC" class="nav nav-stacked fixed sidebar">
+              <h3>Table of Contents</h3>
+<ul>
+<li><a href="#SRS-001">1.0 SRS-001</a><ul>
+<li><a href="#SRS-002">1.1 SRS-002</a></li>
+<li><a href="#SRS-003">1.2 SRS-003</a></li>
+<li><a href="#SRS-004">1.3 SRS-004</a></li>
+<li><a href="#SRS-005">1.4 SRS-005</a></li>
+<li><a href="#SRS-006">1.5 SRS-006</a></li>
+<li><a href="#SRS-007">1.6 SRS-007</a></li>
+<li><a href="#SRS-008">1.7 SRS-008</a></li>
+<li><a href="#SRS-009">1.8 SRS-009</a></li>
+<li><a href="#SRS-010">1.9 SRS-010</a></li>
+<li><a href="#SRS-011">1.10 SRS-011</a></li>
+<li><a href="#SRS-012">1.11 SRS-012</a></li>
+<li><a href="#SRS-013">1.12 SRS-013</a></li>
+<li><a href="#SRS-014">1.13 SRS-014</a></li>
+<li><a href="#SRS-015">1.14 SRS-015</a></li>
+<li><a href="#SRS-016">1.15 SRS-016</a></li>
+<li><a href="#SRS-017">1.16 SRS-017</a></li>
+<li><a href="#SRS-018">1.17 SRS-018</a></li>
+<li><a href="#SRS-019">1.18 SRS-019</a></li>
+<li><a href="#SRS-020">1.19 SRS-020</a></li>
+<li><a href="#SRS-021">1.20 SRS-021</a></li>
+<li><a href="#SRS-022">1.21 SRS-022</a></li>
+<li><a href="#SRS-023">1.22 SRS-023</a></li>
+<li><a href="#SRS-024">1.23 SRS-024</a></li>
+<li><a href="#SRS-025">1.24 SRS-025</a></li>
+<li><a href="#SRS-026">1.25 SRS-026</a></li>
+<li><a href="#SRS-027">1.26 SRS-027</a></li>
+<li><a href="#SRS-028">1.27 SRS-028</a></li>
+<li><a href="#SRS-029">1.28 SRS-029</a></li>
+<li><a href="#SRS-030">1.29 SRS-030</a></li>
+<li><a href="#SRS-031">1.30 SRS-031</a></li>
+<li><a href="#SRS-032">1.31 SRS-032</a></li>
+<li><a href="#SRS-033">1.32 SRS-033</a></li>
+<li><a href="#SRS-035">1.34 SRS-035</a></li>
+<li><a href="#SRS-036">1.35 SRS-036</a></li>
+<li><a href="#SRS-037">1.36 SRS-037</a></li>
+</ul>
+</li>
+</ul>
+          </nav>
+      </div>
+      <div class="col-lg-8" id="main">
+        <h1 id="SRS-001">1.0 SRS-001</h1>
+<p>As a system admin user,
+I want to deploy and maintain a central subsystem, called command-and-control (C&amp;C),
+so that I can updated user-exposed settings of subsystems tackling data collection, intrusion detection and prevention.</p>
+<ol>
+<li>Set up host for C&amp;C server.</li>
+<li>Access as root.</li>
+<li>Deploy C&amp;C components following:</li>
+</ol>
+<p><img alt="IDPS-ESCAPE decision diagram C&amp;C deployment" src="assets/IDPS-ESCAPE-decision-diagram-CC.png" title="IDPS-ESCAPE decision diagram C&amp;C deployment" /></p>
+<ol start="4">
+<li>Configure components via respective software configuration management (SCM) mechanism.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-002">MRS-002</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To centralize and simplify IDPS components configuration management.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-002">1.1 SRS-002</h2>
+<p>As a system admin user,
+I want access end-point monitored system via IDPS-ESCAPE C&amp;C server/unit,
+so that I can check the status of end-point monitor solutions deployed if any.</p>
+<ol>
+<li>Access C&amp;C server as root.</li>
+<li>Via CyFORT-Wazuh manager, list the enrolled agents and their status.</li>
+<li>If deployed, check C-CyFORT-Suricata and mirroring status</li>
+<li>If any deployed, remote connect to endpoint and check local CyFORT-Suricata status.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-002">MRS-002</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To centralize and simplify agent/sensor configuration management.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-003">1.2 SRS-003</h2>
+<p>As a sys admin user,
+I want deploy HIDS agents on the of hosts' monitored system,
+so that I can enable IDPS-ESCAPE's HIDS capabilities.</p>
+<ol>
+<li>Access host to be monitored</li>
+<li>Install Wazuh Agent</li>
+<li>Enroll Wazuh Agent in CyFORT-Wazuh manager.</li>
+<li>Configure Wazuh Agent.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-005">MRS-005</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable a multi-node deployment of monitoring endpoints host.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-004">1.3 SRS-004</h2>
+<p>As a sys admin user,
+I want to enabled/disabled HIDS agents deployed on the of hosts' monitored system.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Enroll/unenroll  Wazuh Agent from CyFORT-Wazuh manager</li>
+<li>Possibly, remove logs and config files.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-005">MRS-005</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable system hosts security posture monitoring</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-005">1.4 SRS-005</h2>
+<p>As a sys admin user,
+I want to enable/disable network monitoring within IDPS-ESCAPE's subsystem boundaries.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Deploy C-CyFORT-Suricata</li>
+<li>Set up channel to be connections to be monitored</li>
+<li>Possibly, add custom rules.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-006">MRS-006</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable traffic monitoring</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-006">1.5 SRS-006</h2>
+<p>As a sys admin user,
+I want a centralized NIDPS in the C&amp;C server.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Deploy C-CyFORT-Suricata</li>
+<li>Activate prevention in the config and set up actions behavior.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>4</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To be able to take reactive corrective measures and mitigate intrusions</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-007">1.6 SRS-007</h2>
+<p>As a sys admin user,
+I want capture and forward raw network traffic to the C&amp;C server,
+to run NIDS on such a traffic.</p>
+<ol>
+<li>Access C&amp;C server.</li>
+<li>Deploy C-CyFORT-Suricata.</li>
+<li>Identify host capture interface (CI), C&amp;C CI and IP.</li>
+<li>Run port mirroring activation script with above arguments.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-008">MRS-008</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To collect events for threat hunting and CTI operations, reducing the NIDS overhead and to do customized AD.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-008">1.7 SRS-008</h2>
+<p>As a sys admin user,
+I want to deploy NIDS components as Docker container on system end-point's hosts,
+to monitor traffic and store logs locally.</p>
+<ol>
+<li>Access end-point (EP) host,</li>
+<li>Deploy using custom script.</li>
+<li>Update the configs file (.yml) with local configuration.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-009">MRS-009</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure the following properties: consistent and reproducible environments, isolation, resource efficiency, scalability, portability, fast spawning and shutdown, improved CI/CD, support of micro services architecture, improved dependency management.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-009">1.8 SRS-009</h2>
+<p>As a sys admin user,
+I want to enable host intrusion detection via pattern matching with known/expected threats (signature-based HIDS).</p>
+<ol>
+<li>Access host to be monitored.</li>
+<li>Deploy Wazuh Agent (using C&amp;C manager ip).</li>
+<li>Enroll Agent agent.</li>
+<li>Set up local configs and logs.</li>
+<li>Possibly, define custom rules.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-011">MRS-011</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-010">1.9 SRS-010</h2>
+<p>As SOC member user,
+I want to manage the HIDP and NIDS results and information jointly,
+to have a centralize overview of the system for threat detection, investigation, and response.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Deploy CyFORT-Wazuh and HIDS agents</li>
+<li>Deploy (C-)CyFORT-Suricata</li>
+<li>Integrate CyFORT-Suricata and CyFORT-Wazuh using custom script and procedure</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-012">MRS-012</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-011">1.10 SRS-011</h2>
+<p>As SOC member,
+I want a graphic visualization of the network events detected in my system.</p>
+<p>Assuming: CyFORT-Suricata integrated in CyFORT-Wazuh</p>
+<ol>
+<li>Access CyFORT-Wazuh Dashboard</li>
+<li>Filter security events generate by NIDS group rules</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-013">MRS-013</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To improve accessibility and easy-of-use for IDPS-ESCAPE end-users</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-012">1.11 SRS-012</h2>
+<p>As SOC member,
+I want a graphic visualization of the host events detected in my system.</p>
+<p>Assuming: CyFORT-Wazuh and HIDS agents deployed</p>
+<ol>
+<li>Access CyFORT-Wazuh Dashboard</li>
+<li>Filter security events generate by HIDS group rules</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-013">MRS-013</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To improve accessibility and easy-of-use for IDPS-ESCAPE end-users</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-013">1.12 SRS-013</h2>
+<p>As SOC member,
+I want to check the status of HIDS agents.</p>
+<p>Assuming: CyFORT-Wazuh and HIDS agents deployed and enrolled to C&amp;C Manager</p>
+<ol>
+<li>Access CyFORT-Wazuh Dashboard.</li>
+<li>Look dedicated panel and click to the agent ID for additional info.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-013">MRS-013</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To improve IDPS-ESCAPE status management for the end-users</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-014">1.13 SRS-014</h2>
+<p>As SOC member,
+I want the detected event to be correctly decoded and transformed before usage and storage.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access CyFORT-Wazuh manager</li>
+<li>Run testing and verification of rules and decoders via CyFORT-Wazuh server API</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-014">MRS-014</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure avoid errors and inaccuracy</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-015">1.14 SRS-015</h2>
+<p>As a user,
+I want my SIEM to interpret a new type of data forwarded by agents/sensors.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access CyFORT-Wazuh manager</li>
+<li>Add custom rules and custom decoders.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-014">MRS-014</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>3</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To extend the detection capability of IDPS-ESCAPE and taylor the detection to my system</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-016">1.15 SRS-016</h2>
+<p>As an admin user,
+I want to modify the credentials of data indexer for a user,
+to improve the security level of the admin password.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access CyFORT-Wazuh manager</li>
+<li>Update <code>config/wazuh_indexer/internal_users.yml</code> file.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F/S</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>Maintain/improve the security of IDPS-ESCAPE</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-017">1.16 SRS-017</h2>
+<p>As a user,
+I want to define a ADBox to fetch data from an indexer at specific host address.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Modify IP address in  <code>../siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>4</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To connect ADBox to a specific data source containing data of interest, possibly different from the default one</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-018">1.17 SRS-018</h2>
+<p>As a user,
+I want to modify the default hyperparameter of ML methods used by ADBox.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Modify values in <code>siem_mtad_gat/assets/default_configs/mtad_gat_train_config_default_args.json</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To globally tune ML algorithm to a specify system/scenario</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-019">1.18 SRS-019</h2>
+<p>As a user,
+I want to modify the datatype transformation map operated by ADBox on fetched.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Modify key values <code>../siem_mtad_gat/assets/wazuh/wazuh_columns.json</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To maintain the consistency with SIEM solution</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-020">1.19 SRS-020</h2>
+<p>As a user,
+I want to update the default fields fetched at ingestion phase by ADBox.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Update key and values in <code>../siem_mtad_gat/assets/wazuh/wazuh_columns.json</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To maintain the consistency with SIEM solution, add custom feature</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-021">1.20 SRS-021</h2>
+<p>As a user,
+I want to update the default use case of ADBox.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Modify <code>../siem_mtad_gat/assets/default_configs/default_detector_input_config.json</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To adapt ADBox default behavior</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-022">1.21 SRS-022</h2>
+<p>As a user,
+I want to update indexer credentials in ADBox.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Update CyFORT-Wazuh indexer credentials in  <code>../siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To adapt to local configuration</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-023">1.22 SRS-023</h2>
+<p>As a user,
+I want to register a new agent in the central SIEM&amp;XDR.</p>
+<p>Assuming: CyFORT-Wazuh Manager running on C&amp;C and agent on selected host</p>
+<ol>
+<li>Either:
+  a. Add the manager IP as an environment variable during the agent installation process.
+  b. Set the manager IP in  the agent configuration file.
+  c. requests the key from the manager API and  manually imports it to the agent.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-016">MRS-016</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable a non-static configuration of monitored nodes.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-024">1.23 SRS-024</h2>
+<p>As a user,
+I want to run queries on data such as events, alerts and statistics.</p>
+<p>Assuming: CyFORT-Wazuh running and established connection to indexer</p>
+<ol>
+<li>Formulate query as Wazuh Query Language</li>
+<li>Query to indexer via Wazuh API</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-018">MRS-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To achieve a programmatic access to security alert and event data.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-025">1.24 SRS-025</h2>
+<p>As a user,
+I want to map a detected event to MITRE ATT&amp;CK framework.</p>
+<p>Assuming:  CyFORT-Wazuh running</p>
+<ol>
+<li>Open the document corresponding to the event (e.g. via index query, or using the dashboard )</li>
+<li>Check if the following keys exist in the attributes
+  <code>rule.mitre.id , rule.mitre.tactic , rule.mitre.technique</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-023">MRS-023</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To improve and speed up threat detection and classification, thereby facilitating CTI analysis.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-026">1.25 SRS-026</h2>
+<p>As a user,
+I want to export data from IDPS-ESCAPE to a TIP.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-025">MRS-025</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable programmatic access, which would also in turn support integration with SATRAP-DL.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-027">1.26 SRS-027</h2>
+<p>As a system admin,
+I want to run a machine learning algorithm to detect anomalous behaviors within my system.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Select a trained detector</li>
+<li>Run a prediction script using the chosen detection either on a selected time interval or in realtime.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-028">1.27 SRS-028</h2>
+<p>As a user,
+I want to compare the outcome different anomaly detection algorithms on my data.</p>
+<p>Assuming: Two different algorithms A1 and A2 available in ADBox, and two compatible detectors D1 and D2 based on these algorithms, respectively.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Establish detection parameters (time interval, features, etc.)</li>
+<li>Select a (trained) detector D1 using algorithm A1</li>
+<li>Run a prediction script using D1.</li>
+<li>Select a (trained) detector D2 using algorithm A2</li>
+<li>Run a prediction script using D2.</li>
+<li>Compare output using dedicated Dashboard.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-031">MRS-031</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To validate the AD capabilities.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-029">1.28 SRS-029</h2>
+<p>As a user,
+I want to detect anomaly by using both host and network events.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Train a detector using features derived from CyFORT-Wazuh and CyFORT-Suricata logs arguments.</li>
+<li>Run a prediction script using the chosen detection either on a selected time interval or in realtime.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-032">MRS-032</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable holistic system monitoring.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-030">1.29 SRS-030</h2>
+<p>As a user,
+I want to read/plot AD results of training and test data.</p>
+<p>Assuming: trained detector with unique identifier <code>uuid</code> available.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Open the folder <code>siem_mtad_gat/assets/detector_models/uuid/training</code></li>
+<li>Use either external tools or viz-notebooks to visualize
+   - train subset AD output: <code>train_output.pkl</code>
+   - test subset AD output: <code>test_output.pkl</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable programmatic use of such data to further elaborate and evaluate output of training</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-031">1.30 SRS-031</h2>
+<p>As a user,
+I want to read/plot losses of training and test data.</p>
+<p>Assuming: trained detector with unique identifier <code>uuid</code> available.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Open the folder <code>siem_mtad_gat/assets/detector_models/uuid/training</code></li>
+<li>Use either external tools or viz-notebooks to visualize
+   - train : <code>train_losses.png</code>
+   - test : <code>test_losses.png</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>1</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To evaluate quality of output of training</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-032">1.31 SRS-032</h2>
+<p>As a user,
+I want to read/plot the list of predicted anomalies .</p>
+<p>Assuming: trained detector with unique identifier <code>uuid</code> available, use-case scenario <code>uc-x</code> given.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Within <code>siem_mtad_gat/assets/detector_models/uuid/prediction</code> folder, open: <code>uc-x_predicted_anomalies_data-*.json</code></li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable programmatic use of such data to further elaborate and evaluate output of prediction</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-033">1.32 SRS-033</h2>
+<p>As a system admin user,
+I want to deploy IDPS end-point monitoring solutions on a remote end-point by choosing from multiple configuration option,
+so that I can monitor events on my system's edges.</p>
+<ol start="2">
+<li>Access end-point as root.</li>
+<li>Deploy end-point components following:</li>
+</ol>
+<p><img alt="IDPS-ESCAPE decision diagram EP deployment" src="assets/IDPS-ESCAPE-decision-diagram-EP.png" title="IDPS-ESCAPE decision diagram End-points deployment" /></p>
+<ol start="4">
+<li>Connect local solution to C&amp;C sub-system.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-037">MRS-037</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>29.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>3</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To adapt and improve performance</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-035">1.34 SRS-035</h2>
+<p>As I user,
+I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM-DD.</p>
+<p>Assuming: trained detector with unique identifier <code>uuid</code> available.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>
+<p>Add an use-case file <code>siem_mtad_gat/assets/drivers/uc_x.yaml</code> including</p>
+<p>```</p>
+<p>prediction:
+    run_mode: "historical"
+    index_date: YYYY-MM-DD
+    detector_id: uuid
+```</p>
+</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-039">MRS-039</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating an possible threat</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-036">1.35 SRS-036</h2>
+<p>As user,
+I want to add a new custom rule-set signature,
+to a specific network related event type.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Add the file with custom rules <code>local.rules</code></li>
+<li>
+<p>Open <code>/etc/suricata/suricata.yaml</code> and update:</p>
+<p><code>rule-files:
+    - suricata.rules
+    - /path/to/local.rules</code></p>
+</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-040">MRS-040</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>3</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To extend the detection capability of IDPS-ESCAPE and taylor the detection to my system</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-037">1.36 SRS-037</h2>
+<p>As a user,
+I want to find anomalies in the network traffic,
+to detect threats not recognize by the signature-based NIDS.</p>
+<p>Assuming: CyFORT-Suricata integrated with CyFORT-Wazuh</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Add an use-case file <code>siem_mtad_gat/assets/drivers/uc_x.yaml</code> including as features attributes from Suricata <code>eve.log</code> decoding</li>
+<li>Run ADBox</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>author</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>date</td>
+<td>22.08.2024</td>
+</tr>
+<tr>
+<td>status</td>
+<td>To detect deviations from an a priori normal baseline system behavior, possibly caused by malicious actors.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+      </div>
+    </div>
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="assets/doorstop/jquery.min.js"></script>
+<script src="assets/doorstop/bootstrap.min.js"></script>
+<script>
+    $(function() {
+        $("table").addClass("table");
+        $("nav ul").addClass("nav nav-stacked");
+        $("nav").affix();
+        $('body').scrollspy({
+          target: '.sidebar'
+        });
+        $("#main a").attr("target", "parent");
+
+  $(window).on('hashchange', function() {
+    $(window).scrollTop($(location.hash.toLowerCase()).offset().top);});
+  });
+</script>
+</body>
+</html>
+

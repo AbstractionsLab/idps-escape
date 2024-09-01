@@ -1,0 +1,14 @@
+active: true
+derived: false
+header: ''
+level: 1.12
+links:
+- MRS-004: null
+- MRS-030: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  The diagram below explicit Predictor class object  of the MTAD_GAT subpackage of ADBox.
+
+  ![ADBox Predictor class diagram](assets/ADBox-predictor-class.png "ADBox Predictor class diagram")

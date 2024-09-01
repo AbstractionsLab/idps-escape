@@ -1,0 +1,21 @@
+active: true
+comments: ''
+defect_category: '0'
+defect_description: ''
+derived: false
+header: ''
+level: 1.16
+links:
+- TST-010: null
+normative: true
+ref: ''
+reviewed: null
+test_date: 26-07-2024
+tester: AGI
+text: |
+  Test execution results for the test case (TST) referred in the parent link.
+  ## Test environment details
+  - vm-cyfort-idps-escape
+  - wazuh host : "192.168.5.5"
+  ## Suggestions
+  - For prediction the response should be null if the data are not avaliabe.

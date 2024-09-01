@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: |
+  To ingest data from tools in an  security technology stack to create greater context for Security Operations Center (SOC) teams to perform faster threat detection, investigation, and response.
+ref: ''
+release: Alpha
+reviewed: C4CHVQL0aQetnxT0ulvjF_wEMJInUYdyZ1OXkdBWFfM=
+text: |
+  The IDPS-ESCAPE system architecture SHALL include an XDR & SIEM subsystem (see the system concept for definitions).
+type: A
+urgency: '4'
+vm: R

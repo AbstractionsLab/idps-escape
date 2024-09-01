@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: ''
+level: 1.8
+links:
+- MRS-004: null
+- MRS-030: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## Diagram
+
+  The diagram explicit the sequence of operations runned by the function predict_MTAD_GAT of the mtad_gat subpackage of ADBOX.
+
+  ![ADBox predict_MTAD_GAT sequence diagram](assets/ADBox-predict_MTAD_GAT-sequence.png "ADBox predict_MTAD_GAT sequence")

@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To improve accessibility and easy-of-use for IDPS-ESCAPE end-users (e.g., security engineers, CTI analysts, etc.).
+ref: ''
+release: Alpha
+reviewed: FoVayZaf7wo3PIRmHpo3nQhlJAwCaeJilr_WYMlED6o=
+text: |
+  The IDPS-ESCAPE system architecture SHOULD include a subsystem providing a data visualization dashboard capable of presenting data collected by the endpoint monitoring agents; precise feature definitions are deferred to system requirement specifications (SRS).
+type: A
+urgency: '4'
+vm: R

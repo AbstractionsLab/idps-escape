@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '2'
+level: 1
+links: []
+normative: true
+rationale: To ensure reuse, wide adoption and known standards-based arguments.
+ref: ''
+release: Alpha
+reviewed: ul4pWYbmPbnxp-MWAXh6yYmPkIDLBCrsx-ugUz7pawM=
+text: |
+  IDPS-ESCAPE SHOULD capture network traffic using a pcap-based API.
+type: C
+urgency: '2'
+vm: T

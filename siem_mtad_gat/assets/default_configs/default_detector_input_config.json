@@ -1,0 +1,21 @@
+  {
+    "index_date": "default",
+    "categorical_features": false,
+    "columns": ["data.cpu_usage_%", "data.memory_usage_%"],
+    "aggregation": true,
+    "aggregation_config": {
+      "fill_na_method": "Zero",
+      "padding_value": 0,
+      "granularity": "1min",
+      "features": {
+        "data.cpu_usage_%": ["average", "max"],
+        "data.memory_usage_%": ["average", "max"]
+    }
+    },
+    "train_config": {
+      "window_size": 10, 
+      "epochs" : 30
+    },
+    "display_name": "default"
+  }
+  

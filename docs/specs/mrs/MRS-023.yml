@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: |
+  To improve and speed up threat detection and classification, thereby facilitating CTI analysis.
+ref: ''
+release: Alpha
+reviewed: Wwq0DUM5d51odTr_UI9ROmFGGb7KHkzkNJ4V24oaJeE=
+text: |
+  The SIEM subsystem SHOULD include threat enumeration based on a mapping of security incident detections to MITRE ATT&CK entries.
+type: F
+urgency: '3'
+vm: T

@@ -1,0 +1,49 @@
+settings:
+  digits: 3
+  itemformat: yaml
+  parent: MRS
+  prefix: SRS
+  sep: '-'
+
+attributes:
+  defaults:
+    author: 'AGI'
+    acceptance: 'Successful validation according to the corresponding test case specification'
+    date: '22.08.2024'
+    dependence: []
+    status: ''
+    importance: ''
+    urgency: ''
+    difficulty: ''
+    risk: ''
+    outlay: ''
+    type: ''
+    rationale: ''
+    version: ''
+    release: 'Alpha'
+  reviewed:
+  - author
+  - acceptance
+  - date
+  - dependence
+  - status
+  - importance
+  - urgency
+  - risk
+  - outlay
+  - type
+  - rationale
+  - version
+  publish:
+    - author
+    - acceptance
+    - date
+    - dependence
+    - status
+    - importance
+    - urgency
+    - risk
+    - outlay
+    - type
+    - rationale
+    - version

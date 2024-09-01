@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: To address stakeholder scalability needs.
+ref: ''
+release: Alpha
+reviewed: u3JmUx6m-4nwZSzi0fSLhV1xCgs_6WiNknMHY1bXFO4=
+text: |
+  IDPS-ESCAPE endpoint monitoring SHALL be able to monitor at least 5 endpoint nodes capable of running IDPS-ESCAPE sensors/agents.
+type: O
+urgency: '2'
+vm: T

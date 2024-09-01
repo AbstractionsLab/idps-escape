@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To provide consolidated raw data capturing host and network level data for detecting anomalies.
+ref: ''
+release: Alpha
+reviewed: cgA_-IcutOo6cpCTNhO33gzWqXDDqz4nLjQkn4HC2AQ=
+text: |
+  The AD subsystem SHALL retrieves data retrieved via the IDPS-ESCAPE API.
+type: F
+urgency: '5'
+vm: T

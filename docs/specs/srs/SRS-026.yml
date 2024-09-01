@@ -1,0 +1,28 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: ''
+level: 1.25
+links:
+- MRS-025: null
+normative: true
+outlay: ''
+rationale: 'To enable programmatic access, which would also in turn support integration with SATRAP-DL.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: ''
+status: ''
+text: |
+  As a user,
+  I want to export data from IDPS-ESCAPE to a TIP.
+
+type: 'F'
+urgency: '1'
+version: '0.1'

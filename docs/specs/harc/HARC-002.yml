@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: ''
+level: 1.1
+links:
+- MRS-004: null
+- MRS-031: null
+- MRS-032: null
+- MRS-033: null
+- MRS-039: null
+- MRS-041: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## Diagram
+  The diagram below explicit the architecture of ADBox subsystem.
+  ![ADBox high level architecture](assets/ADBox-system_high_level_architecture.png "ADBox high level architecture")

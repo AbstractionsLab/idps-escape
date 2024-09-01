@@ -1,0 +1,13 @@
+
+{
+    "granularity": "10min", 
+    "columns": {
+        "data.memory_used_bytes": "average", 
+        "data.disk_used_bytes": "sum",
+        "data.disk_usage_%": "count",
+        "data.memory_usage_%": "min", 
+        "rule.firedtimes": "max"
+    }
+}
+
+

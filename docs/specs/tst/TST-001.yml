@@ -1,0 +1,46 @@
+active: true
+authors: MZA 
+complexity: '1'
+derived: false
+execution_type: M
+header: |
+  Start ADBox interactive console
+level: 1
+links: []
+normative: true
+platform: 'Ubuntu 22.04.4 LTS '
+ref: ''
+release: alpha
+reviewed: OA2k3Cc9xj8LYsXx40zHk_lGEQgGHzD0CbyOvBzA7Vo=
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Docker version 26.0.0
+  - User with root privileges
+  - 14 GB storage on the machine
+  - git version 2.44.0
+  ## Test steps
+  1. Clone the ADBox repository.
+  `git clone https://github.com/AbstractionsLab/idps-escape.git`
+  2. Change the working directory to the cloned folder containing the all the files along with the Dockerfile.
+  ```cd siem-mtad-gat```
+  3. Build the image.
+  ```
+  docker build -t siem-mtad-gat:v0.1.0 .
+  ```
+  4. Run the container by executing the bash file containing the run commands.
+      a. Make it executable.
+  ```chmod  +x  adbox.sh```
+    b. And execute it.
+  ```./adbox.sh```
+  ## Expected outcome
+  1. Copy of  ` siem-mtad-gat` folder in local folder
+  3. In the list of docker imageges (`docker images`) it should appear
+  ```
+  REPOSITORY                      TAG       IMAGE ID       CREATED         SIZE
+  siem-mtad-gat                   v0.1.0    ...   ...            ...
+  ```
+  4b. ADBox interactive console should be opened
+verification_method: T

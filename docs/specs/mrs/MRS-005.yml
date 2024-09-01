@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: To support host-based IDS.
+ref: ''
+release: Alpha
+reviewed: KIAGpk2Ts7eav-SxTAci1OuHa1TRLkWLfQGwTQ9o0Y0=
+text: |
+  The IDPS-ESCAPE system architecture SHALL include a host-based intrusion detection system (HIDS) with agents deployed on the of hosts' monitored system, that can be enabled/disabled by the user.
+type: A
+urgency: '5'
+vm: R

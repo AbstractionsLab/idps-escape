@@ -1,0 +1,43 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '2'
+header: ''
+importance: '4'
+level: 1.34
+links:
+- MRS-039: null
+normative: true
+outlay: ''
+rationale: 'To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating an possible threat'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As I user,
+  I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM-DD.
+
+  Assuming: trained detector with unique identifier `uuid` available.
+
+  1. Access C&C server
+  2. Access ADBox
+  3. Add an use-case file `siem_mtad_gat/assets/drivers/uc_x.yaml` including
+
+      ```
+
+      prediction: 
+          run_mode: "historical"
+          index_date: YYYY-MM-DD
+          detector_id: uuid
+      ```
+
+
+type: 'F'
+urgency: '4'
+version: '0.1'

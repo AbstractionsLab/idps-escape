@@ -1,0 +1,69 @@
+[tool.poetry]
+name = "siem-mtad-gat"
+version = "0.1.0"
+description = "This is the main repository for IDPS-ESCAPE and ADBox, which is a subsystem of the former."
+authors = ["Agnese Gini <agnese@abstractionslab.lu>", "Arash Atashpendar <arash@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>"]
+readme = "README.md"
+ 
+
+
+[tool.poetry.dependencies]
+python = "3.10.12" 
+opensearch-sdk-py = {git = "https://github.com/opensearch-project/opensearch-sdk-py.git", rev = "fb412ad3fe4c58d990ab0c84b9cc7972870b707b" }
+opensearch-py = "2.5.0"
+
+# Added these for deployment 
+torch = "^2.3.0"
+ipykernel = "^6.29.4"
+torchinfo = "^1.8.0" 
+
+numpy = "1.26.4"
+pandas = "2.2.2"
+matplotlib = "3.8.4"
+scikit-learn = "1.4.2"
+
+
+black = "24.4.2"
+pre-commit = "3.7.0"
+tqdm = "4.66.4"
+tensorboard = "2.16.2"
+more-itertools = "8.10.0"
+
+
+tabulate = "^0.9.0"
+plotly = "^5.23.0"
+nbformat = "^5.10.4"
+
+
+[tool.isort]
+profile = "black"
+known_first_party = "poetry"
+skip = ["protobuf"]
+line_length = 240
+
+[tool.black]
+line-length = 240
+target-version = ['py37']
+extend-exclude = "protobuf"
+
+
+
+[tool.poetry.group.docs.dependencies]
+doorstop = "3.0b10"
+
+
+[tool.poetry.group.plot]
+optional = true
+
+[tool.poetry.group.plot.dependencies]
+cufflinks = "^0.17.3"
+plotly = "^5.22.0"
+nbformat = "^5.10.4"
+
+[build-system]
+requires = ["poetry-core>=1.5.0"]
+build-backend = "poetry.core.masonry.api" 
+
+
+[tool.poetry.scripts]
+adbox = "siem_mtad_gat.ad_driver.driver:main"

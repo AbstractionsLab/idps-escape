@@ -1,0 +1,34 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '3'
+header: ''
+importance: '4'
+level: 1.28
+links:
+- MRS-032: null
+normative: true
+outlay: ''
+rationale: 'To enable holistic system monitoring.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As a user,
+  I want to detect anomaly by using both host and network events.
+
+  1. Access C&C server
+  2. Access ADBox
+  3. Train a detector using features derived from CyFORT-Wazuh and CyFORT-Suricata logs arguments.
+  4. Run a prediction script using the chosen detection either on a selected time interval or in realtime.
+
+
+type: 'F'
+urgency: '4'
+version: '0.1'

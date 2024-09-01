@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: |
+  To ensure automation, programmatic access, wide and easy adoption, code reuse.
+ref: ''
+release: Alpha
+reviewed: 2Q6uUkBFzAPXTfFecTngkch0XK2mytAS_W_0XE2cT84=
+text: |
+  The AD subsystem SHALL output anomaly detection events to a log file using a machine-readable format (e.g., YAML, syslog).
+type: C
+urgency: '3'
+vm: T

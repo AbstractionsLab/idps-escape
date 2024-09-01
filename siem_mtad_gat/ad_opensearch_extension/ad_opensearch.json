@@ -1,0 +1,9 @@
+{
+    "name":"Anomaly Detection using MTAD-GAT algorithm",
+    "uniqueId":"anomaly_detection_py",
+    "hostAddress":"localhost",
+    "port":"1234",
+    "version":"0.1.0",
+    "opensearchVersion":"3.0.0",
+    "minimumCompatibleVersion":"3.0.0"
+}

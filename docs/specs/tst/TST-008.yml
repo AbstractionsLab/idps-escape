@@ -1,0 +1,43 @@
+active: true
+authors: 'MZA'
+complexity: '2'
+derived: false
+execution_type: M
+header: |
+  ADBox use case 1 without a Wazuh connection
+level: 8
+links: []
+normative: true
+platform: 'Ubuntu 22.04.4 LTS '
+ref: ''
+release: alpha
+reviewed: eHEa3r2CDkdSvqeKydIC-0DPTSCOfGGvXsYpi-GiE-Y=
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Docker version 26.0.0
+  - User with root privileges
+  - Built image `siem-mtad-gat:v0.1.0`
+  - No existing container named `“siem-mtad-gat-container”` should be running.
+  - No instance of Wazuh distribution running.
+  ## Test steps
+  1. Run the container `“siem-mtad-gat-container”` by executing the adbox script with use case 1 parameters.
+  ```
+   ./adbox.sh -uc 1
+  ```
+  ## Expected outcome
+  - ADBox starts with `“Running AD driver with user configuration uc_1.yaml.”`
+  - Output screen should show message `“Could not establish a connection with OpenSearch.”`
+  - And collect training data from default file with message `“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json”`.
+  - The training should run for 10 epochs.
+  - Train response should be seen on the console.
+  - Training outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”` folder.
+  - Prediction starts after training with message `“Predicting in real-time mode with interval 1 (min).”`
+  - Output screen should show the following messages:
+  - `“Could not establish a connection with OpenSearch.”`
+  - `“Prediction in run_mode.REALTIME requires a connection with OpenSearch.”`
+  - `“No data found for given input.”`
+  - And the application should exit.
+verification_method: T

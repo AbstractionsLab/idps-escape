@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: |
+  To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.
+ref: ''
+release: Alpha
+reviewed: mwmFXP_LWPCCuta_18kOVD8Cn5UGc6hSaqZf8L1TPnk=
+text: |
+  IDPS-ESCAPE SHALL include a signature-based host intrusion detection engine.
+type: F
+urgency: '5'
+vm: T

@@ -1,0 +1,66 @@
+# Example YAML template for detector training and prediction input file
+# The file contains defaults values which would be used for default training and prediction 
+
+training: 
+  # Specify the index date in "YYYY-MM-DD" format or with *s 
+  # The default date would be the current month 
+  index_date: "default"  # str 
+
+  # Set to True or False based on whether categorical features are included 
+  # By default it is det to false 
+  categorical_features: false  # bool
+
+  # List the columns to be included in the analysis
+  columns: 
+    # Specify the column name as a string
+    # Add more columns as needed 
+    # By default the following columns would be used 
+    - "data.cpu_usage_%"  
+    - "data.memory_usage_%"  
+
+  # Set to True to enable aggregation, False otherwise 
+  # By default it is set to true 
+  aggregation: true # bool
+
+  # Configuration for data aggregation
+  aggregation_config: 
+    # Specify the method for filling missing values ('Linear', 'Previous', 'Subsequent', 'Zero', 'Fixed'.) - str 
+    # By default the "Zero" method is used 
+    fill_na_method: "Zero"  
+    # Specify the value to use when 'Fixed' method is selected. Required only for 'Fixed' method. - int 
+    # It is not required for the default ("Zero") method 
+    padding_value: 
+    granularity: "1min" # Specify the granularity (e.g, "1min", "5min", "1s" "1hour") if integer is interpretes as minutes- str
+    features: 
+    # Specify aggregation method for each feature defined in the columns list. 
+    # The aggregation methods could be among "average", "max", "min", "count", and "sum". 
+    # And one feature could have multiple aggregation methods or one
+    # Example format: 
+    # str : list[str] 
+      # "rule.firedtimes": ["average", "max", "min", "count", "sum"],
+      data.cpu_usage_%:
+        - "average"  # Specify aggregation methods for CPU usage ("%"): "average", "max", "min", "count", "sum" - list[str]
+        - "max"
+      data.memory_usage_%:
+        - "average"  # Specify aggregation methods for memory usage ("%"): "average", "max", "min", "count", "sum" - list[str]
+        - "max" 
+
+  # Configuration for model training
+  train_config: 
+    # By default, the window size = 10 and epochs = 30 
+    window_size: 10 # Specify the window size for training (integer) - int
+    epochs: 30 # Specify the number of epochs for training (integer) - int
+
+  # Specify a display name for the detector 
+  # By default, the detector would have a name in the format 'detector_<current timestamp>' 
+  display_name: "default" # str
+
+
+prediction: 
+  run_mode: "default"
+  index_date: "default"
+  detector_id: "default"
+  start_time: "default"
+  end_time: "default"
+  batch_size: 10
+ 

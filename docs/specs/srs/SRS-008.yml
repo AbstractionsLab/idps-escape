@@ -1,0 +1,33 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '3'
+header: ''
+importance: '3'
+level: 1.7
+links:
+- MRS-009: null
+normative: true
+outlay: ''
+rationale: ' 	To ensure the following properties: consistent and reproducible environments, isolation, resource efficiency, scalability, portability, fast spawning and shutdown, improved CI/CD, support of micro services architecture, improved dependency management.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a sys admin user,
+  I want to deploy NIDS components as Docker container on system end-point's hosts,
+  to monitor traffic and store logs locally.
+
+  1. Access end-point (EP) host,
+  2. Deploy using custom script.
+  3. Update the configs file (.yml) with local configuration.
+
+type: 'F'
+urgency: '2'
+version: '0.1'

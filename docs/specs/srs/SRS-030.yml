@@ -1,0 +1,38 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '1'
+header: ''
+importance: '2'
+level: 1.29
+links:
+- MRS-034: null
+normative: true
+outlay: ''
+rationale: 'To enable programmatic use of such data to further elaborate and evaluate output of training'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a user,
+  I want to read/plot AD results of training and test data.
+
+  Assuming: trained detector with unique identifier `uuid` available.
+
+
+  1. Access C&C server
+  2. Access ADBox
+  3. Open the folder `siem_mtad_gat/assets/detector_models/uuid/training`
+  4. Use either external tools or viz-notebooks to visualize
+     - train subset AD output: `train_output.pkl`
+     - test subset AD output: `test_output.pkl`
+
+type: 'F'
+urgency: '2'
+version: '0.1'

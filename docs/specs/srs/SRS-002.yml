@@ -1,0 +1,33 @@
+acceptance: 'Successful validation according to the corresponding test case specification'
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '1'
+header: ''
+importance: '5'
+level: 1.1
+links:
+- MRS-002: null
+normative: true
+outlay: ''
+rationale: 'To centralize and simplify agent/sensor configuration management.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a system admin user,
+  I want access end-point monitored system via IDPS-ESCAPE C&C server/unit,
+  so that I can check the status of end-point monitor solutions deployed if any.
+
+  1. Access C&C server as root.
+  2. Via CyFORT-Wazuh manager, list the enrolled agents and their status.
+  3. If deployed, check C-CyFORT-Suricata and mirroring status
+  4. If any deployed, remote connect to endpoint and check local CyFORT-Suricata status.
+
+type: 'F'
+urgency: '5'
+version: '0.1'

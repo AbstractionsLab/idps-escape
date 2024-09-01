@@ -1,0 +1,20 @@
+active: true
+derived: false
+header: ''
+level: 1.0
+links:
+- MRS-002: null
+- MRS-004: null
+- MRS-032: null
+- MRS-033: null
+- MRS-039: null
+- MRS-041: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## Diagram
+
+  The diagram below explicit the context of ADBox subsystem.
+
+  ![ADBox context diagram](assets/ADBox-context.png "ADBox context diagram")

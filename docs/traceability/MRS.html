@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html>
+<head><title>Doorstop</title>
+  <meta charset="utf-8" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="assets/doorstop/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/doorstop/general.css" />
+  <link type="text/css" rel="stylesheet" href="assets/doorstop/sidebar.css" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+  });
+  </script>
+</head>
+<body>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-2 hidden-sm hidden-xs">
+          <nav id="TOC" class="nav nav-stacked fixed sidebar">
+              <h3>Table of Contents</h3>
+<ul>
+<li><a href="#MRS-001">1 MRS-001</a></li>
+<li><a href="#MRS-002">1 MRS-002</a></li>
+<li><a href="#MRS-003">1 MRS-003</a></li>
+<li><a href="#MRS-004">1 MRS-004</a></li>
+<li><a href="#MRS-005">1 MRS-005</a></li>
+<li><a href="#MRS-006">1 MRS-006</a></li>
+<li><a href="#MRS-007">1 MRS-007</a></li>
+<li><a href="#MRS-008">1 MRS-008</a></li>
+<li><a href="#MRS-009">1 MRS-009</a></li>
+<li><a href="#MRS-011">1 MRS-011</a></li>
+<li><a href="#MRS-012">1 MRS-012</a></li>
+<li><a href="#MRS-013">1 MRS-013</a></li>
+<li><a href="#MRS-014">1 MRS-014</a></li>
+<li><a href="#MRS-015">1 MRS-015</a></li>
+<li><a href="#MRS-016">1 MRS-016</a></li>
+<li><a href="#MRS-017">1 MRS-017</a></li>
+<li><a href="#MRS-018">1 MRS-018</a></li>
+<li><a href="#MRS-019">1 MRS-019</a></li>
+<li><a href="#MRS-020">1 MRS-020</a></li>
+<li><a href="#MRS-021">1 MRS-021</a></li>
+<li><a href="#MRS-022">1 MRS-022</a></li>
+<li><a href="#MRS-023">1 MRS-023</a></li>
+<li><a href="#MRS-024">1 MRS-024</a></li>
+<li><a href="#MRS-025">1 MRS-025</a></li>
+<li><a href="#MRS-026">1 MRS-026</a></li>
+<li><a href="#MRS-027">1 MRS-027</a></li>
+<li><a href="#MRS-028">1 MRS-028</a></li>
+<li><a href="#MRS-029">1 MRS-029</a></li>
+<li><a href="#MRS-030">1 MRS-030</a></li>
+<li><a href="#MRS-031">1 MRS-031</a></li>
+<li><a href="#MRS-032">1 MRS-032</a></li>
+<li><a href="#MRS-033">1 MRS-033</a></li>
+<li><a href="#MRS-034">1 MRS-034</a></li>
+<li><a href="#MRS-035">1 MRS-035</a></li>
+<li><a href="#MRS-036">1 MRS-036</a></li>
+<li><a href="#MRS-037">1 MRS-037</a></li>
+<li><a href="#MRS-038">1 MRS-038</a></li>
+<li><a href="#MRS-039">1 MRS-039</a></li>
+<li><a href="#MRS-040">1 MRS-040</a></li>
+<li><a href="#MRS-041">1 MRS-041</a></li>
+</ul>
+          </nav>
+      </div>
+      <div class="col-lg-8" id="main">
+        <h1 id="MRS-001">1 MRS-001</h1>
+<p>The IDPS-ESCAPE source code and technical documentation SHALL be made available as open-source software using either a permissive or a copyleft software license.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>B</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To comply with organizational and project constraints.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>I</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-002">1 MRS-002</h1>
+<p>The IDPS-ESCAPE system architecture SHALL define a centralized subsystem, throughout called command-and-control (C&amp;C), for updating user-exposed settings of subsystems tackling data collection, intrusion detection and prevention.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-001">HARC-001</a>, <a href="SRS.html#SRS-001">SRS-001</a>, <a href="SRS.html#SRS-002">SRS-002</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To centralize and simplify agent/sensor configuration management.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-003">1 MRS-003</h1>
+<p>The IDPS-ESCAPE system architecture SHALL define end-point monitoring agents/sensors that gather host and network data and relay the said data back to the C&amp;C.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable a multi-node deployment of monitoring endpoints and centralization of data collection.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-004">1 MRS-004</h1>
+<p>The IDPS-ESCAPE system architecture SHALL include a multivariate anomaly detection (AD) subsystem to detect anomalies across at least two features/dimensions in at least one of the following types of security event capturing data sets: host-based and network-based.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-001">HARC-001</a>, <a href="HARC.html#HARC-002">HARC-002</a>, <a href="HARC.html#HARC-003">HARC-003</a>, <a href="HARC.html#HARC-004">HARC-004</a>, <a href="HARC.html#HARC-005">HARC-005</a>, <a href="HARC.html#HARC-006">HARC-006</a>, <a href="HARC.html#HARC-007">HARC-007</a>, <a href="HARC.html#HARC-008">HARC-008</a>, <a href="HARC.html#HARC-009">HARC-009</a>, <a href="HARC.html#HARC-010">HARC-010</a>, <a href="HARC.html#HARC-011">HARC-011</a>, <a href="HARC.html#HARC-012">HARC-012</a>, <a href="HARC.html#HARC-013">HARC-013</a>, <a href="HARC.html#HARC-014">HARC-014</a>, <a href="HARC.html#HARC-015">HARC-015</a>, <a href="HARC.html#HARC-016">HARC-016</a>, <a href="HARC.html#HARC-017">HARC-017</a>, <a href="HARC.html#HARC-018">HARC-018</a>, <a href="SRS.html#SRS-037">SRS-037</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To detect deviations from an a priori normal baseline system behavior, possibly caused by malicious actors.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-005">1 MRS-005</h1>
+<p>The IDPS-ESCAPE system architecture SHALL include a host-based intrusion detection system (HIDS) with agents deployed on the of hosts' monitored system, that can be enabled/disabled by the user.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-003">SRS-003</a>, <a href="SRS.html#SRS-004">SRS-004</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To support host-based IDS.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-006">1 MRS-006</h1>
+<p>The IDPS-ESCAPE system architecture SHALL include a network-based intrusion detection system (NIDS) covering channels between endpoints running IDPS-ESCAPE subsystems, that can be enabled/disabled by the user.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-005">SRS-005</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To support network-based IDS.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-007">1 MRS-007</h1>
+<p>The subsystems of IDPS-ESCAPE SHOULD include intrusion prevention (IP) capabilities.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-006">SRS-006</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To be able to take reactive corrective measures and mitigate intrusions.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-008">1 MRS-008</h1>
+<p>The IDPS-ESCAPE network sensors SHOULD be able to capture and forward raw network traffic to the C&amp;C server.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-007">SRS-007</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To collect events for threat hunting and CTI operations, reducing the NIDS overhead and to do customized AD.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-009">1 MRS-009</h1>
+<p>The IDPS-ESCAPE end-point monitoring components MAY be deployed in Docker containers.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-008">SRS-008</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>O</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure the following properties: consistent and reproducible environments, isolation, resource efficiency, scalability, portability, fast spawning and shutdown, improved CI/CD, support of micro services architecture, improved dependency management.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-011">1 MRS-011</h1>
+<p>IDPS-ESCAPE SHALL include a signature-based host intrusion detection engine.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-009">SRS-009</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-012">1 MRS-012</h1>
+<p>The IDPS-ESCAPE system architecture SHALL include an XDR &amp; SIEM subsystem (see the system concept for definitions).</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-010">SRS-010</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ingest data from tools in an  security technology stack to create greater context for Security Operations Center (SOC) teams to perform faster threat detection, investigation, and response.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-013">1 MRS-013</h1>
+<p>The IDPS-ESCAPE system architecture SHOULD include a subsystem providing a data visualization dashboard capable of presenting data collected by the endpoint monitoring agents; precise feature definitions are deferred to system requirement specifications (SRS).</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-011">SRS-011</a>, <a href="SRS.html#SRS-012">SRS-012</a>, <a href="SRS.html#SRS-013">SRS-013</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To improve accessibility and easy-of-use for IDPS-ESCAPE end-users (e.g., security engineers, CTI analysts, etc.).</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-014">1 MRS-014</h1>
+<p>IDPS-ESCAPE SHALL provide an API for retrieving data obtained from the IDPS-ESCAPE endpoint monitoring agents.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-014">SRS-014</a>, <a href="SRS.html#SRS-015">SRS-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>I</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable programmatic access to data gathered by IDPS-ESCAPE endpoint agents.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-015">1 MRS-015</h1>
+<p>The C&amp;C subsystem of IDPS-ESCAPE SHALL provide the user with a software configuration management (SCM) mechanism (e.g., a CLI or configuration files) to set the user-adjustable parameters of subsystems and modules scoped within the C&amp;C system boundary.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-016">SRS-016</a>, <a href="SRS.html#SRS-017">SRS-017</a>, <a href="SRS.html#SRS-018">SRS-018</a>, <a href="SRS.html#SRS-019">SRS-019</a>, <a href="SRS.html#SRS-020">SRS-020</a>, <a href="SRS.html#SRS-021">SRS-021</a>, <a href="SRS.html#SRS-022">SRS-022</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable centralize management of subsystems controlled by the C&amp;C.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-016">1 MRS-016</h1>
+<p>The SCM mechanism SHALL provide a (de)registration solution for the removal and addition of end-point monitoring agents.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-023">SRS-023</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable a non-static configuration of monitored nodes.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-017">1 MRS-017</h1>
+<p>The IDPS-ESCAPE system architecture SHALL include a frontend subsystem presenting monitoring outcomes to the end-user, with the specific outcome definitions deferred to system requirement specifications (SRS).</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To allow end-users to monitor complex indicators more easily.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-018">1 MRS-018</h1>
+<p>The IDPS-ESCAPE system architecture design SHALL include a data management subsystem aimed at consolidating access to data obtained from endpoint monitoring agents such as events, alerts and statistics.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a>, <a href="SRS.html#SRS-024">SRS-024</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To simplify programmatic access to security alert and event data and to ensure a single source of truth.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-019">1 MRS-019</h1>
+<p>The IDPS-ESCAPE architecture SHOULD integrate third-party open-source tools for signature-based intrusion detection.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To capitalize on and build upon existing open-source capabilities.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-020">1 MRS-020</h1>
+<p>The IDPS-ESCAPE architecture SHALL rely on a platform-independent solution (e.g., containerization-based) enabling the C&amp;C subsystem and endpoint monitoring agents to run on the following operating systems: Windows 10/11 64-bit, MacOS 10.12 above and GNU/Linux-based distributions based on Debian such as Ubuntu.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure cross-platform compatibility and portability.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-021">1 MRS-021</h1>
+<p>The deployment solution of IDPS-ESCAPE for the C&amp;C subsystem and the endpoint monitoring agents SHALL make use of installation scripts (e.g., Shell or Python) that can be integrated into infrastructure-as-code paradigms used for automating scalable VM-based technology stacks used in cloud environments.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable deployments in cloud infrastructures.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-022">1 MRS-022</h1>
+<p>The IDPS-ESCAPE architecture SHALL define endpoint monitoring for networked nodes capable of running IDPS-ESCAPE agents/sensors and relying on network connections between the said agents and the C&amp;C subsystem.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To allow sensors/agents and the central server to be deployable across multiple distinct nodes.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-023">1 MRS-023</h1>
+<p>The SIEM subsystem SHOULD include threat enumeration based on a mapping of security incident detections to MITRE ATT&amp;CK entries.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-025">SRS-025</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To improve and speed up threat detection and classification, thereby facilitating CTI analysis.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-024">1 MRS-024</h1>
+<p>The IDPS-ESCAPE system architecture SHOULD include a mechanism for an API-based integration with at least one threat intelligence platform (TIP), e.g., MISP, with integration here referring to sending detection alert information to a TIP and receiving additional threat intelligence from the said TIP.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>I</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enhance cyber threat Intelligence capabilities by capitalizing on mature TIPs.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-025">1 MRS-025</h1>
+<p>IDPS-ESCAPE SHALL provide an API for retrieving threat detection events and security information gathered by agents/sensors.</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-026">SRS-026</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>I</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable programmatic access, which would also in turn support integration with SATRAP-DL.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-026">1 MRS-026</h1>
+<p>IDPS-ESCAPE SHALL be designed and developed following the C5-DEC model, methodology, and tools.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>C</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To comply with project requirements and to follow a consistent and well-defined process, while improving development security.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-027">1 MRS-027</h1>
+<p>Communication between IDPS-ESCAPE subsystems/modules/components that do not reside in the same system/trust/cryptographic boundaries SHALL occur over authenticated and encrypted channels.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>S</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure confidentiality and integrity with respect to malicious actors (adversaries).</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>A</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-028">1 MRS-028</h1>
+<p>Security events and alerts used as raw input to the AD subsystem SHALL either follow a standardized data scheme or an open-source specification (e.g., syslog).</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-015">HARC-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>C</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To foster adoption, improve data management efficiency and robustness, enable code reuse (parsing, (de)serialization, and marshalling libraries), and to avoid proprietary formats and vendor lock-in.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>I</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-029">1 MRS-029</h1>
+<p>IDPS-ESCAPE endpoint monitoring SHALL be able to monitor at least 5 endpoint nodes capable of running IDPS-ESCAPE sensors/agents.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>O</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To address stakeholder scalability needs.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-030">1 MRS-030</h1>
+<p>The AD subsystem SHALL use an ML technique to detect anomalies, relying on a deep learning method, with the definition of the concrete AD solution traced to the mathematical specification of AD for the selected algorithm.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-004">HARC-004</a>, <a href="HARC.html#HARC-005">HARC-005</a>, <a href="HARC.html#HARC-006">HARC-006</a>, <a href="HARC.html#HARC-007">HARC-007</a>, <a href="HARC.html#HARC-008">HARC-008</a>, <a href="HARC.html#HARC-009">HARC-009</a>, <a href="HARC.html#HARC-010">HARC-010</a>, <a href="HARC.html#HARC-011">HARC-011</a>, <a href="HARC.html#HARC-012">HARC-012</a>, <a href="HARC.html#HARC-013">HARC-013</a>, <a href="HARC.html#HARC-014">HARC-014</a>, <a href="HARC.html#HARC-015">HARC-015</a>, <a href="HARC.html#HARC-016">HARC-016</a>, <a href="HARC.html#HARC-017">HARC-017</a>, <a href="SRS.html#SRS-027">SRS-027</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To address stakeholder needs and project proposal requirements and constraints.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>A</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-031">1 MRS-031</h1>
+<p>The AD subsystem MAY use several different ML techniques to detect anomalies.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-002">HARC-002</a>, <a href="SRS.html#SRS-028">SRS-028</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To allow for the use of different types of data and methods to consolidate, improve, validate and extend AD capabilities.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>1</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>1</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-032">1 MRS-032</h1>
+<p>IDPS-ESCAPE SHALL provide a data ingestion solution capable of retrieving endpoint observation data from both host and network events.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-001">HARC-001</a>, <a href="HARC.html#HARC-002">HARC-002</a>, <a href="HARC.html#HARC-003">HARC-003</a>, <a href="HARC.html#HARC-004">HARC-004</a>, <a href="HARC.html#HARC-005">HARC-005</a>, <a href="HARC.html#HARC-006">HARC-006</a>, <a href="HARC.html#HARC-007">HARC-007</a>, <a href="HARC.html#HARC-018">HARC-018</a>, <a href="SRS.html#SRS-029">SRS-029</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To enable holistic system monitoring.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-033">1 MRS-033</h1>
+<p>The AD subsystem SHALL retrieves data retrieved via the IDPS-ESCAPE API.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-001">HARC-001</a>, <a href="HARC.html#HARC-002">HARC-002</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To provide consolidated raw data capturing host and network level data for detecting anomalies.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-034">1 MRS-034</h1>
+<p>The AD subsystem SHALL output anomaly detection events to a log file using a machine-readable format (e.g., YAML, syslog).</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-030">SRS-030</a>, <a href="SRS.html#SRS-031">SRS-031</a>, <a href="SRS.html#SRS-032">SRS-032</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>C</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure automation, programmatic access, wide and easy adoption, code reuse.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-035">1 MRS-035</h1>
+<p>The C&amp;C subsystem SHALL store log files containing anomaly detection events as well as detection and observation data originating from endpoint monitoring agents on nodes located within the same trust boundary as the C&amp;C subsystem.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>S</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure confidentiality and integrity with respect to adversaries.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>A</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-036">1 MRS-036</h1>
+<p>The C&amp;C subsystem SHALL store pcap files (if any) on nodes located within the same trust boundary as the C&amp;C subsystem.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>S</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure confidentiality and integrity with respect to adversaries.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>A</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-037">1 MRS-037</h1>
+<p>The IDPS-ESCAPE architecture SHOULD define at least two deployment models for network-based intrusion detection, one relying on a monitoring and detection (MD) engine running on each monitored node, and another relying on a single MD receiving consolidated raw input originating from multiple monitored nodes, e.g., using channel redirection.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a>, <a href="SRS.html#SRS-033">SRS-033</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>O</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To provide flexibility and potential for adapting and improving performance.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>R</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-038">1 MRS-038</h1>
+<p>IDPS-ESCAPE SHOULD capture network traffic using a pcap-based API.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>C</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure reuse, wide adoption and known standards-based arguments.</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-039">1 MRS-039</h1>
+<p>The AD subsystem SHALL be able to perform off-line AD using static input, e.g., data static data sets compiled from a pcap-based API or SIEM indices.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-001">HARC-001</a>, <a href="HARC.html#HARC-002">HARC-002</a>, <a href="HARC.html#HARC-018">HARC-018</a>, <a href="SRS.html#SRS-035">SRS-035</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To mitigate the risk of poor online detection as well as design and implementation obstacles.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-040">1 MRS-040</h1>
+<p>IDPS-ESCAPE SHALL include a signature-based network intrusion detection engine.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-018">HARC-018</a>, <a href="SRS.html#SRS-036">SRS-036</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h1 id="MRS-041">1 MRS-041</h1>
+<p>The AD subsystem SHALL run as an independent process, i.e., as a standalone UNIX process.</p>
+<p><em>Child links:</em> <a href="HARC.html#HARC-001">HARC-001</a>, <a href="HARC.html#HARC-002">HARC-002</a>, <a href="HARC.html#HARC-018">HARC-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure autonomy, self-sufficiency, extensibility, flexibility, and to minimize dependency on third-party tools.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>acceptance-criteria</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+      </div>
+    </div>
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="assets/doorstop/jquery.min.js"></script>
+<script src="assets/doorstop/bootstrap.min.js"></script>
+<script>
+    $(function() {
+        $("table").addClass("table");
+        $("nav ul").addClass("nav nav-stacked");
+        $("nav").affix();
+        $('body').scrollspy({
+          target: '.sidebar'
+        });
+        $("#main a").attr("target", "parent");
+
+  $(window).on('hashchange', function() {
+    $(window).scrollTop($(location.hash.toLowerCase()).offset().top);});
+  });
+</script>
+</body>
+</html>
+

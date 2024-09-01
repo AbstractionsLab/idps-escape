@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To simplify programmatic access to security alert and event data and to ensure a single source of truth.
+ref: ''
+release: Alpha
+reviewed: -YZZxjG1EIKk2Cj3rMXW-DbeLE15GVBx-fULfIJWpnI=
+text: |
+  The IDPS-ESCAPE system architecture design SHALL include a data management subsystem aimed at consolidating access to data obtained from endpoint monitoring agents such as events, alerts and statistics.
+type: A
+urgency: '3'
+vm: R

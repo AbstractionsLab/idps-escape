@@ -1,0 +1,32 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '1'
+header: ''
+importance: '3'
+level: 1.17
+links:
+- MRS-015: null
+normative: true
+outlay: ''
+rationale: 'To globally tune ML algorithm to a specify system/scenario'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a user,
+  I want to modify the default hyperparameter of ML methods used by ADBox.
+  
+  1. Access C&C server
+  2. Access ADBox
+  3. Modify values in `siem_mtad_gat/assets/default_configs/mtad_gat_train_config_default_args.json`
+
+type: 'F'
+urgency: '2'
+version: '0.1'

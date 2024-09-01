@@ -1,0 +1,35 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 29.08.2024
+dependence: []
+derived: false
+difficulty: '3'
+header: ''
+importance: '5'
+level: 1.32
+links:
+- MRS-037: null
+normative: true
+outlay: ''
+rationale: "To adapt and improve performance"
+ref: ''
+release: Alpha
+reviewed: null
+risk: '3'
+status: ''
+text: |
+  As a system admin user,
+  I want to deploy IDPS end-point monitoring solutions on a remote end-point by choosing from multiple configuration option,
+  so that I can monitor events on my system's edges.
+
+  2. Access end-point as root.
+  3. Deploy end-point components following:
+
+    ![IDPS-ESCAPE decision diagram EP deployment](assets/IDPS-ESCAPE-decision-diagram-EP.png "IDPS-ESCAPE decision diagram End-points deployment")
+
+  4. Connect local solution to C&C sub-system.
+type: F
+urgency: '4'
+version: '0.1'

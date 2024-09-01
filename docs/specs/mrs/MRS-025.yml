@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To enable programmatic access, which would also in turn support integration with SATRAP-DL.
+ref: ''
+release: Alpha
+reviewed: 6A06Lqu1iYnEjjS3-7JXxr429IIIDdsmHL-GtGdguUY=
+text: |
+  IDPS-ESCAPE SHALL provide an API for retrieving threat detection events and security information gathered by agents/sensors.
+type: I
+urgency: '4'
+vm: T

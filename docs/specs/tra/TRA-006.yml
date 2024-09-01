@@ -1,0 +1,20 @@
+active: true
+comments: 'Suggestion: decrese the number of default epochs'
+defect_category: '0'
+defect_description: ''
+derived: false
+header: ''
+level: 1.5
+links:
+- TST-005: null
+normative: true
+ref: ''
+reviewed: null
+test_date: 25-07-2024
+tester: 'AGI'
+text: |
+  Test execution results for the test case (TST) referred in the parent link.
+  ## Test environment details
+  - vm-cyfort-idps-escape
+  - wazuh host : "192.168.5.5"
+  

@@ -1,0 +1,17 @@
+active: true
+derived: false
+header: ''
+level: 1.11
+links:
+- MRS-004: null
+- MRS-030: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## Diagram
+
+  The diagram explicit the sequence of operations runned by the function predict_anomalies method of the Predictor object of the MTAD_GAT subpackage of ADBox.
+
+
+  ![ADBox Predict.predict_anomalies sequence diagram](assets/ADBox-predict_anomalies-sequence.png "ADBox Predict.predict_anomalies sequence diagram")

@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html>
+<head><title>Doorstop</title>
+  <meta charset="utf-8" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="assets/doorstop/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/doorstop/general.css" />
+  <link type="text/css" rel="stylesheet" href="assets/doorstop/sidebar.css" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+  });
+  </script>
+</head>
+<body>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-2 hidden-sm hidden-xs">
+          <nav id="TOC" class="nav nav-stacked fixed sidebar">
+              <h3>Table of Contents</h3>
+<ul>
+<li><a href="#TST-001">1 Start ADBox interactive console</a></li>
+<li><a href="#TST-002">2 Installation of ADBox via pipx</a></li>
+<li><a href="#TST-003">3 Install ADBox as dev container</a></li>
+<li><a href="#TST-004">4 Run ADBox console</a></li>
+<li><a href="#TST-005">5 Run ADBox in default mode with a Wazuh connection</a></li>
+<li><a href="#TST-006">6 Run ADBox in default mode without a Wazuh connection</a></li>
+<li><a href="#TST-007">7 ADBox use case 1 with a Wazuh connection</a></li>
+<li><a href="#TST-008">8 ADBox use case 1 without a Wazuh connection</a></li>
+<li><a href="#TST-009">9 ADBox use case 2 with a Wazuh connection</a></li>
+<li><a href="#TST-010">10 ADBox use case 2 without a Wazuh connection</a></li>
+<li><a href="#TST-011">11 ADBox use case 3 with a Wazuh connection</a></li>
+<li><a href="#TST-012">12 ADBox use case 3 without a Wazuh connection</a></li>
+<li><a href="#TST-013">13 ADBox use case 4 with a Wazuh connection</a></li>
+<li><a href="#TST-014">14 ADBox use case 4 without a Wazuh connection</a></li>
+<li><a href="#TST-015">15 ADBox use case 5 with a Wazuh connection</a></li>
+<li><a href="#TST-016">16 ADBox use case 5 without a Wazuh connection</a></li>
+</ul>
+          </nav>
+      </div>
+      <div class="col-lg-8" id="main">
+        <h1 id="TST-001">1 Start ADBox interactive console <small>TST-001</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>14 GB storage on the machine</li>
+<li>git version 2.44.0</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Clone the ADBox repository.
+<code>git clone https://github.com/AbstractionsLab/idps-escape.git</code></li>
+<li>Change the working directory to the cloned folder containing the all the files along with the Dockerfile.
+<code>cd siem-mtad-gat</code></li>
+<li>Build the image.</li>
+</ol>
+<pre><code>docker build -t siem-mtad-gat:v0.1.0 .
+</code></pre>
+<ol start="4">
+<li>Run the container by executing the bash file containing the run commands.
+    a. Make it executable.
+<code>chmod  +x  adbox.sh</code>
+  b. And execute it.
+<code>./adbox.sh</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>Copy of  <code>siem-mtad-gat</code> folder in local folder</li>
+<li>In the list of docker imageges (<code>docker images</code>) it should appear</li>
+</ol>
+<pre><code>REPOSITORY                      TAG       IMAGE ID       CREATED         SIZE
+siem-mtad-gat                   v0.1.0    ...   ...            ...
+</code></pre>
+<p>4b. ADBox interactive console should be opened</p>
+<p><em>Child links:</em> <a href="TRA.html#TRA-001">TRA-001</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-002">2 Installation of ADBox via pipx <small>TST-002</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Python 3.10.12</li>
+<li>git version 2.44.0</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Install pipx</li>
+</ol>
+<pre><code>python3 -m pip install pipx
+python3 -m pipx ensurepath
+</code></pre>
+<ol start="2">
+<li>Unpack the siem-mtad-gat.zip distribution</li>
+<li>Change working directory to the unpacked folder (e.g.,<code>cd siem-mtad-gat</code>) containing the wheel distribution  file (.whl), and use pipx to install SIEM-MTAD-GAT</li>
+</ol>
+<pre><code>pipx install ./siem_mtad_gat-0.1.0-py3-none-any.whl
+</code></pre>
+<ol start="4">
+<li>And then launch it by:
+adbox</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>pipx successufully installed</li>
+<li>creation of
+3.</li>
+<li>ADBox interactive console should be opened.</li>
+</ol>
+<p><em>Child links:</em> <a href="TRA.html#TRA-002">TRA-002</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-003">3 Install ADBox as dev container <small>TST-003</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker engine version 26.1.3</li>
+<li>Docker desktop version 1.0.35</li>
+<li>Visual Studio Code version 1.83.1 (system setup)</li>
+<li>Dev Containers extension for VS Code by Microsoft version v0.315.1</li>
+<li>at least 26GB storage on the machine</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Clone this repository:
+<code>git clone https://github.com/AbstractionsLab/idps-escape.git</code></li>
+<li>Start Docker Desktop if not already running.</li>
+<li>Open the project folder in VS Code.</li>
+<li>Select the "Reopen in Container" option in the notification that pops up in VS Code.</li>
+<li>Open a terminal in VS Code and run <code>poetry install</code>
+ in the container to install all dependencies.</li>
+<li>And then run the ADBox using its entrypoint.</li>
+</ol>
+<pre><code> poetry run adbox
+</code></pre>
+<h2>Expected outcome</h2>
+<ol>
+<li>repository creation</li>
+<li>Container created and terminal open</li>
+<li>Poetry install terminatwe with <code>Installing the current project: siem-mtad-gat (0.1.0)</code></li>
+<li>ADBox interactive console should be opened.</li>
+</ol>
+<p><em>Child links:</em> <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-004">4 Run ADBox console <small>TST-004</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
+ <code>./adbox.sh</code></li>
+<li>Press <code>&lt;1&gt;</code>, to select train.</li>
+<li>Press <code>&lt;n&gt;</code>, to train using default date.</li>
+<li>Press <code>&lt;n&gt;</code>, to name the trained detector with a default name.</li>
+<li>Press <code>&lt;n&gt;</code>, to train using default configurations.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver in console mode.”</code></li>
+<li>The training should run for 30 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-005">TRA-005</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-005">5 Run ADBox in default mode with a Wazuh connection <small>TST-005</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named “siem-mtad-gat-container” should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+<li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container “siem-mtad-gat-container” by executing the adbox script with default parameter parameters.
+<code>./adbox.sh -df</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver in default mode.”</code></li>
+<li>The training should run for 30 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-006">TRA-006</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-006">6 Run ADBox in default mode without a Wazuh connection <small>TST-006</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>No instance of Wazuh distribution running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with default parameter parameters.
+ <code>./adbox.sh -df</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver in default mode.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json”</code>.</li>
+<li>The training should run for 30 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/sample-alerts-prediction-2024-07-22' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-007">TRA-007</a>, <a href="TRA.html#TRA-019">TRA-019</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-007">7 ADBox use case 1 with a Wazuh connection <small>TST-007</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+<li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+<li>Wazuh configured to monitor linux resource utilization. (Monitoring Linux resource usage with Wazuh)</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 1 parameters.
+    <code>./adbox.sh -uc 1</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_1.yaml.</code></li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in real-time mode with interval 1 (min).”</code></li>
+<li>Prediction response should be seen on the output console after every 1 minute.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-008">TRA-008</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-008">8 ADBox use case 1 without a Wazuh connection <small>TST-008</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>No instance of Wazuh distribution running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 1 parameters.</li>
+</ol>
+<pre><code> ./adbox.sh -uc 1
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_1.yaml.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json”</code>.</li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in real-time mode with interval 1 (min).”</code></li>
+<li>Output screen should show the following messages:</li>
+<li><code>“Could not establish a connection with OpenSearch.”</code></li>
+<li><code>“Prediction in run_mode.REALTIME requires a connection with OpenSearch.”</code></li>
+<li><code>“No data found for given input.”</code></li>
+<li>And the application should exit.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-009">TRA-009</a>, <a href="TRA.html#TRA-018">TRA-018</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-009">9 ADBox use case 2 with a Wazuh connection <small>TST-009</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+<li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 2 parameters.
+ <code>./adbox.sh -uc 2</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_2.yaml.”</code></li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-010">TRA-010</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-010">10 ADBox use case 2 without a Wazuh connection <small>TST-010</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>No instance of Wazuh distribution running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 2 parameters.
+ <code>./adbox.sh -uc 2</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_2.yaml.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07”</code>.</li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/sample-alerts-predict-2024-07-26' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-017">TRA-017</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-011">11 ADBox use case 3 with a Wazuh connection <small>TST-011</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+<li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 3 parameters.</li>
+</ol>
+<pre><code> ./adbox.sh -uc 3
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_3.yaml.”</code></li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in batch mode with batch interval 5 (min).”</code></li>
+<li>Prediction response should be seen on the output console after every 5 minutes.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-011">TRA-011</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-012">12 ADBox use case 3 without a Wazuh connection <small>TST-012</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>No instance of Wazuh distribution running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 3 parameters.</li>
+</ol>
+<pre><code> ./adbox.sh -uc 3
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_3.yaml.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json”</code>.</li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in batch mode with batch interval 5 (min).”</code></li>
+<li>Output screen should show the following messages:<ul>
+<li><code>“Could not establish a connection with OpenSearch.”</code></li>
+<li><code>“Prediction in run_mode.BATCH requires a connection with OpenSearch.”</code></li>
+<li><code>“No data found for given input.”</code></li>
+<li>And the application should exit.</li>
+</ul>
+</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-016">TRA-016</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-013">13 ADBox use case 4 with a Wazuh connection <small>TST-013</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+<li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+<li>Wazuh agent configured to read Suricata logs.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 4 parameters.</li>
+</ol>
+<pre><code>./adbox.sh -uc 4
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_4.yaml.”</code></li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-012">TRA-012</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-014">14 ADBox use case 4 without a Wazuh connection <small>TST-014</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>No instance of Wazuh distribution running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 4 parameters.</li>
+</ol>
+<pre><code>./adbox.sh -uc 4
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_4.yaml.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-03.json”</code>.</li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/wazuh-alerts-*.*-2024.07.22.json' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-015">TRA-015</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-015">15 ADBox use case 5 with a Wazuh connection <small>TST-015</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+<li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+<li>Wazuh agent configured to read Suricata logs.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 5 parameters.
+ <code>./adbox.sh -uc 5</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_5.yaml.”</code></li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-013">TRA-013</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-016">16 ADBox use case 5 without a Wazuh connection <small>TST-016</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>No instance of Wazuh distribution running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 5 parameters.</li>
+</ol>
+<pre><code>./adbox.sh -uc 5
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>ADBox starts with <code>“Running AD driver with user configuration uc_5.yaml.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-03.json”</code>.</li>
+<li>The training should run for 10 epochs.</li>
+<li>Train response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
+<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/wazuh-alerts-*.*-2024.07.22.json' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
+<li>Prediction response should be seen on the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+</ul>
+<p><em>Child links:</em> <a href="TRA.html#TRA-014">TRA-014</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+</tbody>
+</table>
+      </div>
+    </div>
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="assets/doorstop/jquery.min.js"></script>
+<script src="assets/doorstop/bootstrap.min.js"></script>
+<script>
+    $(function() {
+        $("table").addClass("table");
+        $("nav ul").addClass("nav nav-stacked");
+        $("nav").affix();
+        $('body').scrollspy({
+          target: '.sidebar'
+        });
+        $("#main a").attr("target", "parent");
+
+  $(window).on('hashchange', function() {
+    $(window).scrollTop($(location.hash.toLowerCase()).offset().top);});
+  });
+</script>
+</body>
+</html>
+

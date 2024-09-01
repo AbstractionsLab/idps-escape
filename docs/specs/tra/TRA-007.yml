@@ -1,0 +1,31 @@
+active: true
+comments: ''
+defect_category: '2'
+defect_description: 'off-line data not avaliable'
+derived: false
+header: ''
+level: 1.6
+links:
+- TST-006: null
+normative: true
+ref: ''
+reviewed: null
+test_date: 25-07-2024
+tester: 'AGI'
+text: |
+  Output:
+  ```
+  Running AD driver in default mode.
+  JSON file 'detector_input_parameters.json' saved at /home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/5967c756-0a7a-41f5-8fa3-914ba9758fed/input/detector_input_parameters.json.
+  Could not establish a connection with OpenSearch.
+  More details logged in /home/root/siem-mtad-gat/siem_mtad_gat/logs/output_logs/siem_mtad_gat.data_ingestion.wazuh.wazuh_data_ingestor.log
+  The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/wazuh-alerts-*.*-2024.07.*.json' does not exist, returning all default data.
+  ```
+  Problem with file names 
+    ```
+    ~/../siem_mtad_gat/assets/data/train$ ls 
+    wazuh-alerts-.-2024.03..json  wazuh-alerts-.-2024.05..json  wazuh-alerts-.-2024.07..json
+    wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
+    ```
+  ## Test environment details
+  - vm-cyfort-idps-escape

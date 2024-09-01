@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: ''
+level: 1.7
+links:
+- MRS-004: null
+- MRS-030: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## Diagram
+
+  The diagram explicit the sequence of operations runned by the function train_MTAD_GAT of the mtad_gat subpackage of ADBox.
+
+  ![ADBox train_MTAD_GAT sequence diagram](assets/ADBox-train_MTAD_GAT-sequence.png "ADBox train_MTAD_GAT sequence")

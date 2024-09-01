@@ -1,0 +1,45 @@
+settings:
+  digits: 3
+  itemformat: yaml
+  parent: SRS
+  prefix: TST
+  sep: '-'
+
+attributes:
+  defaults:
+    release: alpha
+    header: |
+      Add a short description here
+    platform: MacOS, Windows, GNU/Linux
+    authors: 'ACR'
+    execution_type: 'Automated/Manual'
+    complexity: 1-5
+    test_data: see referenced files
+    verification_method: 'Test (T)/Review of design (R)/Inspection (I)/Analysis (A)'
+    success_criteria: 'SRS acceptance criteria fulfilled and expected outcome observed.'
+    references:
+      - path: docs/specs/tst/assets
+        type: file
+    text: |
+      ## Preconditions and setup actions
+      - 
+      
+      ## Test steps
+      1. follow steps in SRS.
+      
+      ## Expected outcome
+      1.  
+    expected_outcome: ''
+  publish:
+  - platform
+  - precondition
+  - execution_type
+  - verification_method
+  - release
+  - complexity
+  - test_data
+  reviewed:
+  - authors
+  - precondition
+  - execution_type
+  - verification_method

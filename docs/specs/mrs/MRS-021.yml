@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: To enable deployments in cloud infrastructures.
+ref: ''
+release: Alpha
+reviewed: U7mNS8_amWcMOXssJK8iH3mYlbGVpEc0mUBZE3um3DI=
+text: |
+  The deployment solution of IDPS-ESCAPE for the C&C subsystem and the endpoint monitoring agents SHALL make use of installation scripts (e.g., Shell or Python) that can be integrated into infrastructure-as-code paradigms used for automating scalable VM-based technology stacks used in cloud environments.
+type: F
+urgency: '2'
+vm: T

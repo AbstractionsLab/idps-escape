@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '2'
+level: 1
+links: []
+normative: true
+rationale: To capitalize on and build upon existing open-source capabilities.
+ref: ''
+release: Alpha
+reviewed: u5dQxXMsKxcdsP_2TIRtSZ2_htqogK5U5NtIBgzP8t4=
+text: |
+  The IDPS-ESCAPE architecture SHOULD integrate third-party open-source tools for signature-based intrusion detection.
+type: A
+urgency: '1'
+vm: R

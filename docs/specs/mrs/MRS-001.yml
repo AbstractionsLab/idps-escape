@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: To comply with organizational and project constraints.
+ref: ''
+release: Alpha
+reviewed: ErBO3KVeFhCNYLVB2B85M4cHWZuXSWUdrt5F8HR-Eeg=
+text: |
+  The IDPS-ESCAPE source code and technical documentation SHALL be made available as open-source software using either a permissive or a copyleft software license.
+type: B
+urgency: '1'
+vm: I

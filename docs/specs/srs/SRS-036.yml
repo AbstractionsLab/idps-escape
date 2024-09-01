@@ -1,0 +1,39 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '3'
+header: ''
+importance: '3'
+level: 1.35
+links:
+- MRS-040: null
+normative: true
+outlay: ''
+rationale: 'To extend the detection capability of IDPS-ESCAPE and taylor the detection to my system'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '3'
+status: ''
+text: |
+  As user,
+  I want to add a new custom rule-set signature,
+  to a specific network related event type.
+
+  1. Access C&C server
+  2. Add the file with custom rules `local.rules`
+  3. Open `/etc/suricata/suricata.yaml` and update:
+      
+      ```
+      rule-files:
+          - suricata.rules
+          - /path/to/local.rules
+      ```
+
+type: 'F'
+urgency: '1'
+version: '0.1'

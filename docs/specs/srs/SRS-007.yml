@@ -1,0 +1,34 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '2'
+header: ''
+importance: '5'
+level: 1.6
+links:
+- MRS-008: null
+normative: true
+outlay: ''
+rationale: 'To collect events for threat hunting and CTI operations, reducing the NIDS overhead and to do customized AD.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a sys admin user,
+  I want capture and forward raw network traffic to the C&C server,
+  to run NIDS on such a traffic.
+
+  1.  Access C&C server.
+  2.  Deploy C-CyFORT-Suricata.
+  3.  Identify host capture interface (CI), C&C CI and IP.
+  4.  Run port mirroring activation script with above arguments.
+
+type: 'F'
+urgency: '5'
+version: '0.1'

@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '1'
+level: 1
+links: []
+normative: true
+rationale: |
+  To allow for the use of different types of data and methods to consolidate, improve, validate and extend AD capabilities.
+ref: ''
+release: Alpha
+reviewed: Qe4O1p-Ejjhx1iVzqvyOfQ2tmT40K3v6GYgQlFi72cc=
+text: |
+  The AD subsystem MAY use several different ML techniques to detect anomalies.
+type: F
+urgency: '1'
+vm: R

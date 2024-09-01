@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: |
+  To ensure confidentiality and integrity with respect to malicious actors (adversaries).
+ref: ''
+release: Alpha
+reviewed: NUpbBXTlfbZE7PUx2fC6Z-e5e7_o_oJ1KyhJ4vEG4XQ=
+text: |
+  Communication between IDPS-ESCAPE subsystems/modules/components that do not reside in the same system/trust/cryptographic boundaries SHALL occur over authenticated and encrypted channels.
+type: S
+urgency: '3'
+vm: A

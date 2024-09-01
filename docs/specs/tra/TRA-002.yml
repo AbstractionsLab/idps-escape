@@ -1,0 +1,20 @@
+active: true
+comments: Add link to zip file in test step 2.
+defect_category: '4'
+defect_description: Missing .whl file (step 4)
+derived: false
+header: ''
+level: 1.1
+links:
+- TST-002: null
+normative: true
+ref: ''
+reviewed: null
+test_date: 24-07-2024
+tester: AGI
+text: |
+  Test execution results for the test case (TST) referred in the parent link.
+  ## Test environment details
+  - vm-cyfort-idps-escape
+
+  

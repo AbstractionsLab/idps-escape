@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: To enable holistic system monitoring.
+ref: ''
+release: Alpha
+reviewed: 8PqSYwKBzcz2ebnoKiLMRb21-sFRTziyoKQ3hieM-yY=
+text: |
+  IDPS-ESCAPE SHALL provide a data ingestion solution capable of retrieving endpoint observation data from both host and network events.
+type: F
+urgency: '4'
+vm: T

@@ -1,0 +1,40 @@
+active: true
+authors: 'MZA'
+complexity: '2'
+derived: false
+execution_type: M
+header: |
+  Installation of ADBox via pipx
+level: 2
+links: []
+normative: true
+platform: 'Ubuntu 22.04.4 LTS '
+ref: ''
+release: alpha
+reviewed: TPuo7jeiIUDfiu2Mdk832otTqxNg11qtZPZSbeDVTSc=
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Python 3.10.12
+  - git version 2.44.0
+  ## Test steps
+  1. Install pipx
+  ```
+  python3 -m pip install pipx
+  python3 -m pipx ensurepath
+  ```
+  2. Unpack the siem-mtad-gat.zip distribution
+  3. Change working directory to the unpacked folder (e.g.,`cd siem-mtad-gat`) containing the wheel distribution  file (.whl), and use pipx to install SIEM-MTAD-GAT
+  ```
+  pipx install ./siem_mtad_gat-0.1.0-py3-none-any.whl
+  ```
+  4. And then launch it by:
+  adbox
+  ## Expected outcome
+  1. pipx successufully installed
+  2. creation of
+  3.
+  4. ADBox interactive console should be opened.
+verification_method: T

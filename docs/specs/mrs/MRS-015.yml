@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: To enable centralize management of subsystems controlled by the C&C.
+ref: ''
+release: Alpha
+reviewed: Yr-yAgprKY7gmn1mmMTIXVYx9DQ8ZDNb8WR6i8tys2g=
+text: |
+  The C&C subsystem of IDPS-ESCAPE SHALL provide the user with a software configuration management (SCM) mechanism (e.g., a CLI or configuration files) to set the user-adjustable parameters of subsystems and modules scoped within the C&C system boundary.
+type: F
+urgency: '3'
+vm: T

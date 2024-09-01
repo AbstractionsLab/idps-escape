@@ -1,0 +1,32 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: '3'
+level: '1.20'
+links:
+- MRS-015: null
+normative: true
+outlay: ''
+rationale: 'To adapt ADBox default behavior'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As a user,
+  I want to update the default use case of ADBox.
+  
+  1. Access C&C server
+  2. Access ADBox
+  3. Modify `../siem_mtad_gat/assets/default_configs/default_detector_input_config.json`
+
+type: 'F'
+urgency: '3'
+version: '0.1'

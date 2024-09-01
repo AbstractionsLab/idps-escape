@@ -1,0 +1,34 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: '3'
+level: 1.22
+links:
+- MRS-016: null
+normative: true
+outlay: ''
+rationale: 'To enable a non-static configuration of monitored nodes.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As a user,
+  I want to register a new agent in the central SIEM&XDR.
+
+  Assuming: CyFORT-Wazuh Manager running on C&C and agent on selected host
+
+  1. Either:
+    a. Add the manager IP as an environment variable during the agent installation process.
+    b. Set the manager IP in  the agent configuration file.
+    c. requests the key from the manager API and  manually imports it to the agent.
+type: 'F'
+urgency: '3'
+version: '0.1'

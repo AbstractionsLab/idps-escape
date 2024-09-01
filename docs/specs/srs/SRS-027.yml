@@ -1,0 +1,34 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '3'
+header: ''
+importance: '5'
+level: 1.26
+links:
+- MRS-030: null
+normative: true
+outlay: ''
+rationale: ''
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a system admin,
+  I want to run a machine learning algorithm to detect anomalous behaviors within my system.
+
+  1. Access C&C server
+  2. Access ADBox
+  3. Select a trained detector
+  4. Run a prediction script using the chosen detection either on a selected time interval or in realtime.
+
+
+type: 'F'
+urgency: '4'
+version: '0.1'

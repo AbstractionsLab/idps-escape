@@ -1,0 +1,23 @@
+active: true
+comments: ''
+defect_category: '4'
+defect_description: 'Dev container build fail - not enough memory'
+derived: false
+header: ''
+level: 1.2
+links:
+- TST-003: null
+normative: true
+ref: ''
+references: 
+  - path: docs/specs/tra/assets/tra-003_Dev_container_error.png
+    type: file
+
+reviewed: null
+test_date: 24-07-2024
+tester: 'AGI'
+text: |
+  The docker build command fails. See reference.
+  Test repeated.
+  ## Test environment details
+  - vm-cyfort-idps-escape

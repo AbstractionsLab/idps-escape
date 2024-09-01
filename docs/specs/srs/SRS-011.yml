@@ -1,0 +1,33 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '1'
+header: ''
+importance: '3'
+level: '1.10'
+links:
+- MRS-013: null
+normative: true
+outlay: ''
+rationale: 'To improve accessibility and easy-of-use for IDPS-ESCAPE end-users'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As SOC member,
+  I want a graphic visualization of the network events detected in my system.
+
+  Assuming: CyFORT-Suricata integrated in CyFORT-Wazuh
+
+  1. Access CyFORT-Wazuh Dashboard
+  2. Filter security events generate by NIDS group rules 
+
+type: 'F'
+urgency: '3'
+version: '0.1'

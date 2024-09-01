@@ -1,0 +1,33 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '3'
+header: ''
+importance: '5'
+level: 1.4
+links:
+- MRS-006: null
+normative: true
+outlay: ''
+rationale: 'To enable traffic monitoring'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+ As a sys admin user,
+ I want to enable/disable network monitoring within IDPS-ESCAPE's subsystem boundaries.
+ 
+ 1.  Access C&C server
+ 2.  Deploy C-CyFORT-Suricata 
+ 3.  Set up channel to be connections to be monitored
+ 4.  Possibly, add custom rules.
+
+type: 'F'
+urgency: '4'
+version: '0.1'

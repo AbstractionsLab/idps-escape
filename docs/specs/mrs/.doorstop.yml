@@ -1,0 +1,38 @@
+settings:
+  digits: 3
+  prefix: MRS
+  sep: '-'
+
+attributes:
+  defaults:
+    type: 'F'
+    rationale: ""
+    importance: "5"
+    urgency: "5"
+    vm: 'T'
+    acceptance-criteria: |
+      Successful validation according to the
+      corresponding test case specification
+    release: "Alpha"
+    # the following are optional, uncomment as needed
+    #risk: ''
+    #difficulty: ''
+    #subsystem: ""
+
+  publish:
+    - type
+    - rationale
+    - importance
+    - urgency
+    - vm
+    - acceptance-criteria
+    - release
+  
+  reviewed:
+    - type
+    - rationale
+    - importance
+    - urgency
+    - vm
+    - acceptance-criteria
+    - release

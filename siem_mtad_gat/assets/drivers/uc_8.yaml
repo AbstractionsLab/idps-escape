@@ -1,0 +1,3 @@
+prediction:
+  batch_size: 12
+  run_mode: BATCH

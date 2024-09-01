@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To address stakeholder needs and project proposal requirements and constraints.
+ref: ''
+release: Alpha
+reviewed: IYS6LYS6oTYGK970NiY3aRfOORMDl0eydoH_pxuAM7U=
+text: |
+  The AD subsystem SHALL use an ML technique to detect anomalies, relying on a deep learning method, with the definition of the concrete AD solution traced to the mathematical specification of AD for the selected algorithm.
+type: F
+urgency: '4'
+vm: A

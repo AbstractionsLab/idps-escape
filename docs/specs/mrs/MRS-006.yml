@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: To support network-based IDS.
+ref: ''
+release: Alpha
+reviewed: _1kYIYSuIF1OxtdFRnPwTZQNZ1Jwadp4bEqGWuy5eBc=
+text: |
+  The IDPS-ESCAPE system architecture SHALL include a network-based intrusion detection system (NIDS) covering channels between endpoints running IDPS-ESCAPE subsystems, that can be enabled/disabled by the user.
+type: A
+urgency: '5'
+vm: R

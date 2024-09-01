@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '2'
+level: 1
+links: []
+normative: true
+rationale: |
+  To mitigate the risk of poor online detection as well as design and implementation obstacles.
+ref: ''
+release: Alpha
+reviewed: 4pepNOPXHsHmADQ2Ub21C5a1WEQO9zFwcEBZremD0HM=
+text: |
+  The AD subsystem SHALL be able to perform off-line AD using static input, e.g., data static data sets compiled from a pcap-based API or SIEM indices.
+type: F
+urgency: '2'
+vm: T

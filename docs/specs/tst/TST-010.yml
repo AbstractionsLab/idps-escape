@@ -1,0 +1,42 @@
+active: true
+authors: 'MZA'
+complexity: '2'
+derived: false
+execution_type: M
+header: |
+  ADBox use case 2 without a Wazuh connection
+level: 10
+links: []
+normative: true
+platform: 'Ubuntu 22.04.4 LTS '
+ref: ''
+release: alpha
+reviewed: 3w9PKjnR-STeOgbK02zSkS7QOVcGnJeh2AN2x8PIDDk=
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Docker version 26.0.0
+  - User with root privileges
+  - Built image `siem-mtad-gat:v0.1.0`
+  - No existing container named `“siem-mtad-gat-container”` should be running.
+  - No instance of Wazuh distribution running.
+  ## Test steps
+  1. Run the container `“siem-mtad-gat-container”` by executing the adbox script with use case 2 parameters.
+   ```
+   ./adbox.sh -uc 2
+   ```
+  ## Expected outcome
+  - ADBox starts with `“Running AD driver with user configuration uc_2.yaml.”`
+  - Output screen should show message `“Could not establish a connection with OpenSearch.”`
+  - And collect training data from default file with message `“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07”`.
+  - The training should run for 10 epochs.
+  - Train response should be seen on the console.
+  - Training outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”` folder.
+  - Prediction starts after training with message `“Predicting in historical mode.”`
+  - Output screen should show message `“Could not establish a connection with OpenSearch.”`
+  - And collect training data from default file with message `“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/sample-alerts-predict-2024-07-26' does not exist, returning all default data.”`, depending upon the date it was run.
+  - Prediction response should be seen on the output console.
+  - Prediction outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”` folder.
+verification_method: T

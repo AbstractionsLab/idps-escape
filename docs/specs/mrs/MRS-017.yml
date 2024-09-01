@@ -1,0 +1,18 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: To allow end-users to monitor complex indicators more easily.
+ref: ''
+release: Alpha
+reviewed: eFUzqFk86Hzn5XIHC5Mh7vit4tbtyWX7f8PuMA9YFqE=
+text: |
+  The IDPS-ESCAPE system architecture SHALL include a frontend subsystem presenting monitoring outcomes to the end-user, with the specific outcome definitions deferred to system requirement specifications (SRS).
+type: A
+urgency: '2'
+vm: R

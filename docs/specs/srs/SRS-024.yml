@@ -1,0 +1,34 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: '2'
+level: 1.23
+links:
+- MRS-018: null
+normative: true
+outlay: ''
+rationale: 'To achieve a programmatic access to security alert and event data.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As a user,
+  I want to run queries on data such as events, alerts and statistics.
+
+  Assuming: CyFORT-Wazuh running and established connection to indexer
+
+  1. Formulate query as Wazuh Query Language
+  2. Query to indexer via Wazuh API
+
+
+type: F
+urgency: '4'
+version: '0.1'

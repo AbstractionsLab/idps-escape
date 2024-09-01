@@ -1,0 +1,17 @@
+active: true
+derived: false
+header: ''
+level: 1.3
+links:
+- MRS-004: null
+- MRS-030: null
+- MRS-032: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## Diagram
+
+  The diagram summarize the flow of the training pipeline orchestrated by the ADBox Engine.
+
+  ![ADBox training pipeline flow diagram](assets/ADBox-engine-train-pipeline-flow.png "ADBox training pipeline flow")

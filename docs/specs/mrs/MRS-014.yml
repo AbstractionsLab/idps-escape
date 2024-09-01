@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To enable programmatic access to data gathered by IDPS-ESCAPE endpoint agents.
+ref: ''
+release: Alpha
+reviewed: NyVQmVqMqHOjmj0-C4-HBdg5jpYunL-qVQb3LbcfEA8=
+text: |
+  IDPS-ESCAPE SHALL provide an API for retrieving data obtained from the IDPS-ESCAPE endpoint monitoring agents.
+type: I
+urgency: '4'
+vm: R

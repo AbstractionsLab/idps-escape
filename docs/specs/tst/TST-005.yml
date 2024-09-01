@@ -1,0 +1,37 @@
+active: true
+authors: 'MZA'
+complexity: '3'
+derived: false
+execution_type: M
+header: |
+  Run ADBox in default mode with a Wazuh connection
+level: 5
+links: []
+normative: true
+platform: 'Ubuntu 22.04.4 LTS '
+ref: ''
+release: alpha
+reviewed: 9PsuTcMZqTJHIa_a84OQzP6MMT2MHGuALVrngnavHaE=
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Docker version 26.0.0
+  - User with root privileges
+  - Built image `siem-mtad-gat:v0.1.0`
+  - No existing container named “siem-mtad-gat-container” should be running.
+  - An instance of a Wazuh distribution should be running.
+  - Wazuh indexer RESTful API should be listening on port 9200.
+  ## Test steps
+  1. Run the container “siem-mtad-gat-container” by executing the adbox script with default parameter parameters.
+  `./adbox.sh -df`
+  ## Expected outcome
+  - ADBox starts with `“Running AD driver in default mode.”`
+  - The training should run for 30 epochs.
+  - Train response should be seen on the console.
+  - Training outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”` folder.
+  - Prediction starts after training with message `“Predicting in historical mode.”`
+  - Prediction response should be seen on the output console.
+  - Prediction outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”` folder.
+verification_method: T

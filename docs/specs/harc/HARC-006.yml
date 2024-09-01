@@ -1,0 +1,17 @@
+active: true
+derived: false
+header: ''
+level: 1.5
+links:
+- MRS-004: null
+- MRS-030: null
+- MRS-032: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## Diagram
+
+  The diagram explicit the sequence of operations of the training pipeline orchestrated by the ADBox Engine.
+
+  ![ADBox training pipeline sequence diagram](assets/ADBox-engine-train-pipeline-sequence.png "ADBox training pipeline sequence")

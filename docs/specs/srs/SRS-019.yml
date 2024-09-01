@@ -1,0 +1,32 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: ''
+level: 1.18
+links:
+- MRS-015: null
+normative: true
+outlay: ''
+rationale: 'To maintain the consistency with SIEM solution'
+ref: ''
+release: Alpha
+reviewed: null
+risk: ''
+status: ''
+text: |
+  As a user,
+  I want to modify the datatype transformation map operated by ADBox on fetched.
+
+  1. Access C&C server
+  2. Access ADBox
+  3. Modify key values `../siem_mtad_gat/assets/wazuh/wazuh_columns.json`
+
+type: 'F'
+urgency: '1'
+version: '0.1'

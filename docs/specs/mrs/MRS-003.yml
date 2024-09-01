@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: |
+  To enable a multi-node deployment of monitoring endpoints and centralization of data collection.
+ref: ''
+release: Alpha
+reviewed: MbDfgrdzfC2Mk9ADobhu5OjCFeQsCaMiAjfLxd4LwMU=
+text: |
+  The IDPS-ESCAPE system architecture SHALL define end-point monitoring agents/sensors that gather host and network data and relay the said data back to the C&C.
+type: A
+urgency: '5'
+vm: R

@@ -1,0 +1,35 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: '2'
+level: 1.24
+links:
+- MRS-023: null
+normative: true
+outlay: ''
+rationale: 'To improve and speed up threat detection and classification, thereby facilitating CTI analysis.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As a user,
+  I want to map a detected event to MITRE ATT&CK framework.
+
+  Assuming:  CyFORT-Wazuh running
+
+  1. Open the document corresponding to the event (e.g. via index query, or using the dashboard )
+  2. Check if the following keys exist in the attributes
+    ```
+    rule.mitre.id , rule.mitre.tactic , rule.mitre.technique
+    ```
+type: 'F'
+urgency: '2'
+version: '0.1'

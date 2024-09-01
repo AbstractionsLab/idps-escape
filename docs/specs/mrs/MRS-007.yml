@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: |
+  To be able to take reactive corrective measures and mitigate intrusions.
+ref: ''
+release: Alpha
+reviewed: MYGDh7hfSDYQoh_aLsw5nLs_RYInVm0opcD702A5fQI=
+text: |
+  The subsystems of IDPS-ESCAPE SHOULD include intrusion prevention (IP) capabilities.
+type: F
+urgency: '3'
+vm: T

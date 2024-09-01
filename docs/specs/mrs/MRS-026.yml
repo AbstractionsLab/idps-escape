@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: |
+  To comply with project requirements and to follow a consistent and well-defined process, while improving development security.
+ref: ''
+release: Alpha
+reviewed: qJonL3sdeT6AF8d3RfjO2qL4rncLZRDxJLGe89aRt9M=
+text: |
+  IDPS-ESCAPE SHALL be designed and developed following the C5-DEC model, methodology, and tools.
+type: C
+urgency: '5'
+vm: R

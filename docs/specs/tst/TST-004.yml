@@ -1,0 +1,39 @@
+active: true
+authors: 'MZA'
+complexity: '2'
+derived: false
+execution_type: M
+header: |
+  Run ADBox console
+level: 4
+links: []
+normative: true
+platform: 'Ubuntu 22.04.4 LTS '
+ref: ''
+release: alpha
+reviewed: b8RIdvmx_ITZDPkoHeMIl87K6Y4W_K2Q36W_UQAybno=
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Docker version 26.0.0
+  - User with root privileges
+  - Built image `siem-mtad-gat:v0.1.0`
+  - No existing container named `“siem-mtad-gat-container”` should be running.
+
+  ## Test steps
+  1. Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
+   ```
+   ./adbox.sh
+   ```
+  2. Press `<1>`, to select train.
+  3. Press `<n>`, to train using default date.
+  4. Press `<n>`, to name the trained detector with a default name.
+  5. Press `<n>`, to train using default configurations.
+  ## Expected outcome
+  - ADBox starts with `“Running AD driver in console mode.”`
+  - The training should run for 30 epochs.
+  - Train response should be seen on the console.
+  - Training outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”` folder.
+verification_method: T

@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '4'
+level: 1
+links: []
+normative: true
+rationale: |
+  To allow sensors/agents and the central server to be deployable across multiple distinct nodes.
+ref: ''
+release: Alpha
+reviewed: lUOrsiYzrOZ7rjU8CQ6ZJhmoG-3JFUS6PRR5BswoPeM=
+text: |
+  The IDPS-ESCAPE architecture SHALL define endpoint monitoring for networked nodes capable of running IDPS-ESCAPE agents/sensors and relying on network connections between the said agents and the C&C subsystem.
+type: A
+urgency: '3'
+vm: R

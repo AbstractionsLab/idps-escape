@@ -1,0 +1,8 @@
+settings:
+  digits: 3
+  itemformat: yaml
+  parent: MRS
+  prefix: HARC
+  sep: '-'
+
+

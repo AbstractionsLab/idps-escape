@@ -1,0 +1,35 @@
+acceptance: 'Successful validation according to the corresponding test case specification'
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: '1'
+header: ''
+importance: '5'
+level: 1.0
+links:
+- MRS-002: null
+normative: true
+outlay: ''
+rationale: 'To centralize and simplify IDPS components configuration management.'
+ref: ''
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As a system admin user,
+  I want to deploy and maintain a central subsystem, called command-and-control (C&C),
+  so that I can updated user-exposed settings of subsystems tackling data collection, intrusion detection and prevention.
+
+  1. Set up host for C&C server.
+  2. Access as root.
+  3. Deploy C&C components following:
+
+    ![IDPS-ESCAPE decision diagram C&C deployment](assets/IDPS-ESCAPE-decision-diagram-CC.png "IDPS-ESCAPE decision diagram C&C deployment")
+  
+  4. Configure components via respective software configuration management (SCM) mechanism.
+
+type: F
+urgency: '5'
+version: '0.1'

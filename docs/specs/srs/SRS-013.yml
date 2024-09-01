@@ -1,0 +1,33 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+author: AGI
+date: 22.08.2024
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: '3'
+level: 1.12
+links:
+- MRS-013: null
+normative: true
+outlay: ''
+rationale: 'To improve IDPS-ESCAPE status management for the end-users'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '1'
+status: ''
+text: |
+  As SOC member,
+  I want to check the status of HIDS agents.
+
+  Assuming: CyFORT-Wazuh and HIDS agents deployed and enrolled to C&C Manager
+
+  1. Access CyFORT-Wazuh Dashboard.
+  2. Look dedicated panel and click to the agent ID for additional info.
+
+type: 'F'
+urgency: '2'
+version: '0.1'

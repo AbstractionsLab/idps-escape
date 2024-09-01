@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: |
+  To provide flexibility and potential for adapting and improving performance.
+ref: ''
+release: Alpha
+reviewed: qYyZcNrxvOvpVpfsQlpGAkUdhRKaGnSVCekMBzILydw=
+text: |
+  The IDPS-ESCAPE architecture SHOULD define at least two deployment models for network-based intrusion detection, one relying on a monitoring and detection (MD) engine running on each monitored node, and another relying on a single MD receiving consolidated raw input originating from multiple monitored nodes, e.g., using channel redirection.
+type: O
+urgency: '3'
+vm: R

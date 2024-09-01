@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '5'
+level: 1
+links: []
+normative: true
+rationale: |
+  To detect deviations from an a priori normal baseline system behavior, possibly caused by malicious actors.
+ref: ''
+release: Alpha
+reviewed: xi45PNuE6R8VT5LWMegbdcrYRDwa3nxZATXBXcayriA=
+text: |
+  The IDPS-ESCAPE system architecture SHALL include a multivariate anomaly detection (AD) subsystem to detect anomalies across at least two features/dimensions in at least one of the following types of security event capturing data sets: host-based and network-based.
+type: A
+urgency: '4'
+vm: R

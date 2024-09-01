@@ -1,0 +1,19 @@
+acceptance-criteria: |
+  Successful validation according to the corresponding test case specification
+active: true
+derived: false
+header: ''
+importance: '3'
+level: 1
+links: []
+normative: true
+rationale: |
+  To collect events for threat hunting and CTI operations, reducing the NIDS overhead and to do customized AD.
+ref: ''
+release: Alpha
+reviewed: R97YurKXW5vWVFATOK9hAmqMmsx05236L5jsciU41I4=
+text: |
+  The IDPS-ESCAPE network sensors SHOULD be able to capture and forward raw network traffic to the C&C server.
+type: F
+urgency: '4'
+vm: T
