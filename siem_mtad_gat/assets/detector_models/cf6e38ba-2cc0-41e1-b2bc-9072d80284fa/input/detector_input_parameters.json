@@ -1,0 +1,39 @@
+{
+    "index_date": "2024-*-*",
+    "categorical_features": false,
+    "columns": [
+        "data.cpu_usage_%",
+        "data.memory_usage_%"
+    ],
+    "aggregation": true,
+    "aggregation_config": {
+        "fill_na_method": "Linear",
+        "padding_value": 0,
+        "granularity": "1min",
+        "features": {
+            "data.cpu_usage_%": [
+                "average",
+                "max"
+            ],
+            "data.memory_usage_%": [
+                "average",
+                "max"
+            ]
+        }
+    },
+    "train_config": {
+        "window_size": 10,
+        "epochs": 30
+    },
+    "display_name": "linux-resource-utilization-anomaly",
+    "detector_id": "cf6e38ba-2cc0-41e1-b2bc-9072d80284fa",
+    "created_time": "2024-07-25T07:29:59Z",
+    "last_updated_time": "2024-07-25T07:29:59Z",
+    "model_info": {
+        "datasource": "wazuh-alerts-*.*-2024.*.*",
+        "start_time": "",
+        "end_time": "",
+        "status": "CREATED",
+        "errors": []
+    }
+}

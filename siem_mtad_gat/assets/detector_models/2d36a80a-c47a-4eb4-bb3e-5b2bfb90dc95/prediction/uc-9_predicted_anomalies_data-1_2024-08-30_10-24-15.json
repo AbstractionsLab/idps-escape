@@ -1,0 +1,340 @@
+[
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T10:18:04Z",
+        "end_time": "2024-08-30T10:27:04Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T10:24:04Z",
+        "end_time": "2024-08-30T10:33:04Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T10:30:05Z",
+        "end_time": "2024-08-30T10:39:05Z",
+        "results": [
+            {
+                "timestamp": "2024-08-30T10:33:00Z",
+                "is_anomaly": true,
+                "score": 0.43841490149497986,
+                "prediction_values": {
+                    "Forecast_data.cpu_usage_%_average": 0.05332876741886139,
+                    "Recon_data.cpu_usage_%_average": 0.0011255182325839996,
+                    "True_data.cpu_usage_%_average": 0.0,
+                    "A_Score_data.cpu_usage_%_average": 0.05445428565144539,
+                    "Forecast_data.memory_usage_%_average": 0.982990026473999,
+                    "Recon_data.memory_usage_%_average": 0.10214532911777496,
+                    "True_data.memory_usage_%_average": 0.0,
+                    "A_Score_data.memory_usage_%_average": 1.0851353406906128,
+                    "Forecast_rule.firedtimes_count": 0.03757286071777344,
+                    "Recon_rule.firedtimes_count": 0.03205513954162598,
+                    "True_rule.firedtimes_count": 0.12264151126146317,
+                    "A_Score_rule.firedtimes_count": 0.17565502226352692,
+                    "A_Score_Global": 0.43841490149497986,
+                    "Thresh_data.cpu_usage_%_average": 0.47982557366895306,
+                    "A_Pred_data.cpu_usage_%_average": 0.0,
+                    "Thresh_data.memory_usage_%_average": 156174307.96696022,
+                    "A_Pred_data.memory_usage_%_average": 0.0,
+                    "Thresh_rule.firedtimes_count": 0.10692793914569942,
+                    "A_Pred_rule.firedtimes_count": 1.0,
+                    "Thresh_Global": 0.2670929433973198,
+                    "A_Pred_Global": 1.0
+                }
+            },
+            {
+                "timestamp": "2024-08-30T10:33:30Z",
+                "is_anomaly": true,
+                "score": 0.5233340263366699,
+                "prediction_values": {
+                    "Forecast_data.cpu_usage_%_average": 0.0557151660323143,
+                    "Recon_data.cpu_usage_%_average": 0.04460979625582695,
+                    "True_data.cpu_usage_%_average": 0.416411817073822,
+                    "A_Score_data.cpu_usage_%_average": 0.7324986457824707,
+                    "Forecast_data.memory_usage_%_average": 0.9426602125167847,
+                    "Recon_data.memory_usage_%_average": 0.37544891238212585,
+                    "True_data.memory_usage_%_average": 0.4942672848701477,
+                    "A_Score_data.memory_usage_%_average": 0.5672112703323364,
+                    "Forecast_rule.firedtimes_count": 0.03756900131702423,
+                    "Recon_rule.firedtimes_count": 0.03176143020391464,
+                    "True_rule.firedtimes_count": 0.16981132328510284,
+                    "A_Score_rule.firedtimes_count": 0.2702922224998474,
+                    "A_Score_Global": 0.5233340263366699,
+                    "Thresh_data.cpu_usage_%_average": 0.47982557366895306,
+                    "A_Pred_data.cpu_usage_%_average": 1.0,
+                    "Thresh_data.memory_usage_%_average": 160396327.71479928,
+                    "A_Pred_data.memory_usage_%_average": 0.0,
+                    "Thresh_rule.firedtimes_count": 0.10692793914569942,
+                    "A_Pred_rule.firedtimes_count": 1.0,
+                    "Thresh_Global": 0.2670929433973198,
+                    "A_Pred_Global": 1.0
+                }
+            },
+            {
+                "timestamp": "2024-08-30T10:34:00Z",
+                "is_anomaly": true,
+                "score": 0.4562942683696747,
+                "prediction_values": {
+                    "Forecast_data.cpu_usage_%_average": 0.03566606342792511,
+                    "Recon_data.cpu_usage_%_average": 0.023487132042646408,
+                    "True_data.cpu_usage_%_average": 0.46279311180114746,
+                    "A_Score_data.cpu_usage_%_average": 0.8664330244064331,
+                    "Forecast_data.memory_usage_%_average": 0.6729135513305664,
+                    "Recon_data.memory_usage_%_average": 1.1270005702972412,
+                    "True_data.memory_usage_%_average": 0.8634898066520691,
+                    "A_Score_data.memory_usage_%_average": 0.4540870189666748,
+                    "Forecast_rule.firedtimes_count": 0.020478688180446625,
+                    "Recon_rule.firedtimes_count": 0.006630271673202515,
+                    "True_rule.firedtimes_count": 0.03773584961891174,
+                    "A_Score_rule.firedtimes_count": 0.04836273938417435,
+                    "A_Score_Global": 0.4562942683696747,
+                    "Thresh_data.cpu_usage_%_average": 0.47982557366895306,
+                    "A_Pred_data.cpu_usage_%_average": 1.0,
+                    "Thresh_data.memory_usage_%_average": 164461590.64210632,
+                    "A_Pred_data.memory_usage_%_average": 0.0,
+                    "Thresh_rule.firedtimes_count": 0.10697300868071612,
+                    "A_Pred_rule.firedtimes_count": 0.0,
+                    "Thresh_Global": 0.2670929433973198,
+                    "A_Pred_Global": 1.0
+                }
+            }
+        ]
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T10:36:06Z",
+        "end_time": "2024-08-30T10:45:06Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T10:42:06Z",
+        "end_time": "2024-08-30T10:51:06Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T10:48:06Z",
+        "end_time": "2024-08-30T10:57:06Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T10:54:07Z",
+        "end_time": "2024-08-30T11:03:07Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:00:07Z",
+        "end_time": "2024-08-30T11:09:07Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:06:07Z",
+        "end_time": "2024-08-30T11:15:07Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:12:08Z",
+        "end_time": "2024-08-30T11:21:08Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:18:08Z",
+        "end_time": "2024-08-30T11:27:08Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:24:08Z",
+        "end_time": "2024-08-30T11:33:08Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:30:09Z",
+        "end_time": "2024-08-30T11:39:09Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:36:09Z",
+        "end_time": "2024-08-30T11:45:09Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:42:09Z",
+        "end_time": "2024-08-30T11:51:09Z",
+        "results": [
+            {
+                "timestamp": "2024-08-30T11:44:30Z",
+                "is_anomaly": true,
+                "score": 0.3337433636188507,
+                "prediction_values": {
+                    "Forecast_data.cpu_usage_%_average": 0.05693276226520538,
+                    "Recon_data.cpu_usage_%_average": 0.006390616297721863,
+                    "True_data.cpu_usage_%_average": 0.0,
+                    "A_Score_data.cpu_usage_%_average": 0.06332337856292725,
+                    "Forecast_data.memory_usage_%_average": 0.9138360023498535,
+                    "Recon_data.memory_usage_%_average": -0.013763457536697388,
+                    "True_data.memory_usage_%_average": 0.0,
+                    "A_Score_data.memory_usage_%_average": 0.9275994300842285,
+                    "Forecast_rule.firedtimes_count": 0.037580445408821106,
+                    "Recon_rule.firedtimes_count": 0.029330603778362274,
+                    "True_rule.firedtimes_count": 0.028301887214183807,
+                    "A_Score_rule.firedtimes_count": 0.010307274758815765,
+                    "A_Score_Global": 0.3337433636188507,
+                    "Thresh_data.cpu_usage_%_average": 0.4799910737522501,
+                    "A_Pred_data.cpu_usage_%_average": 0.0,
+                    "Thresh_data.memory_usage_%_average": 293744890.1736662,
+                    "A_Pred_data.memory_usage_%_average": 0.0,
+                    "Thresh_rule.firedtimes_count": 0.10675416024851904,
+                    "A_Pred_rule.firedtimes_count": 0.0,
+                    "Thresh_Global": 0.2662668010291398,
+                    "A_Pred_Global": 1.0
+                }
+            }
+        ]
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:48:10Z",
+        "end_time": "2024-08-30T11:57:10Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T11:54:10Z",
+        "end_time": "2024-08-30T12:03:10Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:00:10Z",
+        "end_time": "2024-08-30T12:09:10Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:06:10Z",
+        "end_time": "2024-08-30T12:15:10Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:12:11Z",
+        "end_time": "2024-08-30T12:21:11Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:18:11Z",
+        "end_time": "2024-08-30T12:27:11Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:24:11Z",
+        "end_time": "2024-08-30T12:33:11Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:30:11Z",
+        "end_time": "2024-08-30T12:39:11Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:36:12Z",
+        "end_time": "2024-08-30T12:45:12Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:42:12Z",
+        "end_time": "2024-08-30T12:51:12Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:48:12Z",
+        "end_time": "2024-08-30T12:57:12Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T12:54:12Z",
+        "end_time": "2024-08-30T13:03:12Z",
+        "results": []
+    },
+    {
+        "run_mode": "BATCH",
+        "detector_id": "2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95",
+        "index_date": "2024-08-30",
+        "start_time": "2024-08-30T13:00:13Z",
+        "end_time": "2024-08-30T13:09:13Z",
+        "results": []
+    }
+]
