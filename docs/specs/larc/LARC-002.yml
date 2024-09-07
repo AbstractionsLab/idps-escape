@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  Historical data prediction pipeline flow
+level: 2.0
+links:
+- SRS-035: kXrRgzjyZzSoQR8n0PuqbbS4bM8DIAHNl40oVjQm-2E=
+normative: true
+ref: ''
+release: Alpha
+reviewed: r9mqUCGMncC9pxkouMgo97tY8tFl7S4h7yVR_8Y-xhA=
+text: |
+  ## Prediction pipeline flow diagram for historical data mode
+
+  The diagram summarizes the flow of the predict pipeline for historical data orchestrated by the ADBox Engine.
+
+  ![ADBox predict pipeline flow - historical diagram](assets/ADBox-engine-predict-pipeline-flow-historical.png "ADBox predict pipeline flow - historical")
+version: '0.1'

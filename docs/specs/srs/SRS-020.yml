@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
-difficulty: ''
+difficulty: null
 header: ''
-importance: ''
-level: 1.19
+importance: null
+level: 20
 links:
-- MRS-015: null
+- MRS-015: Yr-yAgprKY7gmn1mmMTIXVYx9DQ8ZDNb8WR6i8tys2g=
 normative: true
-outlay: ''
-rationale: 'To maintain the consistency with SIEM solution, add custom feature'
+outlay: null
+rationale: To maintain the consistency with SIEM solution, add custom feature
 ref: ''
 release: Alpha
-reviewed: null
-risk: ''
-status: ''
+reviewed: pOBfy2RJLJn0bAN6zFsBLHUZA8dUoDLUgJ6Ont-2M2k=
+risk: null
+status: null
 text: |
   As a user,
   I want to update the default fields fetched at ingestion phase by ADBox.
@@ -26,7 +24,6 @@ text: |
   1. Access C&C server
   2. Access ADBox
   3. Update key and values in `../siem_mtad_gat/assets/wazuh/wazuh_columns.json`
-
-type: 'F'
+type: F
 urgency: '1'
 version: '0.1'

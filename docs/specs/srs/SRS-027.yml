@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '3'
 header: ''
 importance: '5'
-level: 1.26
+level: 27
 links:
-- MRS-030: null
+- MRS-030: IYS6LYS6oTYGK970NiY3aRfOORMDl0eydoH_pxuAM7U=
 normative: true
-outlay: ''
-rationale: ''
+outlay: null
+rationale: null
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: Dvnhu-fKpIGaJ6bkBVQAuQlgJtN8jwj0ZQEGnWA0aZ0=
 risk: '2'
-status: ''
+status: null
 text: |
   As a system admin,
   I want to run a machine learning algorithm to detect anomalous behaviors within my system.
@@ -27,8 +25,6 @@ text: |
   2. Access ADBox
   3. Select a trained detector
   4. Run a prediction script using the chosen detection either on a selected time interval or in realtime.
-
-
-type: 'F'
+type: F
 urgency: '4'
 version: '0.1'

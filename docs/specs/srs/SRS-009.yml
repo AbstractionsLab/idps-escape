@@ -1,24 +1,23 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
-difficulty: ''
+difficulty: null
 header: ''
 importance: '5'
-level: 1.8
+level: 9
 links:
-- MRS-011: null
+- MRS-011: mwmFXP_LWPCCuta_18kOVD8Cn5UGc6hSaqZf8L1TPnk=
 normative: true
-outlay: ''
-rationale: 'To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.'
+outlay: null
+rationale: |
+  To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: 8xnrWIoPNxJ83aiLPXD1YuU3MPdmxufkSSGsvsnx-2g=
 risk: '1'
-status: ''
+status: null
 text: |
   As a sys admin user,
   I want to enable host intrusion detection via pattern matching with known/expected threats (signature-based HIDS).
@@ -26,9 +25,8 @@ text: |
   1. Access host to be monitored.
   2. Deploy Wazuh Agent (using C&C manager ip).
   3. Enroll Agent agent.
-  4. Set up local configs and logs. 
+  4. Set up local configs and logs.
   5. Possibly, define custom rules.
-
-type: 'F'
+type: F
 urgency: '5'
 version: '0.1'

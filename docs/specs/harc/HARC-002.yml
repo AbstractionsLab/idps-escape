@@ -1,18 +1,21 @@
 active: true
 derived: false
-header: ''
-level: 1.1
+header: |
+  ADBox architecture
+level: 2.0
 links:
-- MRS-004: null
-- MRS-031: null
-- MRS-032: null
-- MRS-033: null
-- MRS-039: null
-- MRS-041: null
+- MRS-004: xi45PNuE6R8VT5LWMegbdcrYRDwa3nxZATXBXcayriA=
+- MRS-031: Qe4O1p-Ejjhx1iVzqvyOfQ2tmT40K3v6GYgQlFi72cc=
+- MRS-032: 8PqSYwKBzcz2ebnoKiLMRb21-sFRTziyoKQ3hieM-yY=
+- MRS-033: Qo3tudn-i84fGKUF66LxEtGw3FdzfYcS9U1xwgQKYJo=
+- MRS-039: 4pepNOPXHsHmADQ2Ub21C5a1WEQO9zFwcEBZremD0HM=
+- MRS-041: y8mj4oHfwFhaVQebBfNa9p9DRhqS88bd8RS1i3nzQW0=
 normative: true
 ref: ''
-reviewed: null
+reviewed: m-8WrFxsgTppkhedHH9jrjk2mpniEKijIpfaieSLWUQ=
 text: |
-  ## Diagram
-  The diagram below explicit the architecture of ADBox subsystem.
-  ![ADBox high level architecture](assets/ADBox-system_high_level_architecture.png "ADBox high level architecture")
+  ## ADBox architecture diagram
+  
+  The diagram below depicts the high-level architecture of the ADBox subsystem.
+
+  ![ADBox high level architecture](assets/ADBox-system_high_level_architecture.png "ADBox high level architecture"){: width="70%"}

@@ -1,22 +1,22 @@
-acceptance: 'Successful validation according to the corresponding test case specification'
+acceptance: |
+  Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '1'
 header: ''
 importance: '5'
-level: 1.0
+level: 1
 links:
-- MRS-002: null
+- MRS-002: PcjCPpAQg4L-F5WYHxXPLu4WLt030SwN9R24ecLAMdg=
 normative: true
-outlay: ''
-rationale: 'To centralize and simplify IDPS components configuration management.'
+outlay: null
+rationale: To centralize and simplify IDPS components configuration management.
 ref: ''
-reviewed: null
+release: Alpha
+reviewed: kVvpIq64rOPVFFjPDeuNx_bvk5RXJ2UKzOnJsNY_rw8=
 risk: '1'
-status: ''
+status: null
 text: |
   As a system admin user,
   I want to deploy and maintain a central subsystem, called command-and-control (C&C),
@@ -27,9 +27,8 @@ text: |
   3. Deploy C&C components following:
 
     ![IDPS-ESCAPE decision diagram C&C deployment](assets/IDPS-ESCAPE-decision-diagram-CC.png "IDPS-ESCAPE decision diagram C&C deployment")
-  
-  4. Configure components via respective software configuration management (SCM) mechanism.
 
+  4. Configure components via respective software configuration management (SCM) mechanism.
 type: F
 urgency: '5'
 version: '0.1'

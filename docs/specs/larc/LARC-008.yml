@@ -1,0 +1,22 @@
+active: true
+derived: false
+header: |
+  Batch and real-time prediction flow
+level: 8.0
+links:
+- SRS-027: IQG2O9GzGOJwvuAWdTI1n4T8sAwxuMNlWlD9ExVkGhA=
+normative: true
+ref: ''
+release: Alpha
+reviewed: E2e7L1la5phNz7ksBl9ne9fP_mdB0CrXozC6oDVld7k=
+text: |
+  ## Batch and real-time ADBox modes prediction flow diagrams
+
+  The diagram summarizes the flow of the predict pipeline with
+    - batch mode
+    - real-time mode
+  orchestrated by the ADBox Engine.
+
+  ![ADBox predict pipeline flow - batch diagram](assets/ADBox-engine-predict-pipeline-flow-batch.png "ADBox predict pipeline flow - batch")
+  ![ADBox predict pipeline flow - real-time diagram](assets/ADBox-engine-predict-pipeline-flow-real-time.png "ADBox predict pipeline flow - real-time")
+version: '0.1'

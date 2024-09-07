@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  ADBox machine learning package
+level: 9.0
+links:
+- SRS-039: qXc_D8wNc8mcw9zVPh9Iy-v7aoE_uglm_D12jRsYv5U=
+normative: true
+ref: ''
+release: Alpha
+reviewed: Q-0TI4LcCN2hXXQUqV7uKjsy-vCMUDSsB1dFS0LTCKA=
+text: |
+  ## ADBox machine learning package diagram
+
+  ADBox ML-packages folder containing the machine learning packages called by the AD pipelines.
+
+  ![ADBox ML-packages](assets/ADBox-ML-packages.png "ML-packages")
+version: '0.1'

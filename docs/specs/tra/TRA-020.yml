@@ -1,17 +1,17 @@
 active: true
-comments: ''
+comments: null
 defect_category: '0'
-defect_description: ''
+defect_description: null
 derived: false
 header: ''
-level: 1.19
+level: 20
 links:
-- TST-003: null
+- TST-003: iM8VjyXLsywJgisixh4Sv4xM2QJDMVXQcbE1kaYGgK8=
 normative: true
 ref: ''
-reviewed: null
+reviewed: uuWZYeVAp8NY2PLjjr1RDB1unkIKqWPf8AB-HXNLpWc=
 test_date: 29-07-2024
-tester: ''
+tester: null
 text: |
   Test execution results for the test case (TST) referred in the parent link.
   ## Test environment details

@@ -1,28 +1,26 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
-difficulty: ''
+difficulty: null
 header: ''
-importance: ''
-level: 1.25
+importance: null
+level: 26
 links:
-- MRS-025: null
+- MRS-025: 6A06Lqu1iYnEjjS3-7JXxr429IIIDdsmHL-GtGdguUY=
 normative: true
-outlay: ''
-rationale: 'To enable programmatic access, which would also in turn support integration with SATRAP-DL.'
+outlay: null
+rationale: |
+  To enable programmatic access, which would also in turn support integration with SATRAP-DL.
 ref: ''
 release: Alpha
-reviewed: null
-risk: ''
-status: ''
+reviewed: 1E5d18RFGpWUUIbfk-sruknwsz4Ed_2D4BxZpPiXrPE=
+risk: null
+status: null
 text: |
   As a user,
   I want to export data from IDPS-ESCAPE to a TIP.
-
-type: 'F'
+type: F
 urgency: '1'
 version: '0.1'

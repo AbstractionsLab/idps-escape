@@ -18,5 +18,5 @@ $$
 \vdots & \ddots & \vdots\\
 {x}_{k,1} &\dots&{x}_{k,n}
 \end{bmatrix}} { features}
-$$ {#eq-ts-decomposition}
+$$
 

@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '2'
 header: ''
 importance: '3'
-level: 1.15
+level: 16
 links:
-- MRS-015: null
+- MRS-015: Yr-yAgprKY7gmn1mmMTIXVYx9DQ8ZDNb8WR6i8tys2g=
 normative: true
-outlay: ''
-rationale: 'Maintain/improve the security of IDPS-ESCAPE'
+outlay: null
+rationale: Maintain/improve the security of IDPS-ESCAPE
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: TZxeb4N-02tNyuG8HSCWA1MR4LN38OuNDE6rZUc_iVQ=
 risk: '2'
-status: ''
+status: null
 text: |
   As an admin user,
   I want to modify the credentials of data indexer for a user,
@@ -27,7 +25,6 @@ text: |
   1. Access C&C server
   2. Access CyFORT-Wazuh manager
   3. Update `config/wazuh_indexer/internal_users.yml` file.
-
-type: 'F/S'
+type: F/S
 urgency: '1'
 version: '0.1'

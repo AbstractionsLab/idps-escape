@@ -1,25 +1,24 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '3'
 header: ''
 importance: '4'
-level: 1.36
+level: 37
 links:
-- MRS-004: null
+- MRS-004: xi45PNuE6R8VT5LWMegbdcrYRDwa3nxZATXBXcayriA=
 normative: true
-outlay: ''
-rationale: ''
+outlay: null
+rationale: null
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: hyWH8hQUuIEIxNCZ9P6Tih6yIRxsLRbm_6O5juHpuiM=
 risk: '1'
-status: 'To detect deviations from an a priori normal baseline system behavior, possibly caused by malicious actors.'
-text: |  
+status: |
+  To detect deviations from an a priori normal baseline system behavior, possibly caused by malicious actors.
+text: |
   As a user,
   I want to find anomalies in the network traffic,
   to detect threats not recognize by the signature-based NIDS.
@@ -28,9 +27,8 @@ text: |
 
   1. Access C&C server
   2. Access ADBox
-  3. Add an use-case file `siem_mtad_gat/assets/drivers/uc_x.yaml` including as features attributes from Suricata `eve.log` decoding 
+  3. Add an use-case file `siem_mtad_gat/assets/drivers/uc_x.yaml` including as features attributes from Suricata `eve.log` decoding
   4. Run ADBox
-
-type: 'F'
+type: F
 urgency: '3'
 version: '0.1'

@@ -1,34 +1,31 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '2'
 header: ''
 importance: '5'
-level: 1.2
+level: 3
 links:
-- MRS-005: null
+- MRS-005: WU-OQqjP5o1FghU8Hq0-_jp7o-kDIm-B969Ssgvg058=
 normative: true
-outlay: ''
-rationale: 'To enable a multi-node deployment of monitoring endpoints host.'
+outlay: null
+rationale: To enable a multi-node deployment of monitoring endpoints host.
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: kSjYWs6fky6sZtfhO1e4E_1yY1zG52KN3ErkvZa-Tlw=
 risk: '1'
-status: ''
+status: null
 text: |
- As a sys admin user,
- I want deploy HIDS agents on the of hosts' monitored system,
- so that I can enable IDPS-ESCAPE's HIDS capabilities.
- 
- 1. Access host to be monitored
- 2. Install Wazuh Agent 
- 3. Enroll Wazuh Agent in CyFORT-Wazuh manager.
- 4. Configure Wazuh Agent.
+  As a sys admin user,
+  I want deploy HIDS agents on the of hosts' monitored system,
+  so that I can enable IDPS-ESCAPE's HIDS capabilities.
 
-type: 'F'
+  1. Access host to be monitored
+  2. Install Wazuh Agent
+  3. Enroll Wazuh Agent in CyFORT-Wazuh manager.
+  4. Configure Wazuh Agent.
+type: F
 urgency: '5'
 version: '0.1'

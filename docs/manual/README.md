@@ -29,18 +29,22 @@ SIEM.
 - [Detector](./detector_data_structure.md)
 - [Front-end](./front_end.md)
 - [Data transformation](./data_transformation.md)
+- [Example](./example.md)
+- [Glossary](./glossary.md)
+
 
 ## Overview
 
 - **Install.** Instructions to install ADBox.
-- **Setup and prerequisites.** List of configurations file and prerequisites to complete the deployment of ADBox and be able to create and run detectors.
+- **Setup and prerequisites.** List of configurations file and prerequisites to complete the deployment of ADBox and to be able to create and run detectors.
 - **User guide**. 
-- **Use case definition guide**. Via ADBox it is possible to create, use and maintain detector which ingest data and analyzed them. The user can simply define the parameter via *use case* configuration files and feed them to ADBox entry point. This page contains the instruction for understanding and defining use case files.
-- **Anomaly detection engine.** The anomaly detection engine is the core component of ADBox. In fact, for every available anomaly detection method it orchestrates the interaction between the bulk functions of every algorithm, the data ingestion, data storage, user output, etc. In other words, the Engine determines the sequence of action to be performed to successfully go through the detection pipeline. This page gives also an overview of the train and predict pipelines.
-- **MTAD-GAT.** ADBox incorporates machine learning algorithms for AD. Currently, MTAD-GAT algorithm is supported. This page is a high level overview.
-- **Detector** The *detectors* are the "object"  used to perform detection. This page explained the notion and provide an overview of the ADBox pipelines' outcomes.
+- **Use case definition guide**. Via ADBox it is possible to create, use and maintain detectors which ingest data and analyze them. The user can simply define the parameters via *use case* configuration files and feed them to the ADBox entry point. This page contains the instructions for understanding and defining use case files.
+- **Anomaly detection engine.** The anomaly detection engine is the core component of ADBox. In fact, for every available anomaly detection method it orchestrates the interaction between the bulk functions of every algorithm, the data ingestion, data storage, user output, etc. In other words, the Engine determines the sequence of actions to be performed to successfully go through the detection pipeline. This page also gives an overview of the train and predict pipelines.
+- **MTAD-GAT.** ADBox incorporates machine learning algorithms for AD. Currently, the MTAD-GAT algorithm is supported. This page gives a high level overview.
+- **Detector**. The *detectors* are the "objects" used to perform detection. This page explains this notion and provides an overview of the ADBox pipelines' outcomes.
 - **Front-end.** Available front-end interfaces.
-- **Data transformation.** The row data ingested by ADBox from Wazuh, or any other source, must be cleaned and prepared to be fed to the machine learning model. This page provides an overview of the transformations, including the preprocessing.
-
+- **Data transformation.** The raw data ingested by ADBox from Wazuh, or any other source, must be cleaned and prepared to be fed to the machine learning model. This page provides an overview of the transformations, including the preprocessing.
+- **Example**. An example of ADBox usage from use case definition up to output analysis. This example used data from HIDS and includes [Monitoring Linux resource usage](./linux_resource.md).
+- **Glossary**. Summary of specific terminology used in this manual.
 
 ![ADBox ADBox high level architecture](../specs/harc/assets/ADBox-system_high_level_architecture.png "ADBox high level architecture")

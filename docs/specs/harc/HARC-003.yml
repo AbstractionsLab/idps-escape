@@ -1,16 +1,36 @@
 active: true
 derived: false
-header: ''
-level: 1.2
+header: |
+  IDPS-ESCAPE context
+level: 3.0
 links:
-- MRS-004: null
-- MRS-032: null
+- MRS-002: PcjCPpAQg4L-F5WYHxXPLu4WLt030SwN9R24ecLAMdg=
+- MRS-003: MbDfgrdzfC2Mk9ADobhu5OjCFeQsCaMiAjfLxd4LwMU=
+- MRS-004: xi45PNuE6R8VT5LWMegbdcrYRDwa3nxZATXBXcayriA=
+- MRS-005: WU-OQqjP5o1FghU8Hq0-_jp7o-kDIm-B969Ssgvg058=
+- MRS-006: _1kYIYSuIF1OxtdFRnPwTZQNZ1Jwadp4bEqGWuy5eBc=
+- MRS-007: MYGDh7hfSDYQoh_aLsw5nLs_RYInVm0opcD702A5fQI=
+- MRS-008: NIxP2kk-rkPA2dTJMoWs_cm5XQjXwuOpIPvuF6uLtkE=
+- MRS-011: mwmFXP_LWPCCuta_18kOVD8Cn5UGc6hSaqZf8L1TPnk=
+- MRS-012: C4CHVQL0aQetnxT0ulvjF_wEMJInUYdyZ1OXkdBWFfM=
+- MRS-013: FoVayZaf7wo3PIRmHpo3nQhlJAwCaeJilr_WYMlED6o=
+- MRS-017: eFUzqFk86Hzn5XIHC5Mh7vit4tbtyWX7f8PuMA9YFqE=
+- MRS-018: -YZZxjG1EIKk2Cj3rMXW-DbeLE15GVBx-fULfIJWpnI=
+- MRS-019: u5dQxXMsKxcdsP_2TIRtSZ2_htqogK5U5NtIBgzP8t4=
+- MRS-020: Y0EQ-_vRDGXOkkPcR-vf-PXnXWBPCg1bp-vp-1RNm_0=
+- MRS-022: lUOrsiYzrOZ7rjU8CQ6ZJhmoG-3JFUS6PRR5BswoPeM=
+- MRS-032: 8PqSYwKBzcz2ebnoKiLMRb21-sFRTziyoKQ3hieM-yY=
+- MRS-033: Qo3tudn-i84fGKUF66LxEtGw3FdzfYcS9U1xwgQKYJo=
+- MRS-037: qYyZcNrxvOvpVpfsQlpGAkUdhRKaGnSVCekMBzILydw=
+- MRS-039: 4pepNOPXHsHmADQ2Ub21C5a1WEQO9zFwcEBZremD0HM=
+- MRS-040: arnExMS6GVpYR1r-58fDJlROjnNgn51uRAodqXmSH4M=
+- MRS-041: y8mj4oHfwFhaVQebBfNa9p9DRhqS88bd8RS1i3nzQW0=
 normative: true
 ref: ''
-reviewed: null
+reviewed: TtJxl72Lls6qKVr41dHm-_x93Y2sv_vbL89Fbx-2Q_A=
 text: |
-  ## Diagram
+  ## IPDS-ESCAPE context diagram
 
-  The diagram below explicit ADEngine object of ADBox.
+  The diagram below illustrates the overall context of the IDPS-ESCAPE SOAR system.
 
-  ![ADBox Engine class diagram](assets/ADBox-engine-class.png "ADBox Engine class diagram")
+  ![IDPS-ESCAPE context diagram](assets/IDPS-ESCAPE-context-diagram.png "IDPS-ESCAPE context diagram"){: width="80%"}

@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '1'
 header: ''
 importance: '3'
-level: 1.11
+level: 12
 links:
-- MRS-013: null
+- MRS-013: FoVayZaf7wo3PIRmHpo3nQhlJAwCaeJilr_WYMlED6o=
 normative: true
-outlay: ''
-rationale: 'To improve accessibility and easy-of-use for IDPS-ESCAPE end-users'
+outlay: null
+rationale: To improve accessibility and easy-of-use for IDPS-ESCAPE end-users
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: aZsSRN76nSUaK4bhcbbcJlB0MpMZB9XjuZhE3sLYfZU=
 risk: '1'
-status: ''
+status: null
 text: |
   As SOC member,
   I want a graphic visualization of the host events detected in my system.
@@ -26,8 +24,7 @@ text: |
   Assuming: CyFORT-Wazuh and HIDS agents deployed
 
   1. Access CyFORT-Wazuh Dashboard
-  2. Filter security events generate by HIDS group rules 
-
-type: 'F'
+  2. Filter security events generate by HIDS group rules
+type: F
 urgency: '3'
 version: '0.1'

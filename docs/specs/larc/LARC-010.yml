@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  ADBox data manager
+level: 10.0
+links:
+- SRS-040: IdhnOOZ257FEav4xK9TDYmn4WCBIlsAEtZBdpJ2GV8g=
+normative: true
+ref: ''
+release: Alpha
+reviewed: v2vFE1t8wlnBZY8A4yY8s-M-NMSo2tVjvVYcYuw-4Ec=
+text: |
+  ## ADBox data manager diagram
+
+  The diagram below depicts the ADBox `Data Manager`.
+
+  ![ADBox Data Manager](assets/ADBox-DataManager.png "ADBox Data Manager")
+version: '0.1'

@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: |
+  ADBox data transformer
+level: 10.0
+links:
+- LARC-003: LCVZKzHtUM8ilVQpO9dhR4cowbESLIQau0Ymve_Z-34=
+normative: true
+ref: ''
+reviewed: FweG8eecakuLM73JnAcM4ITnMGx6llqoGGniMMn1sAU=
+text: |
+  ## ADBox data transformer class diagram
+  
+  The diagram below depicts the `Data Transformer` class of ADBox.
+
+  ![ADBox Transformer class diagram](assets/ADBox-transf-class.png "ADBox Data Transformer classes diagram"){: width="80%"}

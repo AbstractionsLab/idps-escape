@@ -1,28 +1,26 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '2'
 header: ''
 importance: '1'
-level: '1.30'
+level: 31
 links:
-- MRS-034: null
+- MRS-034: 2Q6uUkBFzAPXTfFecTngkch0XK2mytAS_W_0XE2cT84=
 normative: true
-outlay: ''
-rationale:  'To evaluate quality of output of training'
+outlay: null
+rationale: To evaluate quality of output of training
 ref: ''
 release: Alpha
-reviewed: null
-risk: ''
-status: ''
+reviewed: M1enPaDQWmPtk8pOA8ycjdsy9KxZOpb6zgExixT3f3Y=
+risk: null
+status: null
 text: |
   As a user,
   I want to read/plot losses of training and test data.
-  
+
   Assuming: trained detector with unique identifier `uuid` available.
 
 
@@ -32,8 +30,6 @@ text: |
   4. Use either external tools or viz-notebooks to visualize
      - train : `train_losses.png`
      - test : `test_losses.png`
-
-
-type: 'F'
+type: F
 urgency: '1'
 version: '0.1'

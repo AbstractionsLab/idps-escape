@@ -1,0 +1,30 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+dependence: '[]'
+derived: false
+difficulty: '3'
+header: ''
+importance: '5'
+level: 38
+links:
+- MRS-030: IYS6LYS6oTYGK970NiY3aRfOORMDl0eydoH_pxuAM7U=
+normative: true
+outlay: null
+rationale: null
+ref: ''
+release: Alpha
+reviewed: P00oeGfVxMfDaKrGJ0Ghsua7r5p_dKJuVc3nPRNxaPg=
+risk: '2'
+status: null
+text: |
+  As a user,
+  I train a detector,
+  to detect anomaly by using both host and network events.
+
+  1.  Access C&C server
+  2.  Access ADBox
+  3.  Train a detector using features derived from CyFORT-Wazuh and CyFORT-Suricata logs arguments.
+type: F
+urgency: '4'
+version: '0.1'

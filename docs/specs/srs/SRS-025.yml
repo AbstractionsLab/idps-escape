@@ -1,24 +1,23 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
-difficulty: ''
+difficulty: null
 header: ''
 importance: '2'
-level: 1.24
+level: 25
 links:
-- MRS-023: null
+- MRS-023: Wwq0DUM5d51odTr_UI9ROmFGGb7KHkzkNJ4V24oaJeE=
 normative: true
-outlay: ''
-rationale: 'To improve and speed up threat detection and classification, thereby facilitating CTI analysis.'
+outlay: null
+rationale: |
+  To improve and speed up threat detection and classification, thereby facilitating CTI analysis.
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: phhHDiMLFFmPek19wjx1pKmZy3iI0EAZflEmmhgcip8=
 risk: '1'
-status: ''
+status: null
 text: |
   As a user,
   I want to map a detected event to MITRE ATT&CK framework.
@@ -30,6 +29,6 @@ text: |
     ```
     rule.mitre.id , rule.mitre.tactic , rule.mitre.technique
     ```
-type: 'F'
+type: F
 urgency: '2'
 version: '0.1'

@@ -54,4 +54,5 @@ Restart the agent and then the logs could be seen on the Wazuh dashboard.
 sudo systemctl restart wazuh-agent 
 ```
 To test the correct working of the integration, any online tool that generates some malicious traffic for testing purposes can be used, such as: 
+
 [GitHub - 3CORESec/testmynids.org: A website and framework for testing NIDS detection](https://github.com/3CORESec/testmynids.org)  

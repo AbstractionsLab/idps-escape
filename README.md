@@ -88,7 +88,7 @@ See our [Instructions for IDPS and SIEM integrated deployment](./deployment/READ
 
 ## User manual
 
-Please see the [Instructions for IDPS and SIEM integrated deployment](./deployment/README.md) and the [ADBox user manual](./docs/manual/overview.md) page to learn more about the installation, setup requirements, overall usage and specific modules of the ADBox. 
+Please see the [Instructions for IDPS and SIEM integrated deployment](./deployment/README.md) and the [ADBox user manual](./docs/manual/README.md) page to learn more about the installation, setup requirements, overall usage and specific modules of the ADBox. 
 
 ## Documentation and technical specifications
 
@@ -233,7 +233,7 @@ The output of the all the detections performed through the console are stored in
 ./adbox.sh
 ```
 
-In this mode, the ADBox will train a detector using the default arguments and then also perform detection based on default arguments, with the detector trained using the previously mentioned default arguments. To know more about the input arguments used in default mode, visit the [user manual](./docs/manual/overview.md) page.
+In this mode, the ADBox will train a detector using the default arguments and then also perform detection based on default arguments, with the detector trained using the previously mentioned default arguments. To know more about the input arguments used in default mode, visit the [user manual](./docs/manual/README.md) page.
 
 The output of the default detection is also stored in `./siem_mtad_gat/assets/detector_models/{detector_id}/prediction` folder.
 
@@ -250,7 +250,7 @@ I have deployed all the components as explained in the [guide for IDPS and SIEM 
 
 I want a detector which correlates resource usage and rules statistics. Once created, I want this detector to keep running on new data.
 
-Therefore, I prepare a dedicated [use case file](./use_case.md).
+Therefore, I prepare a dedicated [use case file](./docs/manual/use_case.md).
 
 Namely,
 
@@ -398,22 +398,36 @@ We traced the two anomalies to two real events that had happened in the correspo
 
 In both cases, the actions that (most probably) generated the anomalies had been carried out by a system administrator. In case not, while A1 would have been noticed by looking at single features and/or Wazuh; A2 would have not been as obvious to track.
 
-## Disclaimer: Use of alpha/experimental Software
+## Disclaimer: use of alpha/experimental software
 
 This software is currently in its alpha or experimental phase and is provided for testing and evaluation purposes only. It may contain errors, bugs, or other issues that could result in security vulnerabilities, data loss, or other unpredictable outcomes. As such, **this software is not intended for use in production environments** or for handling sensitive, confidential, or critical information.
 
-In particular, given the nature of security-related software, it is crucial to understand that the algorithms, protocols, and implementations within this software may not have undergone thorough security audits or peer review. **Do not rely on this software for critical system functions.**.
+In particular, given the nature of security-related software, it is crucial to understand that the algorithms, protocols, and implementations within this software may not have undergone thorough security audits or peer review. **Do not rely on this software for critical system functions.**
 
 The developers, contributors, and affiliated organizations **disclaim all warranties, express or implied,** including but not limited to the implied warranties of fitness for a particular purpose. **No guarantee is made regarding the correctness, completeness, or security** of the software, and you assume full responsibility for any risks associated with its use.
 
 By using this software, you acknowledge that you understand the risks and agree to use it **at your own risk.** You are strongly encouraged to conduct your own security assessments and tests before deploying this software in any environment.
+
+### Usage recommendations and remarks
+
+We advise the user __not__ to 
+- set the detector time granularity parameter to a value lower than 30s,
+- run prediction-only use cases if there are no corresponding detectors available in the [detectors folder](./siem_mtad_gat/assets/detector_models/). 
+
+Furthermore, we highlight the following points:
+
+- Anomalous timestamps should be considered more as period indicators rather than precise links to an event for two reasons: 
+  - (i) data points from events are aggregated, to which rounding is applied during preprocessing; 
+  - (ii) the anomaly is defined in terms of windows, hence consecutive sets of events.
+- Depending on the selected configurations, running the full stack of IDPS-ESCAPE may require up to 26 GB of persistent storage, while RAM usage for the default ADBox configuration remains close to 4 GB, the same as the recommended value for Wazuh, which is used as our source of data for training and prediction. Note that the various subsystems can be deployed on different nodes, e.g., the ADBox on one node and our customized Wazuh+Suricata setup on another, or all three on separate nodes (see the [integration](./deployment/README.md) and [remote monitoring](./deployment/remote_monitoring/remote_monitoring.md) pages).
+- Clearly, the MTAD-GAT hyperparameters (e.g., the number of GRU layers) require tuning when it comes to training machine learning models.
 
 ## Roadmap
 
 Some of the currently planned items include:
 
 - automated unit/integration/system test suites providing coverage for critical parts of the software;
-- a GUI frontend integrated into Wazuh or OpenSearch;
+- a web-based GUI frontend, either standalone or integrated into Wazuh or OpenSearch;
 - tailoring the underlying ADBox algorithms to specific SOC operations.
 
 For details on our roadmap and features planned for future releases, please see the [Wiki](https://github.com/AbstractionsLab/idps-escape/wiki) section of this repository.

@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: |
+  ADBox preprocessing
+level: 11.0
+links:
+- LARC-003: LCVZKzHtUM8ilVQpO9dhR4cowbESLIQau0Ymve_Z-34=
+normative: true
+ref: ''
+reviewed: gXDz1QiHWh-Kx5qqTOIXDWdx3Jm07lB6HRZvO-Wv2S8=
+text: |
+  ## ADBox preprocessing sequence diagram
+
+  The diagram summarizes the sequence of actions of the method `Preprocessor.preprocessing` in the ADBox DataTransformer.
+
+  ![ADBox Preprocessor.preprocessing sequence diagram](assets/ADBox-preprocessing-sequence.png "ADBox Preprocessor.preprocessing sequence "){: width="80%"}

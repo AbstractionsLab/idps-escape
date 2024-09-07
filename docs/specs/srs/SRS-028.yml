@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
-difficulty: ''
+difficulty: null
 header: ''
 importance: '2'
-level: 1.27
+level: 28
 links:
-- MRS-031: null
+- MRS-031: Qe4O1p-Ejjhx1iVzqvyOfQ2tmT40K3v6GYgQlFi72cc=
 normative: true
-outlay: ''
-rationale: 'To validate the AD capabilities.'
+outlay: null
+rationale: To validate the AD capabilities.
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: E9IbqpfnD0qQOW5aUz6zUNekEPq6Wo6dzWtSz-q4jQI=
 risk: '1'
-status: ''
+status: null
 text: |
   As a user,
   I want to compare the outcome different anomaly detection algorithms on my data.
@@ -33,8 +31,6 @@ text: |
   6. Select a (trained) detector D2 using algorithm A2
   7. Run a prediction script using D2.
   8. Compare output using dedicated Dashboard.
-
-
-type: 'F'
+type: F
 urgency: '1'
 version: '0.1'

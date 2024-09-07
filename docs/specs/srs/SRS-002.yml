@@ -1,23 +1,22 @@
-acceptance: 'Successful validation according to the corresponding test case specification'
+acceptance: |
+  Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '1'
 header: ''
 importance: '5'
-level: 1.1
+level: 2
 links:
-- MRS-002: null
+- MRS-002: PcjCPpAQg4L-F5WYHxXPLu4WLt030SwN9R24ecLAMdg=
 normative: true
-outlay: ''
-rationale: 'To centralize and simplify agent/sensor configuration management.'
+outlay: null
+rationale: To centralize and simplify agent/sensor configuration management.
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: TBpYTeDAEcSXx3gwuWO9zpHhpMQM4A6MFe4Lu5n0p5U=
 risk: '2'
-status: ''
+status: null
 text: |
   As a system admin user,
   I want access end-point monitored system via IDPS-ESCAPE C&C server/unit,
@@ -27,7 +26,6 @@ text: |
   2. Via CyFORT-Wazuh manager, list the enrolled agents and their status.
   3. If deployed, check C-CyFORT-Suricata and mirroring status
   4. If any deployed, remote connect to endpoint and check local CyFORT-Suricata status.
-
-type: 'F'
+type: F
 urgency: '5'
 version: '0.1'

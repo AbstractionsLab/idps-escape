@@ -1,20 +1,21 @@
 active: true
 derived: false
-header: ''
+header: |
+  ADBox subsystem
 level: 1.0
 links:
-- MRS-002: null
-- MRS-004: null
-- MRS-032: null
-- MRS-033: null
-- MRS-039: null
-- MRS-041: null
+- MRS-002: PcjCPpAQg4L-F5WYHxXPLu4WLt030SwN9R24ecLAMdg=
+- MRS-004: xi45PNuE6R8VT5LWMegbdcrYRDwa3nxZATXBXcayriA=
+- MRS-032: 8PqSYwKBzcz2ebnoKiLMRb21-sFRTziyoKQ3hieM-yY=
+- MRS-033: Qo3tudn-i84fGKUF66LxEtGw3FdzfYcS9U1xwgQKYJo=
+- MRS-039: 4pepNOPXHsHmADQ2Ub21C5a1WEQO9zFwcEBZremD0HM=
+- MRS-041: y8mj4oHfwFhaVQebBfNa9p9DRhqS88bd8RS1i3nzQW0=
 normative: true
 ref: ''
-reviewed: null
+reviewed: Hzg5bd3rAuMArWh5hMiEIZ8gAMz4pFCyk8CHY2ncEjU=
 text: |
-  ## Diagram
+  ## ADBox subsystem diagram
 
-  The diagram below explicit the context of ADBox subsystem.
+  The diagram below depicts the context of the ADBox subsystem.
 
-  ![ADBox context diagram](assets/ADBox-context.png "ADBox context diagram")
+  ![ADBox context diagram](assets/ADBox-context.png "ADBox context diagram"){: width="80%"}

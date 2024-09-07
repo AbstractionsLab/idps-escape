@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  Training pipeline flow
+level: 1.0
+links:
+- SRS-038: Zc7jVax5hJt5loWNRgdh8UztkBSGeNLUJYyyeTf9LO0=
+normative: true
+ref: ''
+release: Alpha
+reviewed: T1EdkK29QMeBrsCOw-0uTtFf4ufN2YQJSFHLM6ukeOs=
+text: |
+  ## Training pipeline flow diagram
+
+  The diagram summarizes the flow of the training pipeline orchestrated by the ADBox Engine.
+
+  ![ADBox training pipeline flow diagram](assets/ADBox-engine-train-pipeline-flow.png "ADBox training pipeline flow")
+version: '0.1'

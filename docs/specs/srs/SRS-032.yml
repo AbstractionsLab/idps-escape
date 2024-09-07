@@ -1,35 +1,33 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '1'
 header: ''
 importance: '4'
-level: 1.31
+level: 32
 links:
-- MRS-034: null
+- MRS-034: 2Q6uUkBFzAPXTfFecTngkch0XK2mytAS_W_0XE2cT84=
 normative: true
-outlay: ''
-rationale: 'To enable programmatic use of such data to further elaborate and evaluate output of prediction'
+outlay: null
+rationale: |
+  To enable programmatic use of such data to further elaborate and evaluate output of prediction
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: H9OQyQD8AFbi9YkOUGXqmqJQMzDigJ7EXLRO6uuzLWs=
 risk: '1'
-status: ''
+status: null
 text: |
   As a user,
   I want to read/plot the list of predicted anomalies .
 
-  Assuming: trained detector with unique identifier `uuid` available, use-case scenario `uc-x` given. 
+  Assuming: trained detector with unique identifier `uuid` available, use-case scenario `uc-x` given.
 
 
   1. Access C&C server
   2. Access ADBox
   3. Within `siem_mtad_gat/assets/detector_models/uuid/prediction` folder, open: `uc-x_predicted_anomalies_data-*.json`
-
-type: 'F'
+type: F
 urgency: '3'
 version: '0.1'

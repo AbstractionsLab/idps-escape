@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: |
+  ADBox MTAD GAT Predictor
+level: 8.0 
+links:
+- LARC-009: 1In1SEyV7gBoBCstchmENiQlJSODLpZymAQ-i8IQZ5Y=
+normative: true
+ref: ''
+reviewed: YRxBDVWlJlxKfMONseUrUK0qJ4XqcEd9ofzJVdYQ4aA=
+text: |
+  ## ADBox MTAD GAT Predictor class diagram
+
+  The diagram below depicts the `Predictor` class of the MTAD GAT PyTorch subpackage of ADBox.
+
+  ![ADBox Predictor class diagram](assets/ADBox-predictor-class.png "ADBox Predictor class diagram"){: width="80%"}

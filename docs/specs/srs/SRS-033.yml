@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 29.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '3'
 header: ''
 importance: '5'
-level: 1.32
+level: 33
 links:
-- MRS-037: null
+- MRS-037: qYyZcNrxvOvpVpfsQlpGAkUdhRKaGnSVCekMBzILydw=
 normative: true
-outlay: ''
-rationale: "To adapt and improve performance"
+outlay: null
+rationale: To adapt and improve performance
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: OfO5R8H7oTzyOt6heZdiz7M7npPfYWsZCao8KW5UxyY=
 risk: '3'
-status: ''
+status: null
 text: |
   As a system admin user,
   I want to deploy IDPS end-point monitoring solutions on a remote end-point by choosing from multiple configuration option,

@@ -1,34 +1,31 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
-difficulty: ''
+difficulty: null
 header: ''
 importance: '5'
-level: 1.9
+level: 10
 links:
-- MRS-012: null
+- MRS-012: C4CHVQL0aQetnxT0ulvjF_wEMJInUYdyZ1OXkdBWFfM=
 normative: true
-outlay: ''
-rationale: ''
+outlay: null
+rationale: null
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: W6C01IlZu1V09NPW5EiSzbwi0ZFfrf-Ax_KbFZFPcd8=
 risk: '1'
-status: ''
+status: null
 text: |
   As SOC member user,
   I want to manage the HIDP and NIDS results and information jointly,
   to have a centralize overview of the system for threat detection, investigation, and response.
 
-  1. Access C&C server 
+  1. Access C&C server
   2. Deploy CyFORT-Wazuh and HIDS agents
   3. Deploy (C-)CyFORT-Suricata
   4. Integrate CyFORT-Suricata and CyFORT-Wazuh using custom script and procedure
-
-type: 'F'
+type: F
 urgency: '4'
 version: '0.1'

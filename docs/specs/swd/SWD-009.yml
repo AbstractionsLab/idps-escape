@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: |
+  ADBox data managers
+level: 9.0 
+links:
+- LARC-010: zwinCbeFNwFHFGCmZk-qUet-I_UgAGXPJe_hq9m_tjQ=
+normative: true
+ref: ''
+reviewed: QaWVXeAjrvrdHuAoWyUvgesPtMWWkxbrAfmEM1RPTEU=
+text: |
+  ## ADBox data manager class diagrams
+
+  The diagram below depicts the `Data manager` classes of ADBox, all designed and implemented as Singleton classes.
+
+  ![ADBox Managers class diagram](assets/ADBox-managers-class.png "ADBox Managers classes diagram"){: width="80%"}

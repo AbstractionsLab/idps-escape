@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: |
+  Predictor score computation
+level: 6.0
+links:
+- LARC-009: 1In1SEyV7gBoBCstchmENiQlJSODLpZymAQ-i8IQZ5Y=
+normative: true
+ref: ''
+reviewed: AEO1Bp9QlWd6aQ0pkSxEAWzhQ_BLZQPyJuftiqjcR2I=
+text: |
+  ## Predictor score computation sequence diagram
+
+  The diagram depicts the sequence of operations run by the function `get_score` method of the `Predictor` class in the MTAD GAT PyTorch subpackage of ADBox.
+
+  ![ADBox Predict.get_scores sequence diagram](assets/ADBox-get_scores-sequence.png "ADBox Predict.get_scores sequence diagram"){: width="80%"}

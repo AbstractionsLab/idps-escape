@@ -1,21 +1,20 @@
 active: true
-comments: ''
+comments: null
 defect_category: '4'
-defect_description: 'Dev container build fail - not enough memory'
+defect_description: Dev container build fail - not enough memory
 derived: false
 header: ''
-level: 1.2
+level: 3
 links:
-- TST-003: null
+- TST-003: iM8VjyXLsywJgisixh4Sv4xM2QJDMVXQcbE1kaYGgK8=
 normative: true
 ref: ''
-references: 
-  - path: docs/specs/tra/assets/tra-003_Dev_container_error.png
-    type: file
-
-reviewed: null
+references:
+- path: docs/specs/tra/assets/tra-003_Dev_container_error.png
+  type: file
+reviewed: kKI9fUddmY8n0gtqsq4AP-O4Y-bW5kQa0yD6Q7cBtXs=
 test_date: 24-07-2024
-tester: 'AGI'
+tester: AGI
 text: |
   The docker build command fails. See reference.
   Test repeated.

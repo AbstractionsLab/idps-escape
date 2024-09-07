@@ -7,9 +7,7 @@ settings:
 
 attributes:
   defaults:
-    author: 'AGI'
     acceptance: 'Successful validation according to the corresponding test case specification'
-    date: '22.08.2024'
     dependence: []
     status: ''
     importance: ''
@@ -22,9 +20,7 @@ attributes:
     version: ''
     release: 'Alpha'
   reviewed:
-  - author
   - acceptance
-  - date
   - dependence
   - status
   - importance
@@ -35,9 +31,7 @@ attributes:
   - rationale
   - version
   publish:
-    - author
     - acceptance
-    - date
     - dependence
     - status
     - importance

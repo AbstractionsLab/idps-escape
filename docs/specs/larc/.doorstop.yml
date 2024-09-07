@@ -3,4 +3,9 @@ settings:
   itemformat: yaml
   parent: SRS
   prefix: LARC
-  sep: ''
+  sep: '-'
+
+attributes:
+  defaults:
+    version: ''
+    release: 'Alpha'

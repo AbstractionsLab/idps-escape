@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  IDPS-ESCAPE end-point host-only IDS arch.
+level: 6.0
+links:
+- SRS-033: HmvkqUrdQeu4MKFJwKHasqoC_QO0YbMNVxF6Rl7un-w=
+normative: true
+ref: ''
+release: Alpha
+reviewed: T8HD8v1Zd6qQPSUW_2oZUX_-88tZfkrN21aYjEkqf4I=
+text: |
+  ## IDPS-ESCAPE end-point host-only IDS model architecture diagram
+
+  The diagram illustrates the architecture of IDPS-ESCAPE end-point HIDS only model.
+
+  ![IDPS-ESCAPE end-point HIDS only model](assets/IDPS-ESCAPE-EP-HIDS-only.png "IDPS-ESCAPE end-point HIDS only model")
+version: '0.1'

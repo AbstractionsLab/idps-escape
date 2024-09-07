@@ -1,0 +1,30 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+dependence: '[]'
+derived: false
+difficulty: '2'
+header: ''
+importance: '3'
+level: 39
+links:
+- MRS-031: Qe4O1p-Ejjhx1iVzqvyOfQ2tmT40K3v6GYgQlFi72cc=
+normative: true
+outlay: null
+rationale: Adapt AD functionality to different scenarios and maximize accuracy.
+ref: ''
+release: Alpha
+reviewed: 9N6iM-UNfwHX2TcrU1frDOpZc4feYPo8wacleEvSAlU=
+risk: '2'
+status: unavaliable
+text: |
+  As a user,
+  I want to be able to select the algorithm to use for AD,
+  to run AD according to the most suitable AD principle.
+
+  1.  Access C&C server
+  2.  Access ADBox
+  3.  Select the ML-package to be used by the train/test pipelines.
+type: F
+urgency: '2'
+version: '0.1'

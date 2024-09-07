@@ -1,24 +1,23 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '4'
 header: ''
 importance: '2'
-level: 1.5
+level: 6
 links:
-- MRS-007: null
+- MRS-007: MYGDh7hfSDYQoh_aLsw5nLs_RYInVm0opcD702A5fQI=
 normative: true
-outlay: ''
-rationale: ' 	To be able to take reactive corrective measures and mitigate intrusions'
+outlay: null
+rationale: |
+  To be able to take reactive corrective measures and mitigate intrusions
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: lfxEn2aJ6j53Kb74Fwl5Ijl2xy-FxwJ0-KXKoiRZxXI=
 risk: '4'
-status: ''
+status: null
 text: |
   As a sys admin user,
   I want a centralized NIDPS in the C&C server.

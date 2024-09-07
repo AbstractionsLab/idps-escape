@@ -1,31 +1,29 @@
-acceptance: 'Successful validation according to the corresponding test case specification'
+acceptance: |
+  Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '2'
 header: ''
 importance: '5'
-level: 1.3
+level: 4
 links:
-- MRS-005: null
+- MRS-005: WU-OQqjP5o1FghU8Hq0-_jp7o-kDIm-B969Ssgvg058=
 normative: true
-outlay: ''
-rationale: 'To enable system hosts security posture monitoring'
+outlay: null
+rationale: To enable system hosts security posture monitoring
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: 0Cwpsb18oGlWym8IDVJZWW8BKCxR9devAhmMcjZ-bpc=
 risk: '2'
-status: ''
-text:  |
- As a sys admin user,
- I want to enabled/disabled HIDS agents deployed on the of hosts' monitored system.
+status: null
+text: |
+  As a sys admin user,
+  I want to enabled/disabled HIDS agents deployed on the of hosts' monitored system.
 
- 1. Access C&C server
- 2. Enroll/unenroll  Wazuh Agent from CyFORT-Wazuh manager
- 3. Possibly, remove logs and config files.
-
-type: 'F'
+  1. Access C&C server
+  2. Enroll/unenroll  Wazuh Agent from CyFORT-Wazuh manager
+  3. Possibly, remove logs and config files.
+type: F
 urgency: '5'
 version: '0.1'

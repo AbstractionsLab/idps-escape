@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
-difficulty: ''
+difficulty: null
 header: ''
 importance: '3'
-level: 1.22
+level: 23
 links:
-- MRS-016: null
+- MRS-016: BfDouEhEYpGpUkobupMtaH7QVGJKHSWZi0lS4wmxXzg=
 normative: true
-outlay: ''
-rationale: 'To enable a non-static configuration of monitored nodes.'
+outlay: null
+rationale: To enable a non-static configuration of monitored nodes.
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: bm069PFCUhshpjWNeakkQdqRSK8exSa9VqyvyJ2iWiw=
 risk: '1'
-status: ''
+status: null
 text: |
   As a user,
   I want to register a new agent in the central SIEM&XDR.
@@ -29,6 +27,6 @@ text: |
     a. Add the manager IP as an environment variable during the agent installation process.
     b. Set the manager IP in  the agent configuration file.
     c. requests the key from the manager API and  manually imports it to the agent.
-type: 'F'
+type: F
 urgency: '3'
 version: '0.1'

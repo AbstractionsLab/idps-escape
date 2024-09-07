@@ -1,6 +1,6 @@
 settings:
   digits: 3
   itemformat: yaml
-  parent: larc
+  parent: LARC
   prefix: SWD
-  sep: ''
+  sep: '-'

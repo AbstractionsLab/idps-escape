@@ -1,24 +1,23 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '3'
 header: ''
 importance: '3'
-level: 1.35
+level: 36
 links:
-- MRS-040: null
+- MRS-040: arnExMS6GVpYR1r-58fDJlROjnNgn51uRAodqXmSH4M=
 normative: true
-outlay: ''
-rationale: 'To extend the detection capability of IDPS-ESCAPE and taylor the detection to my system'
+outlay: null
+rationale: |
+  To extend the detection capability of IDPS-ESCAPE and taylor the detection to my system
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: PC1UejSusWJ1HUR8DNX9hkxDTznW1iEPBZblKrcHa9o=
 risk: '3'
-status: ''
+status: null
 text: |
   As user,
   I want to add a new custom rule-set signature,
@@ -27,13 +26,12 @@ text: |
   1. Access C&C server
   2. Add the file with custom rules `local.rules`
   3. Open `/etc/suricata/suricata.yaml` and update:
-      
+
       ```
       rule-files:
           - suricata.rules
           - /path/to/local.rules
       ```
-
-type: 'F'
+type: F
 urgency: '1'
 version: '0.1'

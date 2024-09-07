@@ -1,19 +1,19 @@
 active: true
-comments: ''
+comments: null
 defect_category: '0'
-defect_description: ''
+defect_description: null
 derived: false
 header: ''
-level: 1.11
+level: 12
 links:
-- TST-013: null
+- TST-013: 8o6N0HWXlHVEvOweivbRs2FaCRCwl5LN6-mD-nMqnko=
 normative: true
 ref: ''
-reviewed: null
+reviewed: 0axzZCbSbxiKuC3BmlKc19MF8rMApCGe7rMXwjuI474=
 test_date: 25-07-2024
-tester: 'AGI'
+tester: AGI
 text: |
   Test execution results for the test case (TST) referred in the parent link.
   ## Test environment details
-  - vm-cyfort-idps-escape  
+  - vm-cyfort-idps-escape
   - wazuh host : "192.168.5.5"

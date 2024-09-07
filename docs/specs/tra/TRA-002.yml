@@ -4,17 +4,15 @@ defect_category: '4'
 defect_description: Missing .whl file (step 4)
 derived: false
 header: ''
-level: 1.1
+level: 2
 links:
-- TST-002: null
+- TST-002: XZ_YX7RbV39HcA6va_-bWrnU06-_lgeY0CCXQdy_sjM=
 normative: true
 ref: ''
-reviewed: null
+reviewed: vPSym7MaQIXbVDQ0Q2W3PvAMhE3W39u1gFQhQJ4sR0U=
 test_date: 24-07-2024
 tester: AGI
 text: |
   Test execution results for the test case (TST) referred in the parent link.
   ## Test environment details
   - vm-cyfort-idps-escape
-
-  

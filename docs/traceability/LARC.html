@@ -20,10 +20,81 @@
       <div class="col-lg-2 hidden-sm hidden-xs">
           <nav id="TOC" class="nav nav-stacked fixed sidebar">
               <h3>Table of Contents</h3>
+<ul>
+<li><a href="#LARC-001">1.0 Training pipeline flow</a></li>
+<li><a href="#LARC-002">2.0 Historical data prediction pipeline flow</a></li>
+<li><a href="#LARC-003">3.0 Preprocessing flow</a></li>
+<li><a href="#LARC-004">4.0 IDPS-ESCAPE end-point integrated arch.</a></li>
+<li><a href="#LARC-005">5.0 IDPS-ESCAPE end-point hybrid arch.</a></li>
+<li><a href="#LARC-006">6.0 IDPS-ESCAPE end-point host-only IDS arch.</a></li>
+<li><a href="#LARC-007">7.0 IDPS-ESCAPE end-point capture-only arch.</a></li>
+<li><a href="#LARC-008">8.0 Batch and real-time prediction flow</a></li>
+<li><a href="#LARC-009">9.0 ADBox machine learning package</a></li>
+<li><a href="#LARC-010">10 ADBox data manager</a></li>
+</ul>
           </nav>
       </div>
       <div class="col-lg-8" id="main">
-        
+        <h1 id="LARC-001">1.0 Training pipeline flow <small>LARC-001</small></h1>
+<h2>Training pipeline flow diagram</h2>
+<p>The diagram summarizes the flow of the training pipeline orchestrated by the ADBox Engine.</p>
+<p><img alt="ADBox training pipeline flow diagram" src="assets/ADBox-engine-train-pipeline-flow.png" title="ADBox training pipeline flow" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-001">SWD-001 Training pipeline</a></p>
+<h1 id="LARC-002">2.0 Historical data prediction pipeline flow <small>LARC-002</small></h1>
+<h2>Prediction pipeline flow diagram for historical data mode</h2>
+<p>The diagram summarizes the flow of the predict pipeline for historical data orchestrated by the ADBox Engine.</p>
+<p><img alt="ADBox predict pipeline flow - historical diagram" src="assets/ADBox-engine-predict-pipeline-flow-historical.png" title="ADBox predict pipeline flow - historical" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-002">SWD-002 Prediction pipeline</a></p>
+<h1 id="LARC-003">3.0 Preprocessing flow <small>LARC-003</small></h1>
+<h2>Preprocessing flow diagram of ADBox data transformer</h2>
+<p>The diagram summarizes the flow of the method Preprocessor.preprocessing by the ADBox Data Transformer.</p>
+<p><img alt="ADBox Preprocessor.preprocessing flow diagram" src="assets/ADBox-preprocessing-flow.png" title="ADBox Preprocessor.preprocessing flow" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-029">SRS-029</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-010">SWD-010 ADBox data transformer</a>, <a href="SWD.html#SWD-011">SWD-011 ADBox preprocessing</a></p>
+<h1 id="LARC-004">4.0 IDPS-ESCAPE end-point integrated arch. <small>LARC-004</small></h1>
+<h2>IDPS-ESCAPE end-point integrated architecture diagram</h2>
+<p>The diagram illustrates the architecture of IDPS-ESCAPE end-point integrated model.</p>
+<p><img alt="IDPS-ESCAPE end-point integrated model" src="assets/IDPS-ESCAPE-EP-integrated.png" title="IDPS-ESCAPE end-point integrated model" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-033">SRS-033</a></p>
+<h1 id="LARC-005">5.0 IDPS-ESCAPE end-point hybrid arch. <small>LARC-005</small></h1>
+<h2>IDPS-ESCAPE end-point hybrid model architecture diagram</h2>
+<p>The diagram illustrates the architecture of IDPS-ESCAPE end-point hybrid model.</p>
+<p><img alt="IDPS-ESCAPE end-point hybrid model" src="assets/IDPS-ESCAPE-EP-hybrid.png" title="IDPS-ESCAPE end-point hybrid model" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-033">SRS-033</a></p>
+<h1 id="LARC-006">6.0 IDPS-ESCAPE end-point host-only IDS arch. <small>LARC-006</small></h1>
+<h2>IDPS-ESCAPE end-point host-only IDS model architecture diagram</h2>
+<p>The diagram illustrates the architecture of IDPS-ESCAPE end-point HIDS only model.</p>
+<p><img alt="IDPS-ESCAPE end-point HIDS only model" src="assets/IDPS-ESCAPE-EP-HIDS-only.png" title="IDPS-ESCAPE end-point HIDS only model" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-033">SRS-033</a></p>
+<h1 id="LARC-007">7.0 IDPS-ESCAPE end-point capture-only arch. <small>LARC-007</small></h1>
+<h2>IDPS-ESCAPE end-point capture-only model architecture diagram</h2>
+<p>The diagram illustrates the architecture of IDPS-ESCAPE end-point capture only model.</p>
+<p><img alt="IDPS-ESCAPE end-point capture only model" src="assets/IDPS-ESCAPE-EP-capture-only.png" title="IDPS-ESCAPE end-point capture only model" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-033">SRS-033</a></p>
+<h1 id="LARC-008">8.0 Batch and real-time prediction flow <small>LARC-008</small></h1>
+<h2>Batch and real-time ADBox modes prediction flow diagrams</h2>
+<p>The diagram summarizes the flow of the predict pipeline with
+  - batch mode
+  - real-time mode
+orchestrated by the ADBox Engine.</p>
+<p><img alt="ADBox predict pipeline flow - batch diagram" src="assets/ADBox-engine-predict-pipeline-flow-batch.png" title="ADBox predict pipeline flow - batch" />
+<img alt="ADBox predict pipeline flow - real-time diagram" src="assets/ADBox-engine-predict-pipeline-flow-real-time.png" title="ADBox predict pipeline flow - real-time" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-002">SWD-002 Prediction pipeline</a></p>
+<h1 id="LARC-009">9.0 ADBox machine learning package <small>LARC-009</small></h1>
+<h2>ADBox machine learning package diagram</h2>
+<p>ADBox ML-packages folder containing the machine learning packages called by the AD pipelines.</p>
+<p><img alt="ADBox ML-packages" src="assets/ADBox-ML-packages.png" title="ML-packages" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-039">SRS-039</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-003">SWD-003 MTAD GAT training</a>, <a href="SWD.html#SWD-004">SWD-004 MTAD GAT prediction</a>, <a href="SWD.html#SWD-005">SWD-005 Peak-over-threshold</a>, <a href="SWD.html#SWD-006">SWD-006 Predictor score computation</a>, <a href="SWD.html#SWD-007">SWD-007 ADBox MTAD GAT anomaly prediction</a>, <a href="SWD.html#SWD-008">SWD-008 ADBox MTAD GAT Predictor</a></p>
+<h1 id="LARC-010">10 ADBox data manager <small>LARC-010</small></h1>
+<h2>ADBox data manager diagram</h2>
+<p>The diagram below depicts the ADBox <code>Data Manager</code>.</p>
+<p><img alt="ADBox Data Manager" src="assets/ADBox-DataManager.png" title="ADBox Data Manager" /></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-040">SRS-040</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-009">SWD-009 ADBox data managers</a></p>
       </div>
     </div>
 </div>

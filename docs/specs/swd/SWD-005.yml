@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  Peak-over-threshold
+level: 5.0
+links:
+- LARC-009: 1In1SEyV7gBoBCstchmENiQlJSODLpZymAQ-i8IQZ5Y=
+normative: true
+ref: ''
+reviewed: A6hoifIUsEoY11wGQvPpH5Pv7nsWbiI4FSJps0ACG8c=
+text: |
+  ## POT evaluation sequence diagram
+
+  The diagram depicts the sequence of operations run  by the function `pot_eval` of the MTAD_GAT subpackage of ADBox.
+
+  This function runs the dynamic POT (i.e., peak-over-threshold) evaluation.
+
+  ![ADBox pot_eval sequence diagram](assets/ADBox-pot_eval-sequence.png "ADBox pot_eval sequence diagram"){: width="80%"}

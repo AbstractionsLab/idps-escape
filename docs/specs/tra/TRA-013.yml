@@ -1,17 +1,17 @@
 active: true
-comments: ''
+comments: null
 defect_category: '0'
-defect_description: ''
+defect_description: null
 derived: false
 header: ''
-level: 1.12
+level: 13
 links:
-- TST-015: null
+- TST-015: mbGnd61yB1E_VqjcWRAbDeCoUluMuSy6R0zG9_9Tde0=
 normative: true
 ref: ''
-reviewed: null
+reviewed: CjhPdp4jZGvjuKWA4GlLqwb3boFYTCVa6TD0vCiRlZE=
 test_date: 25-07-2024
-tester: 'AGI'
+tester: AGI
 text: |
   Test execution results for the test case (TST) referred in the parent link.
   ## Test environment details

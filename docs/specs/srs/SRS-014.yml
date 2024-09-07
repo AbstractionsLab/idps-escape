@@ -1,24 +1,22 @@
 acceptance: |
   Successful validation according to the corresponding test case specification
 active: true
-author: AGI
-date: 22.08.2024
-dependence: []
+dependence: '[]'
 derived: false
 difficulty: '2'
 header: ''
 importance: '3'
-level: 1.13
+level: 14
 links:
-- MRS-014: null
+- MRS-014: NyVQmVqMqHOjmj0-C4-HBdg5jpYunL-qVQb3LbcfEA8=
 normative: true
-outlay: ''
-rationale: 'To ensure avoid errors and inaccuracy'
+outlay: null
+rationale: To ensure avoid errors and inaccuracy
 ref: ''
 release: Alpha
-reviewed: null
+reviewed: bnJ0gcIQrvMCkM4VqDG2lj6hhIZeugMF2ILWxVHr8xQ=
 risk: '1'
-status: ''
+status: null
 text: |
   As SOC member,
   I want the detected event to be correctly decoded and transformed before usage and storage.
@@ -26,7 +24,6 @@ text: |
   1. Access C&C server
   2. Access CyFORT-Wazuh manager
   3. Run testing and verification of rules and decoders via CyFORT-Wazuh server API
-
-type: 'F'
+type: F
 urgency: '1'
 version: '0.1'

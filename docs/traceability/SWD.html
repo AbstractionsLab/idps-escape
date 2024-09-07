@@ -20,10 +20,78 @@
       <div class="col-lg-2 hidden-sm hidden-xs">
           <nav id="TOC" class="nav nav-stacked fixed sidebar">
               <h3>Table of Contents</h3>
+<ul>
+<li><a href="#SWD-001">1.0 Training pipeline</a></li>
+<li><a href="#SWD-002">2.0 Prediction pipeline</a></li>
+<li><a href="#SWD-003">3.0 MTAD GAT training</a></li>
+<li><a href="#SWD-004">4.0 MTAD GAT prediction</a></li>
+<li><a href="#SWD-005">5.0 Peak-over-threshold</a></li>
+<li><a href="#SWD-006">6.0 Predictor score computation</a></li>
+<li><a href="#SWD-007">7.0 ADBox MTAD GAT anomaly prediction</a></li>
+<li><a href="#SWD-008">8.0 ADBox MTAD GAT Predictor</a></li>
+<li><a href="#SWD-009">9.0 ADBox data managers</a></li>
+<li><a href="#SWD-010">10 ADBox data transformer</a></li>
+<li><a href="#SWD-011">11 ADBox preprocessing</a></li>
+</ul>
           </nav>
       </div>
       <div class="col-lg-8" id="main">
-        
+        <h1 id="SWD-001">1.0 Training pipeline <small>SWD-001</small></h1>
+<h2>Training sequence diagram</h2>
+<p>The diagram depicts the sequence of operations of the training pipeline, orchestrated by the ADBox Engine.</p>
+<p><img alt="ADBox training pipeline sequence diagram" src="assets/ADBox-engine-train-pipeline-sequence.png" title="ADBox training pipeline sequence" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-001">LARC-001 Training pipeline flow</a></p>
+<h1 id="SWD-002">2.0 Prediction pipeline <small>SWD-002</small></h1>
+<h2>Prediction pipeline sequence diagram</h2>
+<p>The diagram depicts the sequence of operations in the prediction pipeline, orchestrated by the ADBox Engine.</p>
+<p><img alt="ADBox predict pipeline sequence diagram" src="assets/ADBox-engine-predict-pipeline-sequence.png" title="ADBox predict pipeline sequence" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-002">LARC-002 Historical data prediction pipeline flow</a>, <a href="LARC.html#LARC-008">LARC-008 Batch and real-time prediction flow</a></p>
+<h1 id="SWD-003">3.0 MTAD GAT training <small>SWD-003</small></h1>
+<h2>MTAD GAT training sequence diagram</h2>
+<p>The diagram depicts the sequence of operations run by the function <code>train_MTAD_GAT</code> of the MTAD_GAT ML-subpackage of ADBox.</p>
+<p><img alt="ADBox train_MTAD_GAT sequence diagram" src="assets/ADBox-train_MTAD_GAT-sequence.png" title="ADBox train_MTAD_GAT sequence" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
+<h1 id="SWD-004">4.0 MTAD GAT prediction <small>SWD-004</small></h1>
+<h2>MTAD GAT prediction sequence diagram</h2>
+<p>The diagram depicts the sequence of operations run by the function <code>predict_MTAD_GAT</code> of the MTAD_GAT ML-subpackage of ADBOX.</p>
+<p><img alt="ADBox predict_MTAD_GAT sequence diagram" src="assets/ADBox-predict_MTAD_GAT-sequence.png" title="ADBox predict_MTAD_GAT sequence" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
+<h1 id="SWD-005">5.0 Peak-over-threshold <small>SWD-005</small></h1>
+<h2>POT evaluation sequence diagram</h2>
+<p>The diagram depicts the sequence of operations run  by the function <code>pot_eval</code> of the MTAD_GAT subpackage of ADBox.</p>
+<p>This function runs the dynamic POT (i.e., peak-over-threshold) evaluation.</p>
+<p><img alt="ADBox pot_eval sequence diagram" src="assets/ADBox-pot_eval-sequence.png" title="ADBox pot_eval sequence diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
+<h1 id="SWD-006">6.0 Predictor score computation <small>SWD-006</small></h1>
+<h2>Predictor score computation sequence diagram</h2>
+<p>The diagram depicts the sequence of operations run by the function <code>get_score</code> method of the <code>Predictor</code> class in the MTAD GAT PyTorch subpackage of ADBox.</p>
+<p><img alt="ADBox Predict.get_scores sequence diagram" src="assets/ADBox-get_scores-sequence.png" title="ADBox Predict.get_scores sequence diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
+<h1 id="SWD-007">7.0 ADBox MTAD GAT anomaly prediction <small>SWD-007</small></h1>
+<h2>ADBox MTAD GAT anomaly prediction sequence diagram</h2>
+<p>The diagram depicts the sequence of operations run by the function <code>predict_anomalies</code> method of the <code>Predictor</code> class in the MTAD GAT PyTorch subpackage of ADBox.</p>
+<p><img alt="ADBox Predict.predict_anomalies sequence diagram" src="assets/ADBox-predict_anomalies-sequence.png" title="ADBox Predict.predict_anomalies sequence diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
+<h1 id="SWD-008">8.0 ADBox MTAD GAT Predictor <small>SWD-008</small></h1>
+<h2>ADBox MTAD GAT Predictor class diagram</h2>
+<p>The diagram below depicts the <code>Predictor</code> class of the MTAD GAT PyTorch subpackage of ADBox.</p>
+<p><img alt="ADBox Predictor class diagram" src="assets/ADBox-predictor-class.png" title="ADBox Predictor class diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
+<h1 id="SWD-009">9.0 ADBox data managers <small>SWD-009</small></h1>
+<h2>ADBox data manager class diagrams</h2>
+<p>The diagram below depicts the <code>Data manager</code> classes of ADBox, all designed and implemented as Singleton classes.</p>
+<p><img alt="ADBox Managers class diagram" src="assets/ADBox-managers-class.png" title="ADBox Managers classes diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-010">LARC-010 ADBox data manager</a></p>
+<h1 id="SWD-010">10 ADBox data transformer <small>SWD-010</small></h1>
+<h2>ADBox data transformer class diagram</h2>
+<p>The diagram below depicts the <code>Data Transformer</code> class of ADBox.</p>
+<p><img alt="ADBox Transformer class diagram" src="assets/ADBox-transf-class.png" title="ADBox Data Transformer classes diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-003">LARC-003 Preprocessing flow</a></p>
+<h1 id="SWD-011">11 ADBox preprocessing <small>SWD-011</small></h1>
+<h2>ADBox preprocessing sequence diagram</h2>
+<p>The diagram summarizes the sequence of actions of the method <code>Preprocessor.preprocessing</code> in the ADBox DataTransformer.</p>
+<p><img alt="ADBox Preprocessor.preprocessing sequence diagram" src="assets/ADBox-preprocessing-sequence.png" title="ADBox Preprocessor.preprocessing sequence" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-003">LARC-003 Preprocessing flow</a></p>
       </div>
     </div>
 </div>

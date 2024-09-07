@@ -1,15 +1,15 @@
 active: true
-comments: ''
+comments: null
 defect_category: '0'
-defect_description: ''
+defect_description: null
 derived: false
 header: ''
-level: 1.17
+level: 18
 links:
-- TST-008: null
+- TST-008: UAsY-Ley_w3VQCh3yallpAQZrFCEAjDoMooz-r4ioZU=
 normative: true
 ref: ''
-reviewed: null
+reviewed: CwK80JAks_zIOxpHK59IrfxbRwKyH9HGg5asBqmA11A=
 test_date: 26-07-2024
 tester: AGI
 text: |

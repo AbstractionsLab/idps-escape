@@ -1,0 +1,17 @@
+active: true
+derived: false
+header: |
+  Prediction pipeline
+level: 2.0
+links:
+- LARC-002: UhypjRApmGmXEAu7bT3umJfshCPQk_lhyZY2MJC-KnI=
+- LARC-008: 4xl6fn54vwenKd0mq0780ZpErMVi46eh6oII0nfG0MM=
+normative: true
+ref: ''
+reviewed: RmFi8lT3jfyruVaQWBpNmOUNxEBhEvZmfrj6gzCCz8c=
+text: |
+  ## Prediction pipeline sequence diagram
+
+  The diagram depicts the sequence of operations in the prediction pipeline, orchestrated by the ADBox Engine.
+
+  ![ADBox predict pipeline sequence diagram](assets/ADBox-engine-predict-pipeline-sequence.png "ADBox predict pipeline sequence"){: width="80%"}

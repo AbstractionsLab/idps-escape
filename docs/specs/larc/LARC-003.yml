@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  Preprocessing flow
+level: 3.0
+links:
+- SRS-029: 6Oqv9F562H6om1exTwEcwIAIr2z5cBpOahaJdM6dCiU=
+normative: true
+ref: ''
+release: Alpha
+reviewed: lqPLdtYoDhUVv0auCez2LVpkzZRv30HK0qnMFouTYEY=
+text: |
+  ## Preprocessing flow diagram of ADBox data transformer
+
+  The diagram summarizes the flow of the method Preprocessor.preprocessing by the ADBox Data Transformer.
+
+  ![ADBox Preprocessor.preprocessing flow diagram](assets/ADBox-preprocessing-flow.png "ADBox Preprocessor.preprocessing flow")
+version: '0.1'

@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  IDPS-ESCAPE end-point capture-only arch.
+level: 7.0
+links:
+- SRS-033: HmvkqUrdQeu4MKFJwKHasqoC_QO0YbMNVxF6Rl7un-w=
+normative: true
+ref: ''
+release: Alpha
+reviewed: kdtS4SZNCtS-h8hZ-jnduXp5mEE7VjUKUg-2Uu_7NwQ=
+text: |
+  ## IDPS-ESCAPE end-point capture-only model architecture diagram
+
+  The diagram illustrates the architecture of IDPS-ESCAPE end-point capture only model.
+
+  ![IDPS-ESCAPE end-point capture only model](assets/IDPS-ESCAPE-EP-capture-only.png "IDPS-ESCAPE end-point capture only model")
+version: '0.1'

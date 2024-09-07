@@ -3,7 +3,7 @@ Once Suricata and Wazuh are installed, proceed with the integration process outl
  
 
 ### Requirements 
-1. [A running instance of the Suricata service
+1. A running instance of the Suricata service
 2. A running instance of the Wazuh distribution
 3. An installation of a Wazuh agent
 

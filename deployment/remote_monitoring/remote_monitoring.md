@@ -18,6 +18,8 @@ Notice that, dedicated Wazuh agents are installed on the endpoints that need to 
 1. [Install Wazuh agent](./wazuh/wazuh_agents.md) using address of cental manager.
 1. Follow [integration procedure](integration.md) with local paths.
 
+![Integrated Model](./../../docs/specs/larc/assets/IDPS-ESCAPE-EP-integrated.png)
+
 ### Hybrid Model 
 
 1. [Install Wazuh agent](./wazuh/wazuh_agents.md) using address of cental manager. 
@@ -52,3 +54,5 @@ Then finally, the script can be executed as:
 ./idps-escape-port-mirroring.sh source_interface=enp9s0 source_ip=192.168.5.8 destination_interface=enp7s0 destination_ip=192.168.5.5 tunnel_ip=192.168.5.10/24 tunnel_name=tun0
 ```
  This creates a GRE tunnel from the source to destination mirroring all incoming and outgoing network traffic to the destination machine. Any malicious activity on the source machine would now be seen through the Wazuh dashboard on the destination machine i.e., the centralized monitoring machine hosting the Suricata and Wazuh integration. 
+
+![Integrated Model](./../../docs/specs/larc/assets/IDPS-ESCAPE-EP-hybrid.png)

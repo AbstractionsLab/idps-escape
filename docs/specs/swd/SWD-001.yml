@@ -1,0 +1,16 @@
+active: true
+derived: false
+header: |
+  Training pipeline
+level: 1.0
+links:
+- LARC-001: EoZ1am2LLCNAX0wwF66oq5Uy8bnHz0mMIH8HRhtSqA0=
+normative: true
+ref: ''
+reviewed: -i4wVIxZy8ifV4loyi5zNhf3jXCgjHaHDDxLu7RvdS8=
+text: |
+  ## Training sequence diagram
+
+  The diagram depicts the sequence of operations of the training pipeline, orchestrated by the ADBox Engine.
+
+  ![ADBox training pipeline sequence diagram](assets/ADBox-engine-train-pipeline-sequence.png "ADBox training pipeline sequence"){: width="80%"}

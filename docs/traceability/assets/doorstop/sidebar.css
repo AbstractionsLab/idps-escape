@@ -69,3 +69,10 @@
 .sidebar * {
     margin-left: 0px;
 }
+
+                            @media (min-width: 1200px) {
+                                .col-lg-2 {
+                                width: 26.66666667%;
+                                }
+                            }
+                            
