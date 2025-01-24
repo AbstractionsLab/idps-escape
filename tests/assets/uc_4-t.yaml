@@ -1,0 +1,5 @@
+prediction:
+  run_mode: HISTORICAL
+  start_time: "2023-11-01T12:24:33Z"
+  end_time: "2023-11-01T20:00:03Z"
+  detector_id: "7f240591-3b5b-4cc8-91fe-09ce51f7ff85"

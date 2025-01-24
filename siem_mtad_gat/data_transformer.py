@@ -1,18 +1,32 @@
+
+import json
 import pandas as pd
 import numpy as np
 import logging
-from siem_mtad_gat.data_manager.data_retrieval_manager import DataRetrievalManager
-import siem_mtad_gat.settings as settings
-import json
-from sklearn.preprocessing import MinMaxScaler  
 from typing import * 
-from siem_mtad_gat.data_manager.data_storage_manager import DataStorageManager 
-import os
-os.makedirs(settings.OUTPUT_LOGS, exist_ok=True)
-logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name=__name__), format=settings.DEFAULT_LOGGING_FORMAT)
-logger = logging.getLogger(__name__)
-logger.setLevel(settings.DEFAULT_LOGGING_LEVEL) 
+from sklearn.preprocessing import MinMaxScaler  
 
+from siem_mtad_gat.commons import EscapeError, EscapeWarning
+import siem_mtad_gat.settings as settings
+import siem_mtad_gat.config_manager.config_keys as keys
+from siem_mtad_gat.data_manager.data_storage_manager import DataStorageManager 
+from siem_mtad_gat.data_manager.data_retrieval_manager import DataRetrievalManager
+
+import logging
+import siem_mtad_gat.settings as settings
+
+logger = logging.getLogger(__name__)
+logger.setLevel(settings.DEFAULT_LOGGING_LEVEL)
+
+AGGREGATION_METHODS_MAP: dict[str, str] = {
+            'average': 'mean',
+            'count': 'count',
+            'sum': 'sum',
+            'min': 'min',
+            'max': 'max'
+        }
+
+TIMESTAMP:str='timestamp'
 
 class DataTypeTransformer: 
     @staticmethod
@@ -42,7 +56,7 @@ class DataTypeTransformer:
 
         with open(columns_config_path, 'r') as file:
             config_data = json.load(file) 
-            columns_dict = {col_name: dtype for col_name, dtype in config_data['columns'].items()} 
+            columns_dict: dict = {col_name: dtype for col_name, dtype in config_data[keys.UC_COLUMNS].items()} 
         
         # Drop columns not in the columns_info list and remove the _source word from them 
         df = df[[col for col in columns_dict if col in df.columns]]   
@@ -62,12 +76,12 @@ class DataTypeTransformer:
                 elif dtype == 'string':
                     df[col] = DataTypeTransformer.convert_to_string(df[col])
                 else:
-                    logging.error(f"Unrecognized data type for column '{col}': {dtype}") 
+                    raise EscapeError(f"Unrecognized data type for column '{col}': {dtype}") 
                 
         
         # Rename _id column to document_id
         if '_id' in df.columns:
-            df = df.rename(columns={'_id': 'document_id'}) 
+            df: pd.DataFrame = df.rename(columns={'_id': 'document_id'}) 
             
         return df
 
@@ -87,7 +101,7 @@ class DataTypeTransformer:
         try:
             return series.replace("NaN", np.nan).astype(pd.Float64Dtype()).astype(pd.Int64Dtype())
         except Exception as e:
-            logging.error(f"Error converting column '{series.name}' to int: {e}")
+            raise EscapeWarning(f"Error converting column '{series.name}' to int: {e}")
             return series
 
     @staticmethod
@@ -104,7 +118,7 @@ class DataTypeTransformer:
         try:
             return series.replace("NaN", np.nan).astype(pd.Float64Dtype())
         except Exception as e:
-            logging.error(f"Error converting column '{series.name}' to float: {e}")
+            raise EscapeWarning(f"Error converting column '{series.name}' to float: {e}",logger)
             return series
 
     @staticmethod
@@ -129,7 +143,7 @@ class DataTypeTransformer:
                 series = pd.to_datetime(series, errors='coerce') 
             return series 
         except Exception as e:
-            logging.error(f"Error converting column '{series.name}' to datetime: {e}")
+            raise EscapeError(f"Error converting column '{series.name}' to datetime: {e}",logger)
             return series
 
     @staticmethod
@@ -149,7 +163,7 @@ class DataTypeTransformer:
             series.astype(pd.BooleanDtype(), copy=False) 
             return series 
         except Exception as e:
-            logging.error(f"Error converting column '{series.name}' to bool: {e}")
+            raise EscapeError(f"Error converting column '{series.name}' to bool: {e}",logger)
             return series
 
     @staticmethod
@@ -166,7 +180,7 @@ class DataTypeTransformer:
         try:
             return series.astype(pd.StringDtype())
         except Exception as e:
-            logging.error(f"Error converting column '{series.name}' to string: {e}")
+            raise EscapeError(f"Error converting column '{series.name}' to string: {e}",logger)
             return series
     
     
@@ -195,36 +209,30 @@ class DataAggregator:
         """
 
 
-        # Select columns that are of type int, float, Int64, or Float64, and ensure 'timestamp' column is included
-        filtered_df = training_data.select_dtypes(include=['int', 'float', 'Int64', 'Float64']).copy()
-        filtered_df['timestamp'] = training_data['timestamp']
+        # Select columns that are of type int, float, Int64, or Float64, and ensure TIMESTAMP column is included
+        filtered_df: pd.DataFrame = training_data.select_dtypes(include=['int', 'float', 'Int64', 'Float64']).copy()
+        filtered_df[TIMESTAMP] = training_data[TIMESTAMP]
 
         # Define aggregation methods
-        aggregation_methods = {
-            'average': 'mean',
-            'count': 'count',
-            'sum': 'sum',
-            'min': 'min',
-            'max': 'max'
-        }
+
 
         # Extract granularity from the config
-        granularity = config.get('granularity')
+        granularity = config.get(keys.UC_GRANULARITY)
         if not granularity:
-            raise ValueError("The configuration must include a 'granularity' key.")
+            raise ValueError(f"The configuration must include a {keys.UC_GRANULARITY} key.")
 
         # Extract feature-specific aggregation methods from the config
-        features_methods = config.get('features')
+        features_methods = config.get(keys.UC_FEATURES)
         if not features_methods:
-            raise ValueError("The configuration must include a 'features' key with feature-specific aggregation methods.")
+            raise ValueError(f"The configuration must include a {keys.UC_FEATURES} key with feature-specific aggregation methods.")
 
-        # Check if 'timestamp' column is present
-        if 'timestamp' not in training_data.columns:
-            raise ValueError("The input DataFrame must contain a 'timestamp' column.")
+        # Check if TIMESTAMP column is present
+        if TIMESTAMP not in training_data.columns:
+            raise ValueError(f"The input DataFrame must contain a {TIMESTAMP} column.")
 
 
         # Set the timestamp column as the index
-        training_data.set_index('timestamp', inplace=True) 
+        training_data.set_index(TIMESTAMP, inplace=True) 
 
         # Initialize a list to store resampled data frames
         resampled_data_frames = []
@@ -237,17 +245,17 @@ class DataAggregator:
                     if feature not in training_data.columns:
                         raise ValueError(f"Feature '{feature}' does not exist in the data.") 
 
-                    if method not in aggregation_methods:
-                        raise ValueError(f"Invalid aggregation method '{method}' for feature '{feature}'. Choose from {list(aggregation_methods.keys())}.")
+                    if method not in AGGREGATION_METHODS_MAP:
+                        raise ValueError(f"Invalid aggregation method '{method}' for feature '{feature}'. Choose from {list(AGGREGATION_METHODS_MAP.keys())}.")
         
                     # Resample and aggregate the feature based on the specified method
-                    resampled_col = training_data[feature].resample(granularity).agg(aggregation_methods[method]) 
+                    resampled_col = training_data[feature].resample(granularity).agg(AGGREGATION_METHODS_MAP[method]) 
                     # Rename the column
                     resampled_col = resampled_col.rename(f"{feature}_{method}") 
                     if not resampled_col.empty:
                         resampled_data_frames.append(resampled_col) 
                 except Exception as e:
-                    logging.error(f"Cannot aggregate feature '{feature}': {e}")
+                    raise EscapeError(f"Cannot aggregate feature '{feature}': {e}")
                     print(f"Cannot aggregate feature '{feature}'.")
             
 
@@ -257,7 +265,7 @@ class DataAggregator:
             aggregated_data = pd.concat(resampled_data_frames, axis=1)
         else:
             # Handle case where no objects to concatenate 
-            logging.error("No data to concatenate.")
+            raise EscapeError("No data to concatenate.",logger)
             print("No data returned after aggregation.")
             return 
             #raise ValueError("No data to concatenate.")
@@ -265,16 +273,16 @@ class DataAggregator:
                 
         # Conditionally pass padding_value if it is not passed 
         if config.get('padding_value') is not None:
-            aggregated_data = DataAggregator.handle_null_values(aggregated_data, config.get('fill_na_method'), config.get('padding_value'))
+            aggregated_data = DataAggregator.handle_null_values(aggregated_data, config.get(keys.UC_FILL_NA), config.get(keys.UC_PADDING))
         else:
-            aggregated_data = DataAggregator.handle_null_values(aggregated_data, config.get('fill_na_method'))
+            aggregated_data = DataAggregator.handle_null_values(aggregated_data, config.get(keys.UC_FILL_NA))
 
         return aggregated_data
    
 
 
     @staticmethod
-    def handle_null_values(dataframe: pd.DataFrame, fill_NA_method: str = 'Zero', padding_value: float = None) -> pd.DataFrame:
+    def handle_null_values(dataframe: pd.DataFrame, fill_NA_method: str = 'Zero', padding_value: float | None= None) -> pd.DataFrame:
         """
         Handle missing values (NaN) in the merged table using specified fill methods.
 
@@ -319,54 +327,58 @@ class DataAggregator:
 class DataPreprocessor: 
     @staticmethod
     def preprocess(input_data: pd.DataFrame, 
-                   input_config: json, 
+                   input_config: dict[str, str|dict|list|bool], 
                    test_split: float = 0.3, 
                    normalize: bool = True, 
                    stateful: bool = False, 
-                   caller: str = None) -> tuple[pd.DataFrame,pd.DataFrame,pd.Index,pd.Index]:  
+                   caller: str | None= None) -> Tuple[np.ndarray,np.ndarray|None,pd.Index,pd.Index,pd.Index]:
         """preprocess data according to input configuration
 
         Args:
             input_data (pd.DataFrame): data to be preprocessed
-            input_config (json): dictionary of configuration. We assume the dictionary
+            input_config (dict): dictionary of configuration. We assume the dictionary
                 contains:
                  - the features' list under the key "columns"
                  - the boolean key "aggregation" (True if time series extraction needed)
                  - if "aggregation" value is True, the configuration of
                  aggregation as value corresponding to the key "aggregation_config".
             test_split (float, optional): the train/test split. Defaults to 0.3.
-            normalize (bool, optional): if data normalistion is applies. Defaults to True.
+            normalize (bool, optional): if data normalization is applies. Defaults to True.
             stateful (bool, optional): if data input data are stored wi. Defaults to True.
+            caller (str, optional): the pipeline calling the preprocessing.
+                        This shall be either settings.CALLER_TRAIN or settings.CALLER_PREDIC.
 
 
         Returns:
             tuple[pd.DataFrame,pd.DataFrame,pd.Index,pd.Index]: 
-                train data, test data, train data timesstamps, test timestamps)
+                (train data, test data, train data timestamps, test timestamps)
         """
 
         # Extract keys from "features" and convert to a list 
-        features_list = input_config.get("columns")
+        features_list : list= input_config.get(keys.UC_COLUMNS,[])
             
         # It should always fetch timestamp 
-        features_list.append("timestamp")
+        features_list.append(TIMESTAMP)
 
         #Here will go the encoding for categorical features
         #TBD
 
         # Check and convert aggregation to boolean if necessary (if it is not a boolean )
-        if not isinstance(input_config.get("aggregation"), bool): 
-            input_config["aggregation"] = True if input_config.get("aggregation", "true").lower() == 'true' else False
+        if not isinstance(input_config.get(keys.UC_AGGREGATION), bool): 
+            input_config[keys.UC_AGGREGATION] = True if input_config.get(keys.UC_AGGREGATION, "true").lower() == 'true' else False
 
             # Use the value of aggregation to decide if data needs to be aggregated 
             # If it is true then aggregate the data otherwise don't    
-        if input_config.get("aggregation"): 
-                if "features" in input_config["aggregation_config"]: 
-                    input_data = DataAggregator.aggregate_data(input_data, input_config.get("aggregation_config"))
+        if input_config.get(keys.UC_AGGREGATION): 
+
+                aggregation_config: dict=input_config.get(keys.UC_AGGREGATION_CONFIG,{})
+                if keys.UC_FEATURES in  aggregation_config:
+                    input_data = DataAggregator.aggregate_data(input_data, aggregation_config)
                 else: 
-                    raise ValueError(f"No or invalid features found in aggregation_config")
+                    raise ValueError(f"No or invalid {keys.UC_FEATURES} found in {keys.UC_AGGREGATION_CONFIG}")
         else: 
             #TBD : Feature extraction for non aggregated data TBD
-            raise NotImplementedError(f"Non-aggregated features under development")
+            raise NotImplementedError("Non-aggregated features under development")
         
         if input_data is None: 
             return  
@@ -377,18 +389,18 @@ class DataPreprocessor:
 
        
         
-        # Split the input data in train and test data where size of test chunck is floor(split * size_of_input_data)     
+        # Split the input data in train and test data where size of test chunk is floor(split * size_of_input_data)     
         train_data, test_data = DataPreprocessor.split_data(input_data, test_split)
 
-        # Store timestamaps for later mapping (assuming timestamp is used as index!)
-        train_stamps = train_data.index
-        test_stamps = test_data.index
+        # Store timestamps for later mapping (assuming timestamp is used as index!)
+        train_stamps: pd.Index = train_data.index
+        test_stamps:  pd.Index = test_data.index
         column_names = train_data.columns
         
-        # Tranform the dataframe entries in numpy
-        # This it is useful to later tranforme the input in torch tensors
+        # Transform the dataframe entries in numpy
+        # This it is useful to later transform the input in torch tensors
 
-        if caller=="predict":
+        if caller==settings.CALLER_PREDIC:
             data_retrieval_manager=DataRetrievalManager()
             scaler=data_retrieval_manager.load_preprocessing_scaler()
         else:
@@ -396,20 +408,24 @@ class DataPreprocessor:
 
         if normalize:
             train_data,train_scaler=DataPreprocessor.normalize_data(train_data,scaler)
-            if test_data.shape[0]!=0 : test_data,_=DataPreprocessor.normalize_data(test_data,train_scaler)
-            if caller=="train":
+            if test_data.shape[0]!=0 : test_data, _=DataPreprocessor.normalize_data(test_data,train_scaler)
+            if caller==settings.CALLER_TRAIN:
                 data_storage_manager.save_preprocessing_scaler(train_scaler)
         else: 
             train_data =  np.asarray(train_data, dtype=np.float32)
             if test_data.shape[0]!=0 : test_data=np.asarray(test_data,dtype=np.float32)
         
+        if stateful and caller==settings.CALLER_PREDIC:
+            data_storage_manager.save_preprocessed_data(pd.DataFrame(train_data))
+
+
         return train_data, test_data, train_stamps, test_stamps, column_names 
         
     
     @staticmethod
-    def normalize_data(data : pd.DataFrame, scaler=None): 
+    def normalize_data(in_data : pd.DataFrame, scaler=None) -> tuple[np.ndarray[Any, Any] | Any, MinMaxScaler | Any]: 
         ## normalize_data functions from mtad_gat_pytorch.utils
-        data = np.asarray(data, dtype=np.float32)
+        data = np.asarray(in_data, dtype=np.float32)
         if np.any(sum(np.isnan(data))):
             data = np.nan_to_num(data)
 
@@ -443,7 +459,6 @@ class DataPreprocessor:
                 train_size = size_data - test_size
                 return input.iloc[:train_size,:],input.iloc[train_size:,:]
             else: 
-                logging.error("No data to be split.")
-                print("No data to be split for preprocessing.")
+                raise EscapeWarning("No data to be split for preprocessing.",logger)
                 return 
         raise NotImplementedError(f"Preprocessing for non time-series not implemented")

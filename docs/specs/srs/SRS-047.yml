@@ -1,0 +1,30 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+dependence: []
+derived: false
+difficulty: ''
+header: ''
+importance: ''
+level: 47
+links:
+- MRS-030: null
+normative: true
+outlay: ''
+rationale: 'To simplify the process of preparing use-case files.'
+ref: ''
+release: Alpha
+reviewed: null
+risk: ''
+status: ''
+text: |
+  As a user,
+  I want to interactively compile a use case,
+  to create an anomaly detector and run predictions.
+
+  1.  Access C&C server
+  2.  Access ADBox
+  3.  Run interactive shell.
+type: F
+urgency: '2'
+version: '0.1'

@@ -1,0 +1,9 @@
+training:
+  train_config:
+    epochs: 2
+    window_size: 6
+
+prediction: 
+  run_mode: "historical"
+
+

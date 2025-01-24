@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  ADBox RequestResponseHandler
+level: 13.0
+links:
+- SRS-042: null
+normative: true
+ref: ''
+release: Alpha
+reviewed: null
+text: |
+  ## ADBox RequestResponseHandler context diagram
+
+  The diagram below depicts the ADBox `RequestResponse Handler` subpackage.
+
+  ![ADBox RequestResponseHandler](assets/1B3A4_DIA_IDPS_ESCAPE_RR-component-v1.2.png "ADBox RRHandler")
+version: '0.1'

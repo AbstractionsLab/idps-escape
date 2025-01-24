@@ -60,6 +60,15 @@
 <li><a href="#SRS-038">38 SRS-038</a></li>
 <li><a href="#SRS-039">39 SRS-039</a></li>
 <li><a href="#SRS-040">40 SRS-040</a></li>
+<li><a href="#SRS-041">41 SRS-041</a></li>
+<li><a href="#SRS-042">42 SRS-042</a></li>
+<li><a href="#SRS-043">43 SRS-043</a></li>
+<li><a href="#SRS-044">44 SRS-044</a></li>
+<li><a href="#SRS-045">45 SRS-045</a></li>
+<li><a href="#SRS-046">46 SRS-046</a></li>
+<li><a href="#SRS-047">47 SRS-047</a></li>
+<li><a href="#SRS-048">48 SRS-048</a></li>
+<li><a href="#SRS-049">49 SRS-049</a></li>
 </ul>
           </nav>
       </div>
@@ -67,7 +76,7 @@
         <h1 id="SRS-001">1 SRS-001</h1>
 <p>As a system admin user,
 I want to deploy and maintain a central subsystem, called command-and-control (C&amp;C),
-so that I can updated user-exposed settings of subsystems tackling data collection, intrusion detection and prevention.</p>
+so that I can update user-exposed settings of subsystems tackling data collection, intrusion detection and prevention.</p>
 <ol>
 <li>Set up host for C&amp;C server.</li>
 <li>Access as root.</li>
@@ -78,6 +87,7 @@ so that I can updated user-exposed settings of subsystems tackling data collecti
 <li>Configure components via respective software configuration management (SCM) mechanism.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-002">MRS-002</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-020">TST-020 Wazuh installation in a containerized environment</a></p>
 <table>
 <thead>
 <tr>
@@ -126,8 +136,8 @@ so that I can updated user-exposed settings of subsystems tackling data collecti
 </table>
 <h1 id="SRS-002">2 SRS-002</h1>
 <p>As a system admin user,
-I want access end-point monitored system via IDPS-ESCAPE C&amp;C server/unit,
-so that I can check the status of end-point monitor solutions deployed if any.</p>
+I want to access the end-point monitored system via IDPS-ESCAPE C&amp;C server/unit,
+so that I can check the status of end-point monitoring solutions deployed, if any.</p>
 <ol>
 <li>Access C&amp;C server as root.</li>
 <li>Via CyFORT-Wazuh manager, list the enrolled agents and their status.</li>
@@ -183,8 +193,7 @@ so that I can check the status of end-point monitor solutions deployed if any.</
 </table>
 <h1 id="SRS-003">3 SRS-003</h1>
 <p>As a sys admin user,
-I want deploy HIDS agents on the of hosts' monitored system,
-so that I can enable IDPS-ESCAPE's HIDS capabilities.</p>
+I want deploy HIDS agents on the hosts monitored system so that I can enable the IDPS-ESCAPE HIDS capabilities.</p>
 <ol>
 <li>Access host to be monitored</li>
 <li>Install Wazuh Agent</li>
@@ -192,6 +201,7 @@ so that I can enable IDPS-ESCAPE's HIDS capabilities.</p>
 <li>Configure Wazuh Agent.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-005">MRS-005</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-021">TST-021 Wazuh agent installation and enrollment: the local machine</a></p>
 <table>
 <thead>
 <tr>
@@ -240,13 +250,14 @@ so that I can enable IDPS-ESCAPE's HIDS capabilities.</p>
 </table>
 <h1 id="SRS-004">4 SRS-004</h1>
 <p>As a sys admin user,
-I want to enabled/disabled HIDS agents deployed on the of hosts' monitored system.</p>
+I want to enabled/disabled HIDS agents deployed on the host monitored system.</p>
 <ol>
 <li>Access C&amp;C server</li>
 <li>Enroll/unenroll  Wazuh Agent from CyFORT-Wazuh manager</li>
 <li>Possibly, remove logs and config files.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-005">MRS-005</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-023">TST-023 Wazuh agent deletion and uninstallation</a>, <a href="TST.html#TST-024">TST-024 Wazuh agent unenrollment</a></p>
 <table>
 <thead>
 <tr>
@@ -295,7 +306,7 @@ I want to enabled/disabled HIDS agents deployed on the of hosts' monitored syste
 </table>
 <h1 id="SRS-005">5 SRS-005</h1>
 <p>As a sys admin user,
-I want to enable/disable network monitoring within IDPS-ESCAPE's subsystem boundaries.</p>
+I want to enable/disable network monitoring within IDPS-ESCAPE subsystem boundaries.</p>
 <ol>
 <li>Access C&amp;C server</li>
 <li>Deploy C-CyFORT-Suricata</li>
@@ -410,7 +421,7 @@ I want a centralized NIDPS in the C&amp;C server.</p>
 </table>
 <h1 id="SRS-007">7 SRS-007</h1>
 <p>As a sys admin user,
-I want capture and forward raw network traffic to the C&amp;C server,
+I want to capture and forward raw network traffic to the C&amp;C server,
 to run NIDS on such a traffic.</p>
 <ol>
 <li>Access C&amp;C server.</li>
@@ -419,6 +430,7 @@ to run NIDS on such a traffic.</p>
 <li>Run port mirroring activation script with above arguments.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-008">MRS-008</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-026">TST-026 Port mirroring for remote machines</a></p>
 <table>
 <thead>
 <tr>
@@ -471,7 +483,7 @@ to run NIDS on such a traffic.</p>
 </table>
 <h1 id="SRS-008">8 SRS-008</h1>
 <p>As a sys admin user,
-I want to deploy NIDS components as Docker container on system end-point's hosts,
+I want to deploy NIDS components as a Docker container on a system end-points hosts,
 to monitor traffic and store logs locally.</p>
 <ol>
 <li>Access end-point (EP) host,</li>
@@ -479,6 +491,7 @@ to monitor traffic and store logs locally.</p>
 <li>Update the configs file (.yml) with local configuration.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-009">MRS-009</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-019">TST-019 Suricata installation in a containerized environment</a></p>
 <table>
 <thead>
 <tr>
@@ -593,7 +606,7 @@ I want to enable host intrusion detection via pattern matching with known/expect
 <h1 id="SRS-010">10 SRS-010</h1>
 <p>As SOC member user,
 I want to manage the HIDP and NIDS results and information jointly,
-to have a centralize overview of the system for threat detection, investigation, and response.</p>
+to have a centralized overview of the system for threat detection, investigation, and response.</p>
 <ol>
 <li>Access C&amp;C server</li>
 <li>Deploy CyFORT-Wazuh and HIDS agents</li>
@@ -601,6 +614,7 @@ to have a centralize overview of the system for threat detection, investigation,
 <li>Integrate CyFORT-Suricata and CyFORT-Wazuh using custom script and procedure</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-012">MRS-012</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-025">TST-025 Suricata and Wazuh Integration</a></p>
 <table>
 <thead>
 <tr>
@@ -652,6 +666,7 @@ I want a graphic visualization of the network events detected in my system.</p>
 <li>Filter security events generate by NIDS group rules</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-013">MRS-013</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-027">TST-027 Traffic monitoring on Wazuh (local)</a>, <a href="TST.html#TST-028">TST-028 Traffic monitoring on Wazuh (remote)</a>, <a href="TST.html#TST-032">TST-032 Wazuh filters using the Wazuh Dashboard</a></p>
 <table>
 <thead>
 <tr>
@@ -910,7 +925,7 @@ I want my SIEM to interpret a new type of data forwarded by agents/sensors.</p>
 </tr>
 <tr>
 <td>rationale</td>
-<td>To extend the detection capability of IDPS-ESCAPE and taylor the detection to my system</td>
+<td>To extend the detection capability of IDPS-ESCAPE and tailor the detection to my system</td>
 </tr>
 <tr>
 <td></td>
@@ -932,6 +947,7 @@ to improve the security level of the admin password.</p>
 <li>Update <code>config/wazuh_indexer/internal_users.yml</code> file.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-029">TST-029 Changing password for Wazuh indexer users</a>, <a href="TST.html#TST-030">TST-030 Changing password for Wazuh API users</a></p>
 <table>
 <thead>
 <tr>
@@ -987,6 +1003,7 @@ I want to define a ADBox to fetch data from an indexer at specific host address.
 <li>Modify IP address in  <code>../siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-034">TST-034 ADBox set up indexer host address</a></p>
 <table>
 <thead>
 <tr>
@@ -1046,6 +1063,7 @@ I want to modify the default hyperparameter of ML methods used by ADBox.</p>
 <li>Modify values in <code>siem_mtad_gat/assets/default_configs/mtad_gat_train_config_default_args.json</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-012">LARC-012 ADBox ConfigManager</a></p>
 <table>
 <thead>
 <tr>
@@ -1195,6 +1213,7 @@ I want to update the default use case of ADBox.</p>
 <li>Modify <code>../siem_mtad_gat/assets/default_configs/default_detector_input_config.json</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-012">LARC-012 ADBox ConfigManager</a></p>
 <table>
 <thead>
 <tr>
@@ -1250,6 +1269,7 @@ I want to update indexer credentials in ADBox.</p>
 <li>Update CyFORT-Wazuh indexer credentials in  <code>../siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-035">TST-035 ADBox change indexer credentil</a></p>
 <table>
 <thead>
 <tr>
@@ -1301,12 +1321,13 @@ I want to update indexer credentials in ADBox.</p>
 I want to register a new agent in the central SIEM&amp;XDR.</p>
 <p>Assuming: CyFORT-Wazuh Manager running on C&amp;C and agent on selected host</p>
 <ol>
-<li>Either:
-  a. Add the manager IP as an environment variable during the agent installation process.
-  b. Set the manager IP in  the agent configuration file.
-  c. requests the key from the manager API and  manually imports it to the agent.</li>
+<li>Either:</li>
 </ol>
+<p>a. Add the manager IP as an environment variable during the agent installation process.</p>
+<p>b. Set the manager IP in the agent configuration file.</p>
+<p>c. Requests the key from the manager API and manually imports it into the agent.</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-016">MRS-016</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-022">TST-022 Wazuh agent installation and enrollment: remote machine</a></p>
 <table>
 <thead>
 <tr>
@@ -1362,6 +1383,7 @@ I want to run queries on data such as events, alerts and statistics.</p>
 <li>Query to indexer via Wazuh API</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-018">MRS-018</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-031">TST-031 Wazuh filters using the RESTful API</a></p>
 <table>
 <thead>
 <tr>
@@ -1410,14 +1432,15 @@ I want to run queries on data such as events, alerts and statistics.</p>
 </table>
 <h1 id="SRS-025">25 SRS-025</h1>
 <p>As a user,
-I want to map a detected event to MITRE ATT&amp;CK framework.</p>
+I want to map a detected event to the MITRE ATT&amp;CK framework.</p>
 <p>Assuming:  CyFORT-Wazuh running</p>
 <ol>
-<li>Open the document corresponding to the event (e.g. via index query, or using the dashboard )</li>
+<li>Open the document corresponding to the event (e.g. via index query, or using the dashboard)</li>
 <li>Check if the following keys exist in the attributes
   <code>rule.mitre.id , rule.mitre.tactic , rule.mitre.technique</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-023">MRS-023</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-036">TST-036 Map a detected event to MITRE ATT&amp;CKS</a></p>
 <table>
 <thead>
 <tr>
@@ -1521,10 +1544,10 @@ I want to run a machine learning algorithm to detect anomalous behaviors within 
 <li>Access C&amp;C server</li>
 <li>Access ADBox</li>
 <li>Select a trained detector</li>
-<li>Run a prediction script using the chosen detection either on a selected time interval or in realtime.</li>
+<li>Run a prediction script using the chosen detection either for a selected time interval or in real time.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-008">LARC-008 Batch and real-time prediction flow</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-007">TST-007 ADBox use case 1 with a Wazuh connection</a>, <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a>, <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a>, <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a>, <a href="TST.html#TST-012">TST-012 ADBox use case 3 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -1569,7 +1592,7 @@ I want to run a machine learning algorithm to detect anomalous behaviors within 
 </table>
 <h1 id="SRS-028">28 SRS-028</h1>
 <p>As a user,
-I want to compare the outcome different anomaly detection algorithms on my data.</p>
+I want to compare the outcome of different anomaly detection algorithms on my data.</p>
 <p>Assuming: Two different algorithms A1 and A2 available in ADBox, and two compatible detectors D1 and D2 based on these algorithms, respectively.</p>
 <ol>
 <li>Access C&amp;C server</li>
@@ -1629,16 +1652,14 @@ I want to compare the outcome different anomaly detection algorithms on my data.
 </tbody>
 </table>
 <h1 id="SRS-029">29 SRS-029</h1>
-<p>As a user,
-I want to ingest and transform data generated from both host and network events,
-to feed anomaly detectors.</p>
+<p>As a user, I want to ingest and transform data generated from both host and network events to feed anomaly detectors.</p>
 <ol>
 <li>Access C&amp;C server</li>
 <li>Access ADBox</li>
 <li>Set up data ingestion and transformation of data derived from CyFORT-Wazuh and CyFORT-Suricata logs arguments.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-032">MRS-032</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-003">LARC-003 Preprocessing flow</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-003">LARC-003 ADBox preprocessing flow</a></p>
 <table>
 <thead>
 <tr>
@@ -1698,6 +1719,7 @@ I want to read/plot AD results of training and test data.</p>
    - test subset AD output: <code>test_output.pkl</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-037">TST-037 Open prediction file of training data</a></p>
 <table>
 <thead>
 <tr>
@@ -1761,6 +1783,7 @@ I want to read/plot losses of training and test data.</p>
    - test : <code>test_losses.png</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-038">TST-038 Visualize train losses</a></p>
 <table>
 <thead>
 <tr>
@@ -1804,8 +1827,7 @@ I want to read/plot losses of training and test data.</p>
 </tbody>
 </table>
 <h1 id="SRS-032">32 SRS-032</h1>
-<p>As a user,
-I want to read/plot the list of predicted anomalies .</p>
+<p>As a user, I want to read/plot the list of predicted anomalies .</p>
 <p>Assuming: trained detector with unique identifier <code>uuid</code> available, use-case scenario <code>uc-x</code> given.</p>
 <ol>
 <li>Access C&amp;C server</li>
@@ -1813,6 +1835,7 @@ I want to read/plot the list of predicted anomalies .</p>
 <li>Within <code>siem_mtad_gat/assets/detector_models/uuid/prediction</code> folder, open: <code>uc-x_predicted_anomalies_data-*.json</code></li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-039">TST-039 Open prediction raw outcome</a></p>
 <table>
 <thead>
 <tr>
@@ -1865,8 +1888,7 @@ I want to read/plot the list of predicted anomalies .</p>
 </table>
 <h1 id="SRS-033">33 SRS-033</h1>
 <p>As a system admin user,
-I want to deploy IDPS end-point monitoring solutions on a remote end-point by choosing from multiple configuration option,
-so that I can monitor events on my system's edges.</p>
+I want to deploy IDPS end-point monitoring solutions on a remote end-point by choosing from multiple configuration options so that I can monitor events on my system's edge/endpoints.</p>
 <ol start="2">
 <li>Access end-point as root.</li>
 <li>Deploy end-point components following:</li>
@@ -1930,18 +1952,15 @@ I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM
 <ol>
 <li>Access C&amp;C server</li>
 <li>Access ADBox</li>
-<li>
-<p>Add an use-case file <code>siem_mtad_gat/assets/drivers/uc_x.yaml</code> including</p>
-<p>```</p>
-<p>prediction:
-    run_mode: "historical"
-    index_date: YYYY-MM-DD
-    detector_id: uuid
-```</p>
-</li>
+<li>Add an use-case file <code>siem_mtad_gat/assets/drivers/uc_x.yaml</code> including</li>
 </ol>
+<p><code>yaml
+    prediction:
+      run_mode: "historical"
+      index_date: YYYY-MM-DD
+      detector_id: uuid</code></p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-039">MRS-039</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-002">LARC-002 Historical data prediction pipeline flow</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a>, <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a>, <a href="TST.html#TST-010">TST-010 ADBox use case 2 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -1980,7 +1999,7 @@ I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM
 </tr>
 <tr>
 <td>rationale</td>
-<td>To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating an possible threat</td>
+<td>To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating a possible threat</td>
 </tr>
 <tr>
 <td></td>
@@ -1994,8 +2013,7 @@ I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM
 </table>
 <h1 id="SRS-036">36 SRS-036</h1>
 <p>As user,
-I want to add a new custom rule-set signature,
-to a specific network related event type.</p>
+I want to add a new custom rule set signature to a specific network related event type.</p>
 <ol>
 <li>Access C&amp;C server</li>
 <li>Add the file with custom rules <code>local.rules</code></li>
@@ -2045,7 +2063,7 @@ to a specific network related event type.</p>
 </tr>
 <tr>
 <td>rationale</td>
-<td>To extend the detection capability of IDPS-ESCAPE and taylor the detection to my system</td>
+<td>To extend the detection capability of IDPS-ESCAPE and tailor the detection to my system</td>
 </tr>
 <tr>
 <td></td>
@@ -2059,8 +2077,7 @@ to a specific network related event type.</p>
 </table>
 <h1 id="SRS-037">37 SRS-037</h1>
 <p>As a user,
-I want to find anomalies in the network traffic,
-to detect threats not recognize by the signature-based NIDS.</p>
+I want to find anomalies in the network traffic to detect threats not recognized by the signature-based NIDS.</p>
 <p>Assuming: CyFORT-Suricata integrated with CyFORT-Wazuh</p>
 <ol>
 <li>Access C&amp;C server</li>
@@ -2069,6 +2086,7 @@ to detect threats not recognize by the signature-based NIDS.</p>
 <li>Run ADBox</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-015">TST-015 ADBox use case 5 with a Wazuh connection</a>, <a href="TST.html#TST-016">TST-016 ADBox use case 5 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -2120,16 +2138,14 @@ to detect threats not recognize by the signature-based NIDS.</p>
 </tbody>
 </table>
 <h1 id="SRS-038">38 SRS-038</h1>
-<p>As a user,
-I train a detector,
-to detect anomaly by using both host and network events.</p>
+<p>As a user, I want to train a detector to detect anomaly by using both host and network events.</p>
 <ol>
 <li>Access C&amp;C server</li>
 <li>Access ADBox</li>
 <li>Train a detector using features derived from CyFORT-Wazuh and CyFORT-Suricata logs arguments.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-001">LARC-001 Training pipeline flow</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-001">LARC-001 ADBox training pipeline flow</a>, <a href="TST.html#TST-013">TST-013 ADBox use case 4 with a Wazuh connection</a>, <a href="TST.html#TST-014">TST-014 ADBox use case 4 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -2174,12 +2190,11 @@ to detect anomaly by using both host and network events.</p>
 </table>
 <h1 id="SRS-039">39 SRS-039</h1>
 <p>As a user,
-I want to be able to select the algorithm to use for AD,
-to run AD according to the most suitable AD principle.</p>
+I want to be able to select the algorithm to use for AD to run AD according to the most suitable AD principle.</p>
 <ol>
 <li>Access C&amp;C server</li>
 <li>Access ADBox</li>
-<li>Select the ML-package to be used by the train/test pipelines.</li>
+<li>Select the ML-package to be used by the training/test pipelines.</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-031">MRS-031</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
@@ -2234,8 +2249,7 @@ to run AD according to the most suitable AD principle.</p>
 </tbody>
 </table>
 <h1 id="SRS-040">40 SRS-040</h1>
-<p>ADBox should include a Data Management subpackage,
-centralizing data storage, retrieval and all other operation concerning the management of data along the AD pipelines.</p>
+<p>ADBox should include a Data Management subpackage, centralizing data storage, retrieval and all other operation concerning the management of data along the AD pipelines.</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-010">LARC-010 ADBox data manager</a></p>
 <table>
@@ -2277,6 +2291,491 @@ centralizing data storage, retrieval and all other operation concerning the mana
 <tr>
 <td>rationale</td>
 <td>To consolidate the data management operation</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-041">41 SRS-041</h1>
+<p>ADBox should include a Time Management package, handling various aspects of time-related operations given the time-series based approach.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-011">LARC-011 ADBox TimeManager</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Code inspection</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dependence</td>
+<td>[]</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To consolidate the time management operation</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-042">42 SRS-042</h1>
+<p>As a user,
+I want the prediction of the anomaly detection subsystem to be shipped to the central indexer.</p>
+<p>Assuming:</p>
+<ul>
+<li>
+<p>CyFORT-Wazuh and ADBox deployed</p>
+</li>
+<li>
+<p>a use case, including training settings available.</p>
+</li>
+</ul>
+<ol>
+<li>Build ADBox container</li>
+<li>Run ADBox training with the shipping flag enabled</li>
+<li>When using the created detector, turn the shipping on.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-018">MRS-018</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-013">LARC-013 ADBox RequestResponseHandler</a>, <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a>, <a href="TST.html#TST-018">TST-018 ADBox Create detector data stream</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>Centralization and integration of information</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-043">43 SRS-043</h1>
+<p>As a user,
+I want a graphic visualization of the data produced by the anomaly detection subsystem.</p>
+<p>Assuming:</p>
+<ul>
+<li>
+<p>CyFORT-Wazuh and ADBox deployed and integrated</p>
+</li>
+<li>
+<p>At least a detector data stream available in CyFORT-Wazuh Indexer</p>
+</li>
+</ul>
+<ol>
+<li>Open CyFORT-Wazuh</li>
+<li>Add the detector's pattern to Dashboard pattern list.</li>
+<li>(Optional) Create an ad hoc visualization and a Dashboard.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-017">MRS-017</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-033">TST-033 ADBox Wazuh integration Dashboard</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>Accessibility of AD data for the end-users and centralise forensics</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-044">44 SRS-044</h1>
+<p>As a user,
+I want to deploy ADBox using a platform-independent solution,
+and to further develop it.</p>
+<p>Assuming:</p>
+<ul>
+<li>CyFORT-Wazuh deployed</li>
+</ul>
+<ol>
+<li>Deploy ADBox using dev container.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-020">MRS-020</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>4</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F/A</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>Ensure cross-platform compatibility and portability both for usage and develpment.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-045">45 SRS-045</h1>
+<p>As a user,
+I want to understand IDPS-ESCAPE high level architecture.</p>
+<p>Assuming:</p>
+<ul>
+<li>access to idps-escape docs repository</li>
+</ul>
+<ol>
+<li>Open the <code>docs\specs</code> project folder.</li>
+<li>Open HARC</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-026">MRS-026</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-040">TST-040 Visualize IDPS-ESCAPE high level architecture</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>S</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To follow a consistent and well-defined process, while improving development security.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-046">46 SRS-046</h1>
+<p>As a user,
+I want to deploy ADBox as a platform independent solution.</p>
+<p>Assuming:</p>
+<ul>
+<li>CyFORT-Wazuh deployed</li>
+</ul>
+<ol>
+<li>Deploy ADBox via Docker and shell scripts.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-020">MRS-020</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-001">TST-001 Deploy ADBox via Docker and shell scripts</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>5</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>Ensure cross-platform compatibility and portability for usage.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-047">47 SRS-047</h1>
+<p>As a user,
+I want to interactively compile a use case,
+to create an anomaly detector and run predictions.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>Run interactive shell.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-004">TST-004 Run ADBox console</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To simplify the process of preparing use-case files.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-048">48 SRS-048</h1>
+<p>As a user,
+I want to train a base detector using default parameters.</p>
+<ol>
+<li>Access C&amp;C server</li>
+<li>Access ADBox</li>
+<li>ADBox with default option.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a>, <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To obtain a detector without use case specification.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-049">49 SRS-049</h1>
+<p>As a user,
+I want to enable the shipping of anomaly detection outcomes to the central indexer to centralize data anaysis and threat hunting.</p>
+<ol>
+<li>Access Command and Control server.</li>
+<li>Access ADBox.</li>
+<li>Run shipping installation script.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-021">MRS-021</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-017">TST-017 ADBox shipping install</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>acceptance</td>
+<td>Successful validation according to the corresponding test case specification</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>rationale</td>
+<td>To ensure consisten integration of AD outcomes with SIEM</td>
 </tr>
 <tr>
 <td>version</td>

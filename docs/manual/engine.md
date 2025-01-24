@@ -1,44 +1,43 @@
 # Anomaly detection engine
 
-The anomaly detection engine is the core component of ADBox. In fact, for every available anomaly detection method it orchestrates the interaction between the bulk functions of every algorithm, the data ingestion, data storage, user output, etc. In other words, the Engine determines the sequence of action to be performed to successfully go through the detection pipeline.
+The anomaly detection engine is the core component of ADBox. In fact, for every available anomaly detection method it orchestrates the interaction between the bulk functions of every algorithm, the data ingestion, data storage, user output, etc. In other words, the engine determines the sequence of actions to be performed to successfully go through the detection pipeline.
 
-For every available anomaly detection method, it includes:
-
-- **Detector Manager**: This is essentially a parser and transformer, which transforms use-case input to data consumable by various detection pipeline. It manages the list od available detectors.
-
-- **Engine**: The ADEngine class method maintains the status of the current detector, which is the detector to be used if nothing else specifies and the list of available detectors. Moreover, it exposes the actions that are available for the end user, triggering the corresponding pipelines. Moreover, it defines the default behavior of ADBox if no info are provided.
+ The *ADEngine class* method maintains the status of the current detector, which is the detector to be used if nothing else is specified and the list of available detectors. Moreover, it exposes the actions that are available for the end user, triggering the corresponding pipelines. Moreover, it defines the default behavior of ADBox if no relevant information is provided to that effect.
 
 The list of available actions includes:
 
-- get the list of available detectors and their info
-- set the default (current) detector
-- start the training pipeline for a new detector
-- start the prediction pipeline for an existing detector
+- getting the list of available detectors and their information
+- setting the default (current) detector
+- starting the training pipeline for a new detector
+- starting the prediction pipeline for an existing detector
+
+Currently, the ADBox engine supports the [MTAD-GAT](/docs/manual/mtad_gat.md) algorithm for anomaly detection.
+
+Instructions are given to the engine as [use cases](/docs/manual/use_case.md). The engine can parse and transform use case input into data consumable by various detection pipelines, by calling the [`DetectorsConfigManager`](/siem_mtad_gat/config_manager/config_manager.py).
+
+By default if the key words for training and prediction are not provided in the use case, the corresponding request is set to `None` and the output of the pipeline will be empty.
+
+## Engine state
+
+The engine state is maintained via its attributes. Normally, these attributes are set at initiation time using default values, however they can be automatically changed by the pipelines. For example, at the end of the training pipeline the `current_detector_id` is set to that of detector that was just trained.
 
 
-```mermaid
-classDiagram
-  class ADEngine {
-    current_detector_id : NoneType, str
-    detectors
-    get_detectors()
-    predict(run_mode: str, index_date: str,  detector_id: str, start_time: str, end_time: str, batch_size: int, predict_input_config, use_case_no)
-    select(detector_id: str)
-    set_current_detector_id() str
-    set_detectors() List[str]
-    set_detectors_and_id()
-    train(index_date: str, detector_name: str, default_config: bool, custom_config_file, use_case_no)
-  }
-```
-
-Currently, ADBox engine supports on the [MTAD-GAT](./mtad_gat.md) method for anomaly detection.  
+|  Attribute   | Description     |  Type   | Default |
+| --- | --- | --- | --- |
+| `algorithm `    | algorithm used by the detection pipelines. Currently only [MTAD-GAT](/docs/manual/mtad_gat.md) is available.    |   `str`  |  `MTAD-GAT`   |
+| `current_detector_id`    |  `uuid` of the detector to be used by the pipelines.   |   `str`   |  Last trained ID   |
+|  `default_config_path`    |  The path to the default detector configuration. See [default behavior and use case parsing](/docs/manual/use_case.md#default-behavior-and-use-case-parsing).   |  `str`    |  [`DEFAULT_DETECTOR_INPUT_CONFIG`](/siem_mtad_gat/assets/default_configs/default_detector_input_config.json)   |
+| `detectors`    |  List of detector IDs available locally   |   `List[str]`   |    |
+|  `ship_to_indexer`   |  If `True`, data shipping to Wazuh is enabled. See [Wazuh-ADBox integration](/docs/manual/detector_data_stream.md)   |  `bool`   |   `False`   |
+|  `transform_columns_path` | the path to the config file for ingested data type transformation. See [Data transformation](/docs/manual/data_transformation.md) .  |  `str`    |   [`WAZUH_COLUMNS_PATH`](/siem_mtad_gat/assets/wazuh/wazuh_columns.json)  |
+|  `test_env`   | If set `True`, the engine gathers assets (e.g., uc) from the test environment. |  `bool` | `False`|
 
 
-## MTAD-GAT pipelines
 
+## Detection pipelines
 
-Ideally a detector **detector** is the object that it is used to perform detection. In the specific case of anomaly detection via [MTAD-GAT](./mtad_gat.md) algorithm, it must include for example a trained ML, along with all the configuration used, and POT object. 
-In ADBox implementation detector is realize as a collection of files stored under an unique id, which is also the name of subfolder of `siem_mtad_gat/assets/detector_models` containing such files. All the outcomes generated by a pipeline associate with a certain detector are stored in the corresponding folder. For details see [Detector data structure](./detector_data_structure.md).
+A **detector** is the object that is used to perform detection. In the specific case of anomaly detection via [MTAD-GAT](/docs/manual/mtad_gat.md) algorithm, it must include for example a trained ML, along with all the configuration used, and POT object. 
+In ADBox implementation detector is realize as a collection of files stored under an unique id, which is also the name of subfolder of `siem_mtad_gat/assets/detector_models` containing such files. All the outcomes generated by a pipeline associate with a certain detector are stored in the corresponding folder. For details see [Detector data structure](/docs/manual/detector_data_structure.md).
 
 
 ```sh
@@ -72,167 +71,163 @@ Below we describe the train and predict pipelines.
 
 The main goal of the train pipeline is to create a new detector. 
 
-See parameters in [Use Case Guide](./use_case.md),
+See parameters in [Use-case Guide](/docs/manual/use_case.md),
 
 The train pipeline:
 
-1. Parse the used case and use-case input to get training request.
-2. initialize the *managers*, persistent object during the pipeline to which specific tasks are delegated:
+0. Parse uc and get train request (in fact, we assume the request has been generated using [`get_training_requests_from_uc`](/siem_mtad_gat/ad_engine/mtad_gat/ad_engine.py) method).
+1. Read training request.
+2. Initialize the *managers*, persistent object during the pipeline to which specific tasks are delegated:
     - data storage,
     - data retrievable,
     - management of POT object for dynamic threshold control.
-3. Wazuh data ingestion according to uc input (if the connection to Wazuh is not available, stored data are used).
-4. Transformation of ingested data, including preprocessing.
-5. Training of MTAD-GAT model. This include a testing on subset of data (30%).
+3. Ingest data from Wazuh according to use-case (if the connection to Wazuh is not available, stored data are used).
+4. Transforming ingested data; this includes preprocessing.
+5. Train ML model. This includes the testing on a subset of data (30%).
 6. Produce the train response.
+7. (optional) Create a [detector data stream](/docs/manual/detector_data_stream.md#detector-data-streams).
 
 Running the training pipeline should produce `input` and `training` folders under the id of the model.
 
+
 ```mermaid
+---
+title: Training pipeline
+---
 flowchart LR
-    Parse --> Init 
-    Init--> Ingest
-    Ingest --> Transform 
-    Transform --> Train
-    Train --> Respond
+  s[/Start Engine/]  --> P(Parse uc)
+  P --> Init 
+  Init--> Ingest
+   Ingest --> Transform 
+  Transform --> Train
+  Train --> Response
+  Response --> B{ship?}
+ B -->|no| D[/Return/]
+ B -->|yes| C[create detector stream]
+ C -->  D
 ```
 
-```mermaid
-sequenceDiagram %%% some intermediate checks are not included
+See also the [**training pipeline sequence diagram**](/docs/manual/engine-traninig-pipeline.md).
 
-    participant p0 as Main
-    participant p1 as :ADEngine
-    participant p2 as :Detector
-
-    participant p3 as :DataStorageManager
-    participant p10 as :DataRetrievalManager
-    participant p8 as :SPOTManager
-
-    participant p4 as :WazuhDataIngestor
-
-    participant p5 as :data_transformer.DataTypeTransformer
-    participant p6 as :data_transformer.DataPreprocessor
-    
-    participant p7 as train_mtad_gat
-
-
-    
-    p0->>+ p1: train(trainindex_date,  detector_name)
-
-    p1 ->>+ p2:  get_detector_training_input(index_date, detector_name,default_config, custom_config_file)
-    p2 -->>- p1: return training_request
-
-
-    p1 ->> +p3: init DataStorageManager
-    p1 ->> +p3:  save_detector_input_parameters(training_request)
-    deactivate p3
-    p1 ->> +p10: init DataRetrievalManager with data_storage_manager.uuidd
-
-
-    p1 ->>+ p3:  save_yaml_train(training_request)
-	  p3 -->>- p1: : return use_case_no
-
-    p1 ->> p1: check if required keys exist in training_request else raise exception
-
-    %% ingestion
-    p1 ->> +p4:  get_training_data(training_request)
-    p4 -->>- p1: : return input_data, datasource_name
-
-    %% transformation
-    %%%% Convert data types into proper format 
-    p1 ->>+ p5:  transform_data_types(input_data,...)
-    p5 -->>- p1: : return value
-    %%%% preprocessing 
-    p1 ->>+ p6:  preprocess(input_data, training_request,...)
-    p6 -->>- p1: : return train_data, test_data, train_stamps, test_stamps, column_names
-
-    %% SPOT
-    p1 ->> +p8: init SPOTManager
-
-    %%%$ train model
-    p1 ->>+ p7:  train_MTAD_GAT(train_data, test_data,<br>train_stamp,test_stamps,training_request.get("train_config")) 
-    Note left of p7: Internal calls to Managers and MTAD_GAT package
-    p7 -->>- p1: : return train_response
-
-    p1 ->> p1: define updated_detector_input_parameters using train_response
-
-    p1 ->>+ p3:  update_detector_input_parameters_after_training(updated_detector_input_parameters)
-    deactivate p3
-
-    p1 ->> p1: Init response dict
-
-    p1 ->>+ p8:  save_all_train()
-    deactivate p8
-
-    p1 ->> p8:  destroy_instance()
-    deactivate p8
-    
-	  p1 ->> p10:  destroy_instance()
-    deactivate p10
-
-  	p1 ->> p3:  destroy_instance()
-    deactivate p3
-
-    p1 -->> -p0: response
- 
-```  
-
-#### Train function input explanation
-
- **train:** The train method trains a detector to be used for detection using the default or given arguments. It takes the following inputs:
-
-  1. **index_date:** This is the date string that the detector will use to fetch from the consequent Wazuh index. The input format is the same as the date formats for Wazuh indices i.e., 'YYYY-MM-DD' and could also contain and asterisk (\*) at any position for example to fetch the data for the month of July 2024, the input can be "2024-07-\*".  If no date is provided, or "default" is given, then it will use the default index_date which would be the index date for the current month. So by default, the detector will train on all the data from the current month. 
-  2. **detector_name:** This is the display name for the detector. If no name is provided or "default" is given, then it will name the detector using the default naming format i.e., 'detector_<current timestamp>'. 
-  3. **default_config:** This is a boolean input value, to specify if the detector should use the default training inputs from the `/assets/default_configs/default_detector_input_config.json` file. By default it is True, if specified False, then a custom input config needs to be provided for training.  
-  4. **custom_config:** If the default_config is set to False, then the custom input config needs to be provided from a yaml file. ADBox will read the configs from this file and train a detector using those values. Keep in mind that the custom input config should have the key names same as the default input config. Otherwise it will still take the default values. 
 
 ## Prediction Pipeline
 
-The main goal of the train pipeline is to use a detector to find anomalies in a selected time-frame.
+The main goal of the prediction pipeline is to use a detector to find anomalies in a selected time-frame.
 
-Notice that, at prediction the parameters of the detector like window size, granularity, features aggregation methods, etc. cannot be selected, as they are inherent property of the detector. 
+Note that, at prediction time, detector parameters such as window size, granularity, features aggregation methods, etc. cannot be selected as they are inherent properties of the detector. 
 
-See parameters in the [use case guide](./use_case.md).
-
+See parameters in the [use-case guide](/docs/manual/use_case.md).
 
 The prediction pipeline:
 
-
-1. Parse the used case and use-case input to get prediction request, including detector id and runmode.
-2. initialize the *managers*, persistent object during the pipeline to which specific tasks are delegated:
+0. Parse the use case and use-case input to get the prediction request, including detector ID and run mode (in fact, we assume the request has been generated using the []`get_prediction_requests_from_uc`](/siem_mtad_gat/ad_engine/mtad_gat/ad_engine.py) method).
+1. Read the prediction request into memory.
+2. Initialize the *managers*, persistent object during the pipeline to which specific tasks are delegated:
     - data storage,
     - data retrieval,
     - management of POT object for dynamic threshold control.
-3. Depending on the runmode and the uc prediction parameters, run one or multiple times the following actions:
-    1. Wazuh data ingestion.
-    2. Transformation of ingested data, including preprocessing.
-    3. Apply MTAD-GAT model for prediction. 
-    4. Produce the predict response.
+3. Depending on the run mode and the use case prediction parameters, run one or multiple times the following actions (*prediction body*):
+    1. Wazuh data ingestion
+    2. Transformation of ingested data, including preprocessing
+    3. Apply MTAD-GAT model for prediction
+    4. Produce the prediction response
+    5. (optional) Ship data to detector data stream
 
-Running the training pipeline should files in `prediction` folder under the id of the model.
 
 ```mermaid
+---
+title: Prediction pipeline
+---
 flowchart LR
-    Parse --> Init 
-    Init--> Ingest
-    Ingest --> Transform 
-    Transform --> Predict
-    Predict --> Respond
-    Respond --> Ingest
+  s[/Start Engine/] --> P(Parse uc)
+  P --> Init 
+  Init--> Ingest
+  subgraph prediction body
+  Ingest --> Transform 
+  Transform --> Train
+  Train --> Response
+  Response --> B{ship?}
+  B -->|no| Ingest
+  B -->|yes| C[ship]
+  C -->  Ingest
+  end
+  Ingest --> r[/Return/] 
+```
+### Prediction pipeline body
+
+#### Predict body method's input explanation
+
+1. **prediction_request:**  This contains the arguments parsed form the use case plus the parameters of the chosen detectors (automatically added).
+2. **execution timestamp:** The timestamp indicating when the pipeline started.  
+3. **uc_number:** use case number.
+4. **start_fetch:** This is the start time for fetching the data, a timestamp string in 'YYYY-MM-DDTHH:MM:SSZ' format. This should be computed by `TimeManager`.
+5. **end_fetch:** This is the end time for fetching the data. This should be computed by `TimeManager`.
+6. **out_interval extrema:** This is the timestamps's pair indicating the first timestamp in the output and the timestamp where detections ends. 
+
+```mermaid
+
+sequenceDiagram
+
+    Title __prediction_pipeline_body(prediction_request,exec_timestamp,start_fetch,end_fetch,uc_number,out_interval_extrema,detector_stream)
+
+    participant p1 as engine:ADEngine
+    participant p2 as :data_manager.DataStorageManager
+    participant rr as response_handler:request_response_handler
+    
+    activate p2
+    activate p1
+    p1 ->>+ p1: __prediction_pipeline_body(prediction_request,exec_timestamp,start_fetch,end_fetch,uc_number,out_interval_extrema,detector_stream)
+
+	p1 ->>+ p1:  ingest_prediction(prediction_request,start_fetch,end_fetch)
+	p1 -->>- p1:  ingested_data
+
+	p1 ->>+ p1:  transform(prediction_request,ingested_data,settings.CALLER_PREDICT)
+	p1 -->>- p1:  transformed_data
+    
+	p1 ->>+ p1:  predict(transformed_data)
+	p1 -->>- p1: pred_df, anomalies
+
+	p1 ->> +rr:  prediction_pipeline_response(prediction_request, anomalies,column_names,out_interval_extrema, engine.algorithm)
+	rr -->>- p1 : predicted_anomalies_data
+	p1 ->> +rr:  prediction_pipeline_response(prediction_request, pred_df,column_names,out_interval_extrema, engine.algorithm)
+	rr -->>- p1 : predicted_data
+
+    alt engine.ship_to_indexer is True and detector_stream is not None:
+        p1 ->>+ p1: __ship_to_wazuh_prediction_pipeline(predicted_data,detector_stream)
+        deactivate p1
+    end
+	p1 ->> p2:  save_predict_output(predicted_anomalies_data,exec_timestamp,uc_number,output_type="predicted_anomalies_data")
+	p1 ->> p2:  save_predict_output(predicted_data,uc_number,exec_timestamp=exec_timestamp,output_type="predicted_data")
+
+    p1 ->> -p1: predicted_anomalies_data 
+
+    deactivate p1
+    deactivate p2
+    
+```
+ 
+### Stop online prediction 
+
+For online prediction run modes, i.e., real time and batch mode, the predict body runs in a loop. To stop the prediction, you can simply issue an interrupt using `ctrl-C`, which will simply interrupt the loop and close the running managers.
+
+## ADEngine as a library
+
+The AD engine can be imported and used from other modules.
+
+For example, suppose we compiled `uc_15.yaml` and stored it in the drivers folder; the training pipeline can be started as follows:
+
+```python
+engine=ADEngine()
+train_request=engine.get_training_requests_from_uc(uc_number=15) # parse request and update configs
+response_train=engine.training_pipeline(training_request=train_request)
 ```
 
-#### Predict function input explanation
+If the training request is `None`, the response will be  `None` as well.
 
-**predict:** The predict method performs anomaly detection using the trained detectors with default or specified parameters. The predict function of `ADEngine` takes the following inputs:  
+Similarly, the output of `engine.prediction_pipeline` is a generator, whose behavior depends on the run mode.
 
-1. **run_mode:** This value specifies the detection run mode. And it could take three values. 
-		- **HISTORICAL:** performs detection on historical data. 
-		- **BATCH:** performs detection on data in batches (in a real-time loop). 
-		- **REALTIME:** performs detection on (almost )real-time data. 
-		If no value is provided or "default" is specified, it will run using the default run mode which is set to HISTORICAL. 
-2. **index_date:** This is the date string that the detector will use to fetch from the consequent Wazuh index. The input format is the same as the date formats for Wazuh indices i.e., 'YYYY-MM-DD' and could also contain and asterisk (\*) at any position for example to fetch the data for the month of July 2024, the input can be "2024-07-\*".  If no date is provided, or "default" is given, then it will use the default index_date which would be the index date for the current day. So by default, the detector will preform detection on all the data from the current day.  
-3. **detector_id:** This is the detector id for the detector selected for detection. If no id is given, or "default" is specified, it will detect using the most recently trained detector. 
-4. **start_time:** This is the start time for detection. It should be a timestamp string in 'YYYY-MM-DDTHH:MM:SSZ' format. If not provided, or "default" is specified, it will be set to starting timestamp of the current date. 
-5. **end_time:** This is the end time for detection. It should be a timestamp string in 'YYYY-MM-DDTHH:MM:SSZ' format. If not provided, or "default" is specified, it will be set to current timestamp of the current date.  
-	*Note that for BATCH and REALTIME mode, the start and end time are not required.*
-6. **batch_size:** This specifies the batch size for the BATCH run mode. It should be given as an integer. If not provided, it will use a default batch size, which is set to 10. *Note that the batch size is not required for the other two batch modes (HISTORICAL and REALTIME).*
+```python
+engine=ADEngine()
+pred_request=engine.get_prediction_requests_from_uc(uc_number=args.usecase)
+engine.run_prediction_pipeline(prediction_request=pred_request,uc_number=args.usecase)
+```

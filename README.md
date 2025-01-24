@@ -2,15 +2,15 @@
 
 IDPS-ESCAPE, short for Intrusion Detection and Prevention Systems for Evading Supply Chain Attacks and Post-compromise Effects, is a sub-project of the [CyFORT](https://abstractionslab.com/index.php/research-and-development/cyfort/) project, which in turn stands for Cloud Cybersecurity Fortress of Open Resources and Tools for Resilience. CyFORT is carried out in the context of the [IPCEI-CIS](https://ec.europa.eu/commission/presscorner/detail/en/ip_23_6246) project, with further details available [here](https://www.bmwk.de/Redaktion/EN/Artikel/Industry/ipcei-cis.html).
 
-<img src="./docs/manual/_figures/CyFORT-logo.png" alt="cyfort_logo" width="400"/>
+<img src="./docs/manual/_figures/CyFORT-IDPS-ESCAPE-logo.png" alt="cyfort_logo" width="500"/>
 
-IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into providing a comprehensive package fulfilling the roles of a Security Orchestration, Automation, and Response (SOAR) system, a Security Information and Event Management (SIEM), and an Intrusion Detection and Prevention System (IDPS), with a central subsystem dealing with anomaly detection (AD) based on state-of-the-art advances in machine learning (ML). We call this AD subsystem "**ADBox**", which comes with out-of-the-box integration with well-known open-source solutions such as [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) for enriching alerts, and to [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
+IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into providing a comprehensive package fulfilling the roles of a Security Orchestration, Automation, and Response (SOAR) system, a Security Information and Event Management (SIEM), and an Intrusion Detection and Prevention System (IDPS), with a central subsystem dealing with anomaly detection (AD) based on state-of-the-art advances in artificial intelligence (AI) such as the attention mechanism in machine learning (ML). We call this AD subsystem "**ADBox**", which comes with out-of-the-box integration with well-known open-source solutions such as [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) for enriching alerts, and to [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
 
 Our extensible **ADBox** framework and implementation also include a Multivariate Time-series Anomaly Detection (MTAD) algorithm relying on Graph Attention Networks (GAT).
 
-This repository contains the source code and full documentation (requirements, technical specifications, schematics, user manual, test case specifications and test reports) of IDPS-ESCAPE, based on the [C5-DEC](https://github.com/AbstractionsLab/c5dec) method and software also developed in CyFORT, which relies on storing, interlinking and processing all software development life cycle (SDLC) artifacts in a unified manner; see our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) providing the technical specifications of IDPS-ESCAPE.
+This repository contains the source code and full documentation (requirements, technical specifications, schematics, [user manual](./docs/manual/README.md), test case specifications and test reports) of IDPS-ESCAPE, based on the [C5-DEC](https://github.com/AbstractionsLab/c5dec) method and software also developed in CyFORT, which relies on storing, interlinking and processing all software development life cycle (SDLC) artifacts in a unified manner; see our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) providing the technical specifications of IDPS-ESCAPE.
 
-## Table of contents
+**Table of contents**
 
 - [Overview](#overview)
 - [Features](#features)
@@ -19,7 +19,9 @@ This repository contains the source code and full documentation (requirements, t
 - [Getting started](#getting-started)
 - [Usage](#usage)
 - [Use case scenario example](#example-of-a-use-case-scenario)
+- [Wazuh-ADBox integration and detector dashboard](#wazuh-adbox-integration-and-detectors-dashboard)
 - [Disclaimer](#disclaimer-use-of-alphaexperimental-software)
+- [Testing](#testing)
 - [Roadmap](#roadmap)
 - [License](#license)
 - [Contact](#contact)
@@ -47,7 +49,7 @@ As a consequence, ADBox provides a stepping stone towards settling various contr
 
 The current version of the IDPS-ESCAPE stack consists of 
 - a combined setup integrating state-of-the-art open source _signature-based network and host_ IDPS and SIEM\&XDR, along with
-- ADBox, a custom-designed and implemented _anomaly detection_ subsystem based on machine learning.
+- ADBox, a custom-designed and implemented _anomaly detection_ subsystem based on novel AI techniques such as the attention mechanism in machine learning; ADBox can be directly integrated into Wazuh such that its prediction results can be consulted using the Wazuh GUI and  dashboards.
 
 Although the IDPS, SIEM and ADBox subsystems can be deployed independently, we recommend a fully integrated deployment. We provide automation scripts and guides for an easy deployment of such setups.
 
@@ -73,12 +75,14 @@ ADBox is a custom-designed and implemented _anomaly detection_ subsystem, with i
 - An integration of a machine learning package providing a [PyTorch-based implementation](https://github.com/ML4ITS/mtad-gat-pytorch) of the [MTAD-GAT algorithm](https://arxiv.org/pdf/2009.02040);
 - A dedicated anomaly detection engine (called AD Engine), aimed at orchestrating and generalizing common AD tasks and capturing them via an abstract and extensible design and implementation (currently under active development);
 - A driver module providing the entry point to the ADBox and currently using a CLI to interact with the user;
-- A set of AD use case scenario definitions encoded as YAML files, which can be directly used by the user, but they can also easily form the basis for creating new ones, tailored to the user's preferences for adjusting the training part as well as the prediction part of the ML-based algorithm and pipeline.
+- A set of AD use-case scenario definitions encoded as YAML files, which can be directly used by the user, but they can also easily form the basis for creating new ones, tailored to the user's preferences for adjusting the training part as well as the prediction part of the ML-based algorithm and pipeline;
+- A data shipper module to integrate the output anomaly detection data into Wazuh, allowing the user to view and analyze the ADBox prediction results using the native Wazuh GUI and dashboards.
 
 ### Front-end
 
 - A command-line interface (**CLI**) for efficient user interactions and automation via scripting integration, currently available via the driver module (under active development);
 - A dedicated Jupyter notebook for analysis and post-processing, providing a prepared playbook with tailored plotting and operating directly on top of anomaly prediction data produced by the ADBox backend;
+- Integration into the Wazuh Dashboard, with the possibility to create dedicated detector dashboards to compare predictions with the original data.
 
 ### Network and host monitoring
 
@@ -88,7 +92,7 @@ See our [Instructions for IDPS and SIEM integrated deployment](./deployment/READ
 
 ## User manual
 
-Please see the [Instructions for IDPS and SIEM integrated deployment](./deployment/README.md) and the [ADBox user manual](./docs/manual/README.md) page to learn more about the installation, setup requirements, overall usage and specific modules of the ADBox. 
+Please see our extensive and detailed [ADBox user manual](./docs/manual/README.md) to learn more about the installation, setup requirements, overall usage, specific modules of the ADBox and technical details covering internal aspects that are relevant for an effective use of the suite IDPS-ESCAPE tools. You will also find dedicated [instructions for a network IDPS plus SIEM integrated deployment](./deployment/README.md), describing our combined architectural setup using Wazuh, Suricata and various networking deployment solutions.
 
 ## Documentation and technical specifications
 
@@ -170,13 +174,16 @@ Please note that you can set the parameters (IP, port, username and password) fo
 
 The ADBox driver/CLI currently provides four options:
 
-1. Running ADBox using the `-u` flag following by the ID of a use case YAML file (stored under `siem_mtad_gat/assets/drivers`), e.g., `./adbox.sh -u 2` to start a complete training and prediction pipeline determined by an AD [use case](./docs/manual/use_case.md) scenario, in this case `uc_2.yaml`.
+1. Running ADBox using the `-u` flag following by the ID of a use-case YAML file (stored under `siem_mtad_gat/assets/drivers`), e.g., `./adbox.sh -u 2` to start a complete training and prediction pipeline determined by an AD [use-case](./docs/manual/use_case.md) scenario, in this case `uc_2.yaml`.
 
 1. Running ADBox using the `-i` flag, i.e., `./adbox.sh -i` running the interactive console (**the console currently contains a known bug for prediction-only jobs (i.e., no training and using a trained model), please use option 1**).
 
 1. Running ADBox without any arguments: it runs a training and prediction pipeline using default configurations.
 
 1. Running ADBox using the `-c` flag, i.e., `./adbox.sh -c` to check your connection with Wazuh, which is recommended to ensure a successful channel can be established before executing AD workflows. Otherwise, in the absence of a functional connection, ADBox automatically falls back to local default configuration files and prepared sample training and prediction data.
+
+1. Running ADBox using the `-s` flag enables data shipping to Wazuh on top of the expected behavior. Namely, `./adbox.sh -s`  and `./adbox.sh -u 2 -s`, perform the same operations as without this flag, plus the shipping to Wazuh. We recommend to read the manual's page about [ADBox integration in Wazuh](/docs/manual/detector_data_stream.md) before the usage. 
+
 
 #### Verifying connection with Wazuh
 
@@ -188,17 +195,17 @@ Before running ADBox training and prediction scenarios, you can verify whether a
 
 You can set/modify the parameters (IP, port, username and password) for connecting to Wazuh via the [Wazuh credentials JSON file](./siem_mtad_gat/assets/secrets/wazuh_credentials.json).
 
-#### Executing a use case from a YAML file
+#### Executing a use-case from a YAML file
 
-The ADBox takes inputs from a YAML file stored in the `/siem_mtad_gat/assets/drivers/` folder. By default, the folder contains several YAML-encoded use cases, which can be used for training models and running predictions.
+The ADBox takes inputs from a YAML file stored in the `/siem_mtad_gat/assets/drivers/` folder. By default, the folder contains several YAML-encoded use-cases, which can be used for training models and running predictions.
 
-A training and detection use case can be run by providing the `-u` flag along with an integer to the script.
+A training and detection use-case can be run by providing the `-u` flag along with an integer to the script.
 
 ```sh
 ./adbox.sh -u {number}
 ```
 
-For example, to run use case 1, execute the script as follows:
+For example, to run use-case 1, execute the script as follows:
 
 ```sh
 ./adbox.sh -u 1
@@ -208,15 +215,15 @@ With this input, the ADBox will take the inputs specified in the `uc_1.yaml` fil
 
 The folder containing the YAML files also contains a `driver.yaml` file that provides a template for writing your own custom YAML files.
 
-For example, one can run a new [use case](./docs/manual/use_case.md), by specifying different input parameters in a new YAML file, called `uc_6.yaml` and then run the adbox as follows:
+For example, one can run a new [use-case](./docs/manual/use_case.md), by specifying different input parameters in a new YAML file, called `uc_6.yaml` and then run the adbox as follows:
 
 ```sh
 ./adbox.sh -u 6
 ```
 
-All the outputs produced as a result of running use cases are stored in `./siem_mtad_gat/assets/detector_models/{detector_id}/prediction_{current_date}/predict_output.json`.
+All the outputs produced as a result of running use-cases are stored in `./siem_mtad_gat/assets/detector_models/{detector_id}/prediction_{current_date}/predict_output.json`.
 
-#### Interacting with a console (has bugs in alpha version):
+#### Interacting with a console (contains bugs in the alpha version):
 
 ```sh
 ./adbox.sh -i
@@ -237,7 +244,24 @@ In this mode, the ADBox will train a detector using the default arguments and th
 
 The output of the default detection is also stored in `./siem_mtad_gat/assets/detector_models/{detector_id}/prediction` folder.
 
-## Example of a use case scenario
+#### Shipping Data to Wazuh
+
+#### Install ADBox-Wazuh shipping
+
+Adding the "shipping flag" for the first time installs dedicated ADBox index templates and policies in the Wazuh indexer. We recommend reading the manual page about [ADBox integration in Wazuh](/docs/manual/detector_data_stream.md) before using this option. 
+
+```sh
+./adbox.sh -s
+```
+#### Executing use cases and shipping to Wazuh
+By adding the `-s` flag,
+
+```sh
+./adbox.sh -u 2 -s
+```
+the computed predictions are shipped to a custom data stream in the Wazuh indexer. We recommend reading the manual page about [ADBox integration in Wazuh](/docs/manual/detector_data_stream.md) before using this option. 
+
+## Example of a use-case scenario
 
 In this section, we present an example illustrating the usage of ADBox, adopting the end user point of view.
 
@@ -246,11 +270,11 @@ In this section, we present an example illustrating the usage of ADBox, adopting
 I have deployed all the components as explained in the [guide for IDPS and SIEM integrated deployment](./deployment/guide_sids.md) and the
 [ADBox user manual installation page](./docs/manual/installation.md). Moreover, I have enabled [Linux resource monitoring](./docs/manual/linux_resource.md).
 
-### My use case
+### My use-case
 
 I want a detector which correlates resource usage and rules statistics. Once created, I want this detector to keep running on new data.
 
-Therefore, I prepare a dedicated [use case file](./docs/manual/use_case.md).
+Therefore, I prepare a dedicated [use-case file](./docs/manual/use_case.md).
 
 Namely,
 
@@ -268,7 +292,7 @@ I have to decide:
 - the detection interval (window size), and
 - the number of epochs for training.
 
-For example, I want anomalies to be flagged over intervals of 3 minutes, so the window size should be 8. Then, I also want to use all my data of the current month that is already available to train the detector.
+For example, I want anomalies to be flagged over intervals of 3.5 minutes, so the window size should be 8. Then, I also want to use all my data of the current month that is already available to train the detector.
 
 For the prediction, I want almost real-time results but I would like to fetch data in batches. For example, I want to get points every 6 minutes, then in batches of 12 points.
 
@@ -293,7 +317,7 @@ training:
   - data.cpu_usage_%
   - data.memory_usage_%
   - rule.firedtimes
-  display_name: detector_example_3min
+  display_name: detector_example
   index_date: '2024-08-*'
   train_config:
     epochs: 8
@@ -336,8 +360,6 @@ This produces a detector with id `2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc9` and the a
     ├── train_losses.png
     ├── train_output.pkl
     └── validation_losses.png
-
-4 directories, 15 files
 ```
 
 ### Detection analysis
@@ -396,7 +418,40 @@ We traced the two anomalies to two real events that had happened in the correspo
 
 ### Remarks
 
-In both cases, the actions that (most probably) generated the anomalies had been carried out by a system administrator. In case not, while A1 would have been noticed by looking at single features and/or Wazuh; A2 would have not been as obvious to track.
+In both cases, the actions that (most probably) generated the anomalies had been carried out by a system administrator. Otherwise, while A1 would have been noticed by looking at single features and/or Wazuh; A2 would not have been as obvious to track.
+
+## Wazuh-ADBox integration and detector dashboard
+
+Since IDPS-ESCAPE version 0.1.4, it is possible to ship prediction outcomes to the Wazuh indexer and consult them directly using the Wazuh dashboard.
+We summarize the key points below, referring to the corresponding manual page [Wazuh-ADBox integration](/docs/manual/detector_data_stream).
+
+### Data shipping to the Wazuh indexer and dashboard integration
+
+The training and prediction pipelines are instructed via [use cases](/docs/manual/use_case.md). To enable the data shipping to the Wazuh indexer, it is sufficient to run ADBox with the flag `-s`:
+
+```sh
+$ ./build-adbox.sh
+...
+$ ./adbox.sh -u {number} -s
+```
+
+This way, ADBox:
+- at *training time*,  creates a [**detector data stream**](/docs/manual/detector_data_stream.md#detector-data-streams) associated with the detector.
+- at *prediction time*, adds the outcomes to the corresponding detector data stream.
+
+A **detector stream** is a [data stream index](https://opensearch.org/docs/latest/im-plugin/data-streams/) of the Wazuh Indexer (i.e., its underlying OpenSearch  distribution).  
+
+Following the [**integration procedure**](/docs/manual/detector_data_stream.md#integrate-in-wazuhs-dashboard) described in the manual it is possible to explore a detector's anomaly predictions via the Wazuh Discovery Dashboard.
+
+![Wazuh Dashboard Discover ADBox Detector](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_30-Discover.png "Wazuh Dashboard Discover ADBox Detector")
+
+### Detectors dashboard directly in Wazuh
+
+For an improved visualization, we explain in our [Detector Dashboard Tutorial](/docs/manual/dashboard_tutorial.md) how to construct a dedicated Detector Dashboard in the Wazuh Dashboard, combining multiple visualizations of global and feature-wise results, and related data from other Wazuh indices as well.
+
+Combining Discover Dashboard and our Detector Dashboard we can monitor (in realtime) and investigate anomalies.
+![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_36-Dashboard-video-2.gif)
+
 
 ## Disclaimer: use of alpha/experimental software
 
@@ -412,7 +467,7 @@ By using this software, you acknowledge that you understand the risks and agree 
 
 We advise the user __not__ to 
 - set the detector time granularity parameter to a value lower than 30s,
-- run prediction-only use cases if there are no corresponding detectors available in the [detectors folder](./siem_mtad_gat/assets/detector_models/). 
+- run prediction-only use-cases if there are no corresponding detectors available in the [detectors folder](./siem_mtad_gat/assets/detector_models/). 
 
 Furthermore, we highlight the following points:
 
@@ -422,13 +477,29 @@ Furthermore, we highlight the following points:
 - Depending on the selected configurations, running the full stack of IDPS-ESCAPE may require up to 26 GB of persistent storage, while RAM usage for the default ADBox configuration remains close to 4 GB, the same as the recommended value for Wazuh, which is used as our source of data for training and prediction. Note that the various subsystems can be deployed on different nodes, e.g., the ADBox on one node and our customized Wazuh+Suricata setup on another, or all three on separate nodes (see the [integration](./deployment/README.md) and [remote monitoring](./deployment/remote_monitoring/remote_monitoring.md) pages).
 - Clearly, the MTAD-GAT hyperparameters (e.g., the number of GRU layers) require tuning when it comes to training machine learning models.
 
+## Testing
+
+ADBox comes with an extensive suite of unit tests. A dedicated containerized environment can be built by running `./build-adbox.sh` (the script needs to be made executable). Then, the full set of unit tests can be run as follows
+
+```sh
+./run_test.sh
+```
+
+Otherwise, a test file can be specified:
+```sh
+./run_test.sh  tests/{name}_test.py
+```
+
+For software validation test cases, please see the test campaign results (e.g., TRA and TRB) on our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html). 
+
 ## Roadmap
 
 Some of the currently planned items include:
 
-- automated unit/integration/system test suites providing coverage for critical parts of the software;
-- a web-based GUI frontend, either standalone or integrated into Wazuh or OpenSearch;
-- tailoring the underlying ADBox algorithms to specific SOC operations.
+- tailoring the underlying ADBox algorithms to specific SOC operations;
+- adding new reusable anomaly detection use case scenarios, i.e., other than the ones geared towards resource usage monitoring;
+- stabilizing the current implementation and improving its resilience/fault tolerance, especially when it comes to dealing with missing and ill-formed raw data;
+- adding new automated mechanisms aimed at preventive measures (i.e., the "P" in IDPS), directly integrated into Wazuh, towards the SOAR goal of IDPS-ESCAPE.
 
 For details on our roadmap and features planned for future releases, please see the [Wiki](https://github.com/AbstractionsLab/idps-escape/wiki) section of this repository.
 

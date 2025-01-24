@@ -1,33 +1,34 @@
 from datetime import datetime
+import logging
 from typing import List, Dict, Any, Tuple
 from opensearchpy import OpenSearch
+from siem_mtad_gat.commons import EscapeError, EscapeInfo
 from siem_mtad_gat.data_ingestion.ad_data_ingestor import ADDataIngestor 
 import siem_mtad_gat.settings as settings
+import siem_mtad_gat.config_manager.config_keys as keys
 from siem_mtad_gat.data_ingestion.wazuh.default_data_lookup import DefaultDataLookup 
 import json 
-import logging 
-import os
-os.makedirs(settings.OUTPUT_LOGS, exist_ok=True)
-logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name=__name__), format=settings.DEFAULT_LOGGING_FORMAT)
+
+
 logger = logging.getLogger(__name__)
-logger.setLevel(settings.DEFAULT_LOGGING_LEVEL) 
+logger.setLevel(settings.DEFAULT_LOGGING_LEVEL)
 
 # Constants for dictionary keys
-HOST_KEY = "host"
-PORT_KEY = "port"
-USERNAME_KEY = "username"
-PASSWORD_KEY = "password" 
+HOST_KEY = settings.OP_HOST_KEY
+PORT_KEY = settings.OP_PORT_KEY
+USERNAME_KEY = settings.OP_USERNAME_KEY
+PASSWORD_KEY = settings.OP_PASSWORD_KEY
 # Wazuh columns path 
-WAZUH_COLUMNS = settings.WAZUH_COLUMNS_PATH
+WAZUH_COLUMNS: str = settings.WAZUH_COLUMNS_PATH
 
 class WazuhDataIngestor(ADDataIngestor):
     """
     Data ingestor for retrieving SIEM alert data from Wazuh Indexer using OpenSearch.
     """
 
-    def __init__(self, host: str = None, port: int = None, auth: tuple = None, use_ssl: bool = True,
+    def __init__(self, host: str | None = None, port: int | None = None, auth: tuple | None = None, use_ssl: bool = True,
                  verify_certs: bool = False, ssl_assert_hostname: bool = False,
-                 ssl_show_warn: bool = False, ca_certs: str = None):
+                 ssl_show_warn: bool = False, ca_certs: str | None= None):
         """
         Initializes the WazuhDataIngestor with connection parameters.
 
@@ -47,15 +48,15 @@ class WazuhDataIngestor(ADDataIngestor):
         if host is None or port is None or auth is None:
             # Read credentials from the JSON file
             with open(settings.WAZUH_CREDENTIALS_PATH, 'r') as json_file:
-                credentials = json.load(json_file)
+                credentials: dict = json.load(json_file)
 
-            logging.info("Wazuh data ingestor establishing connection to Wazuh...")
+            EscapeInfo("Wazuh data ingestor establishing connection to Wazuh...",logger)
 
             # Access the credentials 
-            host = credentials[HOST_KEY]
-            port = credentials[PORT_KEY] 
-            username = credentials[USERNAME_KEY]
-            password = credentials[PASSWORD_KEY] 
+            host : str = credentials.get(HOST_KEY, host)
+            port : int= credentials.get(PORT_KEY,port)
+            username:str = credentials.get(USERNAME_KEY,"admin")
+            password:str = credentials.get(PASSWORD_KEY,"SecretPassword")
             auth = (username, password)
         
                 
@@ -87,41 +88,37 @@ class WazuhDataIngestor(ADDataIngestor):
         """
         # Check connection with OpenSearch
         if not self.check_connection():
-            print(
-                "Could not establish a connection with OpenSearch.\n"
-                f"More details logged in {settings.LOGGING_FILE_NAME.format(name=__name__)}"
-            )
-            logging.error("Error connecting to OpenSearch!") 
-            logging.info("Fetching data from file. ") 
+            print("Could not establish a connection with OpenSearch.\n","More details see logs."  )
+            logger.error("Error connecting to OpenSearch!") 
+            logger.info("Fetching data from file. ") 
             default_data_lookup = DefaultDataLookup()
             all_documents, datasource_name =  default_data_lookup.get_default_train_data(date)
             return all_documents, datasource_name 
+        
+        try:
+            # Get index name for the given date
+            index_name: str = self.get_index_name_for_date(date)
+
+            # Check if the given index exists
+            if not self.check_index_exists(index_name):
+                raise EscapeError(f"The index '{index_name}' does not exist.",logger)
+                #print(f"The index '{index_name}' does not exist.")
+
+            # Fetch the list of columns from the wazuh column config file 
+            with open(WAZUH_COLUMNS, 'r') as file:
+                config_data = json.load(file) 
+                columns = list(config_data.get(keys.UC_COLUMNS).keys())
             
-        else:    
-            try:
-                # Get index name for the given date
-                index_name = self.get_index_name_for_date(date)
+            # Get all documents from the index
+            all_documents: List[Dict[str, Any]] = self.get_all_documents_paginated_from_index(index_name, columns)
 
-                # Check if the given index exists
-                if not self.check_index_exists(index_name):
-                    logging.error(f"The index '{index_name}' does not exist.")
-                    print(f"The index '{index_name}' does not exist.")
+            return all_documents, index_name 
 
-                # Fetch the list of columns from the wazuh column config file 
-                with open(WAZUH_COLUMNS, 'r') as file:
-                    config_data = json.load(file) 
-                    columns = list(config_data['columns'].keys())
-                
-                # Get all documents from the index
-                all_documents = self.get_all_documents_paginated_from_index(index_name, columns)
-
-                return all_documents, index_name 
-
-            except Exception as e:
-                logging.error(f"Error occurred while getting SIEM alert data: {e}")
+        except Exception as e:
+            raise EscapeError(f"Error occurred while getting SIEM alert data: {e}")
 
 
-    def get_prediction_data(self, date:str, start_time:str, end_time:str, run_mode=settings.RUN_MODE.HISTORICAL) -> Tuple[List[Dict[str, Any]], str]:
+    def get_prediction_data(self, date:str, start_time:str, end_time:str, run_mode=settings.RUN_MODE.HISTORICAL) -> List[Dict[str, Any]]|None:
         """
         Retrieves SIEM alert data from Wazuh Indexer for a given date.
 
@@ -137,13 +134,13 @@ class WazuhDataIngestor(ADDataIngestor):
         """ 
         # Check connection with OpenSearch
         if not self.check_connection(): 
-            if run_mode == settings.RUN_MODE.HISTORICAL: 
+            if run_mode is settings.RUN_MODE.HISTORICAL: 
                 print(
                     "Could not establish a connection with OpenSearch.\n"
                     f"More details logged in {settings.LOGGING_FILE_NAME.format(name=__name__)}"
                 ) 
-                logging.error("Error connecting to OpenSearch!") 
-                logging.info("Fetching data from file. ") 
+                logger.error("Error connecting to OpenSearch!") 
+                logger.info("Fetching data from file. ") 
                 default_data_lookup = DefaultDataLookup()
                 all_documents =  default_data_lookup.get_default_predict_data(date)
                 index_name = "default_predict_data"
@@ -154,24 +151,23 @@ class WazuhDataIngestor(ADDataIngestor):
                     f"More details logged in {settings.LOGGING_FILE_NAME.format(name=__name__)}\n"
                     f"Prediction in {run_mode} requires a connection with OpenSearch."
                 ) 
-                logging.error("Error connecting to OpenSearch!")
+                logger.error("Error connecting to OpenSearch!")
                 return 
  
         #print(start_time, end_time)
         else: 
             try:
                 # Get index name for the given date
-                index_name = self.get_index_name_for_date(date)
+                index_name: str = self.get_index_name_for_date(date)
 
                 # Check if the given index exists
                 if not self.check_index_exists(index_name):
-                    logging.error(f"The index '{index_name}' does not exist.")
-                    print(f"The index '{index_name}' does not exist.")
-
+                    raise EscapeError(f"The index '{index_name}' does not exist.")
+                    
                 # Fetch the list of columns from the wazuh column config file 
                 with open(WAZUH_COLUMNS, 'r') as file:
                     config_data = json.load(file) 
-                    columns = list(config_data['columns'].keys())
+                    columns = list(config_data[keys.UC_COLUMNS].keys())
                 
                 # Get all documents from the index
                 all_documents = self.get_all_documents_paginated_from_index_by_time_range(index_name, columns, start_time, end_time)
@@ -179,7 +175,7 @@ class WazuhDataIngestor(ADDataIngestor):
                 return all_documents  
 
             except Exception as e: 
-                logging.error(f"Error occurred while getting SIEM alert data: {e}")
+                raise EscapeError(f"Error occurred while getting SIEM alert data: {e}")
                 #raise Exception(f"Error occurred while getting SIEM alert data: {e}") 
         
         
@@ -206,7 +202,7 @@ class WazuhDataIngestor(ADDataIngestor):
                 return False
 
         except Exception as e: 
-            logging.error(f"Error occurred while checking connection: {e}")
+            logger.error(f"Error occurred while checking connection: {e}")
             return False 
             #raise Exception(f"Error occurred while checking connection: {e}")
 
@@ -228,7 +224,7 @@ class WazuhDataIngestor(ADDataIngestor):
             return self.client.indices.exists(index=index_name)
 
         except Exception as e:
-            logging.error(f"Error occurred while checking index '{index_name}': {e}")
+            logger.error(f"Error occurred while checking index '{index_name}': {e}")
 
     def get_index_name_for_date(self, input_date: str) -> str:
         """
@@ -307,12 +303,12 @@ class WazuhDataIngestor(ADDataIngestor):
                     all_documents.extend(hits)
 
                 else:
-                    logging.error("Hits field not found in response.")
+                    logger.error("Hits field not found in response.")
 
             return all_documents
 
         except Exception as e:
-            logging.error(f"Error occurred while retrieving all documents: {e}") 
+            logger.error(f"Error occurred while retrieving all documents: {e}") 
         
         
         
@@ -371,9 +367,9 @@ class WazuhDataIngestor(ADDataIngestor):
                     all_documents.extend(hits)
 
                 else:
-                    logging.error("Hits field not found in response.")
+                    logger.error("Hits field not found in response.")
             
             return all_documents
 
         except Exception as e:
-            logging.error(f"Error occurred while retrieving all documents by time range: {e}")
+            logger.error(f"Error occurred while retrieving all documents by time range: {e}")

@@ -1,0 +1,59 @@
+active: true
+authors: AGI
+complexity: 2
+derived: false
+execution_type: Automated/Manual
+expected_outcome: ''
+header: |
+  Map a detected event to MITRE ATT&CKS
+level: 36
+links:
+- SRS-025: null
+normative: true
+platform: MacOS, Windows, GNU/Linux
+ref: ''
+release: alpha
+reviewed: null
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+  - Wazuh central component deployed.
+  - Presence of alerts collected in Wazuh indexer.
+
+  ## Test steps
+  1. Open Wazuh Dashboard
+  2. Go to  **Threat Hunting > Events> Add Filter** and choose `rule.mitre.id` exists.
+  3. Inspect filtered output (possibly extend time interval for more results).
+
+  ## Expected outcome
+  1. In json `rule.mitre.id` key should include the matching MITRE ID. E.g.	T1078, T1021
+  ```
+  "mitre": {
+        "technique": [
+          "Valid Accounts",
+          "Remote Services"
+        ],
+        "id": [
+          "T1078",
+          "T1021"
+        ],
+        "tactic": [
+          "Defense Evasion",
+          "Persistence",
+          "Privilege Escalation",
+          "Initial Access",
+          "Lateral Movement"
+        ]
+      },
+      "id": "5715",
+      "gpg13": [
+        "7.1",
+        "7.2"
+      ]
+    }
+  ```
+
+verification_method: I
+version: 0.2

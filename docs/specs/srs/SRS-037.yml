@@ -20,8 +20,7 @@ status: |
   To detect deviations from an a priori normal baseline system behavior, possibly caused by malicious actors.
 text: |
   As a user,
-  I want to find anomalies in the network traffic,
-  to detect threats not recognize by the signature-based NIDS.
+  I want to find anomalies in the network traffic to detect threats not recognized by the signature-based NIDS.
 
   Assuming: CyFORT-Suricata integrated with CyFORT-Wazuh
 

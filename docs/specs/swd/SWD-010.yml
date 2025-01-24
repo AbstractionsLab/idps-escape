@@ -14,3 +14,4 @@ text: |
   The diagram below depicts the `Data Transformer` class of ADBox.
 
   ![ADBox Transformer class diagram](assets/ADBox-transf-class.png "ADBox Data Transformer classes diagram"){: width="80%"}
+version: '0.1'

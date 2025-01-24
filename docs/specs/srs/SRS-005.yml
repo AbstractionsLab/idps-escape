@@ -19,7 +19,7 @@ risk: '2'
 status: null
 text: |
   As a sys admin user,
-  I want to enable/disable network monitoring within IDPS-ESCAPE's subsystem boundaries.
+  I want to enable/disable network monitoring within IDPS-ESCAPE subsystem boundaries.
 
   1.  Access C&C server
   2.  Deploy C-CyFORT-Suricata

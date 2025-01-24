@@ -19,8 +19,8 @@ risk: '2'
 status: null
 text: |
   As a system admin user,
-  I want access end-point monitored system via IDPS-ESCAPE C&C server/unit,
-  so that I can check the status of end-point monitor solutions deployed if any.
+  I want to access the end-point monitored system via IDPS-ESCAPE C&C server/unit,
+  so that I can check the status of end-point monitoring solutions deployed, if any.
 
   1. Access C&C server as root.
   2. Via CyFORT-Wazuh manager, list the enrolled agents and their status.

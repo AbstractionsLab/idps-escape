@@ -1,4 +1,4 @@
-active: true
+active: false
 authors: MZA
 complexity: '2'
 derived: false
@@ -38,3 +38,4 @@ text: |
   3.
   4. ADBox interactive console should be opened.
 verification_method: T
+version: 0.1

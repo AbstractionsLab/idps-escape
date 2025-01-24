@@ -30,6 +30,7 @@ attributes:
       ## Expected outcome
       1.  
     expected_outcome: ''
+    version: 0.1
   publish:
   - platform
   - precondition
@@ -38,6 +39,7 @@ attributes:
   - release
   - complexity
   - test_data
+  - version
   reviewed:
   - authors
   - precondition

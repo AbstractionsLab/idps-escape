@@ -11,7 +11,7 @@ docker-compose down
 Run this command to generate the hash of your new password. Once the container launches, input the new password and press **Enter**.
 
 ```sh
-docker run --rm -ti wazuh/wazuh-indexer:4.7.2 bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh
+docker run --rm -ti wazuh/wazuh-indexer:4.8.1 bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh
 ```
    
 Copy the generated hash.
@@ -56,7 +56,7 @@ In the `docker-compose.yml` file. Change all occurrences of the old password wit
       - API_PASSWORD=MyS3cr37P450r.*-
     volumes:
 ....
-    image: wazuh/wazuh-dashboard:4.7.2
+    image: wazuh/wazuh-dashboard:4.8.1
     hostname: wazuh.dashboard
     restart: always
     ports:

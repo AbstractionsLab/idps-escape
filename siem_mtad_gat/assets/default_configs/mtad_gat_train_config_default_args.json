@@ -110,5 +110,9 @@
   "dynamic_pot": {
     "type": "bool",
     "default": true
+  },
+  "threads": {
+    "type": "int",
+    "default": 6
   }
 }

@@ -1,17 +1,26 @@
 import os
 import pickle
 import threading
+from typing import Tuple
 import numpy as np
 import torch
 import json 
 import pandas as pd 
-import siem_mtad_gat.settings as settings
+ 
+from siem_mtad_gat.data_manager import *
+
+from siem_mtad_gat.mtad_gat_pytorch.spot import SPOT
+from siem_mtad_gat.commons import EscapeError, EscapeInfo
+
+"""
 import logging
 import os
 os.makedirs(settings.OUTPUT_LOGS, exist_ok=True)
 logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name=__name__), format=settings.DEFAULT_LOGGING_FORMAT) 
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.DEFAULT_LOGGING_LEVEL) 
+"""
+
 
 
 class DataRetrievalManager:
@@ -61,7 +70,7 @@ class DataRetrievalManager:
         
         with self._semaphore:
             if not os.path.exists(model_path):
-                logging.error(f"Model file '{model_path}' does not exist.")
+                raise EscapeError(f"Model file '{model_path}' does not exist.",logger)
         
         return model_path
     
@@ -76,10 +85,10 @@ class DataRetrievalManager:
         
         with self._semaphore:
             if not os.path.exists(model_path):
-                logging.error(f"Model file '{model_path}' does not exist.")
+                raise EscapeError(f"Model file '{model_path}' does not exist.",logger)
 
             model.load_state_dict(torch.load(model_path, map_location=device))
-            print(f"Model loaded from {model_path}.")
+            EscapeInfo(f"Model loaded from {model_path}.",logger)
             
 
     
@@ -98,7 +107,7 @@ class DataRetrievalManager:
                 with open(param_file_path, 'r') as f:
                     detector_data = json.load(f) 
             else: 
-                logging.error(f"No configurations found for the detector: {self.path}")
+                raise EscapeError(f"No configurations found for the detector: {self.path}",logger)
 
             return detector_data 
     
@@ -115,15 +124,14 @@ class DataRetrievalManager:
         predict_storage_folder = settings.PREDICTION_STORAGE_FOLDER.format(id=self.detector_id)
         
         if not os.path.exists(predict_storage_folder):
-            logging.error(f"The folder {predict_storage_folder} does not exist.")
-            print(f"The folder {predict_storage_folder} does not exist.")
-            return 
+            raise EscapeError(f"The folder {predict_storage_folder} does not exist.",logger)
+
         
         files = [f for f in os.listdir(predict_storage_folder) if os.path.isfile(os.path.join(predict_storage_folder, f))]
         
         if not files:
-            logging.error(f"The folder {predict_storage_folder} does not contain any files.")
-            print(f"The folder {predict_storage_folder} does not contain any files.") 
+            raise EscapeError(f"The folder {predict_storage_folder} does not contain any files.",logger)
+            #print(f"The folder {predict_storage_folder} does not contain any files.") 
             return 
         with self._semaphore:
             for file_name in files:
@@ -134,7 +142,7 @@ class DataRetrievalManager:
                             file_data = json.load(f)
                             predict_output.append(file_data)
                     except Exception as e:
-                        logging.error(f"Error reading {file_path}: {e}")
+                        raise EscapeError(f"Error reading {file_path}: {e}",logger)
         return predict_output
      
      
@@ -153,9 +161,9 @@ class DataRetrievalManager:
                 print(f"Summary retrieved from {summary_path}.")
                 return summary
             else:
-                logging.error(f"Summary file not found at {summary_path}.")
+                raise EscapeError(f"Summary file not found at {summary_path}.",logger)
 
-    def retrieve_training_outputs(self):
+    def retrieve_training_outputs(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Retrieve the training and test predictions from pickle files.
 
@@ -167,14 +175,14 @@ class DataRetrievalManager:
             test_output_path = settings.TEST_OUTPUT_PKL_FILE_PATH.format(id=self.detector_id) 
 
             if os.path.exists(train_output_path) and os.path.exists(test_output_path):
-                train_pred_df = pd.read_pickle(train_output_path)
-                test_pred_df = pd.read_pickle(test_output_path)
-                print(f"Training and test outputs retrieved from {output_folder_path}.")
+                train_pred_df:pd.DataFrame = pd.read_pickle(train_output_path)
+                test_pred_df:pd.DataFrame = pd.read_pickle(test_output_path)
+                EscapeInfo(f"Training and test outputs retrieved from {output_folder_path}.",logger)
                 return train_pred_df, test_pred_df
             else:
-                logging.error("Training or test output files not found.")
+                raise EscapeError("Training or test output files not found.",logger)
 
-    def retrieve_training_config(self):
+    def retrieve_training_config(self) -> dict:
         """
         Retrieve the training config dictionary from the JSON file.
 
@@ -184,49 +192,99 @@ class DataRetrievalManager:
             training_config_path = settings.TRAINING_CONFIG_FILE_PATH.format(id=self.detector_id)
             if os.path.exists(training_config_path):
                 with open(training_config_path, "r") as f:
-                    training_config = json.load(f)
+                    training_config : dict = json.load(f)
                 print(f"Training config retrieved from {training_config_path}.")
                 return training_config
             else:
                 #raise FileNotFoundError(f"Training config file not found at {training_config_path}.")
-                logging.error(f"Training config file not found at {training_config_path}.")
+                raise EscapeError(f"Training config file not found at {training_config_path}.",logger)
+            return {}
     
-    def load_spot(self, feature:int = -1,file_ext="pkl"):
-            with self._semaphore: 
-                spot_storage_folder = settings.SPOT_TRAIN_STORAGE_FOLDER.format(id=self.detector_id)
+    def load_spot_pkl(self, feature:int = -1,caller:str=settings.CALLER_TRAIN) -> SPOT:
+        """
+        Loads spot object from .pkl file
+        Expected file name: see setting.SPOT_TRAIN_FILE_PATH.
+
+        Args. 
+            feature (int): feature number. If -1, takes global distribution.
+
+        Returns:
+            SPOT : instance of SPOT corresponding to input feature
+        """
+        with self._semaphore: 
+                
+                if feature==-1: feature='global'  # type: ignore
+                paths={
+                    settings.CALLER_OFFLINE: settings.SPOT_TRAIN_FILE_PATH.format(id=self.detector_id,feature=feature,ext='pkl'),
+                    settings.CALLER_ONLINE: settings.SPOT_ONLINE_FILE_PATH.format(id=self.detector_id,feature=feature,ext='pkl')
+                    }
+                folder_paths={
+                    settings.CALLER_OFFLINE: settings.SPOT_TRAIN_STORAGE_FOLDER.format(id=self.detector_id),
+                    settings.CALLER_ONLINE: settings.SPOT_ONLINE_STORAGE_FOLDER.format(id=self.detector_id)
+                    }
+                spot_storage_folder = folder_paths.get(caller)
                 # Check if the folder exists
                 if not os.path.exists(spot_storage_folder):
-                    logging.error(f"Spot trained folder not found at {spot_storage_folder} .")
+                    raise EscapeError(f"Spot trained folder not found at {spot_storage_folder} .",logger)
 
-                
-                if feature==-1: feature='global'
+                #load full spot object as pickle file
+                spot_path = paths.get(caller)
+                with open(spot_path, "rb") as f:
+                        spot_obj: SPOT=pickle.load(f)
 
-                if file_ext=="pkl":
-                    #load full spot object as pickle file
-                    spot_path = settings.SPOT_TRAIN_FILE_PATH.format(id=self.detector_id,feature=feature,ext=file_ext) 
-                    with open(spot_path, "rb") as f:
-                        spot=pickle.load(f)
-                elif file_ext=="json":
-                    #load attributes only from json file
-                    spot_path = settings.SPOT_TRAIN_FILE_PATH.format(id=self.detector_id,feature=feature,ext=file_ext) 
-                    with open(spot_path, "r") as f:
-                        spot=json.load(f)               
-                    for k in spot: 
-                        v=spot[k]
-                        if isinstance(v, list) and all([isinstance(x,float) for x in v]): spot[k]=np.asarray(v,dtype=np.float32)
-                else:
-                    logging.exception(f"Invalide file extension for spot object")
-                logging.info(f"Spot object {feature} loaded.")
+                EscapeInfo(f"Spot object {feature} loaded.",logger)
                 
-                return spot
+                return spot_obj
+            
+    def load_spot_json(self, feature:int = -1,caller:str=settings.CALLER_TRAIN) ->  dict :
+        """
+        Loads spot attributes dictionary from json file
+        Expected file name: see setting.SPOT_TRAIN_FILE_PATH.
+
+        Args. 
+            feature (int): feature number. If -1, takes global distribution.
+
+        Returns:
+            dict : SPOT arguments' dictionary
+        """
+        with self._semaphore:
+            if feature==-1: feature='global'  # type: ignore
+            paths={
+                    settings.CALLER_OFFLINE: settings.SPOT_TRAIN_FILE_PATH.format(id=self.detector_id,feature=feature,ext='pkl'),
+                    settings.CALLER_ONLINE: settings.SPOT_ONLINE_FILE_PATH.format(id=self.detector_id,feature=feature,ext='pkl')
+                    }
+            folder_paths={
+                    settings.CALLER_OFFLINE: settings.SPOT_TRAIN_STORAGE_FOLDER.format(id=self.detector_id),
+                    settings.CALLER_ONLINE: settings.SPOT_ONLINE_STORAGE_FOLDER.format(id=self.detector_id)
+                    } 
+            spot_storage_folder = folder_paths.get(caller,caller)
+            # Check if the folder exists
+            if not os.path.exists(spot_storage_folder):
+                raise EscapeError(f"Spot trained folder not found at {spot_storage_folder} .",logger)
+
+
+
+            #load attributes only from json file
+            spot_path = paths.get(caller,"")
+            with open(spot_path, "r") as f:
+                    spot: dict=json.load(f)               
+            for k in spot: 
+                    v=spot[k]
+                    if isinstance(v, list) and all([isinstance(x,float) for x in v]): spot[k]=np.asarray(v,dtype=np.float32)
+                
+            EscapeInfo(f"Spot dictionary {feature} loaded.",logger)    
+            return spot    
+
             
     def load_preprocessing_scaler(self):
-
+        """
+        Retrieves data scaler from preprocessing 
+        """
         with self._semaphore: 
-            scaler_path = settings.SCALER_FILE_PATH.format(id=self.detector_id) 
+            scaler_path: str = settings.SCALER_FILE_PATH.format(id=self.detector_id) 
             with open(scaler_path, "rb") as f:
                 scaler=pickle.load(f)
-            logging.info(f"Scaler for preprocessing loaded from {scaler_path}.")
+            EscapeInfo(f"Scaler for preprocessing loaded from {scaler_path}.",logger)
             return scaler
 
     @classmethod

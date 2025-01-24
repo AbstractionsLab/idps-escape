@@ -20,7 +20,7 @@ status: null
 text: |
   As SOC member user,
   I want to manage the HIDP and NIDS results and information jointly,
-  to have a centralize overview of the system for threat detection, investigation, and response.
+  to have a centralized overview of the system for threat detection, investigation, and response.
 
   1. Access C&C server
   2. Deploy CyFORT-Wazuh and HIDS agents

@@ -19,8 +19,7 @@ risk: '1'
 status: null
 text: |
   As a sys admin user,
-  I want deploy HIDS agents on the of hosts' monitored system,
-  so that I can enable IDPS-ESCAPE's HIDS capabilities.
+  I want deploy HIDS agents on the hosts monitored system so that I can enable the IDPS-ESCAPE HIDS capabilities.
 
   1. Access host to be monitored
   2. Install Wazuh Agent

@@ -1,24 +1,18 @@
-import os
-import torch.nn as nn
 import torch 
 import pandas as pd
-from torchinfo import summary
 import numpy as np
-from siem_mtad_gat.mtad_gat_pytorch.utils import SlidingWindowDataset,create_data_loaders
+import siem_mtad_gat.mtad_gat_pytorch.mtad_gat_keys as keys
+
+from siem_mtad_gat.commons import EscapeError, EscapeInfo
 from siem_mtad_gat.mtad_gat_pytorch.mtad_gat import MTAD_GAT
-from siem_mtad_gat.mtad_gat_pytorch.training import Trainer
-from siem_mtad_gat.mtad_gat_pytorch.utils import plot_losses
 from siem_mtad_gat.mtad_gat_pytorch.prediction_alab import Predictor
-from siem_mtad_gat.data_manager.data_storage_manager import DataStorageManager 
 from siem_mtad_gat.data_manager.data_retrieval_manager import DataRetrievalManager
-from siem_mtad_gat.config_manager.config_manager import TrainConfigManager  
-import siem_mtad_gat.settings as settings
-import logging
-import os
-os.makedirs(settings.OUTPUT_LOGS, exist_ok=True)
-logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name=__name__), format=settings.DEFAULT_LOGGING_FORMAT)
+from siem_mtad_gat.mtad_gat_pytorch import *
+
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.DEFAULT_LOGGING_LEVEL)
+
+
 
 
 
@@ -27,10 +21,10 @@ This adapts and extends ML4ITS/mtad_gat_pytorch/train.py module.
 """
 
 def predict_MTAD_GAT(
-        data: np.array, 
+        data: np.ndarray, 
         timestamps: pd.Index, 
         save_output: bool = False
-        ) -> pd.DataFrame: 
+        )  -> None | tuple[pd.DataFrame, pd.DataFrame]: 
     """Runs a pretrained MTAD-GAT model to generate anomaly predictions
 
     Args:
@@ -51,18 +45,16 @@ def predict_MTAD_GAT(
     # create data managememt objects
     data_retrival_manager = DataRetrievalManager()
     # retrieve training configuration
-    config = data_retrival_manager.retrieve_training_config()
+    config : dict = data_retrival_manager.retrieve_training_config()
 
     ## name variable from prediction configuration parameters    
     
-    # Check if config is None 
-    if config is None:
-        logging.error("Config object is None")
-        return 
+    # Check if config is empty # The pipeline should fail before arriving here
+    if config is {}:
+        raise EscapeError("Retrieve training configuration is empry",logger)
 
  
- 
-    window_size = config.get("window_size")
+    window_size = config.get(keys.MTAD_GAT_WINDOW_SIZE)
 
     ######
     ### preparation data
@@ -78,7 +70,7 @@ def predict_MTAD_GAT(
     #force number output feature equal to input
     out_dim = n_features
     target_dims = None # this line is inherited from ML4ITS/mtad_gat_pytorch and serves to call functions with desired parameter later
-    logger.info(f"Will forecast and reconstruct all {n_features} input features")
+    EscapeInfo(f"Will forecast and reconstruct all {n_features} input features",logger)
 
     ######
     ### preparation ML model
@@ -89,22 +81,22 @@ def predict_MTAD_GAT(
         n_features,
         window_size,
         out_dim,
-        kernel_size=config.get("kernel_size"),
-        use_gatv2=config.get("use_gatv2"),
-        feat_gat_embed_dim=config.get("feat_gat_embed_dim"),
-        time_gat_embed_dim=config.get("time_gat_embed_dim"),
-        gru_n_layers=config.get("gru_n_layers"),
-        gru_hid_dim=config.get("gru_hid_dim"),
-        forecast_n_layers=config.get("fc_n_layers"),
-        forecast_hid_dim=config.get("fc_hid_dim"),
-        recon_n_layers=config.get("recon_n_layers"),
-        recon_hid_dim=config.get("recon_hid_dim"),
-        dropout=config.get("dropout"),
-        alpha=config.get("alpha")
+        kernel_size=config.get(keys.MTAD_GAT_KERNEL_SIZE), # type: ignore
+        use_gatv2=config.get(keys.MTAD_GAT_USE_GATV2),# type: ignore
+        feat_gat_embed_dim=config.get(keys.MTAD_GAT_FEAT_GAT_EMBED_DIM),# type: ignore
+        time_gat_embed_dim=config.get(keys.MTAD_GAT_TIME_GAT_EMBED_DIM),# type: ignore
+        gru_n_layers=config.get(keys.MTAD_GAT_GRU_N_LAYERS),# type: ignore
+        gru_hid_dim=config.get(keys.MTAD_GAT_GRU_HID_DIM),# type: ignore
+        forecast_n_layers=config.get(keys.MTAD_GAT_FC_N_LAYERS),# type: ignore
+        forecast_hid_dim=config.get(keys.MTAD_GAT_FC_HID_DIM),# type: ignore
+        recon_n_layers=config.get(keys.MTAD_GAT_RECON_N_LAYERS),# type: ignore
+        recon_hid_dim=config.get(keys.MTAD_GAT_RECON_HID_DIM),# type: ignore
+        dropout=config.get(keys.MTAD_GAT_DROPOUT),# type: ignore
+        alpha=config.get(keys.MTAD_GAT_ALPHA)# type: ignore
     )
 
     # Retrive model
-    device = "cuda" if config.get("use_cuda") and torch.cuda.is_available() else "cpu"
+    device = "cuda" if config.get(keys.MTAD_GAT_USE_CUDA) and torch.cuda.is_available() else "cpu"
     data_retrival_manager.load_model(model, device=device)
  
     ######
@@ -113,16 +105,8 @@ def predict_MTAD_GAT(
 
     reg_level = 0
 
-    prediction_args = {
-        "target_dims": target_dims,
-        'scale_scores': config.get("scale_scores"),
-        "level": config.get("level"),
-        "q": config.get("q"),
-        'dynamic_pot': config.get("dynamic_pot"),
-        "use_mov_av": config.get("use_mov_av"),
-        "gamma": config.get("gamma"),
-        "reg_level": reg_level,
-    }
+    prediction_args = {keys.MTAD_GAT_TARGET_DIMS : target_dims, keys.MTAD_GAT_REG_LEVEL: reg_level}
+    prediction_args.update({k:config.get(k) for k in keys.MTAD_GAT_PREDICTION_ARGUMENTS})
 
     predictor = Predictor(
         model,
@@ -131,9 +115,9 @@ def predict_MTAD_GAT(
         prediction_args,
     )
 
-    pred_df,_ = predictor.predict_anomalies(x_train, x_test, None,timestamps[:-window_size],[],only_predict=True) # we denote every - window by its initial timestamp 
+    pred_df,_ = predictor.predict_anomalies(x_train, x_test, None,timestamps[window_size:],pd.Index([]),only_predict=True) # we denote every - window by its final timestamp 
     
-    anomalies = pred_df[pred_df['A_Pred_Global'] !=0]
+    anomalies = pred_df[pred_df[keys.MTAD_GAT_OUT_PREDICTION_GLOBAL] !=0]
 
     if save_output:
         raise NotImplementedError(f"Save output prediction not implemented")

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "siem-mtad-gat"
-version = "0.1.0"
+version = "0.1.4"
 description = "This is the main repository for IDPS-ESCAPE and ADBox, which is a subsystem of the former."
 authors = ["Agnese Gini <agnese@abstractionslab.lu>", "Arash Atashpendar <arash@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>"]
 readme = "README.md"
@@ -13,7 +13,7 @@ opensearch-sdk-py = {git = "https://github.com/opensearch-project/opensearch-sdk
 opensearch-py = "2.5.0"
 
 # Added these for deployment 
-torch = "^2.3.0"
+torch = "2.3.0"
 ipykernel = "^6.29.4"
 torchinfo = "^1.8.0" 
 

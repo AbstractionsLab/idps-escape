@@ -21,8 +21,7 @@
           <nav id="TOC" class="nav nav-stacked fixed sidebar">
               <h3>Table of Contents</h3>
 <ul>
-<li><a href="#TST-001">1 Start ADBox interactive console</a></li>
-<li><a href="#TST-002">2 Installation of ADBox via pipx</a></li>
+<li><a href="#TST-001">1 Deploy ADBox via Docker and shell scripts</a></li>
 <li><a href="#TST-003">3 Install ADBox as dev container</a></li>
 <li><a href="#TST-004">4 Run ADBox console</a></li>
 <li><a href="#TST-005">5 Run ADBox in default mode with a Wazuh connection</a></li>
@@ -37,45 +36,88 @@
 <li><a href="#TST-014">14 ADBox use case 4 without a Wazuh connection</a></li>
 <li><a href="#TST-015">15 ADBox use case 5 with a Wazuh connection</a></li>
 <li><a href="#TST-016">16 ADBox use case 5 without a Wazuh connection</a></li>
+<li><a href="#TST-017">17 ADBox shipping install</a></li>
+<li><a href="#TST-018">18 ADBox Create detector data stream</a></li>
+<li><a href="#TST-019">19 Suricata installation in a containerized environment</a></li>
+<li><a href="#TST-020">20 Wazuh installation in a containerized environment</a></li>
+<li><a href="#TST-021">21 Wazuh agent installation and enrollment: the local machine</a></li>
+<li><a href="#TST-022">22 Wazuh agent installation and enrollment: remote machine</a></li>
+<li><a href="#TST-023">23 Wazuh agent deletion and uninstallation</a></li>
+<li><a href="#TST-024">24 Wazuh agent unenrollment</a></li>
+<li><a href="#TST-025">25 Suricata and Wazuh Integration</a></li>
+<li><a href="#TST-026">26 Port mirroring for remote machines</a></li>
+<li><a href="#TST-027">27 Traffic monitoring on Wazuh (local)</a></li>
+<li><a href="#TST-028">28 Traffic monitoring on Wazuh (remote)</a></li>
+<li><a href="#TST-029">29 Changing password for Wazuh indexer users</a></li>
+<li><a href="#TST-030">30 Changing password for Wazuh API users</a></li>
+<li><a href="#TST-031">31 Wazuh filters using the RESTful API</a></li>
+<li><a href="#TST-032">32 Wazuh filters using the Wazuh Dashboard</a></li>
+<li><a href="#TST-033">33 ADBox Wazuh integration Dashboard</a></li>
+<li><a href="#TST-034">34 ADBox set up indexer host address</a></li>
+<li><a href="#TST-035">35 ADBox change indexer credentil</a></li>
+<li><a href="#TST-036">36 Map a detected event to MITRE ATT&amp;CKS</a></li>
+<li><a href="#TST-037">37 Open prediction file of training data</a></li>
+<li><a href="#TST-038">38 Visualize train losses</a></li>
+<li><a href="#TST-039">39 Open prediction raw outcome</a></li>
+<li><a href="#TST-040">40 Visualize IDPS-ESCAPE high level architecture</a></li>
 </ul>
           </nav>
       </div>
       <div class="col-lg-8" id="main">
-        <h1 id="TST-001">1 Start ADBox interactive console <small>TST-001</small></h1>
+        <h1 id="TST-001">1 Deploy ADBox via Docker and shell scripts <small>TST-001</small></h1>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>14 GB storage on the machine</li>
+<li>26 GB storage on the machine</li>
 <li>git version 2.44.0</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Clone the ADBox repository.
-<code>git clone https://github.com/AbstractionsLab/idps-escape.git</code></li>
-<li>Change the working directory to the cloned folder containing the all the files along with the Dockerfile.
-<code>cd siem-mtad-gat</code></li>
+<li>
+<p>Clone the ADBox repository.
+<code>git clone https://github.com/AbstractionsLab/idps-escape.git</code></p>
+</li>
+<li>
+<p>Change the working directory to the cloned folder containing all the files along with the Dockerfile.</p>
+</li>
+</ol>
+<pre><code>cd siem-mtad-gat
+</code></pre>
+<ol start="3">
 <li>Build the image.</li>
 </ol>
-<pre><code>docker build -t siem-mtad-gat:v0.1.0 .
+<p>a. Make the script executable: <code>chmod  +x  build-adbox.sh</code></p>
+<p>b. And execute it as follows</p>
+<pre><code>./build-adbox.sh
 </code></pre>
 <ol start="4">
-<li>Run the container by executing the bash file containing the run commands.
-    a. Make it executable.
-<code>chmod  +x  adbox.sh</code>
-  b. And execute it.
-<code>./adbox.sh</code></li>
+<li>Run the container by executing the bash file containing the run commands.</li>
 </ol>
-<h2>Expected outcome</h2>
-<ol>
-<li>Copy of  <code>siem-mtad-gat</code> folder in local folder</li>
-<li>In the list of docker imageges (<code>docker images</code>) it should appear</li>
-</ol>
-<pre><code>REPOSITORY                      TAG       IMAGE ID       CREATED         SIZE
-siem-mtad-gat                   v0.1.0    ...   ...            ...
+<p>a. Make it executable: <code>chmod  +x  adbox.sh</code></p>
+<p>b. And execute it as follows</p>
+<pre><code>./adbox.sh -h
 </code></pre>
-<p>4b. ADBox interactive console should be opened</p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-001">TRA-001</a></p>
+<h2>Expected outcome</h2>
+<p>Step 1. A copy of <code>siem-mtad-gat</code> folder in local folder</p>
+<p>Step 3. In the list of docker images (<code>docker images</code>), the following should be present</p>
+<pre><code>REPOSITORY                      TAG       IMAGE ID       CREATED         SIZE
+siem-mtad-gat                   v0.1.4    ...   ...            ...
+</code></pre>
+<p>Step 4b. Display ADBox help message</p>
+<p>```
+  usage: driver.py [-h] [-i] [-u USECASE] [-c] [-s]</p>
+<p>IDPS-ESCAPE ADBox, an open-source anomaly detection toolbox, developed in project CyFORT.</p>
+<p>options:
+    -h, --help            show this help message and exit
+    -i, --interactive     run the interactive console for training and prediction
+    -u USECASE, --usecase USECASE
+                          specify a configuration scenario/use-case file for training and prediction
+    -c, --connection      check connection with Wazuh
+    -s, --shipping        enable data shipping to Wazuh
+  ```</p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-046">SRS-046</a></p>
+<p><em>Child links:</em> <a href="TRA.html#TRA-001">TRA-001</a>, <a href="TRB.html#TRB-002">TRB-002</a></p>
 <table>
 <thead>
 <tr>
@@ -108,70 +150,9 @@ siem-mtad-gat                   v0.1.0    ...   ...            ...
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
-</tbody>
-</table>
-<h1 id="TST-002">2 Installation of ADBox via pipx <small>TST-002</small></h1>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>Python 3.10.12</li>
-<li>git version 2.44.0</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Install pipx</li>
-</ol>
-<pre><code>python3 -m pip install pipx
-python3 -m pipx ensurepath
-</code></pre>
-<ol start="2">
-<li>Unpack the siem-mtad-gat.zip distribution</li>
-<li>Change working directory to the unpacked folder (e.g.,<code>cd siem-mtad-gat</code>) containing the wheel distribution  file (.whl), and use pipx to install SIEM-MTAD-GAT</li>
-</ol>
-<pre><code>pipx install ./siem_mtad_gat-0.1.0-py3-none-any.whl
-</code></pre>
-<ol start="4">
-<li>And then launch it by:
-adbox</li>
-</ol>
-<h2>Expected outcome</h2>
-<ol>
-<li>pipx successufully installed</li>
-<li>creation of
-3.</li>
-<li>ADBox interactive console should be opened.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRA.html#TRA-002">TRA-002</a></p>
-<table>
-<thead>
 <tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>Ubuntu 22.04.4 LTS</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>M</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
+<td>version</td>
+<td>0.2</td>
 </tr>
 </tbody>
 </table>
@@ -182,7 +163,7 @@ adbox</li>
 <li>Docker desktop version 1.0.35</li>
 <li>Visual Studio Code version 1.83.1 (system setup)</li>
 <li>Dev Containers extension for VS Code by Microsoft version v0.315.1</li>
-<li>at least 26GB storage on the machine</li>
+<li>at least 26 GB of persistent/disk storage</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -190,21 +171,22 @@ adbox</li>
 <code>git clone https://github.com/AbstractionsLab/idps-escape.git</code></li>
 <li>Start Docker Desktop if not already running.</li>
 <li>Open the project folder in VS Code.</li>
-<li>Select the "Reopen in Container" option in the notification that pops up in VS Code.</li>
-<li>Open a terminal in VS Code and run <code>poetry install</code>
- in the container to install all dependencies.</li>
-<li>And then run the ADBox using its entrypoint.</li>
+<li>Select the "Reopen in Container" option in the notification that pops up in VS Code or run it via the command palette.</li>
+<li>Open a terminal in VS Code and run <code>poetry install</code> in the container to install all dependencies.</li>
+<li>Run ADBox using its entrypoint.</li>
 </ol>
 <pre><code> poetry run adbox
 </code></pre>
-<h2>Expected outcome</h2>
-<ol>
-<li>repository creation</li>
-<li>Container created and terminal open</li>
-<li>Poetry install terminatwe with <code>Installing the current project: siem-mtad-gat (0.1.0)</code></li>
-<li>ADBox interactive console should be opened.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
+<h2>Expected outcome.</h2>
+<p>Step 1. Repository creation</p>
+<p>Step 4. Container created and terminal open.</p>
+<p>Step 5. Poetry install terminated with <code>Installing the current project: siem-mtad-gat (0.1.4)</code>.</p>
+<p>Step 6. Run ADBox default mode:</p>
+<pre><code>  IDPS-ESCAPE ADBox running in default mode
+Are you sure you wish to run the default ADBox in default mode? (y/n):
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-044">SRS-044</a></p>
+<p><em>Child links:</em> <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRB.html#TRB-003">TRB-003</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
 <table>
 <thead>
 <tr>
@@ -236,6 +218,10 @@ adbox</li>
 <tr>
 <td>test_data</td>
 <td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
 </tr>
 </tbody>
 </table>
@@ -244,26 +230,29 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
 <li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
- <code>./adbox.sh</code></li>
-<li>Press <code>&lt;1&gt;</code>, to select train.</li>
-<li>Press <code>&lt;n&gt;</code>, to train using default date.</li>
-<li>Press <code>&lt;n&gt;</code>, to name the trained detector with a default name.</li>
-<li>Press <code>&lt;n&gt;</code>, to train using default configurations.</li>
+ <code>./adbox.sh -i</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver in console mode.”</code></li>
-<li>The training should run for 30 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
+<li>ADBox starts with</li>
 </ul>
-<p><em>Child links:</em> <a href="TRA.html#TRA-005">TRA-005</a></p>
+<pre><code>IDPS-ESCAPE ADBox driver running in interactive console mode.
+
+Enter a number and press enter to select an ADBox action to perform:
+1. Train an anomaly detector.
+2. Predict anomalies using one of the avaliable detectores detector.
+3. Select an existing anomaly detector for prediction.
+4. Exit
+Enter a number (1-4):
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-047">SRS-047</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-004">TRB-004</a>, <a href="TRA.html#TRA-005">TRA-005</a></p>
 <table>
 <thead>
 <tr>
@@ -296,6 +285,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-005">5 Run ADBox in default mode with a Wazuh connection <small>TST-005</small></h1>
@@ -303,27 +296,38 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named “siem-mtad-gat-container” should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+<li>TST-034 and TST-035 should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container “siem-mtad-gat-container” by executing the adbox script with default parameter parameters.
-<code>./adbox.sh -df</code></li>
+<li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
+ <code>./adbox.sh</code></li>
+<li>Input <code>y</code> after <code>Are you sure you wish to run the default ADBox in default mode? (y/n):</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver in default mode.”</code></li>
-<li>The training should run for 30 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
-<li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>ADBox starts with</li>
 </ul>
-<p><em>Child links:</em> <a href="TRA.html#TRA-006">TRA-006</a></p>
+<pre><code>IDPS-ESCAPE ADBox running in default mode
+Are you sure you wish to run the default ADBox in default mode? (y/n): y
+No input use-case: a detection with default config will be created.
+Start training pipeline.
+Init Data managers.
+JSON file 'detector_input_parameters.json' saved at /home/alab/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/input/detector_input_parameters.json.
+Data ingestion.
+...
+</code></pre>
+<ul>
+<li>A detector {detector_id} is trained according to the default parameters specified in <code>siem_mtad_gat/assets/default_configs/default_detector_input_config.json</code>.</li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the following folder: <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code>.</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-005">TRB-005</a>, <a href="TRA.html#TRA-006">TRA-006</a></p>
 <table>
 <thead>
 <tr>
@@ -356,6 +360,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-006">6 Run ADBox in default mode without a Wazuh connection <small>TST-006</small></h1>
@@ -369,23 +377,38 @@ adbox</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with default parameter parameters.
- <code>./adbox.sh -df</code></li>
+<li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
+ <code>./adbox.sh</code></li>
+<li>Input <code>y</code> after <code>Are you sure you wish to run the default ADBox in default mode? (y/n):</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver in default mode.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json”</code>.</li>
-<li>The training should run for 30 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/sample-alerts-prediction-2024-07-22' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
-<li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>ADBox starts with</li>
 </ul>
+<pre><code>IDPS-ESCAPE ADBox running in default mode
+Are you sure you wish to run the default ADBox in default mode? (y/n): y
+No input use-case: a detection with default config will be created.
+Start training pipeline.
+Init Data managers.
+JSON file 'detector_input_parameters.json' saved at /home/alab/siem-mtad-gat/siem_mtad_gat/assets/detector_models/fb5faf1c-7913-4e90-880f-51f3a178a053/input/detector_input_parameters.json.
+Data ingestion.
+Wazuh data ingestor establishing connection to Wazuh...
+Could not establish a connection with OpenSearch.
+More details see logs.
+...
+</code></pre>
+<ul>
+<li>A detector {detector_id} is trained according to the default parameters specified in <code>siem_mtad_gat/assets/default_configs/default_detector_input_config.json</code> and using default stored data</li>
+</ul>
+<pre><code>...
+The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-11.json' does not exist, returning all default data.
+...
+</code></pre>
+<ul>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-007">TRA-007</a>, <a href="TRA.html#TRA-019">TRA-019</a></p>
 <table>
 <thead>
@@ -419,6 +442,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-007">7 ADBox use case 1 with a Wazuh connection <small>TST-007</small></h1>
@@ -426,27 +453,30 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
 <li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li>Wazuh configured to monitor linux resource utilization. (Monitoring Linux resource usage with Wazuh)</li>
+<li><code>2024-07-*</code> index not empty.</li>
+<li>TST-034 and TST-035 should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 1 parameters.
-    <code>./adbox.sh -uc 1</code></li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 1 parameters.
+    <code>./adbox.sh -u 1</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>Running AD driver with user configuration uc_1.yaml.</code></li>
+<li>ADBox starts with <code>IDPS-ESCAPE ADBox driver running use-case scenario configuration uc_1.yaml.</code></li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in real-time mode with interval 1 (min).”</code></li>
-<li>Prediction response should be seen on the output console after every 1 minute.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with the message <code>Predicting in real-time mode with interval 1 (min).</code></li>
+<li>A prediction response should be seen in the output console after every 1 minute.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-008">TRA-008</a></p>
 <table>
 <thead>
@@ -480,6 +510,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-008">8 ADBox use case 1 without a Wazuh connection <small>TST-008</small></h1>
@@ -487,31 +521,32 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>No instance of Wazuh distribution running.</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 1 parameters.</li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 1 parameters.</li>
 </ol>
-<pre><code> ./adbox.sh -uc 1
+<pre><code> ./adbox.sh -u 1
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_1.yaml.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json”</code>.</li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_1.yaml.</code></li>
+<li>Output screen should show the message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from the default file with message <code>Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json</code>.</li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in real-time mode with interval 1 (min).”</code></li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in real-time mode with interval 1 (min).</code></li>
 <li>Output screen should show the following messages:</li>
-<li><code>“Could not establish a connection with OpenSearch.”</code></li>
-<li><code>“Prediction in run_mode.REALTIME requires a connection with OpenSearch.”</code></li>
-<li><code>“No data found for given input.”</code></li>
+<li><code>Could not establish a connection with OpenSearch.</code></li>
+<li><code>Prediction in run_mode.REALTIME requires a connection with OpenSearch.</code></li>
+<li><code>No data found for given input.</code></li>
 <li>And the application should exit.</li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-009">TRA-009</a>, <a href="TRA.html#TRA-018">TRA-018</a></p>
 <table>
 <thead>
@@ -545,6 +580,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-009">9 ADBox use case 2 with a Wazuh connection <small>TST-009</small></h1>
@@ -552,27 +591,30 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+<li><code>2024-07-*</code> index not empty.</li>
+<li>TST-034 and TST-035 should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 2 parameters.
- <code>./adbox.sh -uc 2</code></li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 2 parameters.
+ <code>./adbox.sh -u 2</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_2.yaml.”</code></li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_2.yaml.</code></li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
-<li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in historical mode.</code></li>
+<li>Prediction response should be seen in the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Child links:</em> <a href="TRA.html#TRA-010">TRA-010</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-006">TRB-006</a>, <a href="TRA.html#TRA-010">TRA-010</a></p>
 <table>
 <thead>
 <tr>
@@ -605,6 +647,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-010">10 ADBox use case 2 without a Wazuh connection <small>TST-010</small></h1>
@@ -612,29 +658,30 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>No instance of Wazuh distribution running.</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 2 parameters.
- <code>./adbox.sh -uc 2</code></li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 2 parameters.
+ <code>./adbox.sh -u 2</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_2.yaml.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07”</code>.</li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_2.yaml.</code></li>
+<li>Output screen should show the message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from the default file with message <code>Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07</code>.</li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/sample-alerts-predict-2024-07-26' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
-<li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Training response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in historical mode.</code></li>
+<li>Output screen should show message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from default file with message <code>The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/sample-alerts-predict-2024-07-26' does not exist, returning all default data.</code>, depending upon the date it was run.</li>
+<li>Prediction response should be seen in the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-017">TRA-017</a></p>
 <table>
 <thead>
@@ -668,6 +715,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-011">11 ADBox use case 3 with a Wazuh connection <small>TST-011</small></h1>
@@ -675,28 +726,31 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
+<li><code>2024-07-*</code> index not empty.</li>
+<li>TST-034 and TST-035 should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 3 parameters.</li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 3 parameters.</li>
 </ol>
-<pre><code> ./adbox.sh -uc 3
+<pre><code> ./adbox.sh -u 3
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_3.yaml.”</code></li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_3.yaml.</code></li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in batch mode with batch interval 5 (min).”</code></li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in batch mode with batch interval 5 (min).</code></li>
 <li>Prediction response should be seen on the output console after every 5 minutes.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Child links:</em> <a href="TRA.html#TRA-011">TRA-011</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-007">TRB-007</a>, <a href="TRA.html#TRA-011">TRA-011</a></p>
 <table>
 <thead>
 <tr>
@@ -729,6 +783,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-012">12 ADBox use case 3 without a Wazuh connection <small>TST-012</small></h1>
@@ -736,33 +794,34 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>No instance of Wazuh distribution running.</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 3 parameters.</li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 3 parameters.</li>
 </ol>
-<pre><code> ./adbox.sh -uc 3
+<pre><code> ./adbox.sh -u 3
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_3.yaml.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json”</code>.</li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_3.yaml.</code></li>
+<li>Output screen should show the message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from the default file with the message <code>Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-07.json</code>.</li>
 <li>The training should run for 10 epochs.</li>
 <li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in batch mode with batch interval 5 (min).”</code></li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in batch mode with batch interval 5 (min).</code></li>
 <li>Output screen should show the following messages:<ul>
-<li><code>“Could not establish a connection with OpenSearch.”</code></li>
-<li><code>“Prediction in run_mode.BATCH requires a connection with OpenSearch.”</code></li>
-<li><code>“No data found for given input.”</code></li>
+<li><code>Could not establish a connection with OpenSearch.</code></li>
+<li><code>Prediction in run_mode.BATCH requires a connection with OpenSearch.</code></li>
+<li><code>No data found for given input.</code></li>
 <li>And the application should exit.</li>
 </ul>
 </li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-016">TRA-016</a></p>
 <table>
 <thead>
@@ -796,6 +855,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-013">13 ADBox use case 4 with a Wazuh connection <small>TST-013</small></h1>
@@ -804,27 +867,30 @@ adbox</li>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
 <li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li>Wazuh agent configured to read Suricata logs.</li>
+<li>"2024-03-*" not empty.</li>
+<li>TST-034 and TST-035 should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 4 parameters.</li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 4 parameters.</li>
 </ol>
-<pre><code>./adbox.sh -uc 4
+<pre><code>./adbox.sh -u 4
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_4.yaml.”</code></li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_4.yaml.</code></li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
-<li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in historical mode.</code></li>
+<li>Prediction response should be seen in the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-012">TRA-012</a></p>
 <table>
 <thead>
@@ -858,6 +924,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-014">14 ADBox use case 4 without a Wazuh connection <small>TST-014</small></h1>
@@ -865,30 +935,31 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>No instance of Wazuh distribution running.</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 4 parameters.</li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 4 parameters.</li>
 </ol>
-<pre><code>./adbox.sh -uc 4
+<pre><code>./adbox.sh -u 4
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_4.yaml.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-03.json”</code>.</li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_4.yaml.</code></li>
+<li>Output screen should show message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from default file with message <code>Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-03.json</code>.</li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/wazuh-alerts-*.*-2024.07.22.json' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
+<li>Training response should be seen on the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in historical mode.</code></li>
+<li>Output screen should show message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from default file with message <code>The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/wazuh-alerts-*.*-2024.07.22.json' does not exist, returning all default data.</code>, depending upon the date it was run.</li>
 <li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-015">TRA-015</a></p>
 <table>
 <thead>
@@ -922,6 +993,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-015">15 ADBox use case 5 with a Wazuh connection <small>TST-015</small></h1>
@@ -929,27 +1004,29 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li>Wazuh agent configured to read Suricata logs.</li>
+<li>TST-034 and TST-035 should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 5 parameters.
- <code>./adbox.sh -uc 5</code></li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 5 parameters.
+ <code>./adbox.sh -u 5</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_5.yaml.”</code></li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_5.yaml.</code></li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in historical mode.</code></li>
 <li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-013">TRA-013</a></p>
 <table>
 <thead>
@@ -983,6 +1060,10 @@ adbox</li>
 <td>test_data</td>
 <td>see referenced files</td>
 </tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
 </tbody>
 </table>
 <h1 id="TST-016">16 ADBox use case 5 without a Wazuh connection <small>TST-016</small></h1>
@@ -990,30 +1071,31 @@ adbox</li>
 <ul>
 <li>Docker version 26.0.0</li>
 <li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.0</code></li>
-<li>No existing container named <code>“siem-mtad-gat-container”</code> should be running.</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>No instance of Wazuh distribution running.</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Run the container <code>“siem-mtad-gat-container”</code> by executing the adbox script with use case 5 parameters.</li>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 5 parameters.</li>
 </ol>
-<pre><code>./adbox.sh -uc 5
+<pre><code>./adbox.sh -u 5
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
-<li>ADBox starts with <code>“Running AD driver with user configuration uc_5.yaml.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-03.json”</code>.</li>
+<li>ADBox starts with <code>Running AD driver with user configuration uc_5.yaml.</code></li>
+<li>Output screen should show message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from default file with message <code>Returning data from file /home/root/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts-train-2024-03.json</code>.</li>
 <li>The training should run for 10 epochs.</li>
-<li>Train response should be seen on the console.</li>
-<li>Training outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”</code> folder.</li>
-<li>Prediction starts after training with message <code>“Predicting in historical mode.”</code></li>
-<li>Output screen should show message <code>“Could not establish a connection with OpenSearch.”</code></li>
-<li>And collect training data from default file with message <code>“The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/wazuh-alerts-*.*-2024.07.22.json' does not exist, returning all default data.”</code>, depending upon the date it was run.</li>
-<li>Prediction response should be seen on the output console.</li>
-<li>Prediction outputs and artifacts should be available in the <code>“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”</code> folder.</li>
+<li>Training response should be seen in the console.</li>
+<li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+<li>Prediction starts after training with message <code>Predicting in historical mode.</code></li>
+<li>Output screen should show message <code>Could not establish a connection with OpenSearch.</code></li>
+<li>And collect training data from default file with message <code>The file '/home/root/siem-mtad-gat/siem_mtad_gat/assets/data/predict/wazuh-alerts-*.*-2024.07.22.json' does not exist, returning all default data.</code>, depending upon the date it was run.</li>
+<li>Prediction response should be seen in the output console.</li>
+<li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-014">TRA-014</a></p>
 <table>
 <thead>
@@ -1046,6 +1128,1908 @@ adbox</li>
 <tr>
 <td>test_data</td>
 <td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-017">17 ADBox shipping install <small>TST-017</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with shipping flag.</li>
+</ol>
+<pre><code> ./adbox.sh -s
+</code></pre>
+<h2>Expected outcome</h2>
+<h3>CLI:</h3>
+<pre><code>IDPS-ESCAPE ADBox shipping on
+ADBox Shipper establishing connection to Wazuh...
+ADBox shipper connected to Wazuh
+Template for mtad_gat initialized
+Exit shipper installation. Check ADBox templates and policy correct installation from Wazuh Dashboard!
+</code></pre>
+<h4>Wazuh Dashboard* :</h4>
+<ul>
+<li><strong>Indexer Management&gt;Index Management&gt;Templates</strong> check for presence of base templates<code>adbox_stream_template</code>,<code>adbox_stream_template_mtad_gat</code>;</li>
+<li><strong>Indexer Management&gt;Index Management&gt;Templates&gt;Component templates</strong> check for presence of base templates<code>component_template_mtad_gat</code>;</li>
+<li><strong>Indexer Management&gt;Index Management&gt;State management policies</strong> check for presence of the policy <code>adbox_detectors_rollover</code>.</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-049">SRS-049</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-001">TRB-001</a>, <a href="TRB.html#TRB-008">TRB-008</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-018">18 ADBox Create detector data stream <small>TST-018</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
+<li>An instance of a Wazuh distribution should be running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox use case 12 with shipping flag.</li>
+</ol>
+<pre><code> ./adbox.sh -u 12 -s
+</code></pre>
+<h2>Expected outcome</h2>
+<h3>CLI:</h3>
+<ul>
+<li>Training model for 2 epochs</li>
+</ul>
+<pre><code>  IDPS-ESCAPE ADBox shipping on
+  ADBox Shipper establishing connection to Wazuh...
+  IDPS-ESCAPE ADBox driver running use case scenario configuration uc_12.yaml.
+  Start training pipeline.
+  Init Data managers.
+  JSON file 'detector_input_parameters.json' saved at /home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/1bda6dd3-0947-43e3-9ca2-bd3c711ae69f/input/detector_input_parameters.json.
+  Data ingestion.
+  Wazuh data ingestor establishing connection to Wazuh...
+</code></pre>
+<ul>
+<li>Historical prediction: the start time shall be the present day at '00:06:00Z' (notice <em>window size</em> is 6 and <em>granularity</em> 1min) and the end time/present timestamp rounded to the closest
+<em>unit timestamp</em>.</li>
+</ul>
+<pre><code>Start prediction pipeline. Detector: 1bda6dd3-0947-43e3-9ca2-bd3c711ae69f
+Init Data managers.
+Spot object 0 loaded.
+Spot object 1 loaded.
+...
+Prediction response:
+{'run_mode': 'HISTORICAL', 'detector_id': '1bda6dd3-0947-43e3-9ca2-bd3c711ae69f', 'start_time': '2024-11-25T00:06:00Z', 'end_time': '2024-11-25T16:58:00Z', 'results': []}
+Prediction ended
+</code></pre>
+<h4>Local storage:</h4>
+<ul>
+<li>Training outputs and artifacts available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
+</ul>
+<h4>Wazuh Dashboard:</h4>
+<ul>
+<li>When verifying the output using the dashboard vizualisations, remember that time shift due to TimeZone may apply.</li>
+<li><strong>Indexer Management&gt;Index Management&gt;Templates</strong>  check if the  template <code>adbox_detector_mtad_gat_{detector_id}</code> is there;</li>
+<li><strong>Indexer Management&gt;Index Management&gt;Templates&gt; Component templates</strong> check if the templates <code>component_template_{detector_id}</code> is there;</li>
+<li><strong>Indexer Management&gt;Data streams</strong> check if <code>adbox_detector_mtad_gat_{detector_id}</code> is there and contains at least a document.
+      <img alt="Dashboard" src="assets/TST-18-detector-stream.png" width="80%" /></li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-042">SRS-042</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-019">19 Suricata installation in a containerized environment <small>TST-019</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Create a new directory for suricata docker deployment.</li>
+<li>In the directory download the <code>suricata.yaml</code> configuration file <code>deployment/suricata/suricata.yaml</code>.</li>
+<li>Make the required changes in the configuration file as per the network
+settings of the respective system as explained <code>deployment/suricata/suricata_installation.md#suricata-configuration-file</code>.</li>
+<li>In the directory download the Dockerfile <code>deployment/suricata/Dockerfile</code>.</li>
+<li>Pull the ubuntu docker base image.
+<code>sudo docker pull ubuntu</code></li>
+<li>Build the docker image.</li>
+</ol>
+<pre><code>sudo docker build -t suricata-container .
+</code></pre>
+<ol start="7">
+<li>Run the docker container.</li>
+</ol>
+<pre><code>sudo docker run --network=host --hostname=suricata-instance --name=suricatainstance
+-it suricata-container
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>Container named <code>suricata-instance</code> is running. Verify it by checking the
+running docker container with this command.
+sudo docker ps -a</li>
+<li>Upon running the <code>ps aux</code> command inside the running container's bash,
+Suricata services can be seen as a running process. The container bash can
+be accessed by the following command.
+<code>sudo docker exec -it suricata-instance bash</code></li>
+<li>In the container's bash run the following command to read Suricata log files.
+  <code>tail /var/log/suricata/suricata.log</code></li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-008">SRS-008</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-020">20 Wazuh installation in a containerized environment <small>TST-020</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Clone the Wazuh docker repository in the system as mentioned in section</li>
+</ol>
+<pre><code>git clone https://github.com/wazuh/wazuh-docker.git -b v4.8.1
+</code></pre>
+<ol start="3">
+<li>Navigate to the directory since it is a single
+node deployment.</li>
+</ol>
+<pre><code>cd wazuh-docker/single-node
+</code></pre>
+<ol start="4">
+<li>
+<p>Provide the group of certificates for secure communication.
+  <code>sudo docker-compose -f generate-indexer-certs.yml run --rm generator</code></p>
+</li>
+<li>
+<p>Deploy Wazuh as single-node using docker-compose.
+  <code>sudo docker-compose up -d</code>
+  This could take some time since it would pull all the images.</p>
+</li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>The following output should be visible on the screen after deployment in
+the background (with -d option)</li>
+</ul>
+<pre><code>✔ Container single-node-wazuh.indexer-1 Started
+0.1s
+✔ Container single-node-wazuh.manager-1 Started
+0.1s
+✔ Container single-node-wazuh.dashboard-1 Started
+</code></pre>
+<ul>
+<li>
+<p>Run the following command and you should see 3 containers running. By <code>sudo docker ps -a</code> you shall see
+  <code>wazuh/wazuh-dashboard:4.8.1</code>,<code>wazuh/wazuh-manager:4.8.1</code>,<code>wazuh-indexer:4.8.1</code> .</p>
+</li>
+<li>
+<p>The Wazuh dashboard is accessible through any browser, on the IP address of the system that it is deployed on.</p>
+</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-001">SRS-001</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-021">21 Wazuh agent installation and enrollment: the local machine <small>TST-021</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0</li>
+<li>Deployment of Wazuh Dashboard version 4.8.1 on the local monitoring machine inside a container</li>
+<li>Deployment of Wazuh Indexer version 4.8.1 on the local monitoring
+machine inside a container</li>
+<li>Deployment of Wazuh Manager version 4.8.1 on the local monitoring
+machine inside a container</li>
+<li>GNU bash, version 5.1.16</li>
+<li>No prior agent should already be running on the local monitoring machine</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the Wazuh Dashboard, go to <strong>Endpoint Summary</strong>, and click on <strong>Deploy
+new agent</strong>.</li>
+<li>Select the package to download and install on the respective system
+i.e., Linux DEB amd64.</li>
+<li>Provide a server address and an optional name for the agent. The
+server address should be the IP address of the docker host address in the
+case of docker installation on the local monitoring machine.
+-  The docker host address can be found by:</li>
+</ol>
+<pre><code>sudo docker network inspect bridge | grep Gateway
+</code></pre>
+<ol start="4">
+<li>Install the agent by running the command that should be provided
+on the dashboard after entering the above information. For example,
+- download</li>
+</ol>
+<pre><code>wget https://packages.wazuh.com/4.x/apt/pool/main/w/wazuh-agent/wazuh-agent_4.8.1-1_arm64.deb &amp;&amp; sudo WAZUH_MANAGER='172.17.0.1' WAZUH_AGENT_GROUP='default' WAZUH_AGENT_NAME='idps-escape-1' dpkg -i ./wazuh-agent_4.8.1-1_arm64.deb
+</code></pre>
+<ol start="5">
+<li>Start the agent by running the three commands that should also be
+provided on the dashboard, i.e.,</li>
+</ol>
+<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable wazuh-agent
+sudo systemctl start wazuh-agent
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>The status of the agent should be “Started Wazuh agent.” Which is seen
+by running the command:
+sudo systemctl status wazuh-agent.</li>
+<li>On the Wazuh Dashboard the Agent should appear as active in the summary page.</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-003">SRS-003</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-022">22 Wazuh agent installation and enrollment: remote machine <small>TST-022</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0</li>
+<li>Deployment of Wazuh Dashboard version 4.8.1 on the local monitoring machine inside a container</li>
+<li>Deployment of Wazuh Indexer version  4.8.1 on the local monitoring
+machine inside a container</li>
+<li>Deployment of Wazuh Manager version  4.8.1 on the local monitoring
+machine inside a container</li>
+<li>GNU bash, version 5.1.16</li>
+<li>No prior agent should already be running on a REMOTE monitoring machine</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the Wazuh Dashboard, go to <strong>Endpoint Summary</strong>, and click on <strong>Deploy
+new agent</strong>.</li>
+<li>Select the package to download and install on the REMOTE MACHINE system
+i.e., Linux DEB amd64.</li>
+<li>Provide a server address (this should be the machine hosting the manager) and an optional name for the agent.
+-  The docker host address can be found by:</li>
+</ol>
+<pre><code>sudo docker network inspect bridge | grep Gateway
+</code></pre>
+<ol start="4">
+<li>Install the agent by running the command in the REMOTE HOST that should be provided
+on the dashboard after entering the above information. For example,
+- download</li>
+</ol>
+<pre><code>wget https://packages.wazuh.com/4.x/apt/pool/main/w/wazuh-agent/wazuh-agent_4.8.1-1_arm64.deb &amp;&amp; sudo WAZUH_MANAGER='172.17.0.1' WAZUH_AGENT_GROUP='default' WAZUH_AGENT_NAME='idps-escape-1' dpkg -i ./wazuh-agent_4.8.1-1_arm64.deb
+</code></pre>
+<ol start="5">
+<li>Start the agent by running the three commands in the REMOTE HOST  that should also be
+provided on the dashboard, i.e.,</li>
+</ol>
+<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable wazuh-agent
+sudo systemctl start wazuh-agent
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>The status of the agent should be “Started Wazuh agent.” Which is seen
+by running the command:
+sudo systemctl status wazuh-agent.</li>
+<li>On the Wazuh Dashboard the Agent should appear as active in the summary page.</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-023">SRS-023</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-023">23 Wazuh agent deletion and uninstallation <small>TST-023</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+manager</li>
+<li>Wazuh API Token</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+machine inside a container (4.8.1)</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Using the Wazuh API Token, send a DELETE request through the Wazuh API to the Wazuh
+manager. The request should also contain the IDs of the agents to be
+deleted.</li>
+</ol>
+<pre><code>curl -k -X DELETE &quot;https://[Wazuh Server Address]:55000/agents?pretty=true&amp;older_than=0s&amp;agents_list=[Comma separated agent IDs]&amp;status=all&quot;
+-H &quot;Authorization: Bearer $TOKEN&quot;
+</code></pre>
+<ol start="2">
+<li>Uninstall the agent by running the following commands.</li>
+</ol>
+<pre><code>sudo apt-get remove --purge wazuh-agent
+sudo systemctl disable wazuh-agent
+sudo systemctl daemon-reload
+</code></pre>
+<h2>Expected outcome</h2>
+<ul>
+<li>After deleting the agent, the agent should not be visible in the list of
+agents on the Wazuh Dashboard.</li>
+<li>The agent should also not be present in the list of available agents on the
+machine, which can be checked by the following command.
+<code>sudo /var/ossec/bin/manage_agents -l</code></li>
+<li>After uninstalling the agent, no command regarding the agent should
+work.</li>
+<li>The agent removal can also be verified from the Wazuh manager.</li>
+</ul>
+<ol>
+<li>Access the bash of the container which is running the Wazuh Manager.
+  <code>sudo docker exec -it [Container name or ID of
+  Wazuh Manager] bash</code></li>
+<li>Run the command to access the Agent Manager. <code>/var/ossec/bin/manage_agents</code></li>
+<li>The removal can be confirmed by entering <code>L</code> and pressing ENTER to
+  verify its absence from the <em>Available Agents listing</em>.</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-004">SRS-004</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-024">24 Wazuh agent unenrollment <small>TST-024</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+manager</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+machine inside a container (4.8.1)</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Access the bash of the container which is running the Wazuh Manager.</li>
+</ol>
+<pre><code>sudo docker exec -it [Container name or ID of
+Wazuh Manager] bash
+</code></pre>
+<ol start="2">
+<li>Run the command to access the Agent Manager. <code>/var/ossec/bin/manage_agents</code></li>
+<li>Press <code>&lt;R&gt;</code> which is the option for removing and agent and press enter.</li>
+<li>Enter the ID of the agent to be removed and unenroll from the manager.
+e. Confirm the removal action by pressing <code>&lt;Y&gt;</code> and enter.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ul>
+<li>After confirming the output should be a confirmation message, "Agent
+<code>ID</code> removed".</li>
+<li>After deleting the agent, the agent should not be visible in the list of
+agents on the Wazuh Dashboard.</li>
+<li>The agent should also not be present in the list of available agents on the
+machine, which can be checked by the following command.
+<code>sudo /var/ossec/bin/manage_agents -l</code></li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-004">SRS-004</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-025">25 Suricata and Wazuh Integration <small>TST-025</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+manager</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Suricata version 7.0.3 on the local monitoring machine
+inside a container</li>
+<li>GNU nano, version 6.2</li>
+<li>curl version 7.81.0</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Edit the configuration file of the Wazuh agent to make it able to read
+Suricata logs.
+<code>sudo nano /var/ossec/etc/ossec.conf</code></li>
+<li>Add the suricata eve logs the end of the file, before the last
+<code>&lt;/ossec_config&gt;</code> closing tag.</li>
+</ol>
+<pre><code>&lt;ossec_config&gt;
+...
+  &lt;localfile&gt;
+    &lt;log_format&gt;json&lt;/log_format&gt;
+    &lt;location&gt;/var/log/suricata/eve.json&lt;/location&gt;
+  &lt;/localfile&gt;
+&lt;/ossec_config&gt;
+
+</code></pre>
+<ol start="3">
+<li>Remove the Suricata container.
+<code>sudo docker rm suricata-instance</code></li>
+<li>Run the Suricata container again with adding arguments to create docker
+volumes.</li>
+</ol>
+<pre><code>sudo docker run -v
+/var/log/suricata:/var/log/suricata --network=host
+--hostname=suricata-instance --name=suricatainstance
+-d suricata-container
+</code></pre>
+<ol start="5">
+<li>Restart the Wazuh agent</li>
+</ol>
+<pre><code>sudo systemctl restart wazuh-agent
+</code></pre>
+<ol start="6">
+<li>Generate some malicious network traffic by sending a curl request to the
+following tool.</li>
+</ol>
+<pre><code>curl -sSL
+https://raw.githubusercontent.com/3CORESec/testmynids.org/master/tmNIDS -o /tmp/tmNIDS &amp;&amp; chmod +x /tmp/tmNIDS &amp;&amp; /tmp/tmNIDS
+</code></pre>
+<ol start="7">
+<li>Enter any number from 1 to 11 to generate the respective traffic.</li>
+<li>On the Wazuh dashboard, filter the alerts to see the events particularly
+generated by Suricata. This is done by <strong>Threat Hunting &gt; Add Filter</strong>. And to create the filter, in the Field dropdown,
+select <em>rule.groups</em>, in the operator dropdown, select <em>is</em> and in the
+Value, write <em>suricata</em>.</li>
+</ol>
+<h2>Expected outcome</h2>
+<p>-The alert generated by Suricata for the malicious traffic should be seen on
+the Wazuh Dashboard <strong>Threat Hunting</strong>.
+- After filter application, all alerts generated by suricata should be visible.</p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-010">SRS-010</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-026">26 Port mirroring for remote machines <small>TST-026</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Ubuntu 22.04.4 LTS (Machine 1, central monitoring host)</li>
+<li>Ubuntu 22.04.4 LTS (Machine 2, target host or the remote machine)</li>
+<li>
+<p>Prerequisites for Machine 1:</p>
+<ul>
+<li>tcpdump version 4.99.1</li>
+<li>User with root privileges</li>
+</ul>
+</li>
+<li>
+<p>Prerequisites for Machine 2:</p>
+<ul>
+<li>User with root privileges</li>
+<li>ping from iputils 20211215</li>
+<li>GNU bash, version 5.1.16</li>
+<li>No existing tunnel is configured from machine 2 to machine 1</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Create a GRE tunnel from machine 2 to machine 1 and mirror all the
+ingress and egress (incoming and outgoing) network traffic generated on
+machine 2 to machine 1. Using the procedure describe in <code>deployment/remote_monitoring/remote_monitoring.md</code>.</li>
+</ol>
+</li>
+</ul>
+<ol start="2">
+<li>From machine 2, send some ICMP echo request packets to machine 1.</li>
+</ol>
+<pre><code>ping -c3 [IP of the capture interface of machine
+1]
+</code></pre>
+<ol start="3">
+<li>On machine 1, use tcpdump to capture network traffic on the default
+interface.</li>
+</ol>
+<pre><code>sudo tcpdump -n -i [Capture interface of machine
+1]
+</code></pre>
+<h2>Expected outcome</h2>
+<p>tcpdump output should show that machine 1 receives both the ingress and
+egress ICMP packets from machine 2, encapsulated within GRE packets</p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-007">SRS-007</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>A</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-027">27 Traffic monitoring on Wazuh (local) <small>TST-027</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+  curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+  manager</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Suricata version 7.0.3 on the local monitoring machine
+  inside a container</li>
+<li>GNU nano, version 6.2</li>
+<li>curl version 7.81.0</li>
+<li>Wazuh agent configured to integrate with Suricata</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Generate some malicious network traffic on the monitored machine
+by sending a curl request to the following tool.</li>
+</ol>
+<pre><code>curl -sSL
+https://raw.githubusercontent.com/3CORESec/testmynids.org/master/tmNIDS -o /tmp/tmNIDS &amp;&amp; chmod +x /tmp/tmNIDS &amp;&amp; /tmp/tmNIDS
+</code></pre>
+<ol start="2">
+<li>Enter any number from 1 to 11 to generate the respective traffic on the console.</li>
+</ol>
+<h2>Expected outcome</h2>
+<p>The alert generated by Suricata for the malicious traffic should be seen on
+the Wazuh Dashboard.</p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-028">28 Traffic monitoring on Wazuh (remote) <small>TST-028</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+  curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+  manager in remote machine</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Suricata version 7.0.3 on the remote monitoring machine
+  inside a container</li>
+<li>GNU nano, version 6.2</li>
+<li>curl version 7.81.0</li>
+<li>Wazuh agent configured to integrate with Suricata</li>
+<li>GRE tunnel created from the remote machine to the local monitoring  machine which mirrors all the ingress and egress network traffic from the
+  remote machine to the local monitoring machine</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>
+<p>Generate some malicious network traffic on the remote monitored machine
+  by sending a curl request to the following tool.
+  <code>curl -sSL
+   https://raw.githubusercontent.com/3CORESec/testmynids.org/master/tmNIDS -o /tmp/tmNIDS &amp;&amp; chmod +x /tmp/tmNIDS &amp;&amp; /tmp/tmNIDS</code></p>
+</li>
+<li>
+<p>Enter any number from 1 to 11 to generate the respective traffic on the console.
+  ## Expected outcome
+  The alert generated by Suricata for the malicious traffic should be seen on
+  the Wazuh Dashboard.</p>
+</li>
+<li>
+<p>On the Wazuh dashboard, filter the alerts to see the events particularly related to the remote machine.
+  This is done bya adding a filter. And to create the filter, in the Field dropdown, select <code>data.tunnel.src_ip</code>, in the operator dropdown, select <code>is</code> and in the Value, write the IP of the capture interface of the remote machine where the GRE tunnel was created.</p>
+</li>
+</ol>
+<p><strong>Note</strong> that after creating the tunnel there could be a possible delay of some minutes between the creation of the tunnel and the display of the events on the Wazuh dashboard.</p>
+<p>## Expected outcome
+  - The alert generated by Suricata for the malicious traffic should be seen on the Wazuh Dashboard.
+  - The filter application should show the Suricata alert for the test traffic that was run.</p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-029">29 Changing password for Wazuh indexer users <small>TST-029</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+manager</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Suricata version 7.0.3 on the local monitoring machine
+inside a container</li>
+<li>GNU nano, version 6.2</li>
+</ul>
+<h2>Test steps</h2>
+<p>The change password procedure is more detailed in <code>deployment/wazuh/change_passwords.md</code>.</p>
+<h3>Part 1: Genereate Hash</h3>
+<ol>
+<li>Stop the deployment stack if it's running. From wazuh repository:</li>
+</ol>
+<pre><code>sudo docker-compose down
+</code></pre>
+<ol start="2">
+<li>Run the following command to generate the hash of the new
+password. Once the container launches, input the new password
+and press Enter.</li>
+</ol>
+<pre><code>sudo docker run --rm -ti wazuh/wazuhindexer:4.8.1 bash /usr/share/wazuhindexer/plugins/opensearchsecurity/tools/hash.sh
+</code></pre>
+<ol start="3">
+<li>Copy the generated hash.</li>
+<li>Open the <code>config/wazuh_indexer/internal_users.yml</code> file.
+Locate the block for the user for whom the password is being
+changed for.</li>
+</ol>
+<h3>Part 2: Set the new password.</h3>
+<ol>
+<li>In the <code>docker-compose.yml</code> file, replace all instances of the old
+password with the new one.</li>
+</ol>
+<h3>Part 3: Apply changes</h3>
+<ol>
+<li>Start the deployment stack.</li>
+</ol>
+<pre><code>sudo docker-compose up -d
+</code></pre>
+<ol start="2">
+<li>Enter the container bash.</li>
+</ol>
+<pre><code>sudo docker exec -it [Name or ID of the Wazuh Indexer container] bash
+</code></pre>
+<ol start="3">
+<li>Set the following variables:</li>
+</ol>
+<pre><code>export INSTALLATION_DIR=/usr/share/wazuhindexer
+CACERT=$INSTALLATION_DIR/certs/root-ca.pem
+KEY=$INSTALLATION_DIR/certs/admin-key.pem
+CERT=$INSTALLATION_DIR/certs/admin.pem
+export JAVA_HOME=/usr/share/wazuhindexer/jdk
+</code></pre>
+<ol start="4">
+<li>Wait for the Wazuh indexer to initialize properly. The waiting
+time can vary from two to five minutes. It depends on the size of
+the cluster, the assigned resources, and the speed of the
+network. Then, run the <code>securityadmin.sh</code>  script to apply all
+changes.</li>
+</ol>
+<pre><code>bash /usr/share/wazuhindexer/plugins/opensearchsecurity/tools/securityadmin.sh -cd /usr/share/wazuh-indexer/opensearchsecurity/ -nhnv -cacert $CACERT -cert $CERT -key $KEY -p 9200 -icl
+</code></pre>
+<ol start="5">
+<li>
+<p>Exit the Wazuh indexer container and login with the new
+credentials on the Wazuh dashboard.</p>
+</li>
+<li>
+<p>Enter any number from 1 to 11 to generate the respective traffic on the console.</p>
+</li>
+</ol>
+<h2>Expected outcome</h2>
+<p>-The Wazuh dashboard should show "Invalid username or password.
+Please try again." error while trying to login with the old password.
+- The Wazuh dashboard should be accessible through the new password.</p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-016">SRS-016</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated/Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-030">30 Changing password for Wazuh API users <small>TST-030</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+manager</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+machine inside a container (4.8.1)</li>
+<li>Deployment of Suricata version 7.0.3 on the local monitoring machine
+inside a container</li>
+<li>GNU nano, version 6.2</li>
+</ul>
+<h2>Test steps</h2>
+<p>The change password procedure is more detailed in <code>deployment/wazuh/change_passwords.md</code>.</p>
+<h3>Part 1: Genereate Hash</h3>
+<ol>
+<li>Stop the deployment stack if it's running. From wazuh repository:</li>
+</ol>
+<pre><code>sudo docker-compose down
+</code></pre>
+<ol start="2">
+<li>Run the following command to generate the hash of the new
+password. Once the container launches, input the new password
+and press Enter.</li>
+</ol>
+<pre><code>sudo docker run --rm -ti wazuh/wazuhindexer:4.8.1 bash /usr/share/wazuhindexer/plugins/opensearchsecurity/tools/hash.sh
+</code></pre>
+<ol start="3">
+<li>Copy the generated hash.</li>
+<li>Open the <code>config/wazuh_indexer/internal_users.yml</code> file.
+Locate the block for the user for whom the password is being
+changed for.</li>
+</ol>
+<h3>Part 2: Set the new password.</h3>
+<ol>
+<li>In the <code>docker-compose.yml</code> file, replace all instances of the old
+password with the new one at <code>API_PASSWORD</code> occurrence.</li>
+</ol>
+<h3>Part 3: Apply changes</h3>
+<ol>
+<li>Start the deployment stack.</li>
+</ol>
+<pre><code>sudo docker-compose up -d
+</code></pre>
+<h2>Expected outcome</h2>
+<ol>
+<li>Trying to obtain Wazuh API token using the old password, which can be done in the following way (make sure that the password is within inverted quotes).
+  <code>TOKEN=$(curl -u wazuh-wui:"MyS3cr37P450r.*-" -k -X POST "https://172.17.0.1:55000 /security/user/authenticate?raw=true"); echo $TOKEN</code>
+  This hould return the following error.
+  <code>{"title": "Unauthorized", "detail": "Invalid credentials"}</code></li>
+<li>The token can be successfully obtained using the new password.</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-016">SRS-016</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I/T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-031">31 Wazuh filters using the RESTful API <small>TST-031</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+  curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+  manager in remote machine</li>
+<li>Wazuh agent installed and enrolled with the
+  manager in local machine</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Suricata version 7.0.3 on the remote monitoring machine
+  inside a container</li>
+<li>GNU nano, version 6.2</li>
+<li>curl version 7.81.0</li>
+<li>Wazuh agent configured to integrate with Suricata</li>
+<li>GRE tunnel created from the remote machine to the local monitoring  machine which mirrors all the ingress and egress network traffic from the
+  remote machine to the local monitoring machine</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Get the Wazuh API Token.</li>
+<li>Run the following query to apply the filter:
+  <code>curl -G "q=data.tunnel.src_ip=[IP of the tunnel source interface]" -k -X GET "https://[Wazuh Manager IP address]:55000/manager/logs?limit=500&amp;pretty=true" -H "Authorization: Bearer $TOKEN"</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>The output of the query should show JSON decoded logs and in the last there should be a success message. "message: Logs were successfully read, error: 0"</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-024">SRS-024</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-032">32 Wazuh filters using the Wazuh Dashboard <small>TST-032</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>Docker Compose version v2.25.0
+  curl version 7.81.0</li>
+<li>Wazuh agent installed and enrolled with the
+  manager in remote machine</li>
+<li>Wazuh agent installed and enrolled with the
+  manager in local machine</li>
+<li>Deployment of Wazuh Dashboard on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Indexer  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Deployment of Wazuh Manager  on the local monitoring
+  machine inside a container (4.8.1)</li>
+<li>Wazuh agent configured to integrate with Suricata</li>
+<li>GRE tunnel created from the remote machine to the local monitoring  machine which mirrors all the ingress and egress network traffic from the
+  remote machine to the local monitoring machine</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the Wazuh dashboard navigate to <strong>Threat Hunting</strong> and filter by <code>data.tunnel.src_ip:[IP remote machine]</code>.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>The output of the query should show JSON decoded logs and in the last there should be a success message. "message: Logs were successfully read, error: 0"</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-033">33 ADBox Wazuh integration Dashboard <small>TST-033</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>An instance of CyFORT-Wazuh distribution should be running.</li>
+<li>A detector data stream <code>adbox_detector_mtad_gat_{detector_id}</code> available in Wazuh indexer</li>
+</ul>
+<h2>Test steps</h2>
+<p>A detailed description of the integration procedure can be found at <code>docs/manual/dashboard_tutorial.md</code></p>
+<ol>
+<li>Open <strong>Dashboard Management</strong>.</li>
+<li>Select <strong>Dashboard Management&gt;Index patterns</strong> and create a new index.</li>
+<li>Add the data stream pattern using the.</li>
+<li>Select <code>timestamp</code> as time field.</li>
+<li>Finally, the pattern is created. The field names correspond to the prediction outcome fields.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>The pattern is created. The field names correspond to the prediction outcome fields.</li>
+<li>The data can be navigated using <strong>Discover</strong> dashboard.</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-043">SRS-043</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-034">34 ADBox set up indexer host address <small>TST-034</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
+<li>Wazuh central component deployed.</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Open the <code>/siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
+<li>Set "host" as indexer's host address</li>
+<li>Set "port" as indexer's port</li>
+<li>Run</li>
+</ol>
+<pre><code>./adbox.sh -c
+</code></pre>
+<h2>Expected outcome</h2>
+<ol>
+<li>Succesful connection</li>
+</ol>
+<pre><code>IDPS-ESCAPE ADBox checking connection with Wazuh/OpenSearch...
+Wazuh data ingestor establishing connection to Wazuh...
+Connection with Wazuh established successfully!
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-017">SRS-017</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-035">35 ADBox change indexer credentil <small>TST-035</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
+<li>Wazuh central component deployed.</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Open the <code>/siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
+<li>Update "username" as indexer's username</li>
+<li>Update "password" as indexer's password</li>
+<li>Run</li>
+</ol>
+<pre><code>./adbox.sh -c
+</code></pre>
+<h2>Expected outcome</h2>
+<ol>
+<li>Succesful connection</li>
+</ol>
+<pre><code>IDPS-ESCAPE ADBox checking connection with Wazuh/OpenSearch...
+Wazuh data ingestor establishing connection to Wazuh...
+Connection with Wazuh established successfully!
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-022">SRS-022</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-036">36 Map a detected event to MITRE ATT&amp;CKS <small>TST-036</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Wazuh central component deployed.</li>
+<li>Presence of alerts collected in Wazuh indexer.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open Wazuh Dashboard</li>
+<li>Go to  <strong>Threat Hunting &gt; Events&gt; Add Filter</strong> and choose <code>rule.mitre.id</code> exists.</li>
+<li>Inspect filtered output (possibly extend time interval for more results).</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>In json <code>rule.mitre.id</code> key should include the matching MITRE ID. E.g.   T1078, T1021</li>
+</ol>
+<pre><code>&quot;mitre&quot;: {
+      &quot;technique&quot;: [
+        &quot;Valid Accounts&quot;,
+        &quot;Remote Services&quot;
+      ],
+      &quot;id&quot;: [
+        &quot;T1078&quot;,
+        &quot;T1021&quot;
+      ],
+      &quot;tactic&quot;: [
+        &quot;Defense Evasion&quot;,
+        &quot;Persistence&quot;,
+        &quot;Privilege Escalation&quot;,
+        &quot;Initial Access&quot;,
+        &quot;Lateral Movement&quot;
+      ]
+    },
+    &quot;id&quot;: &quot;5715&quot;,
+    &quot;gpg13&quot;: [
+      &quot;7.1&quot;,
+      &quot;7.2&quot;
+    ]
+  }
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-025">SRS-025</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated/Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-037">37 Open prediction file of training data <small>TST-037</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>ADBox dev container running.</li>
+<li>Wazuh central component deployed.</li>
+<li>User with root privileges</li>
+<li>At lease a trained detector.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Choose one of the detectors avaliable in  <code>siem_mtad_gat/assets/detector_models</code>.
+      E.g, <code>siem_mtad_gat/assets/detector_models/9a447100-39d1-4e00-83fc-8c618444edf7</code>.</li>
+<li>Open <code>siem_mtad_gat/frontend/viznotebook/result_visualizer.ipynb</code> within dev container</li>
+<li>Insert dector id in <strong>Variables and path to be modified</strong></li>
+<li>Run Notebook</li>
+<li>Go to <strong>Running ADBox with a use-case&gt;Training&gt;Training output table</strong></li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>Table showing prediction aver train data</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-030">SRS-030</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-038">38 Visualize train losses <small>TST-038</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Wazuh central component deployed.</li>
+<li>ADBox deployed</li>
+<li>User with root privileges</li>
+<li>At lease a trained detector.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Choose one of the detectors avaliable in <code>siem_mtad_gat/assets/detector_models</code>.</li>
+<li>Open <code>siem_mtad_gat/assets/detector_models/uuid/training/train_losses.png</code> using system default software.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>Graph displaying train_losses.png</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-031">SRS-031</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-039">39 Open prediction raw outcome <small>TST-039</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Wazuh central component deployed.</li>
+<li>ADBox deployed</li>
+<li>User with root privileges</li>
+<li>At lease a trained detector used for running prediction at least once (i.e., stored prediction data).</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Choose one of the detectors avaliable in <code>siem_mtad_gat/assets/detector_models</code>.</li>
+<li>Open <code>siem_mtad_gat/assets/detector_models/uuid/prediction</code></li>
+<li>Open a prediction file of the <code>uc-x_predicted_anomalies_data-*.json</code> using system default software.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>
+<p>Prediction info store using json format. E.g.</p>
+<p><code>{
+    "run_mode": "REALTIME",
+    "detector_id": "563394be-5079-424d-b2ba-cfda0812cf88",
+    "start_time": "2024-10-25T08:51:00Z",
+    "end_time": "2024-10-25T08:52:00Z",
+    "results": [
+        {
+            "timestamp": "2024-10-25T08:51:00Z",
+            "is_anomaly": false,
+            "anomaly_score": 0.029846280813217163,
+            "threshold": 0.12186630221790373,
+            "Forecast_data.5mins_loadAverage_average": 0.1334819793701172,
+            "Recon_data.5mins_loadAverage_average": 0.11187170445919037,
+            "True_data.5mins_loadAverage_average": 0.1077537015080452,
+            "A_Score_data.5mins_loadAverage_average": 0.029846280813217163,
+            "Thresh_data.5mins_loadAverage_average": 0.12186630221790373,
+            "A_Pred_data.5mins_loadAverage_average": 0.0
+        }
+    ]
+  }</code></p>
+</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-032">SRS-032</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated/Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>Test (T)/Review of design (R)/Inspection (I)/Analysis (A)</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-040">40 Visualize IDPS-ESCAPE high level architecture <small>TST-040</small></h1>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>A copy of ADBox project repository</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the <code>docs\traceability\HARC.html</code> file using the browser</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>Wab page displaying IDPS architecture diagrams</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-045">SRS-045</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
 </tr>
 </tbody>
 </table>

@@ -13,4 +13,5 @@ text: |
 
   The diagram summarizes the sequence of actions of the method `Preprocessor.preprocessing` in the ADBox DataTransformer.
 
-  ![ADBox Preprocessor.preprocessing sequence diagram](assets/ADBox-preprocessing-sequence.png "ADBox Preprocessor.preprocessing sequence "){: width="80%"}
+  ![ADBox Preprocessor.preprocessing sequence diagram](assets/ADBox-preprocessing-sequence.png "ADBox Preprocessor.preprocessing sequence "){: width="50%"}
+version: '0.1'

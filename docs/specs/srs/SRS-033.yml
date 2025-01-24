@@ -19,8 +19,7 @@ risk: '3'
 status: null
 text: |
   As a system admin user,
-  I want to deploy IDPS end-point monitoring solutions on a remote end-point by choosing from multiple configuration option,
-  so that I can monitor events on my system's edges.
+  I want to deploy IDPS end-point monitoring solutions on a remote end-point by choosing from multiple configuration options so that I can monitor events on my system's edge/endpoints.
 
   2. Access end-point as root.
   3. Deploy end-point components following:

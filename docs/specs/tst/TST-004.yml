@@ -3,10 +3,12 @@ authors: MZA
 complexity: '2'
 derived: false
 execution_type: M
+expected_outcome: null
 header: |
   Run ADBox console
 level: 4
-links: []
+links:
+- SRS-047: null
 normative: true
 platform: 'Ubuntu 22.04.4 LTS '
 ref: ''
@@ -19,21 +21,26 @@ text: |
   ## Preconditions and setup actions
   - Docker version 26.0.0
   - User with root privileges
-  - Built image `siem-mtad-gat:v0.1.0`
-  - No existing container named `“siem-mtad-gat-container”` should be running.
+  - Built image `siem-mtad-gat:v0.1.4`
+  - No existing container named `siem-mtad-gat-container` should be running.
 
   ## Test steps
   1. Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
    ```
-   ./adbox.sh
+   ./adbox.sh -i
    ```
-  2. Press `<1>`, to select train.
-  3. Press `<n>`, to train using default date.
-  4. Press `<n>`, to name the trained detector with a default name.
-  5. Press `<n>`, to train using default configurations.
   ## Expected outcome
-  - ADBox starts with `“Running AD driver in console mode.”`
-  - The training should run for 30 epochs.
-  - Train response should be seen on the console.
-  - Training outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”` folder.
+  - ADBox starts with
+
+  ```
+  IDPS-ESCAPE ADBox driver running in interactive console mode.
+
+  Enter a number and press enter to select an ADBox action to perform:
+  1. Train an anomaly detector.
+  2. Predict anomalies using one of the avaliable detectores detector.
+  3. Select an existing anomaly detector for prediction.
+  4. Exit
+  Enter a number (1-4):
+  ```
 verification_method: T
+version: 0.2

@@ -1,0 +1,45 @@
+active: true
+authors: MZA,AGI
+complexity: 2
+derived: false
+execution_type: M
+expected_outcome: ''
+header: |
+  Wazuh filters using the Wazuh Dashboard
+level: 32
+links:
+- SRS-011: null
+normative: true
+platform: Ubuntu 22.04.4 LTS
+ref: ''
+release: alpha
+reviewed: null
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+    - Docker version 26.0.0
+    - User with root privileges
+    - Docker Compose version v2.25.0
+    curl version 7.81.0
+    - Wazuh agent installed and enrolled with the
+    manager in remote machine
+    - Wazuh agent installed and enrolled with the
+    manager in local machine
+    - Deployment of Wazuh Dashboard on the local monitoring
+    machine inside a container (4.8.1)
+    - Deployment of Wazuh Indexer  on the local monitoring
+    machine inside a container (4.8.1)
+    - Deployment of Wazuh Manager  on the local monitoring
+    machine inside a container (4.8.1)
+    - Wazuh agent configured to integrate with Suricata
+    - GRE tunnel created from the remote machine to the local monitoring  machine which mirrors all the ingress and egress network traffic from the
+    remote machine to the local monitoring machine
+  ## Test steps
+    1. On the Wazuh dashboard navigate to **Threat Hunting** and filter by `data.tunnel.src_ip:[IP remote machine]`.
+
+  ## Expected outcome
+    1. The output of the query should show JSON decoded logs and in the last there should be a success message. "message: Logs were successfully read, error: 0"
+verification_method: I
+version: 0.2

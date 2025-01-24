@@ -1,24 +1,24 @@
-# An example
+# An example (with notebook)
 
 In this section, we present an example illustrating the usage of ADBox, adopting the end user point of view.
 
 ## My system
 I have deployed all the components as explained in the [guide for IDPS and SIEM integrated deployment](../../deployment/guide_sids.md) and the
-[ADBox user manual installation page](./installation.md). Moreover, I have enabled [Linux resource monitoring](./linux_resource.md).
+[ADBox user manual installation page](/docs/manual/installation.md). Moreover, I have enabled [Linux resource monitoring](/docs/manual/linux_resource.md).
 
-## My use case
+## My use-case
 
 I want a detector which correlates resource usage and rules statistics. Once created, I want this detector to keep running on new data.
 
-Therefore, I prepare a dedicated [use case file](./use_case.md).
+Therefore, I prepare a dedicated [use-case file](/docs/manual/use_case.md).
 
 Namely,
 
-- I have to identify the features of the [multivariate time-series](./time_series.md) that I want to perform detection on. To do so, I analyze the event logs of my system. 
+- I have to identify the features of the [multivariate time-series](/docs/manual/time_series.md) that I want to perform detection on. To do so, I analyze the event logs of my system. 
 
 - For every feature, I choose a suitable aggregation method for the *granularity* I wish to use.
 
-- For example, I would like a new point every 30 seconds (**lowest advised granularity**). Every point has 3 dimensions representing the average CPU percent usage, average memory percent usage and the total `firedtimes` rule statistics parameter.
+- For example, I would like a new point every 30 seconds (**lowest advised granularity**). Every point has 3 dimensions representing the average CPU percent usage, average memory percent usage and the total `firedtimes` rule statistics parameter (essentially, count the number of alerts).
 
 I have to decide:
 
@@ -28,7 +28,7 @@ I have to decide:
 - the detection interval (window size), and
 - the number of epochs for training.
 
-For example, I want anomalies to be flagged over intervals of 3 minutes, so the window size should be 8. Then, I also want to use all my data of the current month that is already available to train the detector.
+For example, I want anomalies to be flagged over intervals of 3/5 minutes, so the window size should be 8. Then, I also want to use all my data of the current month that is already available to train the detector.
 
 For the prediction, I want almost real-time results but I would like to fetch data in batches. For example, I want to get points every 6 minutes, then in batches of 12 points.
 
@@ -101,7 +101,7 @@ This produces a detector with id `2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc9` and the a
 
 ## Detection analysis
 
-Using the [ADBox Result Visualizer Notebook](./../../siem_mtad_gat/frontend/viznotebook/result_visualizer.ipynb), I can plot the results and analyze them. Here, I collect a few observations.
+Using the [ADBox Result Visualizer Notebook](/siem_mtad_gat/frontend/viznotebook/result_visualizer.ipynb), I can plot the results and analyze them. Here, I collect a few observations.
 
 ### Training
 
@@ -117,13 +117,13 @@ I ran the batch prediction from`2024-08-30T10:18:04Z` to `2024-08-30T13:05:30Z` 
 
 **Global overview**
 
-![Batch](./_figures/example_global.png)
+![Batch](/docs/manual/_figures/example_global.png)
 
 During this time period, 5 anomalous windows were flagged, 4 consecutive and 1 alone. Let's call them A1 and A2, respectively.
 
-![a1](./_figures/example-a1.png)
+![a1](/docs/manual/_figures/example-a1.png)
 
-![a2](./_figures/example-a2.png)
+![a2](/docs/manual/_figures/example-a2.png)
 
 **Feature overview**
 
@@ -132,19 +132,19 @@ Looking at the feature statistics, we can see these two anomalies expressing two
 - anomalies in A1 can be also considered anomalies at the feature level.
 - the anomaly in A2 is anomalous **only** at a global level. 
 
-![f1](./_figures/f1.png)
+![f1](/docs/manual/_figures/f1.png)
 
-![f2](./_figures/f2.png)
+![f2](/docs/manual/_figures/f2.png)
 
-![t1](./_figures/true.png)
+![t1](/docs/manual/_figures/true.png)
 
 **Wazuh Dashboard**
 
 Looking at the Wazuh Dashboard, we can observe a high number of events in proximity of A1:
 
-![w1](./_figures/example-w1.png)
+![w1](/docs/manual/_figures/example-w1.png)
 
-![w2](./_figures/example-w2.png)
+![w2](/docs/manual/_figures/example-w2.png)
 
 ### Mapping anomalies to real events
 

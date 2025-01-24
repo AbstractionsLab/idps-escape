@@ -1,0 +1,18 @@
+active: true
+derived: false
+header: |
+  ADBox TimeManager
+level: 11.0
+links:
+- SRS-041: null
+normative: true
+ref: ''
+release: Alpha
+reviewed: null
+text: |
+  ## ADBox TimeManager context diagram
+
+  The diagram below depicts the ADBox `TimeManager`.
+
+  ![ADBox Time Manager](assets/1B3A4_DIA_IDPS_ESCAPE_TimeManager-context_v1.1.png "ADBox Time Manager")
+version: '0.1.1'

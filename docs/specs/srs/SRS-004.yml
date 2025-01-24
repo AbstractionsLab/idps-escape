@@ -19,7 +19,7 @@ risk: '2'
 status: null
 text: |
   As a sys admin user,
-  I want to enabled/disabled HIDS agents deployed on the of hosts' monitored system.
+  I want to enabled/disabled HIDS agents deployed on the host monitored system.
 
   1. Access C&C server
   2. Enroll/unenroll  Wazuh Agent from CyFORT-Wazuh manager

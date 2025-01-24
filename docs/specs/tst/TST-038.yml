@@ -1,0 +1,39 @@
+active: true
+authors: AGI
+complexity: 1
+derived: false
+execution_type: M
+expected_outcome: ''
+header: |
+  Visualize train losses
+level: 38
+links:
+- SRS-031: null
+normative: true
+platform: MacOS, Windows, GNU/Linux
+ref: ''
+release: alpha
+reviewed: null
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+
+    - Wazuh central component deployed.
+    - ADBox deployed
+    - User with root privileges
+    - At lease a trained detector.
+
+  ## Test steps
+
+    1.  Open the cloned ADBox repository
+    2.  Choose one of the detectors avaliable in `siem_mtad_gat/assets/detector_models`. 
+    3.  Open `siem_mtad_gat/assets/detector_models/uuid/training/train_losses.png` using system default software.
+  
+  ## Expected outcome
+
+    1. Graph displaying train_losses.png
+
+verification_method: I
+version: 0.2

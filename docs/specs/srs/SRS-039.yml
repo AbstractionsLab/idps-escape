@@ -19,12 +19,11 @@ risk: '2'
 status: unavaliable
 text: |
   As a user,
-  I want to be able to select the algorithm to use for AD,
-  to run AD according to the most suitable AD principle.
+  I want to be able to select the algorithm to use for AD to run AD according to the most suitable AD principle.
 
   1.  Access C&C server
   2.  Access ADBox
-  3.  Select the ML-package to be used by the train/test pipelines.
+  3.  Select the ML-package to be used by the training/test pipelines.
 type: F
 urgency: '2'
 version: '0.1'

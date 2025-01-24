@@ -1,0 +1,11 @@
+training:
+  aggregation: false
+  categorical_features: false
+  columns:
+  - data.cpu_usage_%
+  - data.memory_usage_%
+  display_name: detector_uc_2_t
+  index_date: '2024-05-*'
+  train_config:
+    epochs: 2
+    window_size: 6

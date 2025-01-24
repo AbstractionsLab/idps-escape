@@ -1,21 +1,26 @@
   {
     "index_date": "default",
     "categorical_features": false,
-    "columns": ["data.cpu_usage_%", "data.memory_usage_%"],
+    "columns": ["rule.firedtimes", "rule.level"],
     "aggregation": true,
     "aggregation_config": {
       "fill_na_method": "Zero",
       "padding_value": 0,
       "granularity": "1min",
       "features": {
-        "data.cpu_usage_%": ["average", "max"],
-        "data.memory_usage_%": ["average", "max"]
+        "rule.firedtimes": ["average", "max"],
+        "rule.level": ["average", "max"]
     }
     },
     "train_config": {
       "window_size": 10, 
-      "epochs" : 30
+      "epochs" : 8
     },
-    "display_name": "default"
+    "display_name": "default",
+    "run_mode": "realtime",
+    "start_time": "default",
+    "end_time": "default",
+    "batch_size": 5,
+    "detector_id": "default"
   }
   

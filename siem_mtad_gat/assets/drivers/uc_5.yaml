@@ -56,8 +56,5 @@ training:
 
 prediction: 
   run_mode: "historical"
-  index_date: "default"
-  detector_id: "default"
-  start_time: "default"
-  end_time: "default"
-  batch_size: 1 
+  start_time: "2024-04-01T01:38:00Z"
+  end_time: "2024-04-01T23:38:00Z"

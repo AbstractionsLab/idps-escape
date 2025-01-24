@@ -1,6 +1,6 @@
 # Monitoring Linux resource usage
 
-Wazuh can be set up to monitor Linux resource usage. This information can be used to complement the SIDS and other metrics, see this [example](./example.md).
+Wazuh can be set up to monitor Linux resource usage. This information can be used to complement the SIDS and other metrics, see this [example](/docs/manual/example.md).
 
 This feature can be enabled following this [blog post](https://wazuh.com/blog/monitoring-linux-resource-usage-with-wazuh/), with some adjustments because we use the docker deployment that we list below.
 

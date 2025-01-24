@@ -1,7 +1,7 @@
 active: true
 derived: false
 header: |
-  MTAD GAT training
+  MTAD-GAT training
 level: 3.0
 links:
 - LARC-009: 1In1SEyV7gBoBCstchmENiQlJSODLpZymAQ-i8IQZ5Y=
@@ -13,4 +13,5 @@ text: |
 
   The diagram depicts the sequence of operations run by the function `train_MTAD_GAT` of the MTAD_GAT ML-subpackage of ADBox.
 
-  ![ADBox train_MTAD_GAT sequence diagram](assets/ADBox-train_MTAD_GAT-sequence.png "ADBox train_MTAD_GAT sequence"){: width="80%"}
+  ![ADBox train_MTAD_GAT sequence diagram](assets/1B3A4B_DIA_IDPS_ESCAPE_ADBoxDiagrams-trainMTAD-GAT_sequence_v1.2.png "ADBox train_MTAD_GAT sequence"){: width="80%"}
+version: '0.2'

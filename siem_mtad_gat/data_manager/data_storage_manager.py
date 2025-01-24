@@ -5,15 +5,23 @@ import threading
 import numpy as np
 import torch 
 import matplotlib.pyplot as plt
-import siem_mtad_gat.settings as settings
+from siem_mtad_gat.data_manager  import *
+from siem_mtad_gat.commons import EscapeError, EscapeInfo
+
 import re
 import yaml
-import logging 
+
+"""import logging 
 
 os.makedirs(settings.OUTPUT_LOGS, exist_ok=True)
 logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name=__name__), format=settings.DEFAULT_LOGGING_FORMAT) 
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.DEFAULT_LOGGING_LEVEL) 
+
+"""
+
+
+
 
 # TO-REDESIGN (move all file system manipulations to a dedicated file management module and refactor all code base accordingly)
 
@@ -43,7 +51,7 @@ class DataStorageManager:
         return cls._instance 
     
 
-    def _initialize(self, detector_id: str = None): 
+    def _initialize(self, detector_id: str | None = None): 
         """
         Initialize the DataStorageManager instance with a unique UUID and path.
         """          
@@ -92,7 +100,7 @@ class DataStorageManager:
             with open(detector_input_parameters_file_path, 'w') as json_file:
                 json.dump(save_detector_input_parameters, json_file, indent=4)
             
-            print(f"JSON file 'detector_input_parameters.json' saved at {detector_input_parameters_file_path}.")
+            EscapeInfo(f"JSON file 'detector_input_parameters.json' saved at {detector_input_parameters_file_path}.",logger)
 
 
     def update_detector_input_parameters_after_training(self, updated_detector_input_parameters):
@@ -123,10 +131,10 @@ class DataStorageManager:
             with open(detector_input_parameters_file_path, 'w') as json_file:
                 json.dump(updated_detector_params, json_file, indent=4)
             
-            print(f"JSON file 'detector_input_parameters.json' updated after training at {detector_input_parameters_file_path}.")
+            EscapeInfo(f"JSON file 'detector_input_parameters.json' updated after training at {detector_input_parameters_file_path}.",logger)
 
 
-    def save_input_data(self, input_data, save_pickle=False, save_csv=False, caller:str=None):
+    def save_input_data(self, input_data, save_pickle=False, save_csv=False, caller:str|None=None):
         """
         Save input data in specified formats (pickle and/or CSV) within the UUID folder.
 
@@ -135,7 +143,7 @@ class DataStorageManager:
         :param save_csv: Boolean indicating whether to save the data as a CSV file.
         """
         with self._semaphore: 
-            if caller == "train": 
+            if caller == settings.CALLER_TRAIN: 
                 input_storage_folder = settings.INPUT_STORAGE_FOLDER.format(id=self.uuid)
                 # Check if the folder exists, and if not, create it
                 if not os.path.exists(input_storage_folder):
@@ -150,17 +158,17 @@ class DataStorageManager:
 
                     # Save the DataFrame as a pickle file
                     input_data.to_pickle(pickle_file_path)
-                    print(f"Pickle file 'input_data.pkl' saved at {pickle_file_path}.")
+                    EscapeInfo(f"Pickle file 'input_data.pkl' saved at {pickle_file_path}.",logger)
 
                 if save_csv:
                     # Define the CSV file path
                     csv_file_path =  settings.INPUT_DATA_CSV_FILE_PATH.format(id=self.uuid) 
                     # Save the DataFrame as a CSV file
                     input_data.to_csv(csv_file_path)
-                    print(f"CSV file 'input_data.csv' saved at {csv_file_path}")
+                    EscapeInfo(f"CSV file 'input_data.csv' saved at {csv_file_path}",logger)
                 
             
-            elif caller == "predict": 
+            elif caller == settings.CALLER_PREDIC: 
                 prediction_output_dir = settings.PREDICTION_STORAGE_FOLDER.format(id=self.uuid) 
                 os.makedirs(prediction_output_dir, exist_ok=True)  
             
@@ -173,19 +181,22 @@ class DataStorageManager:
 
                     # Save the DataFrame as a pickle file
                     input_data.to_pickle(pickle_file_path)
-                    print(f"Pickle file 'input_data.pkl' saved at {pickle_file_path}.")
+                    EscapeInfo(f"Pickle file 'input_data.pkl' saved at {pickle_file_path}.",logger)
 
                 if save_csv:
                     # Define the CSV file path
                     csv_file_path =  settings.PREDICTION_DATA_CSV_FILE_PATH.format(id=self.uuid) 
                     # Save the DataFrame as a CSV file
                     input_data.to_csv(csv_file_path)
-                    print(f"CSV file 'input_data.csv' saved at {csv_file_path}")
+                    EscapeInfo(f"CSV file 'input_data.csv' saved at {csv_file_path}",logger)
             else: 
                 return 
             
     
-    def save_predict_output(self, output, use_case_no, exec_timestamp, output_type): 
+    def save_predict_output(self, output, use_case_no:int, exec_timestamp:str, output_type:str):
+        """
+        Save output of prediction
+        """ 
         with self._semaphore:
             prediction_output_dir = settings.PREDICTION_STORAGE_FOLDER.format(id=self.uuid)
             os.makedirs(prediction_output_dir, exist_ok=True) 
@@ -261,7 +272,7 @@ class DataStorageManager:
                     json.dump(existing_data, json_file, indent=4) 
                         
             
-            print(f"JSON output appended at {predict_output_file_path}")
+            EscapeInfo(f"JSON output appended at {predict_output_file_path}",logger)
                     
                 
     def save_train_logs(self, logs):
@@ -282,7 +293,7 @@ class DataStorageManager:
             with open(log_file_path, 'w') as log_file:
                 log_file.write(logs)
             
-            print(f"Training logs saved at {log_file_path}.")
+            EscapeInfo(f"Training logs saved at {log_file_path}.",logger)
 
 
     def save_model(self, model):
@@ -298,7 +309,7 @@ class DataStorageManager:
                 
             model_path = settings.MODEL_FILE_PATH.format(id=self.uuid) 
             torch.save(model.state_dict(), model_path)
-            print(f"Model parameters saved at {model_path}.")
+            EscapeInfo(f"Model parameters saved at {model_path}.",logger)
         
         
     def save_summary(self, summary):
@@ -315,7 +326,7 @@ class DataStorageManager:
             with open(summary_path, "w") as f:
                 json.dump(summary, f, indent=2)
             
-            print(f"Summary saved at {summary_path}")
+            EscapeInfo(f"Summary saved at {summary_path}",logger)
 
 
     def save_training_outputs(self, train_pred_df, test_pred_df): 
@@ -333,15 +344,15 @@ class DataStorageManager:
                 
             
             train_output_file_path = settings.TRAIN_OUTPUT_PKL_FILE_PATH.format(id=self.uuid) 
-            print(f"Saving output to {train_output_file_path}")
+            EscapeInfo(f"Saving output to {train_output_file_path}",logger)
             train_pred_df.to_pickle(train_output_file_path)
 
             test_output_file_path = settings.TEST_OUTPUT_PKL_FILE_PATH.format(id=self.uuid) 
 
-            print(f"Saving output to {test_output_file_path}")
+            EscapeInfo(f"Saving output to {test_output_file_path}",logger)
             test_pred_df.to_pickle(test_output_file_path)
 
-            print("Training and test outputs saved successfully.")
+            EscapeInfo("Training and test outputs saved successfully.",logger)
         
             
             
@@ -361,7 +372,7 @@ class DataStorageManager:
             with open(training_config_path, "w") as f:
                 json.dump(training_config, f, indent=2)
             
-            print(f"Training config saved at {training_config_path}. ")
+            EscapeInfo(f"Training config saved at {training_config_path}. ",logger)
 
 
     def save_losses(self, losses, plot : bool = True):
@@ -380,7 +391,7 @@ class DataStorageManager:
             # Save the json 
             with open(file_path, "w") as f:
                 json.dump(losses, f, indent=2)
-            print(f"Pickle file 'losses_train_data.json' saved at {file_path}.")
+            EscapeInfo(f"Pickle file 'losses_train_data.json' saved at {file_path}.",logger)
 
         if plot:
             plt.plot(losses.get("train_forecast"), label="Forecast loss")
@@ -461,7 +472,7 @@ class DataStorageManager:
         with open(new_file_path, 'w') as file:
             yaml.dump(content, file)
         
-        print(f"yaml file {new_filename} stored at {new_file_path} ")
+        EscapeInfo(f"yaml file {new_filename} stored at {new_file_path} ",logger)
 
         # Return the new number
         return next_number 
@@ -512,12 +523,12 @@ class DataStorageManager:
         with open(new_file_path, 'w') as file:
             yaml.dump(content, file)
         
-        print(f"yaml file {new_filename} stored at {new_file_path} ")
+        EscapeInfo(f"yaml file {new_filename} stored at {new_file_path} ",logger)
         # Return the new number
         return next_number  
     
 
-    def save_spot_train(self, spot, feature:int=-1,file_ext="pkl"):
+    def save_spot(self, spot, feature:int=-1,file_ext="pkl",caller:str=settings.CALLER_TRAIN):
         """
        Save the dictionary of Argument of a spot object
         
@@ -526,16 +537,29 @@ class DataStorageManager:
 
         """
         with self._semaphore: 
-            spot_storage_folder = settings.SPOT_TRAIN_STORAGE_FOLDER.format(id=self.uuid)
+
+            if feature==-1: feature="global" # type: ignore
+            paths={
+                settings.CALLER_TRAIN: settings.SPOT_TRAIN_FILE_PATH.format(id=self.uuid,feature=feature,ext=file_ext),
+                settings.CALLER_ONLINE: settings.SPOT_ONLINE_FILE_PATH.format(id=self.uuid,feature=feature,ext=file_ext)
+            }
+            folder_paths={
+                    settings.CALLER_TRAIN: settings.SPOT_TRAIN_STORAGE_FOLDER.format(id=self.uuid),
+                    settings.CALLER_ONLINE: settings.SPOT_ONLINE_STORAGE_FOLDER.format(id=self.uuid)
+                    }
+            
+            spot_storage_folder = folder_paths.get(caller,"")
+            
             # Check if the folder exists, and if not, create it
             if not os.path.exists(spot_storage_folder):
                 os.makedirs(spot_storage_folder)   
             
-            if feature==-1: feature='global'
+
+
             
             if file_ext=="pkl":
                     #save full spot object as pickle file
-                    spot_path = settings.SPOT_TRAIN_FILE_PATH.format(id=self.uuid,feature=feature,ext=file_ext)
+                    spot_path = paths.get(caller,"")
                     with open(spot_path , 'wb') as file: 
                         pickle.dump(spot, file=file) 
                     with open(spot_path, "rb") as f:
@@ -548,20 +572,23 @@ class DataStorageManager:
                     if isinstance(v, np.ndarray): di[k]=list(map(lambda x: float(x),v)) 
                     elif isinstance(v, np.float32): di[k]=float(v)
 
-                spot_path = settings.SPOT_TRAIN_FILE_PATH.format(id=self.uuid,feature=feature,ext="json") 
+                spot_path = paths.get(caller,"")
                 with open(spot_path, "w") as f:
                     json.dump(di, f)
+                EscapeInfo(f"Spot object saved at {spot_path}.",logger)
             else:
-                logging.exception(f"Invalide file extension for spot object")
+                raise EscapeError(f"Invalide file extension for spot object",logger)
+
+
+
             
-            print(f"Spot object saved at {spot_path}.")
 
     def save_preprocessing_scaler(self,scaler):
         """
-         
+            Sava data scaler from train preprocessing
             
             Parameters:
-            -  :  
+            -  scaler   
         """
         with self._semaphore: 
 
@@ -573,8 +600,32 @@ class DataStorageManager:
             scaler_path = settings.SCALER_FILE_PATH.format(id=self.uuid)
             with open(scaler_path , 'wb') as file: 
                 pickle.dump(scaler, file=file)
-            print(f"Scaler for preprocessing  saved at {scaler_path}.")
+            EscapeInfo(f"Scaler for preprocessing  saved at {scaler_path}.",log=logger)
     
+    def save_preprocessed_data(self, input_data):
+        """
+        Save input data in specified formats (pickle and/or CSV) within the UUID folder.
+
+        :param input_data: The data to be saved, expected to be a pandas DataFrame.
+        :param save_pickle: Boolean indicating whether to save the data as a pickle file.
+        :param save_csv: Boolean indicating whether to save the data as a CSV file.
+        """
+        with self._semaphore: 
+                 
+                prediction_output_dir = settings.PREDICTION_STORAGE_FOLDER.format(id=self.uuid) 
+                os.makedirs(prediction_output_dir, exist_ok=True)  
+            
+                input_data_dir = settings.PREDICTION_INPUT_DATA_STORAGE_PATH.format(id=self.uuid) 
+                os.makedirs(input_data_dir, exist_ok=True) 
+                
+                # Define the CSV file path
+                csv_file_path =  settings.PREPROCESSED_INPUT_DATA_CSV_FILE_PATH.format(id=self.uuid) 
+                # Save the DataFrame as a CSV file
+                input_data.to_csv(csv_file_path)
+                EscapeInfo(f"CSV file 'preprocessed_input_data.csv' saved at {csv_file_path}")
+
+
+
     @classmethod
     def destroy_instance(cls):
         cls._instance = None

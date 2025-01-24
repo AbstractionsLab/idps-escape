@@ -1,0 +1,23 @@
+{
+    "policy": {
+      "description": "ADBox rollover policy. Minimal condition: 4000 docs.",
+      "default_state": "rollover",
+      "states": [
+        {
+          "name": "rollover",
+          "actions": [
+            {
+              "rollover": {
+                "min_doc_count": 4000
+              }
+            }
+          ],
+          "transitions": []
+        }
+      ],
+      "ism_template": {
+        "index_patterns": ["adbox_detector_*"],
+        "priority": 100
+      }
+    }
+  }

@@ -1,0 +1,40 @@
+active: true
+authors: AGI
+complexity: 2
+derived: false
+execution_type: M
+expected_outcome: ''
+header: |
+  Open prediction file of training data
+level: 37
+links:
+- SRS-030: null
+normative: true
+platform: MacOS, Windows, GNU/Linux
+ref: ''
+release: alpha
+reviewed: null
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+    - ADBox dev container running.
+    - Wazuh central component deployed.
+    - User with root privileges
+    - At lease a trained detector.
+  ## Test steps
+
+    1.  Open the cloned ADBox repository
+    2.  Choose one of the detectors avaliable in  `siem_mtad_gat/assets/detector_models`. 
+        E.g, `siem_mtad_gat/assets/detector_models/9a447100-39d1-4e00-83fc-8c618444edf7`.
+    3.  Open `siem_mtad_gat/frontend/viznotebook/result_visualizer.ipynb` within dev container
+    4.  Insert dector id in **Variables and path to be modified**
+    5.  Run Notebook
+    6.  Go to **Running ADBox with a use-case>Training>Training output table**
+
+  ## Expected outcome
+
+    1. Table showing prediction aver train data
+verification_method: I
+version: 0.2

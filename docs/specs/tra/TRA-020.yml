@@ -11,7 +11,7 @@ normative: true
 ref: ''
 reviewed: uuWZYeVAp8NY2PLjjr1RDB1unkIKqWPf8AB-HXNLpWc=
 test_date: 29-07-2024
-tester: null
+tester: AGI
 text: |
   Test execution results for the test case (TST) referred in the parent link.
   ## Test environment details

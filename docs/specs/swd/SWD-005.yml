@@ -1,7 +1,7 @@
 active: true
 derived: false
 header: |
-  Peak-over-threshold
+  Peak-over-threshold (POT)
 level: 5.0
 links:
 - LARC-009: 1In1SEyV7gBoBCstchmENiQlJSODLpZymAQ-i8IQZ5Y=
@@ -16,3 +16,4 @@ text: |
   This function runs the dynamic POT (i.e., peak-over-threshold) evaluation.
 
   ![ADBox pot_eval sequence diagram](assets/ADBox-pot_eval-sequence.png "ADBox pot_eval sequence diagram"){: width="80%"}
+version: '0.1'

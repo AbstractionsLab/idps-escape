@@ -24,9 +24,12 @@ text: |
   Assuming: CyFORT-Wazuh Manager running on C&C and agent on selected host
 
   1. Either:
+
     a. Add the manager IP as an environment variable during the agent installation process.
-    b. Set the manager IP in  the agent configuration file.
-    c. requests the key from the manager API and  manually imports it to the agent.
+  
+    b. Set the manager IP in the agent configuration file.
+  
+    c. Requests the key from the manager API and manually imports it into the agent.
 type: F
 urgency: '3'
 version: '0.1'

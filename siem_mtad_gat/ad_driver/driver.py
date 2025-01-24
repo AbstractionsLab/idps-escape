@@ -1,27 +1,28 @@
+import argparse
+from siem_mtad_gat.ad_driver import *
 from siem_mtad_gat.ad_engine.mtad_gat.ad_engine import ADEngine
 from siem_mtad_gat.data_ingestion.wazuh.wazuh_data_ingestor import WazuhDataIngestor
-import argparse
-from siem_mtad_gat.ad_driver.driver_console import main as console_main
-import siem_mtad_gat.settings as settings
-import logging
+from siem_mtad_gat.ad_driver.driver_console import Console 
+from siem_mtad_gat.commons import EscapeError, EscapeInfo, EscapeWarning
+from siem_mtad_gat.shipper.wazuh_data_shipper import WazuhDataShipper
 
-logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name=__name__), filemode='a', format=settings.DEFAULT_LOGGING_FORMAT)
-logger = logging.getLogger(__name__)
-logger.setLevel(settings.DEFAULT_LOGGING_LEVEL)
 
-IC_LAUNCH_MSG = "IDPS-ESCAPE ADBox driver running in interactive console mode."
-UC_LAUNCH_MSG = "IDPS-ESCAPE ADBox driver running use case scenario configuration"
+IC_LAUNCH_MSG = "IDPS-ESCAPE ADBox driver running in interactive console mode"
+UC_LAUNCH_MSG = "IDPS-ESCAPE ADBox driver running use-case scenario configuration"
 CC_LAUNCH_MSG = "IDPS-ESCAPE ADBox checking connection with Wazuh/OpenSearch..."
 DEF_LAUNCH_MSG = "IDPS-ESCAPE ADBox running in default mode"
 TRAINING_RESPONSE = "Training response:"
 PREDICTION_RESPONSE = "Prediction response:"
 CONNECTION_ESTABLISHED_MSG = "Connection with Wazuh established successfully!"
-
+S_LAUNCH_MSG = "IDPS-ESCAPE ADBox shipping on"
+s_EXIT_MSG= "Exit shipper installation. Check ADBox templates and policy correct installation from Wazuh Dashboard!"
 # TO-REDESIGN (turn into a robust and extensible CLI: build on C5-DEC code base)
-
+"""
 def print_and_log(m):
     print(m)
     logging.info(m)
+"""
+
 
 def main():     
     # Initialize the argument parser
@@ -29,73 +30,78 @@ def main():
     
     # Define the arguments
     parser.add_argument('-i', '--interactive', action='store_true', help='run the interactive console for training and prediction')
-    parser.add_argument('-u', '--usecase', type=int, help='specify a configuration scenario/use case file for training and prediction')
+    parser.add_argument('-u', '--usecase', type=int, help='specify a configuration scenario/use-case file for training and prediction')
     parser.add_argument('-c', '--connection', action='store_true', help='check connection with Wazuh')
+    parser.add_argument('-s', '--shipping', action='store_true', help='enable data shipping to Wazuh')
 
     # Parse the arguments
     args = parser.parse_args()
 
+    # Handle the -s flag
+    # check if template are installed
+    if args.shipping:
+        EscapeInfo(S_LAUNCH_MSG,logger)
+        if args.usecase is None and  not args.interactive :
+            wds=WazuhDataShipper(install=True)
+            wds.add_rollover_policy()
+            EscapeInfo(s_EXIT_MSG,logger)
+            exit()
+        else:
+            wds=WazuhDataShipper(install=False)
+
+
     # Check connection with Wazuh
     if args.connection:
-        print_and_log(CC_LAUNCH_MSG)
+        EscapeInfo(CC_LAUNCH_MSG,logger)
         try:
             wazuh_ingestor = WazuhDataIngestor()        
             if not wazuh_ingestor.check_connection():
-                print(
-                    "Could not establish a connection with Wazuh! verify ./siem_mtad_gat/assets/secrets/wazuh_credentials.json\n"
-                    f"More details logged in {settings.LOGGING_FILE_NAME.format(name=__name__)}"
-                )
-                logging.error("Error connecting to Wazuh!") 
-                logging.info("Fetching data from file. ")
+                EscapeInfo("Could not establish a connection with Wazuh! verify ./siem_mtad_gat/assets/secrets/wazuh_credentials.json",logger)
+                raise EscapeWarning("Error connecting to Wazuh!") 
+                #EscapeInfo("Fetching data from file. ")
             else:
-                print_and_log(CONNECTION_ESTABLISHED_MSG)
-        except Exception as e:
-                print(f"Error occurred while getting SIEM alert data: {e}")
-                logging.error(f"Error occurred while getting SIEM alert data: {e}")
+                EscapeInfo(CONNECTION_ESTABLISHED_MSG,logger)
+        except Exception as ex:
+            raise EscapeWarning(f"Error occurred while getting SIEM alert data: {ex}",logger)
         exit()
 
     # Handle the -i flag
     if args.interactive:
-        print(IC_LAUNCH_MSG)
-        logging.info(IC_LAUNCH_MSG)
-        console_main()
+        EscapeInfo(IC_LAUNCH_MSG,logger)
+        console=Console(args.shipping)
+        console.main()
 
     # Handle the -u flag taking an integer value as argument
     elif args.usecase is not None:
-        print(UC_LAUNCH_MSG, f"uc_{args.usecase}.yaml.")
-        logging.info(UC_LAUNCH_MSG, f"uc_{args.usecase}.yaml.")
-        config_file = f"uc_{args.usecase}"
-        engine = ADEngine()
-        train_response = engine.train(default_config=False, custom_config_file=config_file, use_case_no=args.usecase)
-        if train_response is not None: 
-            print(TRAINING_RESPONSE, train_response)
-            logging.info(TRAINING_RESPONSE, train_response)
-        predict_response = engine.predict(predict_input_config=config_file, use_case_no=args.usecase)
-        for res in predict_response:
-            print(PREDICTION_RESPONSE, res)
-            logging.info(PREDICTION_RESPONSE, res)
-    
-    # Default behavior if no arguments are provided
+        EscapeInfo(UC_LAUNCH_MSG+f" uc_{args.usecase}.yaml.",logger)
+        engine = ADEngine(ship_to_indexer=args.shipping)
+        train_request=engine.get_training_requests_from_uc(uc_number=args.usecase)
+        train_response = engine.training_pipeline(training_request=train_request)
+        if train_response is not None:
+            EscapeInfo(TRAINING_RESPONSE,logger)
+            EscapeInfo(str(train_response),logger)
+        pred_request=engine.get_prediction_requests_from_uc(uc_number=args.usecase)
+        engine.run_prediction_pipeline(prediction_request=pred_request,uc_number=args.usecase)
+        # Default behavior if no arguments are provided
+        exit()
     else:
-        print(DEF_LAUNCH_MSG)
-        logging.info(DEF_LAUNCH_MSG)
+        EscapeInfo(DEF_LAUNCH_MSG,logger)
 
-        default_mode_confirmation = input("Are you sure you wish to run the default ADBox in default mode? (y/n): ").strip().lower()
+        default_mode_confirmation: str = input("Are you sure you wish to run the default ADBox in default mode? (y/n): ").strip().lower()
     
         if default_mode_confirmation == 'y':
-            engine = ADEngine() 
-            train_response = engine.train()
-            
-            print_and_log(TRAINING_RESPONSE+train_response)
+            engine = ADEngine()
 
-            predict_response = engine.predict()
-            for res in predict_response:
-                print_and_log(PREDICTION_RESPONSE+res)
+            train_request=engine.get_training_requests_from_uc()
+            train_response = engine.training_pipeline(training_request=train_request)
+            
+            EscapeInfo(TRAINING_RESPONSE+str(train_response),logger)
 
         elif default_mode_confirmation == 'n':
-            print("Exiting ADBox console... use adbox -h to see all CLI options.")
+            EscapeInfo("Exiting ADBox console... use adbox -h to see all CLI options.",logger)
             exit()
         
 if __name__ == "__main__": 
     main()
+    
     

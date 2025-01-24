@@ -19,8 +19,7 @@ reviewed: H9OQyQD8AFbi9YkOUGXqmqJQMzDigJ7EXLRO6uuzLWs=
 risk: '1'
 status: null
 text: |
-  As a user,
-  I want to read/plot the list of predicted anomalies .
+  As a user, I want to read/plot the list of predicted anomalies .
 
   Assuming: trained detector with unique identifier `uuid` available, use-case scenario `uc-x` given.
 

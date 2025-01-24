@@ -15,7 +15,7 @@ dimension. This information is then fused via a GRU layer.
 - A joint optimization of a forecasting-based model and a reconstruction-based 
 model. A forecasting-based model detects anomalies based on prediction errors, 
 while a reconstruction-based model learns the representation for the entire 
-time-series by reconstructing the original input based on some latent variables ([Zhao2020](https://arxiv.org/abs/2009.02040)).. The MTAD-GAT training process updates the parameters from two instances of both models simultaneously. Namely, the loss function is defined as the sum of 
+time-series by reconstructing the original input based on some latent variables ([Zhao2020](https://arxiv.org/abs/2009.02040)). The MTAD-GAT training process updates the parameters from two instances of both models simultaneously. Namely, the loss function is defined as the sum of 
 two optimization targets.
 
 More precisely, the model consists of: 
@@ -35,7 +35,7 @@ For ADBox we adapted the implementation [ML4ITS/mtad-gat-pytorch](https://github
 
 ## Assumptions and terminology
 
-A multivariate time-series is a sequence of $n$ vectors of dimensions $k$. See [Time-series](./time_series.md). 
+A multivariate time-series is a sequence of $n$ vectors of dimensions $k$. See [Timeseries](/docs/manual/time_series.md). 
 In this context:
 
 - $n$ is the **window size**, which is the number of **timestamps**.
@@ -44,14 +44,13 @@ In this context:
 
 - We assume the timestamps to be at a regular distance e.g., every minute, every 30s, every 2 hours. This distance is called **granularity**.
 
-- The **detection interval** is the time length of a window $detection\_interval \coloneqq granularity \cdot window\_size$.
+- The **detection interval** is the time period covered by window. We refer to [this page](/docs/manual/runmodes.md) for a detailed explanation of ADBox time management. 
 
-- We identify a window with its initial timestamp.
+- We identify a window with its final timestamp.
 
-Given a predefined window size, the algorithm expects as input a set of points (of dimension $k$) with a certain granularity. In practice, this is a dataframe with $k$ columns, indexed with regular timestamps. 
+Given a predefined window size, the algorithm expects as input a set of points (of dimension $k$) with a certain granularity. In practice, this is a data frame with $k$ columns, indexed with regular timestamps. 
 
-
-For example, the input can be a measure of two quantities $A$ and $B$ every minute from 3PM to 5PM. In this case the input has 120 timestamps with 2 features. 
+For example, the input can be a measure of two quantities $A$ and $B$ every minute from 3PM to 5PM. In this case, the input has 120 timestamps with 2 features. 
 
 The input can be used to train a **detector** or as input for obtaining a prediction from an already trained detector. 
 
@@ -60,6 +59,6 @@ A single window is an acceptable input.
 
 For every window the algorithm computes its **anomaly score**, which is an real number, and if this is above a certain **threshold**, the window is labelled as **anomaly**. The threshold is determined dynamically by using the Peak-over-Threshold (POT) method.
 
-In conclusion, _a timestamp is flagged as an **anomaly** the behavior of the following detection interval is anomalous_, according to the above procedure.
+In conclusion, _a timestamp is flagged as an **anomaly** if the behavior of the antecedent detection interval is anomalous_, according to the above procedure.
 
 

@@ -3,12 +3,14 @@ authors: MZA
 complexity: '3'
 derived: false
 execution_type: M
+expected_outcome: null
 header: |
   Run ADBox in default mode with a Wazuh connection
 level: 5
-links: []
+links:
+- SRS-048: null
 normative: true
-platform: 'Ubuntu 22.04.4 LTS '
+platform: 'Ubuntu 22.04.4 LTS'
 ref: ''
 release: alpha
 reviewed: 9PsuTcMZqTJHIa_a84OQzP6MMT2MHGuALVrngnavHaE=
@@ -19,19 +21,34 @@ text: |
   ## Preconditions and setup actions
   - Docker version 26.0.0
   - User with root privileges
-  - Built image `siem-mtad-gat:v0.1.0`
-  - No existing container named “siem-mtad-gat-container” should be running.
+  - Built image `siem-mtad-gat:v0.1.4`
+  - No existing container named `siem-mtad-gat-container` should be running.
   - An instance of a Wazuh distribution should be running.
   - Wazuh indexer RESTful API should be listening on port 9200.
+  - TST-034 and TST-035 should succeed
   ## Test steps
-  1. Run the container “siem-mtad-gat-container” by executing the adbox script with default parameter parameters.
-  `./adbox.sh -df`
+  1. Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
+   ```
+   ./adbox.sh
+   ```
+  2. Input `y` after `Are you sure you wish to run the default ADBox in default mode? (y/n):`
+
+
+
   ## Expected outcome
-  - ADBox starts with `“Running AD driver in default mode.”`
-  - The training should run for 30 epochs.
-  - Train response should be seen on the console.
-  - Training outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}”` folder.
-  - Prediction starts after training with message `“Predicting in historical mode.”`
-  - Prediction response should be seen on the output console.
-  - Prediction outputs and artifacts should be available in the `“/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction”` folder.
+  - ADBox starts with
+  ```
+  IDPS-ESCAPE ADBox running in default mode
+  Are you sure you wish to run the default ADBox in default mode? (y/n): y
+  No input use-case: a detection with default config will be created.
+  Start training pipeline.
+  Init Data managers.
+  JSON file 'detector_input_parameters.json' saved at /home/alab/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/input/detector_input_parameters.json.
+  Data ingestion.
+  ...
+  ```
+  - A detector {detector_id} is trained according to the default parameters specified in `siem_mtad_gat/assets/default_configs/default_detector_input_config.json`.
+  - Training response should be seen in the console.
+  - Training outputs and artifacts should be available in the following folder: `/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}`.
 verification_method: T
+version: 0.2

@@ -2,11 +2,11 @@
 
 ## Setup
 
-The installation guide includes the process of installing ADBox through different mechanisms. However, for the correct functioning of ADBox, some prerequisites need to be met. The repository comes with a set of configuration files bundled in the assets folder which need to be configured as per requirements. 
+The installation guide includes the process of [installing ADBox](/docs/manual/installation.md) through different mechanisms. However, for the correct functioning of ADBox, some prerequisites need to be met. The repository comes with a set of configuration files bundled in the assets folder which need to be configured as per requirements. 
 
 ### ADBox configuration files 
 
-In the repository cloned from GitHub, the assets folder is located at the following location w.r.t the root folder `./siem_mtad_gat/assets`.
+In the repository cloned from GitHub, the assets folder is located at the following location w.r.t the root folder [`./siem_mtad_gat/assets`](/siem_mtad_gat/assets/).
 
 The asset folder contains the following sub-folders:
 
@@ -23,8 +23,9 @@ Below we explain the purpose for files in each folder and how they should be con
 2. **default_configs:** This folder contains two files. `default_detector_input_config.json` which contains a default detector configuration. These are the values which the detector would be trained on by default. This file is not advised to be changed. The second file is `mtad_gat_train_config_default_args.json` which contains the default machine learning level model specifications for the training pipeline. By default, the machine learning model will be trained using these parameters. This file is also not advised to be changed. 
    **Note: These files should not be modified.**
 3. **detector models:** This folder stores outputs from both training and prediction processes. Each trained model is uniquely identified by an ID, and all resulting data for each model is organized into folders named after their respective IDs. Then these folders contains sub folders and files which would be explained individually in the sections detailing training and prediction. 
-4. **drivers:** This folder contains yaml files. These yaml files can be written and used for non-default training inputs. This folder contains a dummy `driver.yaml` file which explains the structure of these configuration files. Each time you set the default configuration option False and provide a yaml file name, ADBox tries to find it in this folder. The file should contain key names same as specified in the dummy file. And for every missing key or value, it will take values from the `default_detector_input_config.json` file. 
-5. **secrets:** This folder contains `wazuh_credentials.json` file. Since ADBox fetches data from a SIEM i.e., Wazuh, it is required to have a running distribution of Wazuh along with a Wazuh agent deployed on the targeted machine which communicates with the Wazuh server and sends data in near real-time. These agents could also ship data from a network IDPS i.e., Suricata to the Wazuh server. 
+4. **drivers:** This folder contains [use-case](/docs/manual/use_case.md) yaml files. These yaml files can be written and used for non-default training inputs. This folder contains a dummy `driver.yaml` file which explains the structure of these configuration files. Each time you set the default configuration option False and provide a yaml file name, ADBox tries to find it in this folder. The file should contain key names same as specified in the dummy file. And for every missing key or value, it will take values from the `default_detector_input_config.json` file. 
+5. **secrets:** This folder contains `wazuh_credentials.json` file. Since ADBox fetches data from a SIEM i.e., Wazuh, it is required to have a running distribution of Wazuh along with a Wazuh agent deployed on the targeted machine which communicates with the Wazuh server and sends data in near real-time. These agents could also ship data from a network IDPS i.e., Suricata to the Wazuh server. These credential are used 
+ by the data shipper to return predictions back to Wazuh.
 6. **wazuh:** This folder contains `wazuh_columns.json` file. This json file contains a column dictionary which represents all the fields that ADBox  fetches from Wazuh and the datatype in which they are converted to since Wazuh treats all values as keywords. This file is also advised not to be modified. 
 
 ### SIEM and IDPS installations 

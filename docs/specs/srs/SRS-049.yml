@@ -1,0 +1,29 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+dependence: []
+derived: false
+difficulty: '2'
+header: ''
+importance: '3'
+level: 49
+links:
+- MRS-021: null
+normative: true
+outlay: ''
+rationale: 'To ensure consisten integration of AD outcomes with SIEM'
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a user,
+  I want to enable the shipping of anomaly detection outcomes to the central indexer to centralize data anaysis and threat hunting.
+
+  1.  Access Command and Control server.
+  2.  Access ADBox.
+  3.  Run shipping installation script.
+type: 'F'
+urgency: '3'
+version: '0.1'

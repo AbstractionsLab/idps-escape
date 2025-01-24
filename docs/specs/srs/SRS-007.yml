@@ -20,7 +20,7 @@ risk: '2'
 status: null
 text: |
   As a sys admin user,
-  I want capture and forward raw network traffic to the C&C server,
+  I want to capture and forward raw network traffic to the C&C server,
   to run NIDS on such a traffic.
 
   1.  Access C&C server.

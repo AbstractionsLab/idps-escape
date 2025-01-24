@@ -1,7 +1,7 @@
 active: true
 derived: false
 header: |
-  ADBox MTAD GAT anomaly prediction
+  ADBox MTAD-GAT anomaly prediction
 level: 7.0
 links:
 - LARC-009: 1In1SEyV7gBoBCstchmENiQlJSODLpZymAQ-i8IQZ5Y=
@@ -14,3 +14,4 @@ text: |
   The diagram depicts the sequence of operations run by the function `predict_anomalies` method of the `Predictor` class in the MTAD GAT PyTorch subpackage of ADBox.
 
   ![ADBox Predict.predict_anomalies sequence diagram](assets/ADBox-predict_anomalies-sequence.png "ADBox Predict.predict_anomalies sequence diagram"){: width="80%"}
+version: '0.1'

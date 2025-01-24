@@ -17,9 +17,11 @@ TIMEZONE = timezone.utc
 # Date and Time formats 
 DATE_FORMAT = "%Y-%m-%d" 
 DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+EXPECTED_STRING_TIME_FORMAT='YYYY-MM-DDTHH:MM:SSZ'
 
-# Run Modes 
-RUN_MODE = Enum('run_mode', ['HISTORICAL', 'BATCH', 'REALTIME'])
+# Runmodes 
+RUNMODE_LIST=['HISTORICAL', 'BATCH', 'REALTIME']
+RUN_MODE = Enum('run_mode', RUNMODE_LIST)
 DEFAULT_RUN_MODE = "HISTORICAL"
 
 # Default values 
@@ -29,6 +31,10 @@ DEFAULT_GRANULARITY = "1min"
 DEFAULT_REALTIME_INTERVAL = 1
 MAX_FILE_SIZE = 500 * 1024 * 1024  
 
+## ML_ALGORITHMS
+MTAD_GAT="mtad_gat" # algorithm names must be lower case (due shipper dependencies)
+TEST_SPLIT=0.3
+ML_ALGORITHMS_LIST=[MTAD_GAT]
 
 # MTAD-GAT 
 #ROOT =  os.path.dirname(__file__)
@@ -67,7 +73,7 @@ INPUT_STORAGE_FOLDER = os.path.join(DETECTOR_FOLDER, 'input')
 PREDICTION_STORAGE_FOLDER = os.path.join(DETECTOR_FOLDER, 'prediction') 
 # Base path for storing SPOT outputs
 SPOT_TRAIN_STORAGE_FOLDER = os.path.join(TRAINING_STORAGE_FOLDER, 'spot') 
-SPOT_PREDICT_STORAGE_FOLDER = os.path.join(PREDICTION_STORAGE_FOLDER, 'uc-{use_case_no}_spot_{exec_timestamp}') 
+SPOT_ONLINE_STORAGE_FOLDER = os.path.join(PREDICTION_STORAGE_FOLDER, 'spot') 
 
 # Training 
 # Path to store the trained model file
@@ -90,6 +96,7 @@ SCALER_FILE_PATH = os.path.join(TRAINING_STORAGE_FOLDER, 'scaler.pkl')
 # Input 
 # Path to the JSON file containing input parameters for the detector
 DETECTOR_INPUT_PARAMETERS_FILE_PATH = os.path.join(INPUT_STORAGE_FOLDER, 'detector_input_parameters.json') 
+DETECTOR_INPUT_PARAMETERS_FILE_RELATIVE_PATH = 'input/detector_input_parameters.json'
 # Path to store the training configuration file
 TRAINING_CONFIG_FILE_PATH = os.path.join(INPUT_STORAGE_FOLDER, 'training_config.json')
 
@@ -106,7 +113,8 @@ CURRENT_TIMESTAMP = datetime.now(TIMEZONE).strftime("%Y-%m-%d_%H-%M-%S")
 PREDICTED_DATA_FILE_PATH = os.path.join(PREDICTION_STORAGE_FOLDER, 'uc-{use_case_no}_predicted_data-{file_no}_{exec_timestamp}.json')  
 PREDICTED_ANOMALIED_DATA_FILE_PATH = os.path.join(PREDICTION_STORAGE_FOLDER, 'uc-{use_case_no}_predicted_anomalies_data-{file_no}_{exec_timestamp}.json')  
 
-
+# Path to store spot output online
+SPOT_ONLINE_FILE_PATH = os.path.join(SPOT_ONLINE_STORAGE_FOLDER, 'spot_feature-{feature}.{ext}')
 
 
 # Base path for storing prediction outputs
@@ -133,7 +141,8 @@ INPUT_DATA_PKL_FILE_PATH = os.path.join(INPUT_DATA_STORAGE_PATH, 'input_data.pkl
 INPUT_DATA_CSV_FILE_PATH = os.path.join(INPUT_DATA_STORAGE_PATH, 'input_data.csv')
 # Path to store the training logs file
 TRAIN_LOGS_FILE_PATH = os.path.join(TRAINING_STORAGE_FOLDER, 'training_logs.txt')
-
+# Path to store preprocessed input data in CSV format
+PREPROCESSED_INPUT_DATA_CSV_FILE_PATH = os.path.join(PREDICTION_INPUT_DATA_STORAGE_PATH, 'preprocessed_input_data.csv')
 
 
 
@@ -148,6 +157,16 @@ WAZUH_COLUMNS_PATH = os.path.join(WAZUH_CONFIG_FOLDER, 'wazuh_columns.json')
 SECRETS_FOLDER = os.path.join(ASSETS_FOLDER, 'secrets')
 WAZUH_CREDENTIALS_PATH = os.path.join(SECRETS_FOLDER, 'wazuh_credentials.json') 
 
+#Opensearch keys config
+OP_HOST_KEY = "host"
+OP_PORT_KEY = "port"
+OP_USERNAME_KEY = "username"
+OP_PASSWORD_KEY = "password" 
+
+
+#Wazuh ism policies
+SHIPPER_ASSETS_FOLDER = os.path.join(ASSETS_FOLDER, 'shipper')
+POLICY_ROLLOVER=os.path.join(SHIPPER_ASSETS_FOLDER, 'wazuh_adbox_rollover_policy.json') 
 
 
 # Default alert data file from Wazuh 
@@ -169,8 +188,16 @@ DRIVERS_FOLDER = os.path.join(ASSETS_FOLDER, 'drivers')
 DRIVER_YAML_FILE = os.path.join(DRIVERS_FOLDER, '{name}.yaml')
 
 
+# Use-case folder  
+UC_FOLDER: str = os.path.join(ASSETS_FOLDER, 'drivers') 
+# Driver files 
+UC_YAML_FILE: str = os.path.join(UC_FOLDER, 'uc_{number}.yaml')
 
 
+## TEST assets
+TEST_FOLDER=os.path.join(ROOT, 'tests') 
+TEST_ASSETS:str=os.path.join(TEST_FOLDER, 'assets')
+TEST_UC_YAML:str= os.path.join(TEST_ASSETS, 'uc_{number}-t.yaml')
 
 #### Logging settings
 SIMPLE_LOGGING_FORMAT = "%(message)s"
@@ -184,9 +211,18 @@ VERBOSE2_LOGGING_LEVEL = logging.DEBUG
 VERBOSE3_LOGGING_LEVEL = logging.DEBUG - 1
 
 ##Default:
-DEFAULT_LOGGING_LEVEL = QUIET_LOGGING_LEVEL
+DEFAULT_LOGGING_LEVEL = VERBOSE_LOGGING_LEVEL
 DEFAULT_LOGGING_FORMAT = TIMED_LOGGING_FORMAT
 
 
 # File names 
 LOGGING_FILE_NAME = os.path.join(OUTPUT_LOGS, '{name}.log') 
+
+#preprocessing callers
+CALLER_TRAIN="train"
+CALLER_PREDIC="predict"
+CALLER_ONLINE="online"
+CALLER_OFFLINE="offline"
+CALLER_ONLINE_MODES=[RUN_MODE.BATCH,RUN_MODE.REALTIME]
+#Keep detectors
+KEEP_DETECTORS=["baa9b7bf-e05d-4ce9-a1c1-3e82ff4c9f15","2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95", "7f240591-3b5b-4cc8-91fe-09ce51f7ff85", "cf6e38ba-2cc0-41e1-b2bc-9072d80284fa"]

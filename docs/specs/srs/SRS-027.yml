@@ -24,7 +24,7 @@ text: |
   1. Access C&C server
   2. Access ADBox
   3. Select a trained detector
-  4. Run a prediction script using the chosen detection either on a selected time interval or in realtime.
+  4. Run a prediction script using the chosen detection either for a selected time interval or in real time.
 type: F
 urgency: '4'
 version: '0.1'

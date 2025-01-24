@@ -6,7 +6,7 @@ import os
 import json
 import functools
 
-import siem_mtad_gat.settings as escape_settings
+import siem_mtad_gat.settings as settings
 
 
 verbosity = 0  # global verbosity setting for controlling string formatting
@@ -16,38 +16,29 @@ MAX_VERBOSITY = 4  # maximum verbosity level implemented
 
 
 
-logger = logging.getLogger
-log = logger(__name__)
-
-
+logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name="idsp-escape-adbox"), filemode='a', format=settings.DEFAULT_LOGGING_FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(settings.DEFAULT_LOGGING_LEVEL)
 # exception classes ##########################################################
+
 
 
 class EscapeError(Exception):
     """Generic idps-escape error."""
-
-class IdpsEscapeWarning(EscapecError, Warning):
+    def __init__(self, message:str,log:logging.Logger|None=logger): 
+        if log is not None: log.exception(message)
+        super().__init__(message)
+    
+class EscapeWarning(EscapeError, Warning):
     """Generic idps-escape warning."""
+    def __init__(self, message:str, log:logging.Logger|None=logger): 
+        if log is not None: log.warning(message)
+        super().__init__(message)
 
-class IdpsEscapeInfo(EscapeWarning, Warning):
+class EscapeInfo:
     """Generic idps-escape info."""
+    def __init__(self, message:str, log:logging.Logger|None=logger): 
+        if log is not None: log.info(message)
+        print(message)
 
-# Logging classes #################
 
-class WarningFormatter(logging.Formatter):
-    """Logging formatter that displays verbose formatting for WARNING+."""
-
-    def __init__(self, default_format, verbose_format, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.default_format = default_format
-        self.verbose_format = verbose_format
-
-    def format(self, record):
-        """Python 3 hack to change the formatting style dynamically."""
-        if record.levelno > logging.INFO:
-            self._style._fmt = self.verbose_format  # pylint: disable=W0212
-        else:
-            self._style._fmt = self.default_format  # pylint: disable=W0212
-        return super().format(record)
-
-### Files management (possibly to be moved)

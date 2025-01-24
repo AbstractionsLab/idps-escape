@@ -18,9 +18,7 @@ reviewed: P00oeGfVxMfDaKrGJ0Ghsua7r5p_dKJuVc3nPRNxaPg=
 risk: '2'
 status: null
 text: |
-  As a user,
-  I train a detector,
-  to detect anomaly by using both host and network events.
+  As a user, I want to train a detector to detect anomaly by using both host and network events.
 
   1.  Access C&C server
   2.  Access ADBox

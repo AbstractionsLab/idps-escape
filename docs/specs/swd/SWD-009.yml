@@ -14,3 +14,4 @@ text: |
   The diagram below depicts the `Data manager` classes of ADBox, all designed and implemented as Singleton classes.
 
   ![ADBox Managers class diagram](assets/ADBox-managers-class.png "ADBox Managers classes diagram"){: width="80%"}
+version: '0.1'

@@ -1,0 +1,37 @@
+{
+  "policy": {
+    "policy_id": "test_policy_adbox",
+    "description": "A sample description of the policy",
+    "last_updated_time": 1732182858655,
+    "schema_version": 19,
+    "error_notification": null,
+    "default_state": "state1",
+    "states": [
+        {
+            "name": "state1",
+            "actions": [
+                {
+                    "retry": {
+                        "count": 3,
+                        "backoff": "exponential",
+                        "delay": "1m"
+                    },
+                    "alias": {
+                        "actions": [
+                            {
+                                "add": {
+                                    "aliases": [
+                                        "test_alias"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "transitions": []
+        }
+    ],
+    "ism_template": []
+  }
+}

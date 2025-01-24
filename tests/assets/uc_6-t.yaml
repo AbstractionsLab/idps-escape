@@ -1,0 +1,9 @@
+training:
+  graularity: 1
+  display_name: detector_uc_6_t
+  train_config:
+    window_size: 3
+prediction:
+  run_mode: HISTORICAL
+  start_time: "2024-09-01T12:24:33Z"
+  end_time: "2024-09-01T20:00:03Z"

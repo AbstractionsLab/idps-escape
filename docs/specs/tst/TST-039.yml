@@ -1,0 +1,63 @@
+active: true
+authors: AGI
+complexity: 
+derived: false
+execution_type: Automated/Manual
+expected_outcome: ''
+header: |
+  Open prediction raw outcome
+level: 39
+links:
+- SRS-032: null
+normative: true
+platform: MacOS, Windows, GNU/Linux
+ref: ''
+release: alpha
+reviewed: null
+success_criteria: |
+  SRS acceptance criteria fulfilled and expected outcome observed.
+test_data: see referenced files
+text: |
+  ## Preconditions and setup actions
+    - Wazuh central component deployed.
+    - ADBox deployed
+    - User with root privileges
+    - At lease a trained detector used for running prediction at least once (i.e., stored prediction data).
+
+  ## Test steps
+
+    1.  Open the cloned ADBox repository
+    2.  Choose one of the detectors avaliable in `siem_mtad_gat/assets/detector_models`. 
+    3.  Open `siem_mtad_gat/assets/detector_models/uuid/prediction`
+    4.  Open a prediction file of the `uc-x_predicted_anomalies_data-*.json` using system default software.
+
+  ## Expected outcome
+
+    1. Prediction info store using json format. E.g.
+
+      ```
+          {
+          "run_mode": "REALTIME",
+          "detector_id": "563394be-5079-424d-b2ba-cfda0812cf88",
+          "start_time": "2024-10-25T08:51:00Z",
+          "end_time": "2024-10-25T08:52:00Z",
+          "results": [
+              {
+                  "timestamp": "2024-10-25T08:51:00Z",
+                  "is_anomaly": false,
+                  "anomaly_score": 0.029846280813217163,
+                  "threshold": 0.12186630221790373,
+                  "Forecast_data.5mins_loadAverage_average": 0.1334819793701172,
+                  "Recon_data.5mins_loadAverage_average": 0.11187170445919037,
+                  "True_data.5mins_loadAverage_average": 0.1077537015080452,
+                  "A_Score_data.5mins_loadAverage_average": 0.029846280813217163,
+                  "Thresh_data.5mins_loadAverage_average": 0.12186630221790373,
+                  "A_Pred_data.5mins_loadAverage_average": 0.0
+              }
+          ]
+        }
+      ```
+  
+verification_method: I
+verification_method: Test (T)/Review of design (R)/Inspection (I)/Analysis (A)
+version: 0.2

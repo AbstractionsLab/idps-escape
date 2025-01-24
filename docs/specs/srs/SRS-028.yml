@@ -19,7 +19,7 @@ risk: '1'
 status: null
 text: |
   As a user,
-  I want to compare the outcome different anomaly detection algorithms on my data.
+  I want to compare the outcome of different anomaly detection algorithms on my data.
 
   Assuming: Two different algorithms A1 and A2 available in ADBox, and two compatible detectors D1 and D2 based on these algorithms, respectively.
 

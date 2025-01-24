@@ -1,7 +1,7 @@
 active: true
 derived: false
 header: |
-  MTAD GAT prediction
+  MTAD-GAT prediction
 level: 4.0
 links:
 - LARC-009: 1In1SEyV7gBoBCstchmENiQlJSODLpZymAQ-i8IQZ5Y=
@@ -14,3 +14,4 @@ text: |
   The diagram depicts the sequence of operations run by the function `predict_MTAD_GAT` of the MTAD_GAT ML-subpackage of ADBOX.
 
   ![ADBox predict_MTAD_GAT sequence diagram](assets/ADBox-predict_MTAD_GAT-sequence.png "ADBox predict_MTAD_GAT sequence"){: width="80%"}
+version: '0.1'

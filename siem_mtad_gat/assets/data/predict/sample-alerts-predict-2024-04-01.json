@@ -10267,6 +10267,186 @@
         "sort": [
           1712001596363
         ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.04.01",
+        "_id": "SdlSmo4BNI1x0oWnQ8iv",
+        "_score": null,
+        "_source": {
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-04-01T15:41:01.699Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "tx_id": "0",
+            "app_proto": "http",
+            "in_iface": "enp7s0",
+            "src_ip": "192.168.5.8",
+            "src_port": "50892",
+            "event_type": "alert",
+            "alert": {
+              "severity": "3",
+              "signature_id": "2013504",
+              "rev": "6",
+              "metadata": {
+                "updated_at": [
+                  "2020_04_22"
+                ],
+                "created_at": [
+                  "2011_08_31"
+                ]
+              },
+              "action": "allowed"
+            },
+            "flow_id": "877333497006389.000000",
+            "dest_ip": "195.24.74.198",
+            "proto": "TCP",
+            "http": {
+              "redirect": "https://lu.archive.ubuntu.com/ubuntu/dists/jammy/InRelease",
+              "hostname": "lu.archive.ubuntu.com",
+              "protocol": "HTTP/1.1",
+              "http_method": "GET",
+              "http_content_type": "text/html",
+              "length": "353",
+              "url": "/ubuntu/dists/jammy/InRelease",
+              "http_user_agent": "Debian APT-HTTP/1.3 (2.4.11) non-interactive",
+              "status": "301"
+            },
+            "dest_port": "80",
+            "pkt_src": "gre tunnel",
+            "tunnel": {
+              "src_ip": "192.168.5.8",
+              "src_port": "0",
+              "depth": "1",
+              "dest_ip": "192.168.5.5",
+              "proto": "GRE",
+              "dest_port": "0",
+              "pkt_src": "wire/pcap"
+            },
+            "flow": {
+              "src_ip": "192.168.5.8",
+              "src_port": "50892",
+              "pkts_toserver": "4",
+              "dest_ip": "195.24.74.198",
+              "start": "2024-04-01T15:40:59.728558+0000",
+              "bytes_toclient": "798",
+              "bytes_toserver": "497",
+              "pkts_toclient": "3",
+              "dest_port": "80"
+            },
+            "timestamp": "2024-04-01T15:40:59.747454+0000",
+            "direction": "to_server"
+          },
+          "rule": {
+            "firedtimes": 1,
+            "level": 3,
+            "id": "86601"
+          },
+          "location": "/var/log/suricata/eve.json",
+          "decoder": {
+            "name": "json"
+          },
+          "id": "1711986061.79097",
+          "timestamp": "2024-04-01T15:41:01.699+0000"
+        },
+        "sort": [
+          1711986061699
+        ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.04.01",
+        "_id": "StlSmo4BNI1x0oWnQ8iv",
+        "_score": null,
+        "_source": {
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-04-01T15:41:01.707Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "tx_id": "1",
+            "app_proto": "http",
+            "in_iface": "enp7s0",
+            "src_ip": "192.168.5.8",
+            "src_port": "50892",
+            "event_type": "alert",
+            "alert": {
+              "severity": "3",
+              "signature_id": "2013504",
+              "rev": "6",
+              "metadata": {
+                "updated_at": [
+                  "2020_04_22"
+                ],
+                "created_at": [
+                  "2011_08_31"
+                ]
+              },
+              "action": "allowed"
+            },
+            "flow_id": "877333497006389.000000",
+            "dest_ip": "195.24.74.198",
+            "proto": "TCP",
+            "http": {
+              "redirect": "https://lu.archive.ubuntu.com/ubuntu/dists/jammy-updates/InRelease",
+              "hostname": "lu.archive.ubuntu.com",
+              "protocol": "HTTP/1.1",
+              "http_method": "GET",
+              "http_content_type": "text/html",
+              "length": "361",
+              "url": "/ubuntu/dists/jammy-updates/InRelease",
+              "http_user_agent": "Debian APT-HTTP/1.3 (2.4.11) non-interactive",
+              "status": "301"
+            },
+            "dest_port": "80",
+            "pkt_src": "gre tunnel",
+            "tunnel": {
+              "src_ip": "192.168.5.8",
+              "src_port": "0",
+              "depth": "1",
+              "dest_ip": "192.168.5.5",
+              "proto": "GRE",
+              "dest_port": "0",
+              "pkt_src": "wire/pcap"
+            },
+            "flow": {
+              "src_ip": "192.168.5.8",
+              "src_port": "50892",
+              "pkts_toserver": "6",
+              "dest_ip": "195.24.74.198",
+              "start": "2024-04-01T15:40:59.728558+0000",
+              "bytes_toclient": "1472",
+              "bytes_toserver": "1097",
+              "pkts_toclient": "4",
+              "dest_port": "80"
+            },
+            "timestamp": "2024-04-01T15:40:59.762796+0000",
+            "direction": "to_server"
+          },
+          "rule": {
+            "firedtimes": 2,
+            "level": 3,
+            "id": "86601"
+          },
+          "location": "/var/log/suricata/eve.json",
+          "decoder": {
+            "name": "json"
+          },
+          "id": "1711986061.81935",
+          "timestamp": "2024-04-01T15:41:01.707+0000"
+        },
+        "sort": [
+          1711986061707
+        ]
       }
     ]
   }

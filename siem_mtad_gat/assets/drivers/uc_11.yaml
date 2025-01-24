@@ -1,0 +1,4 @@
+prediction:
+  run_mode: HISTORICAL
+  start_time: "2024-10-1T00:00:00Z"
+  end_time: "2024-11-01T00:00:00Z"

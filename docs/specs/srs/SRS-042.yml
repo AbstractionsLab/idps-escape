@@ -1,0 +1,35 @@
+acceptance: |
+  Successful validation according to the corresponding test case specification
+active: true
+dependence: []
+derived: false
+difficulty: '4'
+header: ''
+importance: '2'
+level: 42
+links:
+- MRS-018: null
+normative: true
+outlay: ''
+rationale: Centralization and integration of information
+ref: ''
+release: Alpha
+reviewed: null
+risk: '2'
+status: ''
+text: |
+  As a user,
+  I want the prediction of the anomaly detection subsystem to be shipped to the central indexer.
+
+  Assuming:
+
+  - CyFORT-Wazuh and ADBox deployed
+
+  - a use case, including training settings available.
+
+  1. Build ADBox container
+  2. Run ADBox training with the shipping flag enabled
+  3. When using the created detector, turn the shipping on.
+type: F
+urgency: '2'
+version: '0.1'

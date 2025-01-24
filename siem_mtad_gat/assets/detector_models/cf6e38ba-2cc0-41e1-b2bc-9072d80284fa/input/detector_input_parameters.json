@@ -27,7 +27,7 @@
     },
     "display_name": "linux-resource-utilization-anomaly",
     "detector_id": "cf6e38ba-2cc0-41e1-b2bc-9072d80284fa",
-    "created_time": "2024-07-25T07:29:59Z",
+    "creation_time": "2024-07-25T07:29:59Z",
     "last_updated_time": "2024-07-25T07:29:59Z",
     "model_info": {
         "datasource": "wazuh-alerts-*.*-2024.*.*",

@@ -1,0 +1,20 @@
+training:
+  aggregation: true
+  aggregation_config:
+    features:
+      data.cpu_usage_%:
+      - average
+      data.memory_usage_%:
+      - average
+    fill_na_method: Fixed
+    granularity: 30s
+    padding_value: 1
+  categorical_features: false
+  columns:
+  - data.cpu_usage_%
+  - data.memory_usage_%
+  display_name: detector_uc_5_t
+  index_date: '2024-09-*'
+  train_config:
+    epochs: 2
+    window_size: 6

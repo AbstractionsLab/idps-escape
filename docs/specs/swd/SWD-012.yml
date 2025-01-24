@@ -1,0 +1,17 @@
+active: true
+derived: false
+header: |
+  ADBox TimeManager
+level: 12.0
+links:
+- LARC-011: null
+normative: true
+ref: ''
+reviewed: null
+text: |
+  ## ADBox time manager class diagrams
+
+  The diagram below depicts the `Time manager` classes of ADBox.
+
+  ![ADBox TimeManager class diagram](assets/1B3A4F_DIA_IDPS_ESCAPE_ADBox_TimeManager.png)
+version: '0.1'

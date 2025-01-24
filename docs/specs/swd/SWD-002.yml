@@ -1,7 +1,7 @@
 active: true
 derived: false
 header: |
-  Prediction pipeline
+  ADBox prediction pipeline
 level: 2.0
 links:
 - LARC-002: UhypjRApmGmXEAu7bT3umJfshCPQk_lhyZY2MJC-KnI=
@@ -14,4 +14,5 @@ text: |
 
   The diagram depicts the sequence of operations in the prediction pipeline, orchestrated by the ADBox Engine.
 
-  ![ADBox predict pipeline sequence diagram](assets/ADBox-engine-predict-pipeline-sequence.png "ADBox predict pipeline sequence"){: width="80%"}
+  ![ADBox predict pipeline sequence diagram](assets/1B3A4D_DIA_IDPS_ESCAPE_ADBoxDiagrams-engine-predict-pipeline_v1.2.png "ADBox predict pipeline sequence"){: width="80%"}
+version: '0.2'

@@ -1,7 +1,12 @@
 import os
+import sys
+
+import numpy as np
+import pandas as pd
 import torch.nn as nn
 import torch 
 from torchinfo import summary
+from siem_mtad_gat.commons import EscapeInfo
 from siem_mtad_gat.mtad_gat_pytorch.utils import SlidingWindowDataset,create_data_loaders
 from siem_mtad_gat.mtad_gat_pytorch.mtad_gat import MTAD_GAT
 from siem_mtad_gat.mtad_gat_pytorch.training import Trainer
@@ -9,14 +14,15 @@ from siem_mtad_gat.mtad_gat_pytorch.utils import plot_losses
 from siem_mtad_gat.mtad_gat_pytorch.prediction_alab import Predictor
 from siem_mtad_gat.data_manager.data_storage_manager import DataStorageManager 
 from siem_mtad_gat.data_manager.data_retrieval_manager import DataRetrievalManager
-from siem_mtad_gat.config_manager.config_manager import TrainConfigManager  
+from siem_mtad_gat.config_manager.config_manager import TrainConfigManager
+import siem_mtad_gat.mtad_gat_pytorch.mtad_gat_keys as keys  
 import siem_mtad_gat.settings as settings
 import logging
 import os
-os.makedirs(settings.OUTPUT_LOGS, exist_ok=True)
-logging.basicConfig(filename=settings.LOGGING_FILE_NAME.format(name=__name__), format=settings.DEFAULT_LOGGING_FORMAT)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(settings.DEFAULT_LOGGING_LEVEL)
+
 
 
 
@@ -25,14 +31,45 @@ logger.setLevel(settings.DEFAULT_LOGGING_LEVEL)
 This adapts and extends ML4ITS/mtad_gat_pytorch/train.py module.
 """
 
-def train_MTAD_GAT(train_data, test_data, train_timestamps, test_timestamps,config_input, test_labels=None): 
-    
+def train_MTAD_GAT(train_data:np.ndarray,
+                   test_data:np.ndarray|None,
+                   train_timestamps:pd.Index,
+                   test_timestamps:pd.Index,
+                   config_input:dict,
+                   test_labels=None) -> tuple[dict[str, list[int]], pd.DataFrame, pd.DataFrame]:
+    """
+    Trains a MTAD-GAT model for anomaly detection.
+    Args:
+        train_data (np.ndarray): A 2D numpy array representing the training data, where rows correspond to 
+                                 timestamp (assuming regular granularity) and columns to features.
+        test_data (np.ndarray | None): A 2D numpy array representing the test data, similar to train data.If None, only training 
+                                       will be performed without testing. 
+        train_timestamps (pd.Index): A pandas Index object representing the timestamps associated with the 
+                                     training data.
+        test_timestamps (pd.Index): A pandas Index object representing the timestamps associated with the 
+                                    test data. Only used if `test_data` is provided.
+        config_input (dict): The dictionary containing configuration parameters inherited from the use-case (epochs and window_size).
+        test_labels (Optional): Ground truth labels for the test data, used for evaluation (if available). 
+                                Defaults to None.
+
+    Returns:
+        tuple[dict[str, list[int]], pd.DataFrame, pd.DataFrame]:
+            - dict[str, list[int]]: Training statistics.
+            - pd.DataFrame: The DataFrame containing the model's predictions for the training data.
+            - pd.DataFrame: The DataFrame containing the model's predictions for the test data (if `test_data` is provided).
+
+
+    """
+    #Add checks on the input length
     ######
     ### preparation configuaration, data management, logs
     ######
 
+    if train_data is None: raise(ValueError("Input train given is None"))
+
     # define logs directory
     log_dir = os.path.join(settings.LOGS_FOLDER,'train_logs')
+ 
 
     # create data managememt objects
     
@@ -47,21 +84,24 @@ def train_MTAD_GAT(train_data, test_data, train_timestamps, test_timestamps,conf
 
     ## name variable from training configuration parameters    
 
-    window_size = config.get("window_size")
-    spec_res = config.get("spec_res")
-    n_epochs = config.get("epochs")
-    batch_size = config.get("bs")
-    init_lr = config.get("init_lr")
-    val_split = config.get("val_split")
-    shuffle_dataset = config.get("shuffle_dataset")
-    use_cuda = config.get("use_cuda")
-    print_every = config.get("print_every")
-    log_tensorboard = config.get("log_tensorboard")
+    window_size = config.get(keys.MTAD_GAT_WINDOW_SIZE)
+    spec_res = config.get(keys.MTAD_GAT_SPEC_RES)
+    n_epochs :int = config.get(keys.MTAD_GAT_EPOCHS) # type: ignore
+    batch_size = config.get(keys.MTAD_GAT_BS)
+    init_lr = config.get(keys.MTAD_GAT_INIT_LR)
+    val_split = config.get(keys.MTAD_GAT_VAL_SPLIT)
+    shuffle_dataset = config.get(keys.MTAD_GAT_SHUFFLE_DATASET)
+    use_cuda = config.get(keys.MTAD_GAT_USE_CUDA)
+    print_every = config.get(keys.MTAD_GAT_PRINT_EVERY)
+    log_tensorboard = config.get(keys.MTAD_GAT_LOG_TENSORBOARD)
     args_summary = str(config)
+
+    threads_torch=min(torch.get_num_threads(),config.get(keys.MTAD_GAT_THREADS, sys.maxsize))
+    torch.set_num_threads(threads_torch)
 
     #check if test data avaliable
     exist_test_data = test_data.shape[0]!=0 
-    logger.info(f"Test data avaliable during training: {exist_test_data}")
+    EscapeInfo(f"Test data avaliable during training: {exist_test_data}",log=logger)
 
     ######
     ### preparation data
@@ -79,7 +119,7 @@ def train_MTAD_GAT(train_data, test_data, train_timestamps, test_timestamps,conf
     #force number output feature equal to input
     out_dim = n_features
     target_dims = None # this line is inherited from ML4ITS/mtad_gat_pytorch and serves to call functions with desired parameter later
-    logger.info(f"Will forecast and reconstruct all {n_features} input features")
+    #EscapeInfo(f"Will forecast and reconstruct all {n_features} input features")
 
 
     # Create dataset of sliding windows 
@@ -101,22 +141,22 @@ def train_MTAD_GAT(train_data, test_data, train_timestamps, test_timestamps,conf
         n_features,
         window_size,
         out_dim,
-        kernel_size=config.get("kernel_size"),
-        use_gatv2=config.get("use_gatv2"),
-        feat_gat_embed_dim=config.get("feat_gat_embed_dim"),
-        time_gat_embed_dim=config.get("time_gat_embed_dim"),
-        gru_n_layers=config.get("gru_n_layers"),
-        gru_hid_dim=config.get("gru_hid_dim"),
-        forecast_n_layers=config.get("fc_n_layers"),
-        forecast_hid_dim=config.get("fc_hid_dim"),
-        recon_n_layers=config.get("recon_n_layers"),
-        recon_hid_dim=config.get("recon_hid_dim"),
-        dropout=config.get("dropout"),
-        alpha=config.get("alpha")
+        kernel_size=config.get(keys.MTAD_GAT_KERNEL_SIZE), # type: ignore
+        use_gatv2=config.get(keys.MTAD_GAT_USE_GATV2), # type: ignore
+        feat_gat_embed_dim=config.get(keys.MTAD_GAT_FEAT_GAT_EMBED_DIM),
+        time_gat_embed_dim=config.get(keys.MTAD_GAT_TIME_GAT_EMBED_DIM),
+        gru_n_layers=config.get(keys.MTAD_GAT_GRU_N_LAYERS), # type: ignore
+        gru_hid_dim=config.get(keys.MTAD_GAT_GRU_HID_DIM), # type: ignore
+        forecast_n_layers=config.get(keys.MTAD_GAT_FC_N_LAYERS), # type: ignore
+        forecast_hid_dim=config.get(keys.MTAD_GAT_FC_HID_DIM), # type: ignore
+        recon_n_layers=config.get(keys.MTAD_GAT_RECON_N_LAYERS), # type: ignore
+        recon_hid_dim=config.get(keys.MTAD_GAT_RECON_HID_DIM), # type: ignore
+        dropout=config.get(keys.MTAD_GAT_DROPOUT), # type: ignore
+        alpha=config.get(keys.MTAD_GAT_ALPHA) # type: ignore
     )
 
     #select optimizer,  forecast criterion and recontructions criterion
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.get("init_lr"))
+    optimizer = torch.optim.Adam(model.parameters(), lr=init_lr) 
     forecast_criterion = nn.MSELoss()
     recon_criterion = nn.MSELoss()
 
@@ -150,8 +190,6 @@ def train_MTAD_GAT(train_data, test_data, train_timestamps, test_timestamps,conf
     # train model
     trainer.fit(train_loader, val_loader)
 
-    #save model
-    #TBD
 
     #save losses
     data_storage_manager.save_losses(trainer.losses, plot=True)
@@ -167,28 +205,16 @@ def train_MTAD_GAT(train_data, test_data, train_timestamps, test_timestamps,conf
         print(f"Test reconstruction loss: {test_loss[1]:.5f}")
         print(f"Test total loss: {test_loss[2]:.5f}")
 
-    level = config.get("level")
-    q = config.get("q")
+
     reg_level = 0
 
-    #trainer.load(data_retrival_manager.model_path()) # why we need to load?
+    prediction_args = {keys.MTAD_GAT_TARGET_DIMS : target_dims, keys.MTAD_GAT_REG_LEVEL: reg_level}
+    prediction_args.update({k:config.get(k) for k in keys.MTAD_GAT_PREDICTION_ARGUMENTS})
 
-    prediction_args = {
-        "target_dims": target_dims,
-        'scale_scores': config.get("scale_scores"),
-        "level": level,
-        "q": q,
-        'dynamic_pot': config.get("dynamic_pot"),
-        "use_mov_av": config.get("use_mov_av"),
-        "gamma": config.get("gamma"),
-        "reg_level": reg_level,
-        #"save_path": save_path,
-    }
-    best_model = trainer.model
 
 
     predictor = Predictor(
-        best_model,
+        trainer.model,
         window_size,
         n_features,
         prediction_args,
@@ -196,15 +222,16 @@ def train_MTAD_GAT(train_data, test_data, train_timestamps, test_timestamps,conf
 
 
     label = y_test[window_size:] if y_test is not None else None
-    train_pred_df, test_pred_df = predictor.predict_anomalies(x_train, x_test, label,train_timestamps[:-window_size],test_timestamps[:-window_size]) # we denote every - window by its initial timestamp 
+    train_pred_df, test_pred_df = predictor.predict_anomalies(x_train, x_test, label,train_timestamps[window_size:],test_timestamps[window_size:]) 
+    # we denote every - window by its final timestamp
     
-    # Save anomaly predictions made using epsilon method (could be changed to pot or bf-method)
+    # Save anomaly predictions made
     data_storage_manager.save_training_outputs(train_pred_df, test_pred_df)
 
     training_output = {
-    "epochIds": list(range(1, n_epochs + 1))
+    keys.MTAD_GAT_OUT_EPOCHS_IDS: list(range(1, n_epochs + 1))
     } 
     
     training_output.update(trainer.losses)
  
-    return training_output
+    return training_output,train_pred_df, test_pred_df

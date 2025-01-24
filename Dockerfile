@@ -29,7 +29,7 @@ ENV PATH="/home/${user}/.local/bin:${PATH}"
 # Copy the files and install the python environment as user alab 
 #USER ${user} 
 # RUN pip3 install pipenv
-RUN pip3 install "poetry==$POETRY_VERSION"
+RUN pip3 install poetry=="${POETRY_VERSION}"
 
 WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
 COPY poetry.lock pyproject.toml /home/${user}/${SIEM_MTAD_GAT_FOLDER}/

@@ -20,7 +20,7 @@ risk: '2'
 status: null
 text: |
   As a sys admin user,
-  I want to deploy NIDS components as Docker container on system end-point's hosts,
+  I want to deploy NIDS components as a Docker container on a system end-points hosts,
   to monitor traffic and store logs locally.
 
   1. Access end-point (EP) host,

@@ -23,7 +23,7 @@ The deployment of Wazuh can be done as a single-node or multi-node stack.
 For the sake of simplicity, we discuss here a single node deployment as one manager node would be used to monitor and analyze traffic from the registered agent. The deployment starts by cloning the Wazuh repository to our system.
 
 ```sh
-git clone https://github.com/wazuh/wazuh-docker.git -b v4.7.2 
+git clone https://github.com/wazuh/wazuh-docker.git -b v4.8.1 
 ```
 
 The next step is to provide a group of certificates for each node in the stack to secure communication between the nodes. Execute the following command to get the desired certificates.

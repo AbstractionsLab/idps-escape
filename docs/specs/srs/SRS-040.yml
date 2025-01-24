@@ -18,8 +18,7 @@ reviewed: is3c4rjo1oZWT_oNwufCwVe0KIT-955GaUUvGOqYsYc=
 risk: '3'
 status: null
 text: |
-  ADBox should include a Data Management subpackage,
-  centralizing data storage, retrieval and all other operation concerning the management of data along the AD pipelines.
+  ADBox should include a Data Management subpackage, centralizing data storage, retrieval and all other operation concerning the management of data along the AD pipelines.
 type: A
 urgency: '3'
 version: '0.1'

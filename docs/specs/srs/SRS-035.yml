@@ -12,7 +12,7 @@ links:
 normative: true
 outlay: null
 rationale: |
-  To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating an possible threat
+  To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating a possible threat
 ref: ''
 release: Alpha
 reviewed: spxb_T80UM3n8Zbi2f0VWBJrhGsjxxz-PvgucTZQJfs=
@@ -28,13 +28,12 @@ text: |
   2. Access ADBox
   3. Add an use-case file `siem_mtad_gat/assets/drivers/uc_x.yaml` including
 
-      ```
-
+    ```yaml
       prediction:
-          run_mode: "historical"
-          index_date: YYYY-MM-DD
-          detector_id: uuid
-      ```
+        run_mode: "historical"
+        index_date: YYYY-MM-DD
+        detector_id: uuid
+    ```
 type: F
 urgency: '4'
 version: '0.1'

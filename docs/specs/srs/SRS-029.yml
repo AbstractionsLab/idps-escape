@@ -18,9 +18,7 @@ reviewed: h1LIrjXwwrb_CfxHpAjEaY9I8IOp8zmTkRl4RRwdP-I=
 risk: '1'
 status: null
 text: |
-  As a user,
-  I want to ingest and transform data generated from both host and network events,
-  to feed anomaly detectors.
+  As a user, I want to ingest and transform data generated from both host and network events to feed anomaly detectors.
 
   1. Access C&C server
   2. Access ADBox

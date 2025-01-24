@@ -42,7 +42,7 @@ To deploy a new agent on the Wazuh Dashboard, follow these steps:
 4.  Optionally, provide a name for the agent.
 5.  After entering the required information, download and install the agent using the provided command on the dashboard. For example:    
     ```sh
-    wget https://packages.wazuh.com/4.x/apt/pool/main/w/wazuh-agent/wazuh-agent_4.7.2-1_amd64.deb && sudo WAZUH_MANAGER='172.17.0.1' WAZUH_AGENT_NAME='test-agent' dpkg -i ./wazuh-agent_4.7.2-1_amd64.deb
+    wget https://packages.wazuh.com/4.x/apt/pool/main/w/wazuh-agent/wazuh-agent_4.8.1-1_amd64.deb && sudo WAZUH_MANAGER='172.17.0.1' WAZUH_AGENT_NAME='test-agent' dpkg -i ./wazuh-agent_4.8.1-1_amd64.deb
     ``` 
 6.  Finally, start the agent by executing the following commands:    
     ```sh

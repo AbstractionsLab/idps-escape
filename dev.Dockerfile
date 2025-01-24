@@ -19,6 +19,10 @@ ENV SIEM_MTAD_GAT_FOLDER=siem-mtad-gat
 RUN apt update --fix-missing
 RUN apt-get install -y git python3-pip graphviz
 
+# Install pipx
+RUN python3 -m pip install pipx
+RUN python3 -m pipx ensurepath
+
 # Create a non-root user
 RUN useradd -ms /bin/bash ${user} && echo '${user} ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
 
@@ -28,7 +32,7 @@ ENV PATH="/home/${user}/.local/bin:${PATH}"
 # Copy the files and install the python environment as user alab 
 USER ${user} 
 # RUN pip3 install pipenv
-RUN pip3 install "poetry==$POETRY_VERSION"
+RUN pip3 install poetry=="${POETRY_VERSION}"
 
 WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
 COPY poetry.lock pyproject.toml /home/${user}/${SIEM_MTAD_GAT_FOLDER}/
@@ -42,6 +46,9 @@ COPY . /home/${user}/${SIEM_MTAD_GAT_FOLDER}
 # Install python virtual environment for the project
 WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
 # RUN pipenv install
+
+# Install Doorstop
+RUN pipx install doorstop==3.0b10
 
 # Clean up unnecessary packages
 USER root

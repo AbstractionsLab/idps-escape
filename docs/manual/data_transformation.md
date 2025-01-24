@@ -2,26 +2,27 @@
 
 Row data ingested from Wazuh, or any other source must be cleaned and prepared to be fed to the machine learning model.
 
-This is automatically done by the [Training pipeline](./engine.md#training-pipeline) and the [Prediction pipeline](./engine.md#prediction-pipeline).
+This is automatically done by the [training pipeline](/docs/manual/engine.md#training-pipeline) and the [prediction pipeline](/docs/manual/engine.md#prediction-pipeline).
 
-Data undergo to three main kind of transformation:
+Data undergo three main kinds of transformation:
+
 - data type adjustment
 - aggregation
 - preprocessing
 
-### DataTypeTransformer
+### Data type transformer
 
-The DataTypeTransformer processes raw data into a format suitable for analysis or training through machine learning algorithms. The transformation applied is done according to a predefined back-end configuration file.
+The DataTypeTransformer processes raw data into a format suitable for analysis or training in machine learning algorithms. The transformation applied is done according to a predefined back-end configuration file.
 
-### DataAggregator
+### Data aggregator
 
-The DataAggregator extracts and aggregates features from time-series data based granularity and aggregation methods specified in by the current [use case](./use_case.md). It method may be call as part of the preprocessing.
+The DataAggregator extracts and aggregates features from time-series data based on granularity and aggregation methods specified in the currently selected [use case](/docs/manual/use_case.md). Its methods may be called as part of the preprocessing.
 
-### DataPreprocessor
+### Data preprocessor
 
-The DataPreprocessor operates all the transformations that are strictly part of the ML preprocessing, including feature extraction and possibly aggregation, as specified in by the current [use case](./use_case.md).
+The DataPreprocessor runs all the transformations that are strictly part of the ML preprocessing, including feature extraction and possibly aggregation, as specified in the currently selected [use case](/docs/manual/use_case.md).
 
-Below the sequence diagram of preprocessing main method.
+Below we provide a sequence diagram of the preprocessing main method:
 
 ```mermaid
 sequenceDiagram
