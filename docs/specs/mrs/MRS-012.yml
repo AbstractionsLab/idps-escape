@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'XDR & SIEM Integration'
 importance: '5'
 level: 12
 links: []

@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Platform Independence'
 importance: '3'
 level: 20
 links: []

@@ -60,6 +60,7 @@
 <li><a href="#TST-038">38 Visualize train losses</a></li>
 <li><a href="#TST-039">39 Open prediction raw outcome</a></li>
 <li><a href="#TST-040">40 Visualize IDPS-ESCAPE high level architecture</a></li>
+<li><a href="#TST-041">41 Add a short description here</a></li>
 </ul>
           </nav>
       </div>
@@ -87,15 +88,15 @@
 <ol start="3">
 <li>Build the image.</li>
 </ol>
-<p>a. Make the script executable: <code>chmod  +x  build-adbox.sh</code></p>
-<p>b. And execute it as follows</p>
+<p>3a. Make the script executable: <code>chmod  +x  build-adbox.sh</code></p>
+<p>3b. And execute it as follows</p>
 <pre><code>./build-adbox.sh
 </code></pre>
 <ol start="4">
 <li>Run the container by executing the bash file containing the run commands.</li>
 </ol>
-<p>a. Make it executable: <code>chmod  +x  adbox.sh</code></p>
-<p>b. And execute it as follows</p>
+<p>4a. Make it executable: <code>chmod  +x  adbox.sh</code></p>
+<p>4b. And execute it as follows</p>
 <pre><code>./adbox.sh -h
 </code></pre>
 <h2>Expected outcome</h2>
@@ -105,19 +106,20 @@
 siem-mtad-gat                   v0.1.4    ...   ...            ...
 </code></pre>
 <p>Step 4b. Display ADBox help message</p>
-<p>```
-  usage: driver.py [-h] [-i] [-u USECASE] [-c] [-s]</p>
-<p>IDPS-ESCAPE ADBox, an open-source anomaly detection toolbox, developed in project CyFORT.</p>
-<p>options:
-    -h, --help            show this help message and exit
-    -i, --interactive     run the interactive console for training and prediction
-    -u USECASE, --usecase USECASE
-                          specify a configuration scenario/use-case file for training and prediction
-    -c, --connection      check connection with Wazuh
-    -s, --shipping        enable data shipping to Wazuh
-  ```</p>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-046">SRS-046</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-001">TRA-001</a>, <a href="TRB.html#TRB-002">TRB-002</a></p>
+<pre><code class="language-sh">usage: driver.py [-h] [-i] [-u USECASE] [-c] [-s]
+
+IDPS-ESCAPE ADBox, an open-source anomaly detection toolbox, developed in project CyFORT.
+
+options:
+  -h, --help            show this help message and exit
+  -i, --interactive     run the interactive console for training and prediction
+  -u USECASE, --usecase USECASE
+                        specify a configuration scenario/use-case file for training and prediction
+  -c, --connection      check connection with Wazuh
+  -s, --shipping        enable data shipping to Wazuh
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-046">SRS-046 Cross-Platform ADBox Deployment</a></p>
+<p><em>Child links:</em> <a href="TRA.html#TRA-001">TRA-001</a>, <a href="TRB.html#TRB-002">TRB-002 TCER: ADBox deployment</a></p>
 <table>
 <thead>
 <tr>
@@ -175,9 +177,9 @@ siem-mtad-gat                   v0.1.4    ...   ...            ...
 <li>Open a terminal in VS Code and run <code>poetry install</code> in the container to install all dependencies.</li>
 <li>Run ADBox using its entrypoint.</li>
 </ol>
-<pre><code> poetry run adbox
+<pre><code>  poetry run adbox
 </code></pre>
-<h2>Expected outcome.</h2>
+<h2>Expected outcome</h2>
 <p>Step 1. Repository creation</p>
 <p>Step 4. Container created and terminal open.</p>
 <p>Step 5. Poetry install terminated with <code>Installing the current project: siem-mtad-gat (0.1.4)</code>.</p>
@@ -185,8 +187,8 @@ siem-mtad-gat                   v0.1.4    ...   ...            ...
 <pre><code>  IDPS-ESCAPE ADBox running in default mode
 Are you sure you wish to run the default ADBox in default mode? (y/n):
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-044">SRS-044</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRB.html#TRB-003">TRB-003</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-044">SRS-044 Platform-Independent Deployment</a></p>
+<p><em>Child links:</em> <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRB.html#TRB-003">TRB-003 TCER: ADBox in dev container</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
 <table>
 <thead>
 <tr>
@@ -236,23 +238,21 @@ Are you sure you wish to run the default ADBox in default mode? (y/n):
 <h2>Test steps</h2>
 <ol>
 <li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
- <code>./adbox.sh -i</code></li>
+  <code>./adbox.sh -i</code></li>
 </ol>
 <h2>Expected outcome</h2>
-<ul>
-<li>ADBox starts with</li>
-</ul>
+<p>ADBox starts with</p>
 <pre><code>IDPS-ESCAPE ADBox driver running in interactive console mode.
 
 Enter a number and press enter to select an ADBox action to perform:
 1. Train an anomaly detector.
-2. Predict anomalies using one of the avaliable detectores detector.
+2. Predict anomalies using one of the available detectors.
 3. Select an existing anomaly detector for prediction.
 4. Exit
 Enter a number (1-4):
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-047">SRS-047</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-004">TRB-004</a>, <a href="TRA.html#TRA-005">TRA-005</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-047">SRS-047 Interactive Use Case Builder</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-004">TRB-004 TCER: ADBox console</a>, <a href="TRA.html#TRA-005">TRA-005</a></p>
 <table>
 <thead>
 <tr>
@@ -305,7 +305,7 @@ Enter a number (1-4):
 <h2>Test steps</h2>
 <ol>
 <li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
- <code>./adbox.sh</code></li>
+  <code>./adbox.sh</code></li>
 <li>Input <code>y</code> after <code>Are you sure you wish to run the default ADBox in default mode? (y/n):</code></li>
 </ol>
 <h2>Expected outcome</h2>
@@ -326,8 +326,8 @@ Data ingestion.
 <li>Training response should be seen in the console.</li>
 <li>Training outputs and artifacts should be available in the following folder: <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code>.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-005">TRB-005</a>, <a href="TRA.html#TRA-006">TRA-006</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-005">TRB-005 TCER: ADBox in default mode with Wazuh</a>, <a href="TRA.html#TRA-006">TRA-006</a></p>
 <table>
 <thead>
 <tr>
@@ -378,7 +378,7 @@ Data ingestion.
 <h2>Test steps</h2>
 <ol>
 <li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
- <code>./adbox.sh</code></li>
+  <code>./adbox.sh</code></li>
 <li>Input <code>y</code> after <code>Are you sure you wish to run the default ADBox in default mode? (y/n):</code></li>
 </ol>
 <h2>Expected outcome</h2>
@@ -408,7 +408,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Training response should be seen in the console.</li>
 <li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-007">TRA-007</a>, <a href="TRA.html#TRA-019">TRA-019</a></p>
 <table>
 <thead>
@@ -476,7 +476,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>A prediction response should be seen in the output console after every 1 minute.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-008">TRA-008</a></p>
 <table>
 <thead>
@@ -529,7 +529,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 1 parameters.</li>
 </ol>
-<pre><code> ./adbox.sh -u 1
+<pre><code>  ./adbox.sh -u 1
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -546,7 +546,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li><code>No data found for given input.</code></li>
 <li>And the application should exit.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-009">TRA-009</a>, <a href="TRA.html#TRA-018">TRA-018</a></p>
 <table>
 <thead>
@@ -601,7 +601,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <h2>Test steps</h2>
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 2 parameters.
- <code>./adbox.sh -u 2</code></li>
+  <code>./adbox.sh -u 2</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
@@ -613,8 +613,8 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction response should be seen in the output console.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-006">TRB-006</a>, <a href="TRA.html#TRA-010">TRA-010</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-006">TRB-006 TCER: ADBox UC scenario 2 with Wazuh</a>, <a href="TRA.html#TRA-010">TRA-010</a></p>
 <table>
 <thead>
 <tr>
@@ -665,7 +665,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <h2>Test steps</h2>
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 2 parameters.
- <code>./adbox.sh -u 2</code></li>
+  <code>./adbox.sh -u 2</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
@@ -681,7 +681,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction response should be seen in the output console.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-017">TRA-017</a></p>
 <table>
 <thead>
@@ -737,7 +737,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 3 parameters.</li>
 </ol>
-<pre><code> ./adbox.sh -u 3
+<pre><code>  ./adbox.sh -u 3
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -749,8 +749,8 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction response should be seen on the output console after every 5 minutes.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-007">TRB-007</a>, <a href="TRA.html#TRA-011">TRA-011</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-007">TRB-007 TCER: ADBox UC scenario 3 with Wazuh</a>, <a href="TRA.html#TRA-011">TRA-011</a></p>
 <table>
 <thead>
 <tr>
@@ -802,7 +802,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 3 parameters.</li>
 </ol>
-<pre><code> ./adbox.sh -u 3
+<pre><code>  ./adbox.sh -u 3
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -821,7 +821,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </ul>
 </li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-016">TRA-016</a></p>
 <table>
 <thead>
@@ -890,7 +890,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction response should be seen in the output console.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-012">TRA-012</a></p>
 <table>
 <thead>
@@ -959,7 +959,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction response should be seen on the output console.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-015">TRA-015</a></p>
 <table>
 <thead>
@@ -1014,7 +1014,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <h2>Test steps</h2>
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 5 parameters.
- <code>./adbox.sh -u 5</code></li>
+  <code>./adbox.sh -u 5</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
@@ -1026,7 +1026,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction response should be seen on the output console.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037 Anomaly-Based NIDS</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-013">TRA-013</a></p>
 <table>
 <thead>
@@ -1095,7 +1095,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction response should be seen in the output console.</li>
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037 Anomaly-Based NIDS</a></p>
 <p><em>Child links:</em> <a href="TRA.html#TRA-014">TRA-014</a></p>
 <table>
 <thead>
@@ -1148,7 +1148,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with shipping flag.</li>
 </ol>
-<pre><code> ./adbox.sh -s
+<pre><code>  ./adbox.sh -s
 </code></pre>
 <h2>Expected outcome</h2>
 <h3>CLI:</h3>
@@ -1164,8 +1164,8 @@ Exit shipper installation. Check ADBox templates and policy correct installation
 <li><strong>Indexer Management&gt;Index Management&gt;Templates&gt;Component templates</strong> check for presence of base templates<code>component_template_mtad_gat</code>;</li>
 <li><strong>Indexer Management&gt;Index Management&gt;State management policies</strong> check for presence of the policy <code>adbox_detectors_rollover</code>.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-049">SRS-049</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-001">TRB-001</a>, <a href="TRB.html#TRB-008">TRB-008</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-049">SRS-049 Anomaly Shipping to Indexer</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-001">TRB-001 TCER: install ADBox shipping</a></p>
 <table>
 <thead>
 <tr>
@@ -1217,7 +1217,7 @@ Exit shipper installation. Check ADBox templates and policy correct installation
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox use case 12 with shipping flag.</li>
 </ol>
-<pre><code> ./adbox.sh -u 12 -s
+<pre><code>  ./adbox.sh -u 12 -s
 </code></pre>
 <h2>Expected outcome</h2>
 <h3>CLI:</h3>
@@ -1258,7 +1258,7 @@ Prediction ended
 <li><strong>Indexer Management&gt;Data streams</strong> check if <code>adbox_detector_mtad_gat_{detector_id}</code> is there and contains at least a document.
       <img alt="Dashboard" src="assets/TST-18-detector-stream.png" width="80%" /></li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-042">SRS-042</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a></p>
 <table>
 <thead>
 <tr>
@@ -1334,7 +1334,7 @@ be accessed by the following command.
 <li>In the container's bash run the following command to read Suricata log files.
   <code>tail /var/log/suricata/suricata.log</code></li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-008">SRS-008</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-008">SRS-008 Dockerized NIDS Deployment</a></p>
 <table>
 <thead>
 <tr>
@@ -1423,7 +1423,7 @@ the background (with -d option)</li>
 <p>The Wazuh dashboard is accessible through any browser, on the IP address of the system that it is deployed on.</p>
 </li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-001">SRS-001</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-001">SRS-001 Centralized C&amp;C Deployment</a></p>
 <table>
 <thead>
 <tr>
@@ -1511,7 +1511,7 @@ by running the command:
 sudo systemctl status wazuh-agent.</li>
 <li>On the Wazuh Dashboard the Agent should appear as active in the summary page.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-003">SRS-003</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-003">SRS-003 HIDS Agent Deployment</a></p>
 <table>
 <thead>
 <tr>
@@ -1593,7 +1593,7 @@ by running the command:
 sudo systemctl status wazuh-agent.</li>
 <li>On the Wazuh Dashboard the Agent should appear as active in the summary page.</li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-023">SRS-023</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-023">SRS-023 Agent Registration Process</a></p>
 <table>
 <thead>
 <tr>
@@ -1684,7 +1684,7 @@ work.</li>
 <li>The removal can be confirmed by entering <code>L</code> and pressing ENTER to
   verify its absence from the <em>Available Agents listing</em>.</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-004">SRS-004</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-004">SRS-004 HIDS Agent Management</a></p>
 <table>
 <thead>
 <tr>
@@ -1762,7 +1762,7 @@ agents on the Wazuh Dashboard.</li>
 machine, which can be checked by the following command.
 <code>sudo /var/ossec/bin/manage_agents -l</code></li>
 </ul>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-004">SRS-004</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-004">SRS-004 HIDS Agent Management</a></p>
 <table>
 <thead>
 <tr>
@@ -1872,7 +1872,7 @@ Value, write <em>suricata</em>.</li>
 <p>-The alert generated by Suricata for the malicious traffic should be seen on
 the Wazuh Dashboard <strong>Threat Hunting</strong>.
 - After filter application, all alerts generated by suricata should be visible.</p>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-010">SRS-010</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-010">SRS-010 Centralized Threat Management</a></p>
 <table>
 <thead>
 <tr>
@@ -1955,7 +1955,7 @@ interface.</li>
 <h2>Expected outcome</h2>
 <p>tcpdump output should show that machine 1 receives both the ingress and
 egress ICMP packets from machine 2, encapsulated within GRE packets</p>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-007">SRS-007</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-007">SRS-007 Raw Traffic Capture</a></p>
 <table>
 <thead>
 <tr>
@@ -2029,7 +2029,7 @@ https://raw.githubusercontent.com/3CORESec/testmynids.org/master/tmNIDS -o /tmp/
 <h2>Expected outcome</h2>
 <p>The alert generated by Suricata for the malicious traffic should be seen on
 the Wazuh Dashboard.</p>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011 Network Event Visualization</a></p>
 <table>
 <thead>
 <tr>
@@ -2088,8 +2088,7 @@ the Wazuh Dashboard.</p>
 <li>GNU nano, version 6.2</li>
 <li>curl version 7.81.0</li>
 <li>Wazuh agent configured to integrate with Suricata</li>
-<li>GRE tunnel created from the remote machine to the local monitoring  machine which mirrors all the ingress and egress network traffic from the
-  remote machine to the local monitoring machine</li>
+<li>GRE tunnel created from the remote machine to the local monitoring  machine which mirrors all the ingress and egress network traffic from the remote machine to the local monitoring machine</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -2097,13 +2096,10 @@ the Wazuh Dashboard.</p>
 <p>Generate some malicious network traffic on the remote monitored machine
   by sending a curl request to the following tool.
   <code>curl -sSL
-   https://raw.githubusercontent.com/3CORESec/testmynids.org/master/tmNIDS -o /tmp/tmNIDS &amp;&amp; chmod +x /tmp/tmNIDS &amp;&amp; /tmp/tmNIDS</code></p>
+    https://raw.githubusercontent.com/3CORESec/testmynids.org/master/tmNIDS -o /tmp/tmNIDS &amp;&amp; chmod +x /tmp/tmNIDS &amp;&amp; /tmp/tmNIDS</code></p>
 </li>
 <li>
-<p>Enter any number from 1 to 11 to generate the respective traffic on the console.
-  ## Expected outcome
-  The alert generated by Suricata for the malicious traffic should be seen on
-  the Wazuh Dashboard.</p>
+<p>Enter any number from 1 to 11 to generate the respective traffic on the console.</p>
 </li>
 <li>
 <p>On the Wazuh dashboard, filter the alerts to see the events particularly related to the remote machine.
@@ -2111,10 +2107,16 @@ the Wazuh Dashboard.</p>
 </li>
 </ol>
 <p><strong>Note</strong> that after creating the tunnel there could be a possible delay of some minutes between the creation of the tunnel and the display of the events on the Wazuh dashboard.</p>
-<p>## Expected outcome
-  - The alert generated by Suricata for the malicious traffic should be seen on the Wazuh Dashboard.
-  - The filter application should show the Suricata alert for the test traffic that was run.</p>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011</a></p>
+<h2>Expected outcome</h2>
+<p>Step 2.</p>
+<p>The alert generated by Suricata for the malicious traffic should be seen on
+  the Wazuh Dashboard.</p>
+<p>Step 3.</p>
+<ul>
+<li>The alert generated by Suricata for the malicious traffic should be seen on the Wazuh Dashboard.</li>
+<li>The filter application should show the Suricata alert for the test traffic that was run.</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011 Network Event Visualization</a></p>
 <table>
 <thead>
 <tr>
@@ -2240,7 +2242,7 @@ credentials on the Wazuh dashboard.</p>
 <p>-The Wazuh dashboard should show "Invalid username or password.
 Please try again." error while trying to login with the old password.
 - The Wazuh dashboard should be accessible through the new password.</p>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-016">SRS-016</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-016">SRS-016 Indexer Credential Management</a></p>
 <table>
 <thead>
 <tr>
@@ -2338,7 +2340,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
   <code>{"title": "Unauthorized", "detail": "Invalid credentials"}</code></li>
 <li>The token can be successfully obtained using the new password.</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-016">SRS-016</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-016">SRS-016 Indexer Credential Management</a></p>
 <table>
 <thead>
 <tr>
@@ -2412,7 +2414,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 <ol>
 <li>The output of the query should show JSON decoded logs and in the last there should be a success message. "message: Logs were successfully read, error: 0"</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-024">SRS-024</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-024">SRS-024 Event Querying Capability</a></p>
 <table>
 <thead>
 <tr>
@@ -2480,7 +2482,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 <ol>
 <li>The output of the query should show JSON decoded logs and in the last there should be a success message. "message: Logs were successfully read, error: 0"</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-011">SRS-011 Network Event Visualization</a></p>
 <table>
 <thead>
 <tr>
@@ -2541,7 +2543,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 <li>The pattern is created. The field names correspond to the prediction outcome fields.</li>
 <li>The data can be navigated using <strong>Discover</strong> dashboard.</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-043">SRS-043</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-043">SRS-043 AD Data Visualization</a></p>
 <table>
 <thead>
 <tr>
@@ -2607,7 +2609,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 Wazuh data ingestor establishing connection to Wazuh...
 Connection with Wazuh established successfully!
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-017">SRS-017</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-017">SRS-017 Custom Data Source</a></p>
 <table>
 <thead>
 <tr>
@@ -2673,7 +2675,7 @@ Connection with Wazuh established successfully!
 Wazuh data ingestor establishing connection to Wazuh...
 Connection with Wazuh established successfully!
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-022">SRS-022</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-022">SRS-022 Indexer Credentials Update</a></p>
 <table>
 <thead>
 <tr>
@@ -2748,7 +2750,7 @@ Connection with Wazuh established successfully!
     ]
   }
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-025">SRS-025</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-025">SRS-025 MITRE ATT&amp;CK Mapping</a></p>
 <table>
 <thead>
 <tr>
@@ -2809,7 +2811,7 @@ Connection with Wazuh established successfully!
 <ol>
 <li>Table showing prediction aver train data</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-030">SRS-030</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-030">SRS-030 AD Results Visualization</a></p>
 <table>
 <thead>
 <tr>
@@ -2866,7 +2868,7 @@ Connection with Wazuh established successfully!
 <ol>
 <li>Graph displaying train_losses.png</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-031">SRS-031</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-031">SRS-031 Training Loss Visualization</a></p>
 <table>
 <thead>
 <tr>
@@ -2946,7 +2948,7 @@ Connection with Wazuh established successfully!
   }</code></p>
 </li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-032">SRS-032</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-032">SRS-032 Predicted Anomalies Visualization</a></p>
 <table>
 <thead>
 <tr>
@@ -2965,7 +2967,7 @@ Connection with Wazuh established successfully!
 </tr>
 <tr>
 <td>verification_method</td>
-<td>Test (T)/Review of design (R)/Inspection (I)/Analysis (A)</td>
+<td>I</td>
 </tr>
 <tr>
 <td>release</td>
@@ -2988,13 +2990,13 @@ Connection with Wazuh established successfully!
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Open the <code>docs\traceability\HARC.html</code> file using the browser</li>
+<li>Open the <code>docs/traceability/HARC.html</code> file using the browser</li>
 </ol>
 <h2>Expected outcome</h2>
 <ol>
 <li>Wab page displaying IDPS architecture diagrams</li>
 </ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-045">SRS-045</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-045">SRS-045 High-Level Architecture Overview</a></p>
 <table>
 <thead>
 <tr>
@@ -3030,6 +3032,53 @@ Connection with Wazuh established successfully!
 <tr>
 <td>version</td>
 <td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-041">41 Add a short description here <small>TST-041</small></h1>
+<h2>Preconditions and setup actions</h2>
+<p>-</p>
+<h2>Test steps</h2>
+<ol>
+<li>follow steps in SRS.</li>
+</ol>
+<h2>Expected outcome</h2>
+<p>1.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>Test (T)/Review of design (R)/Inspection (I)/Analysis (A)</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1-5</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.1</td>
 </tr>
 </tbody>
 </table>

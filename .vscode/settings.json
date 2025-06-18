@@ -1,0 +1,10 @@
+{
+    "cSpell.enabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./A/a",
+        "-p",
+        "test_*.py"
+    ],
+}

@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Multivariate Anomaly Detection'
 importance: '5'
 level: 4
 links: []

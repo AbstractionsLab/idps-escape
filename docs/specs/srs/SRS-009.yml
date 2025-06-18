@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: null
-header: ''
+header: 'Signature-Based HIDS'
 importance: '5'
 level: 9
 links:

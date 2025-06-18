@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Data Collection Scalability'
 importance: '3'
 level: 29
 links: []

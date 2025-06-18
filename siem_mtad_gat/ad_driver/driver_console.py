@@ -24,9 +24,9 @@ class Console:
         
         while True: 
             print("\nEnter a number and press enter to select an ADBox action to perform:")
-            print("1. Train an anomaly detector.")
-            print("2. Predict anomalies using one of the avaliable detectores detector.")
-            print("3. Select an existing anomaly detector for prediction.")
+            print("1. Train an anomaly detector")
+            print("2. Predict anomalies using one of the available detectors")
+            print("3. Select an existing anomaly detector for prediction")
             print("4. Exit")
             
             action = input("Enter a number (1-4): ").strip()
@@ -173,13 +173,13 @@ class Console:
     def select_input_training(self) -> int | None:
         """
         Prompts the user to select an input for training detector.
-        Returns use-case number.
+        Returns use case number.
         """    
         print("\nBy default, the detector model will be trained using a default configuration provided in the default configuration file.") 
-        change_input = input("Do you wish to use a different use-case? (y/n): ").strip().lower()
+        change_input = input("Do you wish to use a different use case? (y/n): ").strip().lower()
         
         if change_input == 'y':
-            interactive=input("Do you want to define a new use-case?  Otherwise you will be able to select one of the avaliable use-cases. (y/n):").strip().lower()
+            interactive=input("Do you want to define a new use case? Otherwise you will be able to select one of the available use cases. (y/n):").strip().lower()
             if interactive == 'n':
                 uc_n = input(f"Enter the number of the YAML configuration file (e.g., uc_1.yaml). The driver will look for YAML files in the drivers folder {settings.DRIVERS_FOLDER} :").strip()
             else:

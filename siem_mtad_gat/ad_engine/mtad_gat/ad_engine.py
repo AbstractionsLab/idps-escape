@@ -164,7 +164,7 @@ class ADEngine:
                                         If None the pipeline should return None.
         
         Returns:
-            dict or None: Stastics about training.                               
+            dict or None: Statistics about training.                               
         """
         if training_request is None: 
             EscapeInfo(ERROR_TRAIN_REQUEST_NONE,logger)

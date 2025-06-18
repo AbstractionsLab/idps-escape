@@ -28,7 +28,7 @@ Below we explain the purpose for files in each folder and how they should be con
  by the data shipper to return predictions back to Wazuh.
 6. **wazuh:** This folder contains `wazuh_columns.json` file. This json file contains a column dictionary which represents all the fields that ADBox  fetches from Wazuh and the datatype in which they are converted to since Wazuh treats all values as keywords. This file is also advised not to be modified. 
 
-### SIEM and IDPS installations 
+### SIEM and IDPS installations
 
 The ADBox uses a SIEM to fetch data, which should be integrated with a signature based IDPS. The installation process all the mentioned components can be followed from the following links. 
 
@@ -36,6 +36,7 @@ The ADBox uses a SIEM to fetch data, which should be integrated with a signature
 2. [Installation of Wazuh distribution](../../deployment/wazuh/wazuh_installation.md)
 3. [Installation of Wazuh agent](../../deployment/wazuh//wazuh_agents.md)
 4. [Integration of Wazuh with Suricata](../../deployment/README.md)
+5. [Wazuh command monitoring, decoders and rules for Linux resource usage](./linux_resource.md)
 	
 Once all the above requirements are fulfilled, the credentials to connect to the Wazuh distribution can be provided in the `wazuh_credentials.json` file in this folder. 
 The json file contains 4 keys, whose values should be as following: 
@@ -50,4 +51,5 @@ ADBox will use these credentials to connect to Wazuh distribution and retrieve d
 ### Prerequisites
 
 - Set the Wazuh credentials in the `./siem_mtad_gat/assets/secrets/wazuh_credentials.json` file. If not set or if ADBox is not able to form a connection with the Wazuh API, then it will use the default data stored in the repository and will only run in HISTORICAL detection mode. For BATCH and REALTIME mode, it is mandatory to set these values.  
-  
+
+- Note that in order to be able to run many of our predefined anomaly detection use case scenarios, certain instrumentation functionality in Wazuh would have to be enabled first. More specifically, Wazuh command monitoring, decoders and rules would have to be defined such that the deployed agents collect resource usage information, communicate this to the centralized Wazuh manager and for the latter to be able to decode these and include them in indices that can then be ingested by the ADBox. See our [dedicated manual page](./linux_resource.md) for enabling Linux resource usage to learn how to set things up. Also, **note** that once this has been set up, your Wazuh instance needs to run for a while to collect and accumulate alerts, which will then be used by the training pipeline of ADBox to train and build predictive models.

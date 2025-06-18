@@ -1,27 +1,33 @@
 # IDPS-ESCAPE user manual
 
-IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into providing a comprehensive package fulfilling the roles of a Security Orchestration, Automation, and Response (SOAR) system, a Security Information and Event Management (SIEM), and an Intrusion Detection and Prevention System (IDPS), with a central subsystem dealing with anomaly detection (AD) based on state-of-the-art advances in artificial intelligence such as the attention mechanism in machine learning (ML). We call this AD subsystem "**ADBox**", which comes with out-of-the-box integration with well-known open-source solutions such as [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) for enriching alerts, and to [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
+IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into providing a comprehensive package that implements a Security Orchestration, Automation, and Response (SOAR) system.
 
-Our extensible **ADBox** framework and implementation also include a Multivariate Time-series Anomaly Detection (MTAD) algorithm relying on Graph Attention Networks (GAT).
+This resulting SOAR system combines following building blocks: a Security Information and Event Management (SIEM) system, an Intrusion Detection and Prevention System (IDPS), Cyber Threat Intelligence (CTI) tools, an anomaly detection (AD) subsystem, called [**ADBox**](/docs/manual/README.md), and a Risk-aware AD-based Active Response ([**RADAR**](/soar-radar/README.md)) subsystem providing AD scenario implementations, coupled with active response solutions and SOAR playbooks facilitating security orchestration.
 
-# Signature-based network and host IDPS and SIEM
+We adopt a hybrid method aimed at robustness and resilience to adversarial interference involving three elements: (i) signature-based detection with (ii) AD based on deep learning models via MTAD-GAT, relying on state-of-the-art advances in artificial intelligence (AI) and machine learning (ML) such as the *attention mechanism* and (iii) a classical algorithm for AD on streams such as the Robust Random Cut Forest (RRCF) algorithm supporting categorical features.
+
+## Signature-based network and host IDPS and SIEM
 
 To achieve comprehensive monitoring capabilities, we combine Suricata, an open-source Network Intrusion Detection System (NIDS), and Wazuh, a cybersecurity platform that integrates SIEM and XDR capabilities.
 
 See the [Instructions for IDPS and SIEM integrated deployment](../../deployment/README.md).
 
-# ADBox
+## ADBox and RADAR
 
 The two major missions of ADBox are to:
 
 1. perform core time-series anomaly detection operations via ML;
 2. manage the data flow from the indexer to the core machine learning algorithm, and back to the SIEM.
 
+The [RADAR](/soar-radar/README.md) subsystem provides solutions for completing the SOAR 
+mission of IDPS-ESCAPE enabling security orchestration and automation driven by a 
+Risk-informed AD-based active response (AR) paradigm.
+
 ## Table of contents
 
 - [Install](/docs/manual/installation.md)
 - [Setup and prerequisites](/docs/manual/setup_and_prerequisites.md)
-- [User guide](/docs/manual/user_guide.md)
+- [Quick start](/docs/manual/quick_start.md)
 - [Use case definition guide](/docs/manual/use_case.md)
 - [Anomaly detection engine](/docs/manual/engine.md)
 - [MTAD-GAT](/docs/manual/mtad_gat.md)
@@ -32,6 +38,8 @@ The two major missions of ADBox are to:
 - [Wazuh ADBox integration](/docs/manual/detector_data_stream.md)
 - [Example](/docs/manual/example.md)
 - [Detector dashboard tutorial](/docs/manual/dashboard_tutorial.md)
+- [SOAR-RADAR](/soar-radar/README.md)
+- [Integrations](/integrations/README.md)
 - [Data cleaning](/docs/manual/data_cleaning.md)
 - [Glossary](/docs/manual/glossary.md)
 
@@ -40,7 +48,7 @@ The two major missions of ADBox are to:
 
 - **Install.** Instructions to install ADBox.
 - **Setup and prerequisites.** List of configuration files and prerequisites to complete the deployment of ADBox and to be able to create and run detectors.
-- **User guide**. 
+- **Quick start**. A concise description of how to get started with AD scenario selection and training/prediction pipeline execution.
 - **Use case definition guide**. Via ADBox it is possible to create, use and maintain detectors which ingest data and analyze them. The user can simply define the parameters via *use-case* configuration files and feed them to the ADBox entry point. This page contains the instructions for understanding and defining use-case files.
 - **Anomaly detection engine.** The anomaly detection engine is the core component of ADBox. In fact, for every available anomaly detection method it orchestrates the interaction between the bulk functions of every algorithm, the data ingestion, data storage, user output, etc. In other words, the engine determines the sequence of actions to be performed to successfully go through the detection pipeline. This page also gives an overview of the training and prediction pipelines.
 - **MTAD-GAT.** ADBox incorporates machine learning algorithms for AD. Currently, the MTAD-GAT algorithm is supported. This page gives a high-level overview.
@@ -51,7 +59,9 @@ The two major missions of ADBox are to:
 - **Wazuh ADBox integration**. A **detector data stream** is a Wazuh data stream index storing the prediction output. Via detector data streams we can interact with ADBox detection directly using the Wazuh Dashboard.
 - **Example**. A simple example of ADBox usage from use-case definition to output analysis using a Jupyter notebook. This example uses data from HIDS and includes [Monitoring Linux resource usage](/docs/manual/linux_resource.md).
 - **Detector dashboard tutorial**. A complete tutorial from use-case definition to building custom Wazuh Dashboard visualization.
-- **Data cleaning**. Removing outdated detectors.
-- **Glossary**. Summary of specific terminology used in this manual.
+- **RADAR (Risk-aware Anomaly Detection-based Active Response)**: a collection of modules that complete the Security Orchestration, Automation and Response ([**SOAR**](/soar-radar/README.md)) mission of IDPS-ESCAPE.
+- **Integrations**: Artifacts (manuals, Docker compose files, configuration files, code and scripts) for integrating other tools with IDPS-ESCAPE, e.g., MISP, OpenCTI, OpenBAS, [SATRAP](https://github.com/AbstractionsLab/satrap-dl) and [OpenTRICK](https://github.com/itrust-consulting/OpenTRICK).
+- **Data cleaning**. Tool for removing outdated detectors.
+- **Glossary**. A summary of specific terminology used in this manual.
 
 ![ADBox high level architecture](../specs/harc/assets/1B3A4_DIA_IDPS_ESCAPE_ADBoxDiagrams-ADBox-components_v1.3.png "ADBox high level architecture")

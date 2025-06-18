@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Data Extraction API'
 importance: '4'
 level: 14
 links: []

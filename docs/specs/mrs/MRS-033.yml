@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'API Data Retrieval'
 importance: '4'
 level: 33
 links: []
@@ -13,7 +13,7 @@ ref: ''
 release: Alpha
 reviewed: cgA_-IcutOo6cpCTNhO33gzWqXDDqz4nLjQkn4HC2AQ=
 text: |
-  The AD subsystem SHALL retrieves data retrieved via the IDPS-ESCAPE API.
+  The AD subsystem SHALL retrieve data via the IDPS-ESCAPE API.
 type: F
 urgency: '5'
 vm: T

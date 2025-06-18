@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '1'
-header: ''
+header: 'Centralized C&C Deployment'
 importance: '5'
 level: 1
 links:

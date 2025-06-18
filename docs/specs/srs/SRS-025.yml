@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: null
-header: ''
+header: 'MITRE ATT&CK Mapping'
 importance: '2'
 level: 25
 links:

@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '3'
-header: ''
+header: 'Custom NIDS Rules'
 importance: '3'
 level: 36
 links:

@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: '3rd-Party Open-source Signature-based NIDS'
 importance: '2'
 level: 19
 links: []

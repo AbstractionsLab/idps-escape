@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '2'
-header: ''
+header: 'Offline Anomaly Detection'
 importance: '4'
 level: 35
 links:

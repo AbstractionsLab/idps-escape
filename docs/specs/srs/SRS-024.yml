@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: null
-header: ''
+header: 'Event Querying Capability'
 importance: '2'
 level: 24
 links:

@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '2'
-header: ''
+header: 'Training Loss Visualization'
 importance: '1'
 level: 31
 links:

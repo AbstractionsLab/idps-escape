@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '2'
-header: ''
+header: 'Raw Traffic Capture'
 importance: '5'
 level: 7
 links:

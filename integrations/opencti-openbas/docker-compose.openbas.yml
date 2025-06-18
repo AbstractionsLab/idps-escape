@@ -1,0 +1,110 @@
+networks:
+  opencti-wazuh-network:
+    external: true
+services:
+  pgsql:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: openbas
+    volumes:
+      - pgsqldata:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "openbas" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - opencti-wazuh-network
+  minio-openbas:
+    image: minio/minio:RELEASE.2024-05-28T17-19-04Z
+    volumes:
+      - s3data:/data
+    ports:
+      - "9100:9000"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data
+    restart: always
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - opencti-wazuh-network
+  openbas:
+    image: openbas/platform:1.13.1
+    environment:
+      # OpenBAS General Configuration
+      - SERVER_SSL_KEY-STORE-PASSWORD=${KEYSTORE_PASSWORD}
+      - OPENBAS_BASE-URL=http://localhost:8081
+      - OPENBAS_AUTH-LOCAL-ENABLE=true
+      - OPENBAS_ADMIN_EMAIL=${OPENBAS_ADMIN_EMAIL}
+      - OPENBAS_ADMIN_PASSWORD=${OPENBAS_ADMIN_PASSWORD}
+      - OPENBAS_ADMIN_TOKEN=${OPENBAS_ADMIN_TOKEN}
+      - SERVER_CONNECTION_TIMEOUT=60000  # Increase timeout to 60 seconds
+      - SERVER_CONNECTION_KEEP_ALIVE_TIMEOUT=30000
+      # POSTGRES
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pgsql:5432/openbas
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      # MINIO
+      - MINIO_ENDPOINT=minio-openbas
+      - MINIO_ACCESS-KEY=${MINIO_ROOT_USER}
+      - MINIO_ACCESS-SECRET=${MINIO_ROOT_PASSWORD}
+      # RABBITMQ
+      - OPENBAS_RABBITMQ_HOSTNAME=rabbitmq
+      - OPENBAS_RABBITMQ_USER=${RABBITMQ_DEFAULT_USER}
+      - OPENBAS_RABBITMQ_PASS=${RABBITMQ_DEFAULT_PASS}
+      - OPENBAS_RABBITMQ_PORT=5672
+      - OPENBAS_RABBITMQ_VHOST=openbas
+      # SPRING MAIL Configurations
+      - SPRING_MAIL_HOST=${SPRING_MAIL_HOST}
+      - SPRING_MAIL_PORT=${SPRING_MAIL_PORT}
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST=*
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE}
+      # IMAP Configurations
+      - OPENBAS_MAIL_IMAP_ENABLED=${OPENBAS_MAIL_IMAP_ENABLED}
+      - OPENBAS_MAIL_IMAP_HOST=${OPENBAS_MAIL_IMAP_HOST}
+      - OPENBAS_MAIL_IMAP_PORT=${OPENBAS_MAIL_IMAP_PORT}
+      - OPENBAS_MAIL_IMAP_USERNAME=${SPRING_MAIL_USERNAME}
+      - OPENBAS_MAIL_IMAP_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - OPENBAS_MAIL_IMAP_AUTH=${OPENBAS_MAIL_IMAP_AUTH}
+      - OPENBAS_MAIL_IMAP_SSL_ENABLE=${OPENBAS_MAIL_IMAP_SSL_ENABLE}
+      - OPENBAS_MAIL_IMAP_SSL_TRUST=*
+      - OPENBAS_MAIL_IMAP_STARTTLS_ENABLE=${OPENBAS_MAIL_IMAP_STARTTLS_ENABLE}
+      - OPENBAS_XTM_OPENCTI_TOKEN=${OPENBAS_XTM_OPENCTI_TOKEN}
+      - OPENBAS_XTM_OPENCTI_ENABLE=${OPENBAS_XTM_OPENCTI_ENABLE}
+      - OPENBAS_XTM_OPENCTI_URL=${OPENBAS_XTM_OPENCTI_URL}
+    ports:
+      - "8081:8080"
+    networks:
+      - opencti-wazuh-network
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      minio-openbas:
+        condition: service_healthy
+    restart: always
+  collector-mitre-attack:
+    image: openbas/collector-mitre-attack:1.13.1
+    networks:
+      - opencti-wazuh-network
+    environment:
+      - OPENBAS_URL=http://openbas:8080
+      - OPENBAS_TOKEN=${OPENBAS_ADMIN_TOKEN}
+      - COLLECTOR_ID=${COLLECTOR_MITRE_ATTACK_ID} # Valid UUIDv4
+      - "COLLECTOR_NAME=MITRE ATT&CK"
+      - COLLECTOR_LOG_LEVEL=info
+    restart: always
+volumes:
+  pgsqldata:
+  s3data:

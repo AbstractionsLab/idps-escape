@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '1'
-header: ''
+header: 'Predicted Anomalies Visualization'
 importance: '4'
 level: 32
 links:

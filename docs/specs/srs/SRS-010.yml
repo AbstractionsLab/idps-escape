@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: null
-header: ''
+header: 'Centralized Threat Management'
 importance: '5'
 level: 10
 links:

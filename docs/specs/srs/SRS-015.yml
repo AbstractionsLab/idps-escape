@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '4'
-header: ''
+header: 'Custom Rule Support'
 importance: '2'
 level: 15
 links:

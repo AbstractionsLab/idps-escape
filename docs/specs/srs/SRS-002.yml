@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '1'
-header: ''
+header: 'Endpoint Status Monitoring'
 importance: '5'
 level: 2
 links:

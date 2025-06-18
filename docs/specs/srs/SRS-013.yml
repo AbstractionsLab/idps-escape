@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: null
-header: ''
+header: 'HIDS Agent Status Panel'
 importance: '3'
 level: 13
 links:

@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '3'
-header: ''
+header: 'Anomaly-Based NIDS'
 importance: '4'
 level: 37
 links:

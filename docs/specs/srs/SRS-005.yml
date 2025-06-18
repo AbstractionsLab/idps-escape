@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '3'
-header: ''
+header: 'Network Monitoring Control'
 importance: '5'
 level: 5
 links:

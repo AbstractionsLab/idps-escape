@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Network Endpoint Monitoring'
 importance: '4'
 level: 22
 links: []

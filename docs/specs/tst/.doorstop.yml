@@ -1,6 +1,6 @@
 settings:
   digits: 3
-  itemformat: yaml
+  itemformat: markdown
   parent: SRS
   prefix: TST
   sep: '-'
@@ -10,13 +10,12 @@ attributes:
     release: alpha
     header: |
       Add a short description here
-    platform: MacOS, Windows, GNU/Linux
+    platform: GNU/Linux (Dockerized C5-DEC deployment environment)
     authors: 'ACR'
     execution_type: 'Automated/Manual'
     complexity: 1-5
     test_data: see referenced files
     verification_method: 'Test (T)/Review of design (R)/Inspection (I)/Analysis (A)'
-    success_criteria: 'SRS acceptance criteria fulfilled and expected outcome observed.'
     references:
       - path: docs/specs/tst/assets
         type: file
@@ -33,7 +32,6 @@ attributes:
     version: 0.1
   publish:
   - platform
-  - precondition
   - execution_type
   - verification_method
   - release
@@ -42,6 +40,6 @@ attributes:
   - version
   reviewed:
   - authors
-  - precondition
   - execution_type
   - verification_method
+  - text

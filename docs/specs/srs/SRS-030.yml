@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '1'
-header: ''
+header: 'AD Results Visualization'
 importance: '2'
 level: 30
 links:

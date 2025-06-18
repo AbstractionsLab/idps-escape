@@ -83,7 +83,7 @@ To enroll Wazuh agents via agent configuration, follow these steps for a Unix/Li
 	To find the docker host address IP, run:
         
 		```sh
-		  sudo docker network inspect bridge | grep Gateway` 
+		sudo docker network inspect bridge | grep Gateway
 		``` 
 	
 	Or alternatively.

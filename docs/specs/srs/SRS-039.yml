@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '2'
-header: ''
+header: 'Algorithm Selection Option'
 importance: '3'
 level: 39
 links:

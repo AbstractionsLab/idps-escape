@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '1'
-header: ''
+header: 'Host Event Visualization'
 importance: '3'
 level: 12
 links:

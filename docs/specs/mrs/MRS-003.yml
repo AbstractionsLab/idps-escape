@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Agent Data Centralization'
 importance: '5'
 level: 3
 links: []
@@ -13,7 +13,7 @@ ref: ''
 release: Alpha
 reviewed: MbDfgrdzfC2Mk9ADobhu5OjCFeQsCaMiAjfLxd4LwMU=
 text: |
-  The IDPS-ESCAPE system architecture SHALL define end-point monitoring agents/sensors that gather host and network data and relay the said data back to the C&C.
+  The IDPS-ESCAPE system architecture SHALL include end-point monitoring agents/sensors that gather host and network data and relay the said data back to the C&C.
 type: A
 urgency: '5'
 vm: R

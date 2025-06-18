@@ -4,7 +4,7 @@ active: true
 dependence: []
 derived: false
 difficulty: '1'
-header: ''
+header: 'Default Detector Training'
 importance: '2'
 level: 48
 links:

@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '3'
-header: ''
+header: 'Dockerized NIDS Deployment'
 importance: '3'
 level: 8
 links:

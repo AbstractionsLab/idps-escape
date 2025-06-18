@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Host-based Intrusion Detection'
 importance: '5'
 level: 5
 links: []

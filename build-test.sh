@@ -1,3 +1,3 @@
 #!/bin/bash
 echo Building CyFORT-ADBox image for testing...
-docker build -t siem-mtad-gat-test:v0.1.4 -f test.Dockerfile .
+docker build -t siem-mtad-gat-test:v0.3.0 -f test.Dockerfile .

@@ -1,3 +1,23 @@
+# 0.3 (2025-06-18)
+
+## Added
+
+- Risk-aware Anomaly Detection-based Active Response (RADAR) scenarios towards the SOAR mission of IDPS-ESCAPE, stored in the `soar-radar` folder at the root
+- Integration artifacts for Wazuh, OpenCTI and OpenBAS: `integrations` folder at the root
+- C5-DEC publishing code to the tech specs folder
+- Manual pages for the RADAR subsystem and CTI integrations to the `soar-radar` and `integrations` folders at the root, respectively
+
+## Modified
+
+- Technical specifications and traceability: added headers to all MRS, SRS and TRB items
+- User manual: revisions throughout but mainly the project README, the setup and prerequisites manual page to detail dependencies for resource usage anomaly detection
+- Various MRS, SRS, TST and TRB items to improve content and accuracy
+- Traceability: regenerated all HTML pages providing artifact traceability
+
+## Fixed
+
+- Errors in the test case specifications
+
 # 0.2 (2025-01-24)
 
 ## Added

@@ -1,32 +1,74 @@
 settings:
   digits: 3
-  itemformat: yaml
+  itemformat: markdown
   parent: TST
   prefix: TRB
   sep: '-'
 
 attributes:
   defaults:
-    test_date: 'yyyy-mm-dd'
-    tester: ''
-    defect_category: '[0-4]'
-    defect_description: ''
-    comments: ''
+    test-date: 'yyyy-mm-dd'
+    tester: 'ACR'
+    defect-category: '0 = flawless; 1 = insignificant defect; 2 = minor defect; 3 = major defect; 4 = critical defect'
+    passed-steps: '0'
+    failed-steps: '0'
+    not-executed-steps: '0'
+    release-version: '1.0'
+    verification-method: 'T/R/I/A'
+    references:
+      - path: docs/specs/c5-keyword.py
+        type: file
+    header: |
+      Add a short description here
     text: |
-      Test execution results for the test case (TST) referred in the parent link.
-      ## Test environment details
-      - vm-cyfort-idps-escape
+      ## Relevant test environment and configuration details
+
+      - Software deviations: aligned with test case specification, N/A
+      - Hardware deviations: aligned with test case specification, N/A
+
+      ## Test execution results
+
+      Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.
+
+      **Test case step 1**: Verify that...
+
+      - ?c5-defect-0 OR ?c5-defect-1 OR ?c5-defect-2 OR ?c5-defect-3 OR ?c5-defect-4
+
+      ### Defect summary description
+      
+      Defect-free test execution, i.e., defect category: ?c5-defect-0 OR ?c5-defect-1 OR ?c5-defect-2 OR ?c5-defect-3 OR ?c5-defect-4
+
+      ### Text execution evidence
+      
+      See linked files (if any), e.g., screenshots, logs, etc.
+
+      ### Comments
+      
+      Any additional informative details not fitting in the above sections.
+
+      ## Guide
+
+      - Defect category: ?c5-defect-0; ?c5-defect-1; ?c5-defect-2; ?c5-defect-3; ?c5-defect-4
+      - Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)
 
   publish:
-    - test_date
+    - test-date
     - tester
-    - defect_category
-    - defect_description
-    - comments
+    - defect-category
+    - passed-steps
+    - failed-steps
+    - not-executed-steps
+    - release-version
+    - verification-method
   
   # attributes to be considered for the item's fingerprint,
   # the fingerprint is used to detect unreviewed changes to an item
   reviewed:
-    - test_date
-    - defect_category
-    - defect_description
+    - test-date
+    - tester
+    - defect-category
+    - passed-steps
+    - failed-steps
+    - not-executed-steps
+    - release-version
+    - verification-method

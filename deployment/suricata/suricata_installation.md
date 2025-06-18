@@ -1,25 +1,28 @@
 # Installation and configuration of CyFORT-Suricata
-The process of installing Suricata within a containerized environment consist of:
 
-1. Install all [requirements](#requirements)
-1. Pull [docker image](#suricata-docker-image) `Dockerfile` from the the folder [deployment/suricata](deployment/suricata)
-1. Pull Suricata config file `suricata.yaml` and adapt Suricata config file to local network.
-1. Build Docker Container
-1. Run container
+The process of installing Suricata within a containerized environment consists of the following:
 
-We advice to create a dedicate root folder to store docker image and docker file.
+1. Install all [requirements](#requirements).
+1. Pull [docker image](#suricata-docker-image) `Dockerfile` from the folder [deployment/suricata](/deployment/suricata).
+1. Pull Suricata config file `suricata.yaml` and adapt it to the local network settings.
+1. Build the Suricata Docker Container.
+1. Run the container.
+
+We recommend creating a dedicated root folder to store the Docker image and Dockerfile.
 
 ## Requirements
+
 The following pieces of software are necessary for the installation of Suricata. 
 1. [Docker Engine](https://docs.docker.com/engine/install/ubuntu/)  
 
 
-
 ## Suricata Docker Image 
+
 In order to install Suricata inside a docker container, you will find a custom Dockerfile in this folder to build the Suricata docker image. An image is a read-only template with instructions for creating a Docker container. The approach to build a custom image is driven from the idea that we should be able to to control the privileges and capabilities we provide to this image for the purpose of security and minimization. 
 
 
 ## Suricata Configuration File
+
 In order to configure Suricata container with the desired configurations instead of the default ones, we need to provide the suricata.yaml config file to the image which can also be seen in this directory. The image requires a suricata.yaml config file to be present in the same directory as the Dockerfile.  
 
 However, the file still needs to be edited to provide the default host network interface since it would be different on different machines, on which we want to monitor the traffic, we configure the&nbsp;_af\_packet_ section of the configuration file.

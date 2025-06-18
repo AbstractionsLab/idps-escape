@@ -1,14 +1,16 @@
 # IDPS-ESCAPE
 
-IDPS-ESCAPE, short for Intrusion Detection and Prevention Systems for Evading Supply Chain Attacks and Post-compromise Effects, is a sub-project of the [CyFORT](https://abstractionslab.com/index.php/research-and-development/cyfort/) project, which in turn stands for Cloud Cybersecurity Fortress of Open Resources and Tools for Resilience. CyFORT is carried out in the context of the [IPCEI-CIS](https://ec.europa.eu/commission/presscorner/detail/en/ip_23_6246) project, with further details available [here](https://www.bmwk.de/Redaktion/EN/Artikel/Industry/ipcei-cis.html).
+IDPS-ESCAPE, short for Intrusion Detection and Prevention Systems for Evading Supply Chain Attacks and Post-compromise Effects, is a sub-project of the [CyFORT](https://abstractionslab.com/index.php/research-and-development/cyfort/) project, which in turn stands for Cloud Cybersecurity Fortress of Open Resources and Tools for Resilience. CyFORT is carried out in the context of the [IPCEI-CIS](https://ec.europa.eu/commission/presscorner/detail/en/ip_23_6246) project. 
 
 <img src="./docs/manual/_figures/CyFORT-IDPS-ESCAPE-logo.png" alt="cyfort_logo" width="500"/>
 
-IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into providing a comprehensive package fulfilling the roles of a Security Orchestration, Automation, and Response (SOAR) system, a Security Information and Event Management (SIEM), and an Intrusion Detection and Prevention System (IDPS), with a central subsystem dealing with anomaly detection (AD) based on state-of-the-art advances in artificial intelligence (AI) such as the attention mechanism in machine learning (ML). We call this AD subsystem "**ADBox**", which comes with out-of-the-box integration with well-known open-source solutions such as [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) for enriching alerts, and to [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
+IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into a comprehensive package that implements a Security Orchestration, Automation, and Response (SOAR) system.
 
-Our extensible **ADBox** framework and implementation also include a Multivariate Time-series Anomaly Detection (MTAD) algorithm relying on Graph Attention Networks (GAT).
+The resulting SOAR system combines the following building blocks: a Security Information and Event Management (SIEM) system, an Intrusion Detection and Prevention System (IDPS), Cyber Threat Intelligence (CTI) tools, an anomaly detection (AD) subsystem, called [**ADBox**](/docs/manual/README.md), and a Risk-aware AD-based Active Response ([**RADAR**](/soar-radar/README.md)) subsystem providing AD scenario implementations, coupled with active response solutions and SOAR playbooks facilitating security orchestration.
 
-This repository contains the source code and full documentation (requirements, technical specifications, schematics, [user manual](./docs/manual/README.md), test case specifications and test reports) of IDPS-ESCAPE, based on the [C5-DEC](https://github.com/AbstractionsLab/c5dec) method and software also developed in CyFORT, which relies on storing, interlinking and processing all software development life cycle (SDLC) artifacts in a unified manner; see our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) providing the technical specifications of IDPS-ESCAPE.
+We adopt a hybrid method aimed at robustness and resilience to adversarial interference involving three elements: (i) signature-based detection with (ii) AD based on deep learning models via MTAD-GAT, relying on state-of-the-art advances in artificial intelligence (AI) and machine learning (ML) such as the *attention mechanism* and (iii) a classical algorithm for AD on streams such as the Robust Random Cut Forest (RRCF) algorithm supporting categorical features.
+
+This repository contains the source code and full documentation (requirements, technical specifications, schematics, [user manual](./docs/manual/README.md), validation test case specifications and test reports) of IDPS-ESCAPE, based on the [C5-DEC](https://github.com/AbstractionsLab/c5dec) method and software also developed in CyFORT, which relies on storing, interlinking and processing all software development life cycle (SDLC) artifacts in a unified manner; see our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) providing the technical specifications of IDPS-ESCAPE.
 
 **Table of contents**
 
@@ -17,9 +19,11 @@ This repository contains the source code and full documentation (requirements, t
 - [User manual](#user-manual)
 - [Technical specifications](#documentation-and-technical-specifications)
 - [Getting started](#getting-started)
-- [Usage](#usage)
+- [ADBox usage](#adbox-usage)
 - [Use case scenario example](#example-of-a-use-case-scenario)
 - [Wazuh-ADBox integration and detector dashboard](#wazuh-adbox-integration-and-detectors-dashboard)
+- [RADAR](#radar)
+- [Integrations](#integrations)
 - [Disclaimer](#disclaimer-use-of-alphaexperimental-software)
 - [Testing](#testing)
 - [Roadmap](#roadmap)
@@ -28,30 +32,24 @@ This repository contains the source code and full documentation (requirements, t
 
 ## Overview
 
-IDPS-ESCAPE, part of the CyFORT suite of open-source cybersecurity software solutions, addresses various aspects of cybersecurity as an ensemble, targeting different user groups, ranging from public to private and from CIRT/CSIRT to system administrators.
-The design of IDPS-ESCAPE is targeted to cloud-native deployments, with an eye on CERT/CSIRT-operated monitoring systems.
-
-Moreover, IDPS-ESCAPE is being developed in parallel with another CyFORT sub-project, namely SATRAP-DL, aimed at enhancing cyber threat intelligence (CTI) analysts' work using semi-automated reasoning over CTI. Ultimately, IDPS-ESCAPE is planned to include, among other things, mechanisms for coping with and addressing supply chain and adversarial machine learning attacks.
+IDPS-ESCAPE, part of the [CyFORT](https://abstractionslab.com/index.php/research-and-development/cyfort/) suite of open-source cybersecurity software solutions, addresses various aspects of cybersecurity as an ensemble, targeting different user groups, ranging from public to private and from CERT/CSIRT entities to system administrators, and cloud-native deployments. IDPS-ESCAPE is being developed in parallel with another CyFORT sub-project, namely [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl), aimed at enhancing cyber threat intelligence (CTI) analysts' work using semi-automated reasoning over CTI.
  
-Currently, for the alpha release, the main bulk of this repository is dedicated to a novel open-source and extensively documented anomaly detection (AD) framework, called **ADBox**.
-The ADBox implementation provides a modular and extensible software framework for efficiently integrating ML and AD algorithms and it already comes with a Multivariate Time-series Anomaly Detection (MTAD) algorithm relying on Graph Attention Networks (GAT). 
+As part of the alpha release, the main bulk of this repository is dedicated to a novel open-source and extensively documented anomaly detection (AD) framework, called [**ADBox**](/docs/manual/README.md) and a Risk-aware AD-based Active Response ([**RADAR**](/soar-radar/README.md)) subsystem implementing AD scenarios and automated response to fulfill the SOAR mission of IDPS-ESCAPE.
 
-In addition to providing security practitioners such as SOC operators or CTI analysts with anomaly detection over Wazuh indices (alerts, archives, statistics, etc.) in multiple modes (batch, real-time and historical), it can also be used to simplify and refine the work of security practitioners across several dimensions, e.g.,
+IDPS-ESCAPE builds on top of well-known open-source solutions such as [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) and [OpenCTI](https://github.com/OpenCTI-Platform/opencti) for bidirectional SIEM-TIP enrichment of SIEM alerts and CTI content, and finally [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
 
-- rule management, 
-- events correlation, 
-- alert-to-incident derivation, and, 
-- alert/response policy tuning and mappings to KBs such as MITRE ATT&CK. 
+The ADBox implementation provides a modular and extensible software framework for efficiently integrating ML and AD algorithms and it already comes with a deep learning-based paradigm, namely the Multivariate Time-series Anomaly Detection (MTAD) via Graph Attention Network (GAT) algorithm. We recommend following a hybrid method combining MTAD-GAT with signature-based detection and a classical AD algorithm such as the RRCF-based AD plugin built into OpenSearch that is used by our RADAR subsystem for more robust AD, resilient to adversarial interference, with support for categorical features.
+
+In addition to providing security practitioners such as SOC operators or CTI analysts with anomaly detection over Wazuh indices (alerts, archives, statistics, etc.) in multiple modes (batch, real-time and historical), ADBox and RADAR can be used to simplify and refine the work of security practitioners across several dimensions, e.g.,
+
+- rule management,
+- events correlation,
+- alert-to-incident derivation, and,
+- alert/response policy tuning and mappings to KBs such as MITRE ATT&CK.
 
 ADBox can also be used as a software library to deploy various ML based AD algorithms in different environments, while allowing for a high degree of tailoring thanks to its modular and extensible design. An environment-driven customization can not only contribute to reducing false positives, but it can also help detect suspicious behavior with arguably limited information, or to otherwise provide an investigation entry point dealing with adversarial patterns for which prior signatures or indicators of compromise may not be readily available.
 
-As a consequence, ADBox provides a stepping stone towards settling various controversial statements and at times questionable findings and claims from the academic literature and those made by practitioners in the industry: plug the latest implementation of an ML-based AD algorithm into ADBox, integrate with real-world security tools such as Wazuh, to assess and (in)validate such claims.
-
-The current version of the IDPS-ESCAPE stack consists of 
-- a combined setup integrating state-of-the-art open source _signature-based network and host_ IDPS and SIEM\&XDR, along with
-- ADBox, a custom-designed and implemented _anomaly detection_ subsystem based on novel AI techniques such as the attention mechanism in machine learning; ADBox can be directly integrated into Wazuh such that its prediction results can be consulted using the Wazuh GUI and  dashboards.
-
-Although the IDPS, SIEM and ADBox subsystems can be deployed independently, we recommend a fully integrated deployment. We provide automation scripts and guides for an easy deployment of such setups.
+As a consequence, ADBox also provides a stepping stone towards settling various controversial statements and at times questionable findings and claims from the academic literature and those made by practitioners in the industry: plug in the latest implementation of a deep learning based AD algorithm into ADBox, integrated with a real-world security tool such as Wazuh, to assess and (in)validate such claims.
 
 ## Features
 
@@ -66,7 +64,7 @@ Although the IDPS, SIEM and ADBox subsystems can be deployed independently, we r
 
 ### ADBox
 
-ADBox is a custom-designed and implemented _anomaly detection_ subsystem, with its key features summarized as follows:
+[ADBox](/docs/manual/README.md) is a custom-designed and implemented _anomaly detection_ subsystem, with its key features summarized as follows:
 
 - A data ingestion module capable of fetching data from Wazuh and OpenSearch via a REST API;
 - A data transformation module for preprocessing, data type conversions and data aggregation;
@@ -78,11 +76,23 @@ ADBox is a custom-designed and implemented _anomaly detection_ subsystem, with i
 - A set of AD use-case scenario definitions encoded as YAML files, which can be directly used by the user, but they can also easily form the basis for creating new ones, tailored to the user's preferences for adjusting the training part as well as the prediction part of the ML-based algorithm and pipeline;
 - A data shipper module to integrate the output anomaly detection data into Wazuh, allowing the user to view and analyze the ADBox prediction results using the native Wazuh GUI and dashboards.
 
+### SOAR-RADAR
+
+A collection of Risk-aware Anomaly Detection-based Active Response (**RADAR**) modules that complete the Security Orchestration, Automation and Response ([**SOAR**](/soar-radar/README.md)) mission of IDPS-ESCAPE, providing
+
+- AD scenarios, along with their corresponding active response solutions implemented for Wazuh, currently geared towards an [Amazon AWS implementation](https://github.com/aws/random-cut-forest-by-aws/) of the classical [Random Cut Forest (RCF) AD on streams algorithm](https://www.amazon.science/publications/robust-random-cut-forest-based-anomaly-detection-on-streams) integrated into Wazuh, enabled by installing the [OpenSearch AD plugin](https://wazuh.com/blog/enhancing-it-security-with-anomaly-detection/), supporting [categorical features](https://docs.opensearch.org/docs/latest/observing-your-data/ad/index/#setting-categorical-fields-for-high-cardinality);
+- A dedicated [RADAR manual](/soar-radar/README.md) describing best practices for making use of our ADBox for AD powered by deep learning, in hybrid mode, together with the classical RCF-based AD algorithm built into OpenSearch to tackle various AD and ML challenges, e.g., adversarial ML involving training data set poisoning and trained model manipulation.
+
 ### Front-end
 
 - A command-line interface (**CLI**) for efficient user interactions and automation via scripting integration, currently available via the driver module (under active development);
 - A dedicated Jupyter notebook for analysis and post-processing, providing a prepared playbook with tailored plotting and operating directly on top of anomaly prediction data produced by the ADBox backend;
 - Integration into the Wazuh Dashboard, with the possibility to create dedicated detector dashboards to compare predictions with the original data.
+
+### Integration package
+
+- Artifacts (manuals, Docker compose files, configuration files, code and scripts) for integrating other tools with IDPS-ESCAPE, e.g., MISP, OpenCTI, OpenBAS, [SATRAP](https://github.com/AbstractionsLab/satrap-dl) and [OpenTRICK](https://github.com/itrust-consulting/OpenTRICK);
+- Manuals providing tips and best practices for improving such integrations and avoiding certain pitfalls.
 
 ### Network and host monitoring
 
@@ -92,7 +102,7 @@ See our [Instructions for IDPS and SIEM integrated deployment](./deployment/READ
 
 ## User manual
 
-Please see our extensive and detailed [ADBox user manual](./docs/manual/README.md) to learn more about the installation, setup requirements, overall usage, specific modules of the ADBox and technical details covering internal aspects that are relevant for an effective use of the suite IDPS-ESCAPE tools. You will also find dedicated [instructions for a network IDPS plus SIEM integrated deployment](./deployment/README.md), describing our combined architectural setup using Wazuh, Suricata and various networking deployment solutions.
+Please see our extensive and detailed [IDPS-ESCAPE user manual](./docs/manual/README.md) to learn more about the installation, setup requirements, overall usage, specific modules of the ADBox and technical details covering internal aspects that are relevant for an effective use of the suite IDPS-ESCAPE tools. You will also find dedicated [instructions for a network IDPS plus SIEM integrated deployment](./deployment/README.md), describing our combined architectural setup using Wazuh, Suricata and various networking deployment solutions.
 
 ## Documentation and technical specifications
 
@@ -168,7 +178,7 @@ The following pieces of software are necessary for setting up the ADBox as a ser
 
 ![ADBox CLI](./docs/manual/_figures/adbox-cli.png)
 
-### Usage
+### ADBox usage
 
 Please note that you can set the parameters (IP, port, username and password) for connecting to Wazuh via the [Wazuh credentials JSON file](./siem_mtad_gat/assets/secrets/wazuh_credentials.json).
 
@@ -445,13 +455,25 @@ Following the [**integration procedure**](/docs/manual/detector_data_stream.md#i
 
 ![Wazuh Dashboard Discover ADBox Detector](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_30-Discover.png "Wazuh Dashboard Discover ADBox Detector")
 
-### Detectors dashboard directly in Wazuh
+With a customized Dashboard example provided below. You can find instructions for building such a dashboard in a [dedicated manual page](/docs/manual/dashboard_tutorial.md).
+![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_25-Dashboard-10.png)
+
+### Video walkthrough of ADBox Detector dashboard creation in Wazuh
 
 For an improved visualization, we explain in our [Detector Dashboard Tutorial](/docs/manual/dashboard_tutorial.md) how to construct a dedicated Detector Dashboard in the Wazuh Dashboard, combining multiple visualizations of global and feature-wise results, and related data from other Wazuh indices as well.
 
 Combining Discover Dashboard and our Detector Dashboard we can monitor (in realtime) and investigate anomalies.
 ![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_36-Dashboard-video-2.gif)
 
+## RADAR
+
+The [RADAR](/soar-radar/) subsystem provides solutions for completing the SOAR 
+mission of IDPS-ESCAPE enabling security orchestration and automation driven by a 
+Risk-aware AD-based active response (AR) paradigm. Please see the corresponding RADAR [README](/soar-radar/README.md) for more information.
+
+## Integrations
+
+In the [manual page](/integrations/README.md) of our integrations [package](/integrations/), you will find a concise overview of the artifacts (manuals, Docker compose files, configuration files, code and scripts) for integrating other tools with IDPS-ESCAPE, e.g., MISP, OpenCTI, OpenBAS, [SATRAP](https://github.com/AbstractionsLab/satrap-dl) and [OpenTRICK](https://github.com/itrust-consulting/OpenTRICK). We also discuss best practices for improving such integrations and avoiding certain pitfalls.
 
 ## Disclaimer: use of alpha/experimental software
 

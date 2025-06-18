@@ -2,7 +2,7 @@ acceptance-criteria: |
   Successful validation according to the corresponding test case specification
 active: true
 derived: false
-header: ''
+header: 'Signature-based Host IDS'
 importance: '5'
 level: 11
 links: []

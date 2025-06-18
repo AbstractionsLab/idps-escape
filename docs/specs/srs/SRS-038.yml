@@ -4,7 +4,7 @@ active: true
 dependence: '[]'
 derived: false
 difficulty: '3'
-header: ''
+header: 'Joint Host-Network Training'
 importance: '5'
 level: 38
 links:
