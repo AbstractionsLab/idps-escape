@@ -1,0 +1,31 @@
+- name: Debug agent container
+  debug:
+    msg: "Configuring container: {{ agent_container }}"
+
+- name: Copy ossec.conf
+  shell: docker cp "{{ scenario_path }}/agent-ossec.conf" "{{ agent_container }}:/var/ossec/etc/ossec.conf"
+
+- name: Copy all active response scripts from scenario
+  shell: docker cp "{{ item }}" "{{ agent_container }}:/var/ossec/active-response/bin/"
+  with_fileglob:
+    - "{{ scenario_path }}/active_responses/*"
+
+- name: Set permissions on all active response scripts inside the container
+  shell: |
+    for file in /var/ossec/active-response/bin/*; do
+      chmod 750 "$file" && chown root:wazuh "$file"
+    done
+  args:
+    executable: /bin/bash
+  delegate_to: localhost
+  run_once: true
+  become: false
+  vars:
+    container_exec_cmd: "docker exec {{ agent_container }} bash -c"
+  shell: "{{ container_exec_cmd }} 'for file in /var/ossec/active-response/bin/*; do chmod 750 \"$file\" && chown root:wazuh \"$file\"; done'"
+
+- name: Register agent with Wazuh manager
+  command: docker exec {{ agent_container }} /var/ossec/bin/agent-auth -m wazuh.manager -A {{ agent_container }}
+
+- name: Restart Wazuh agent
+  command: docker exec {{ agent_container }} /var/ossec/bin/wazuh-control restart

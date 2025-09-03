@@ -1,3 +1,26 @@
+# 0.4 (2025-09-03)
+
+## Added
+
+- New RADAR detection scenarios and Wazuh active/automated responses under `soar-radar`
+    - suspicious login: detect anomalies in login patterns, such as logins from unusual locations or at odd hours
+    - DDOS detection: identify Distributed Denial-of-Service (DDoS) attacks by monitoring network traffic for unusual spikes
+    - C2 malware communication: detect network traffic patterns indicative of malware communication with command-and-control servers
+- RADAR automated test framework (`soar-radar/radar-test-framework`) powered by Ansible providing a pipeline for deployment, ingestion, attack simulation, detection, data collection, post-processing and statistical analysis 
+- Experiment evaluation module for computing information retrieval measures, e.g. precision, recall, etc.
+- Datasets for RADAR experiments
+- RADAR automated deployment via Infrastructure as Code (IaC) using Ansible (`deployment/wazuh/ansible`), handling Wazuh server and agents
+
+## Modified
+
+- RADAR insider threat scenario: identifying unusual user activities that may indicate insider threats, such as unauthorized access to sensitive data or abnormal login pattern
+- Refactored RADAR scenario implementation
+- Documentation of RADAR
+
+## Fixed
+
+- Detector and attack simulator bugs
+
 # 0.3 (2025-06-18)
 
 ## Added

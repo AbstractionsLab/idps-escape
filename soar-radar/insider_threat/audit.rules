@@ -1,0 +1,8 @@
+# Monitor all access to /tmp
+-w /tmp -p rwxa -k insider_files
+
+# Monitor read of /etc/passwd
+-w /etc/passwd -p r -k passwd_read
+
+# Optionally monitor urandom (anomalous behavior)
+-w /dev/urandom -p r -k urandom_read

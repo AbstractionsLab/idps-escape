@@ -1,4 +1,4 @@
-# RADAR: Risk-aware Anomaly Detection-based Active Response scenarios
+# RADAR: Risk-aware Anomaly Detection-based Automated Response
 
 As a key part of the overall SOAR mission of IDPS-ESCAPE, in this folder, 
 we store all design, development and implementation artifacts required for 
@@ -23,7 +23,10 @@ scripts, configurations, and components in the repository.
 
 Currently implemented RADAR scenarios include:
 
-- [Insider threat](/soar-radar/insider_threat/)
+- [Insider threat](/soar-radar/insider_threat/README.md)
+- [Suspicious login](/soar-radar/suspicious_login/README.md)
+- [DDoS](/soar-radar/ddos_detection/README.md)
+- [C2 malware communication](/soar-radar/malware_communication/README.md)
 
 These provide and make use of the following:
 
@@ -33,11 +36,20 @@ These provide and make use of the following:
 Together, these form RADAR detectors and response modules for 
 deploying machine learning-based AD coupled with automated response.
 
+### RADAR automated test framework
+
+The RADAR subsystem comes with a dedicated test framework aimed at automating the experimentation and validation chain of activities.
+More precisely, powered by Ansible, we provide a pipeline automating the ingestion of datasets, preprocessing, 
+training and ML model baseline establishment, attack simulation, data collection, followed by post-processing and 
+computation of statistical measures, which are then reported to the user.
+
+See [RADAR test framework](/soar-radar/radar-test-framework/README.md) for more details.
+
 ## Active response modules and SOAR playbooks for Wazuh
 
-The [active response](/soar-radar/active_responses/) modules stored at `soar-radar/active_responses` provide 
+The active response modules stored in the respective RADAR scenario implementation folders, i.e., `soar-radar/<RADAR-scenario>/active_responses`, provide 
 automated responses and contextual enrichments based on anomalies. 
-These reduce manual work for analysts via automation and also benefit from our [CTI integration](/integrations/README.md) support.
+These reduce manual work for analysts via automation and also benefit from our [CTI integration](/integrations/README.md) support, e.g., [insider threat active responses](/soar-radar/insider_threat/active_responses/).
 
 ## Best practices for robust AD with resilience to adversarial interference
 

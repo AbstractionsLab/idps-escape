@@ -1,0 +1,14 @@
+<group name="opensearch_ad_alerts,">
+    <!-- Broad catch-all for AD alerts -->
+    <rule id="100300" level="5">
+      <decoded_as>opensearch_ad</decoded_as>
+      <description>OpenSearch AD alert received</description>
+    </rule>
+
+    <!-- DDoS specific -->
+    <rule id="100303" level="12">
+      <decoded_as>opensearch_ad</decoded_as>
+      <match>DDoS-Detected</match>
+      <description>OpenSearch AD: DDoS Detected</description>
+    </rule>
+</group>

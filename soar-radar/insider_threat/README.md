@@ -42,6 +42,7 @@ python3 ./insider-threat/wazuh_ingest.py
     - **Time field:** `@timestamp`
     - **Detection interval:** `5m` (with `1m` window delay)
     - **Detector type:** Real-time (continuous)
+    - **Custom result index:** opensearch-ad-plugin-result-insider_threat (!important)
 
 ### 3.2 Define Numeric Features
 
@@ -162,14 +163,14 @@ Add the content of the file `local_rules.xml` in this repository into the file `
 
 ### 4.4 Binding the Manager-Side Active Response
 
-1. In **`ossec.conf`** on the manager, register and bind only the `ad_context_active_response.py` script. Script can be found in [Active Response directory](/soar-radar/active_responses/).
+1. In **`ossec.conf`** on the manager, register and bind only the `ad_context_insider_active_response.py` script. Script can be found in [Active Response directory](/soar-radar/active_responses/).
 
 ```xml
 <ossec_config>
   <!-- 1) Command declaration -->
   <command>
     <name>ad_enrich</name>
-    <executable>ad_context_active_response.py</executable>
+    <executable>ad_context_insider_active_response.py</executable>
     <timeout_allowed>yes</timeout_allowed>
   </command>
 
@@ -178,19 +179,19 @@ Add the content of the file `local_rules.xml` in this repository into the file `
     <disabled>no</disabled>
     <command>ad_enrich</command>
     <location>server</location>
-    <rules_id>100300</rules_id>
+    <rules_id>100301</rules_id>
     <timeout>120</timeout>
   </active-response>
 </ossec_config>
 ```
 
-- When Wazuh rule 100300 fires, it will run `ad_context_active_response.py user_keyword period_start period_end`.
+- When Wazuh rule 100301 fires, it will run `ad_context_insider_active_response.py user_keyword period_start period_end`.
 
 2. Place a copy of the script from the `active_responses` directory to `/var/ossec/active-response/bin` in the Wazuh manager. **Note**: remember to update the Wazuh access credentials (username, password) in the script based on your setup.
 3. Give permissions for execution:
 ```sh
-chmod 750 /var/ossec/active-response/bin/ad_context_active_response.py
-chown root:wazuh /var/ossec/active-response/bin/ad_context_active_response.py
+chmod 750 /var/ossec/active-response/bin/ad_context_insider_active_response.py
+chown root:wazuh /var/ossec/active-response/bin/ad_context_insider_active_response.py
 ```
 4. Install dependencies in the Wazuh manager
 
@@ -229,7 +230,7 @@ python3 -m pip install requests
 Copy your two scripts into the agent’s AR directory. Scripts can be found in [Active Response directory](/soar-radar/active_responses/).
 
 ```bash
-sudo cp write_contextual_logs_active_response.sh \
+sudo cp write_contextual_logs_insider_active_response.sh \
         /var/ossec/active-response/bin/
 sudo cp lock_user_linux_active_response.sh \
         /var/ossec/active-response/bin/
@@ -238,8 +239,8 @@ sudo cp lock_user_linux_active_response.sh \
 Set ownership and permissions so Wazuh can execute them:
 
 ```bash
-sudo chown root:wazuh /var/ossec/active-response/bin/write_contextual_logs_active_response.sh
-sudo chmod 750      /var/ossec/active-response/bin/write_contextual_logs_active_response.sh
+sudo chown root:wazuh /var/ossec/active-response/bin/write_contextual_logs_insider_active_response.sh
+sudo chmod 750      /var/ossec/active-response/bin/write_contextual_logs_insider_active_response.sh
 
 sudo chown root:wazuh /var/ossec/active-response/bin/lock_user_linux_active_response.sh
 sudo chmod 750      /var/ossec/active-response/bin/lock_user_linux_active_response.sh
@@ -275,8 +276,8 @@ Under the top-level `<ossec_config>` element, add **both** `<command>` entries:
 <ossec_config>
   …
   <command>
-    <name>write_contextual_logs_active_response.sh</name>
-    <executable>write_contextual_logs_active_response.sh</executable>
+    <name>write_contextual_logs_insider_active_response.sh</name>
+    <executable>write_contextual_logs_insider_active_response.sh</executable>
     <timeout_allowed>yes</timeout_allowed>
   </command>
 
@@ -347,10 +348,40 @@ By reserving lockouts for only the most extreme, high-confidence events, you mit
     
     If lockouts are enabled, you can configure a timeout (in Wazuh `<active-response>` settings) so that accounts are automatically re-enabled after a safe period.
 
-## Part 6. OpenCTI Enrichment
+## Part 6. Risk Analysis
+
+In the scenario of a privileged user anomalously exporting sensitive data outside of business hours, the risk associated with this behavior is computed using the classical formulation:
+
+```
+R = C × I
+```
+
+where `C` is the model’s confidence that the behavior is malicious, and `I` is the impact severity derived from the Common Vulnerability Scoring System (CVSS). Although CVSS was originally designed for assessing external software vulnerabilities, we adopt it as a measure in cyber risk modeling and UEBA (User and Entity Behavior Analytics) to handle insider threat scenarios by mapping observed behavior to Confidentiality, Integrity, and Availability (CIA) impacts.
+
+In this particular case, the user is accessing and exfiltrating large amounts of sensitive data, implying a **complete loss of confidentiality** and **partial compromise of data integrity**, but with **minimal availability impact**. These characteristics align with the "High" impact range in CVSS v3 scoring (7.0–8.9). Therefore, we conservatively assign an impact score of:
+
+```
+I = 7.5
+```
+
+This score represents a mid-point within the high-severity band and reflects the severity of potential data loss and misuse of privilege. The resulting risk score becomes:
+
+```
+R = C × 7.5
+```
+
+Depending on the thresholding technique used, e.g., empirically obtained values, the tiered system can be used to take different types of automated response actions:
+
+- **Tier 2** → investigate
+- **Tier 3** → urgent response
+
+This thresholding strategy ensures a data-driven, explainable escalation path where only sufficiently confident and impactful insider threats are prioritized, while low-confidence anomalies are deprioritized. The formulation remains transparent, consistent, and interpretable across operational environments.
+
+
+## Part 7. OpenCTI Enrichment
 
 For Contextual Enrichment and Threat Intelligence, corresponding Active Response can be triggered on every Anomaly detection. The instructions can be found in the [Automated OpenCTI enrichment README](/integrations/opencti-wazuh-connector/automated_trigger/README.md).
 
-## Dataset
+## Part 8. Dataset
 
 The dataset stored in the `dataset` subfolder of this RADAR scenario was obtained from the [kilthub](https://kilthub.cmu.edu/articles/dataset/Insider_Threat_Test_Dataset/12841247) repository of Carnegie Mellon University.

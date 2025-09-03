@@ -6,7 +6,7 @@ IDPS-ESCAPE, short for Intrusion Detection and Prevention Systems for Evading Su
 
 IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into a comprehensive package that implements a Security Orchestration, Automation, and Response (SOAR) system.
 
-The resulting SOAR system combines the following building blocks: a Security Information and Event Management (SIEM) system, an Intrusion Detection and Prevention System (IDPS), Cyber Threat Intelligence (CTI) tools, an anomaly detection (AD) subsystem, called [**ADBox**](/docs/manual/README.md), and a Risk-aware AD-based Active Response ([**RADAR**](/soar-radar/README.md)) subsystem providing AD scenario implementations, coupled with active response solutions and SOAR playbooks facilitating security orchestration.
+The resulting SOAR system combines the following building blocks: a Security Information and Event Management (SIEM) system, an Intrusion Detection and Prevention System (IDPS), Cyber Threat Intelligence (CTI) tools, an anomaly detection (AD) subsystem called [**ADBox**](/docs/manual/README.md), and a Risk-aware AD-based Automated Response ([**RADAR**](/soar-radar/README.md)) subsystem providing AD scenario implementations, coupled with active response solutions and SOAR playbooks facilitating security orchestration.
 
 We adopt a hybrid method aimed at robustness and resilience to adversarial interference involving three elements: (i) signature-based detection with (ii) AD based on deep learning models via MTAD-GAT, relying on state-of-the-art advances in artificial intelligence (AI) and machine learning (ML) such as the *attention mechanism* and (iii) a classical algorithm for AD on streams such as the Robust Random Cut Forest (RRCF) algorithm supporting categorical features.
 
@@ -34,7 +34,7 @@ This repository contains the source code and full documentation (requirements, t
 
 IDPS-ESCAPE, part of the [CyFORT](https://abstractionslab.com/index.php/research-and-development/cyfort/) suite of open-source cybersecurity software solutions, addresses various aspects of cybersecurity as an ensemble, targeting different user groups, ranging from public to private and from CERT/CSIRT entities to system administrators, and cloud-native deployments. IDPS-ESCAPE is being developed in parallel with another CyFORT sub-project, namely [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl), aimed at enhancing cyber threat intelligence (CTI) analysts' work using semi-automated reasoning over CTI.
  
-As part of the alpha release, the main bulk of this repository is dedicated to a novel open-source and extensively documented anomaly detection (AD) framework, called [**ADBox**](/docs/manual/README.md) and a Risk-aware AD-based Active Response ([**RADAR**](/soar-radar/README.md)) subsystem implementing AD scenarios and automated response to fulfill the SOAR mission of IDPS-ESCAPE.
+As part of the alpha release, the main bulk of this repository is dedicated to a novel open-source and extensively documented anomaly detection (AD) toolbox and framework, called [**ADBox**](/docs/manual/README.md), and a Risk-aware AD-based Automated Response ([**RADAR**](/soar-radar/README.md)) subsystem implementing AD scenarios and automated response to fulfill the SOAR mission of IDPS-ESCAPE.
 
 IDPS-ESCAPE builds on top of well-known open-source solutions such as [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) and [OpenCTI](https://github.com/OpenCTI-Platform/opencti) for bidirectional SIEM-TIP enrichment of SIEM alerts and CTI content, and finally [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
 
@@ -78,10 +78,11 @@ As a consequence, ADBox also provides a stepping stone towards settling various 
 
 ### SOAR-RADAR
 
-A collection of Risk-aware Anomaly Detection-based Active Response (**RADAR**) modules that complete the Security Orchestration, Automation and Response ([**SOAR**](/soar-radar/README.md)) mission of IDPS-ESCAPE, providing
+A collection of Risk-aware Anomaly Detection-based Automated Response ([**RADAR**](/soar-radar/README.md)) modules that complete the Security Orchestration, Automation and Response ([**SOAR**](/soar-radar/README.md)) mission of IDPS-ESCAPE, providing
 
-- AD scenarios, along with their corresponding active response solutions implemented for Wazuh, currently geared towards an [Amazon AWS implementation](https://github.com/aws/random-cut-forest-by-aws/) of the classical [Random Cut Forest (RCF) AD on streams algorithm](https://www.amazon.science/publications/robust-random-cut-forest-based-anomaly-detection-on-streams) integrated into Wazuh, enabled by installing the [OpenSearch AD plugin](https://wazuh.com/blog/enhancing-it-security-with-anomaly-detection/), supporting [categorical features](https://docs.opensearch.org/docs/latest/observing-your-data/ad/index/#setting-categorical-fields-for-high-cardinality);
-- A dedicated [RADAR manual](/soar-radar/README.md) describing best practices for making use of our ADBox for AD powered by deep learning, in hybrid mode, together with the classical RCF-based AD algorithm built into OpenSearch to tackle various AD and ML challenges, e.g., adversarial ML involving training data set poisoning and trained model manipulation.
+- RADAR scenario implementations, including anomaly detectors along with their corresponding active response solutions implemented for Wazuh, currently geared towards an [Amazon AWS implementation](https://github.com/aws/random-cut-forest-by-aws/) of the classical [Robust Random Cut Forest (RRCF) AD on streams algorithm](https://www.amazon.science/publications/robust-random-cut-forest-based-anomaly-detection-on-streams) integrated into Wazuh, enabled by installing the [OpenSearch AD plugin](https://wazuh.com/blog/enhancing-it-security-with-anomaly-detection/), supporting [categorical features](https://docs.opensearch.org/docs/latest/observing-your-data/ad/index/#setting-categorical-fields-for-high-cardinality);
+- A dedicated [RADAR test framework](/soar-radar/radar-test-framework/README.md) capable of automating the execution of RADAR experiment pipelines, from data ingestion to attack simulation, detection and post-processing;
+- A comprehensive [RADAR manual](/soar-radar/README.md) describing best practices for making use of our ADBox for AD powered by deep learning, in hybrid mode, together with the classical RRCF-based AD algorithm built into OpenSearch to tackle various AD and ML challenges, e.g., adversarial ML involving training data set poisoning and trained model manipulation.
 
 ### Front-end
 
@@ -501,6 +502,8 @@ Furthermore, we highlight the following points:
 
 ## Testing
 
+### ADBox
+
 ADBox comes with an extensive suite of unit tests. A dedicated containerized environment can be built by running `./build-adbox.sh` (the script needs to be made executable). Then, the full set of unit tests can be run as follows
 
 ```sh
@@ -512,16 +515,26 @@ Otherwise, a test file can be specified:
 ./run_test.sh  tests/{name}_test.py
 ```
 
-For software validation test cases, please see the test campaign results (e.g., TRA and TRB) on our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html). 
+For software validation test cases, please see the test campaign results (e.g., TRA and TRB) on our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html).
+
+### RADAR test framework
+
+The RADAR subsystem comes with a dedicated test framework with support for Infrastructure as Code (IaC) via Ansible aimed at automating the experimentation and validation chain of activities, i.e., a pipeline handling ingestion of datasets, preprocessing, training and ML model baseline establishment, attack simulation, data collection, followed by post-processing and computation of statistical measures. See [RADAR test framework](/soar-radar/radar-test-framework/README.md) for more details.
 
 ## Roadmap
 
 Some of the currently planned items include:
 
-- tailoring the underlying ADBox algorithms to specific SOC operations;
-- adding new reusable anomaly detection use case scenarios, i.e., other than the ones geared towards resource usage monitoring;
-- stabilizing the current implementation and improving its resilience/fault tolerance, especially when it comes to dealing with missing and ill-formed raw data;
-- adding new automated mechanisms aimed at preventive measures (i.e., the "P" in IDPS), directly integrated into Wazuh, towards the SOAR goal of IDPS-ESCAPE.
+- Adding new reusable RADAR and ADBox use case scenarios;
+- Hybridizing RADAR scenarios: AD + signature-based detection;
+- Combining classical AD with deep learning, in our case: RRCF + MTAD-GAT;
+- [SATRAP](https://github.com/AbstractionsLab/satrap-dl) engine integration for advanced real-time CTI on a system security graph combined with world CTI;
+- [OpenTRICK](https://github.com/itrust-consulting/OpenTRICK) asset dependency conversion to a SATRAP system security graph;
+- [OpenTide](https://github.com/OpenTideHQ) integration;
+- Interconnecting ADBox and RADAR;
+- ADBox: add support for categorical features;
+- ADBox: add automatic (online) retraining (policy-based, e.g. schedule, custom criteria, etc.);
+- Stabilizing the current implementation and improving its resilience/fault tolerance, especially when it comes to dealing with missing and ill-formed raw data.
 
 For details on our roadmap and features planned for future releases, please see the [Wiki](https://github.com/AbstractionsLab/idps-escape/wiki) section of this repository.
 

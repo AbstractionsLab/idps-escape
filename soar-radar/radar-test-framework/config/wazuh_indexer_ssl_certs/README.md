@@ -1,0 +1,1 @@
+> **Note**: Please remember to populate this folder with the required SSL certificates, which can be generated using the built-in [Wazuh certificates deployment script](https://documentation.wazuh.com/current/user-manual/wazuh-dashboard/certificates.html).

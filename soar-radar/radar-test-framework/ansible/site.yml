@@ -1,0 +1,19 @@
+- name: Configure Wazuh Manager for scenario
+  hosts: localhost
+  vars:
+    scenario_path: "../../{{ scenario_name }}"
+  roles:
+    - wazuh_manager
+
+- name: Install and configure Wazuh Agent
+  hosts: localhost
+  vars:
+    agent_container_map:
+      suspicious_login: agent.suspicious
+      insider_threat: agent.insider
+      ddos_detection: agent.ddos
+      malware_communication: agent.malcom
+    scenario_path: "../../{{ scenario_name }}"
+    agent_container: "{{ agent_container_map[scenario_name] }}"
+  roles:
+    - wazuh_agent

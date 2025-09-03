@@ -1,0 +1,29 @@
+- name: Copy ossec.conf to wazuh-manager container
+  command: docker cp {{ scenario_path }}/manager-ossec.conf wazuh-manager:/var/ossec/etc/ossec.conf
+
+- name: Copy local decoder to wazuh-manager container
+  command: docker cp {{ scenario_path }}/local_decoder.xml wazuh-manager:/var/ossec/etc/decoders/local_decoder.xml
+
+- name: Copy local rules to wazuh-manager container
+  command: docker cp {{ scenario_path }}/local_rules.xml wazuh-manager:/var/ossec/etc/rules/local_rules.xml
+
+- name: Copy all ad_context_*.py scripts to wazuh-manager container
+  shell: docker cp "{{ item }}" wazuh-manager:/var/ossec/active-response/bin/
+  with_fileglob:
+    - "{{ scenario_path }}/active_responses/ad_context_*.py"
+
+- name: Set executable permissions for ad_context_*.py scripts
+  shell: |
+    docker exec wazuh-manager chmod 750 /var/ossec/active-response/bin/{{ item | basename }}
+  with_fileglob:
+    - "{{ scenario_path }}/active_responses/ad_context_*.py"
+
+- name: Set ownership to root:wazuh for ad_context_*.py scripts
+  shell: |
+    docker exec wazuh-manager chown root:wazuh /var/ossec/active-response/bin/{{ item | basename }}
+  with_fileglob:
+    - "{{ scenario_path }}/active_responses/ad_context_*.py"
+
+- name: Restart Wazuh service inside container
+  command: docker exec wazuh-manager /var/ossec/bin/wazuh-control restart
+

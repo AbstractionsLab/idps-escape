@@ -2,7 +2,8 @@
 import csv
 import glob
 import json
-from datetime import datetime, date, timedelta
+import os
+from datetime import datetime, date, timedelta, timezone
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -14,7 +15,7 @@ AUTH = HTTPBasicAuth("admin", "SecretPassword")
 CA_CERT = "/etc/ssl/root-ca.pem"
 CHUNK_SIZE = 200
 REQUEST_TIMEOUT = 60
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ────────────────────────────
 # Send bulk via HTTP
@@ -59,11 +60,12 @@ def shift_and_bulk(file_pattern, index_prefix, date_field, date_fmt, day_shift):
                 orig = datetime.strptime(row[date_field], date_fmt)
                 # new timestamp with shifted date
                 new_ts = datetime.combine(target_date, orig.time())
-                iso_ts = new_ts.isoformat()
+                utc_ts = new_ts.astimezone(timezone.utc)
+                iso_ts = utc_ts.isoformat()
 
                 # enrich row
                 row["@timestamp"] = iso_ts
-                row["event_hour"] = new_ts.hour
+                row["event_hour"] = utc_ts.hour
                 # compute bytes of content if present
                 if "content" in row:
                     row["content_bytes"] = len(row["content"].encode("utf-8"))
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     ]
 
     for filename, shift in to_load:
-        file_pattern = f"insider-threat/dataset/{filename}"
+        file_pattern = os.path.join(BASE_DIR, "dataset", filename)
         shift_and_bulk(
             file_pattern,
             "wazuh-ad-insider-threat",
