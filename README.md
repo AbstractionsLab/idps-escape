@@ -12,6 +12,8 @@ We adopt a hybrid method aimed at robustness and resilience to adversarial inter
 
 This repository contains the source code and full documentation (requirements, technical specifications, schematics, [user manual](./docs/manual/README.md), validation test case specifications and test reports) of IDPS-ESCAPE, based on the [C5-DEC](https://github.com/AbstractionsLab/c5dec) method and software also developed in CyFORT, which relies on storing, interlinking and processing all software development life cycle (SDLC) artifacts in a unified manner; see our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) providing the technical specifications of IDPS-ESCAPE.
 
+> **Note**: Our latest software validation test execution report ([TRB](https://abstractionslab.github.io/idps-escape/docs/traceability/TRB.html)) on our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) compiles the latest test campaign results, validating select features under specific test conditions.
+
 **Table of contents**
 
 - [Overview](#overview)

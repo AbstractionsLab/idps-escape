@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "siem-mtad-gat"
-version = "0.5"
+version = "0.5.2"
 description = "This is the main repository for IDPS-ESCAPE, along with ADBox and RADAR, two key subsystems of the former."
 authors = ["Arash Atashpendar <arash@abstractionslab.lu>", "Agnese Gini <agnese@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>", "Gulsezim Duisen <duisen@itrust.lu>", "Itzel Vazquez Sandoval <itzel@abstractionslab.lu>"]
 readme = "README.md"

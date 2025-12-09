@@ -1,3 +1,13 @@
+# 0.5.2 (2025-12-09)
+
+## Modified
+
+- Main README
+- Detailed technical documentation of automated Wazuh and RADAR deployment and activation: `/docs/manual/radar-manager-ansible-playbook.md`
+- Validation test verdicts in `TRB-013` and `TRB-014`
+- Validation test results updated in `TRB-009`, `TRB-010` and `TRB-011` for `v0.5.1` after test reruns
+- Rebuilt the traceability web site
+
 # 0.5.1 (2025-12-09)
 
 ## Added
