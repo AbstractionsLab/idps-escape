@@ -4,7 +4,7 @@
 
 The increasing complexity and scale of modern cyber threats necessitate advanced, automated security solutions that not only detect anomalies but also respond in real time. In this context, the SOAR-RADAR framework (Security Orchestration, Automation, and Response – Risk-Aware Detection-based Active Response) was developed as a modular and extensible testbed for simulating and evaluating anomaly detection capabilities in Security Information and Event Management (SIEM) systems.
 
-This thesis presents the design and implementation of the **RADAR Test Framework**, a structured and automated evaluation environment built around Wazuh’s anomaly detection capabilities. The framework is designed to support **multiple threat scenarios**, simulating adversarial behavior and measuring detection effectiveness in realistic settings. Specifically, the system evaluates the performance of Wazuh's anomaly detection in identifying:
+This document presents the design and implementation of the **RADAR Test Framework**, a structured and automated evaluation environment built around Wazuh’s anomaly detection capabilities. The framework is designed to support **multiple threat scenarios**, simulating adversarial behavior and measuring detection effectiveness in realistic settings. Specifically, the system evaluates the performance of Wazuh's anomaly detection in identifying:
 
 - **Insider Threats**: Malicious or negligent activities by authorized users.
 - **Suspicious Logins**: Unauthorized or anomalous authentication attempts in Single Sign-On (SSO) environments.

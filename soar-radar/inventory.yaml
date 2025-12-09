@@ -1,0 +1,58 @@
+all:
+  children:
+    wazuh_manager:
+      children:
+        wazuh_manager_local: {}
+        wazuh_manager_ssh:   {}
+
+    wazuh_manager_local:
+      hosts:
+        wazuh.manager:               
+          ansible_connection: local 
+          manager_address: "wazuh.manager"
+          manager_address_public: "192.168.0.28"  
+          manager_mode: "docker_local" 
+
+    wazuh_manager_ssh:
+      vars:
+        ansible_ssh_common_args: "-o ControlMaster=no -o StrictHostKeyChecking=no -o ConnectTimeout=5"
+      hosts:
+        mgr.remote:
+          ansible_host: 192.168.0.28
+          ansible_user: linuxuser
+          # REQUIRED: Wazuh Manager is docker instance or not
+          manager_mode: "docker_remote"  # "docker_remote" or "host_remote"  (host_remote = non-docker)
+          manager_address: "192.168.0.28"  # For container agents to enroll
+          manager_address_public: "192.168.0.28" # For remote agents to enroll
+          manager_container_name: "wazuh.manager" # Only used if manager_mode == docker_remote
+          ansible_python_interpreter: /usr/bin/python3
+          ansible_become: true
+          ansible_become_method: sudo
+          ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o ConnectTimeout=10"
+
+    # Container agents
+    wazuh_agents_container:
+      hosts:
+        agent.suspicious:
+          agent_mode: container
+          container_name: agent.suspicious
+        agent.insider:
+          agent_mode: container
+          container_name: agent.insider
+        agent.ddos:
+          agent_mode: container
+          container_name: agent.ddos
+        agent.malcom:
+          agent_mode: container
+          container_name: agent.malcom
+
+    # SSH endpoints
+    wazuh_agents_ssh:
+      hosts:
+        edge.vm:
+          agent_mode: ssh
+          ansible_host: 192.168.0.28
+          ansible_user: linuxuser
+          ansible_port: 22
+          ansible_become: true
+          ansible_become_method: sudo

@@ -34,26 +34,27 @@
 <li><a href="#SWD-011">11 ADBox preprocessing</a></li>
 <li><a href="#SWD-012">12 ADBox TimeManager</a></li>
 <li><a href="#SWD-013">13 ADBox Prediction pipeline's inner body</a></li>
-<li><a href="#SWD-014">14 ADBox config managers</a></li>
+<li><a href="#SWD-014">14 ADBox config managersactive: true</a></li>
 <li><a href="#SWD-015">15 ADBox Shipper and Template Handler</a></li>
 <li><a href="#SWD-016">16 ADBox shipping of prediction data</a></li>
 <li><a href="#SWD-017">17 ADBox creation of a detector stream</a></li>
+<li><a href="#SWD-018">18 RATF: ingestion phase</a></li>
+<li><a href="#SWD-019">19 RATF: setup phase</a></li>
+<li><a href="#SWD-020">20 RATF: simulation phase</a></li>
+<li><a href="#SWD-021">21 RATF: evaluation phase</a></li>
 </ul>
           </nav>
       </div>
       <div class="col-lg-8" id="main">
         <h1 id="SWD-001">1.0 ADBox training pipeline <small>SWD-001</small></h1>
-<h2>Training sequence diagram</h2>
 <p>The diagram depicts the sequence of operations of the training pipeline, orchestrated by the ADBox Engine.</p>
 <p><img alt="ADBox training pipeline sequence diagram" src="assets/1B3A4C_DIA_IDPS_ESCAPE_ADBoxDiagrams-engine-train-pipeline-sequence_v1.2.png" title="ADBox training pipeline sequence" width="80%" /></p>
 <p><em>Parent links:</em> <a href="LARC.html#LARC-001">LARC-001 ADBox training pipeline flow</a></p>
 <h1 id="SWD-002">2.0 ADBox prediction pipeline <small>SWD-002</small></h1>
-<h2>Prediction pipeline sequence diagram</h2>
 <p>The diagram depicts the sequence of operations in the prediction pipeline, orchestrated by the ADBox Engine.</p>
 <p><img alt="ADBox predict pipeline sequence diagram" src="assets/1B3A4D_DIA_IDPS_ESCAPE_ADBoxDiagrams-engine-predict-pipeline_v1.2.png" title="ADBox predict pipeline sequence" width="80%" /></p>
 <p><em>Parent links:</em> <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a>, <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a></p>
 <h1 id="SWD-003">3.0 MTAD-GAT training <small>SWD-003</small></h1>
-<h2>MTAD GAT training sequence diagram</h2>
 <p>The diagram depicts the sequence of operations run by the function <code>train_MTAD_GAT</code> of the MTAD_GAT ML-subpackage of ADBox.</p>
 <p><img alt="ADBox train_MTAD_GAT sequence diagram" src="assets/1B3A4B_DIA_IDPS_ESCAPE_ADBoxDiagrams-trainMTAD-GAT_sequence_v1.2.png" title="ADBox train_MTAD_GAT sequence" width="80%" /></p>
 <p><em>Parent links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
@@ -108,7 +109,7 @@
 <p>The diagram depicts the sequence of operations in the prediction pipeline body (private method), called by the prediction pipeline.</p>
 <p><img alt="ADBox predict pipeline sequence diagram" src="assets/1B3A4D_DIA_IDPS_ESCAPE_ADBoxDiagrams-engine-predict-pipeline-body_v1.2.png" width="80%" /></p>
 <p><em>Parent links:</em> <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a>, <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a></p>
-<h1 id="SWD-014">14 ADBox config managers <small>SWD-014</small></h1>
+<h1 id="SWD-014">14 ADBox config managersactive: true <small>SWD-014</small></h1>
 <h2>ADBox config manager class diagrams</h2>
 <p>The diagram below depicts the <code>Config manager</code> classes of ADBox.</p>
 <p><img alt="ADBox Managers class diagram" src="assets/1B3A4H_DIA_IDPS_ESCAPE_ADBoxDiagrams-ConfigManager-class-diagram_v1.1.png" title="ADBox Config Managers classes diagram" width="50%" /></p>
@@ -131,6 +132,33 @@ Specifically, the <code>__ship_to_wazuh_training_pipeline</code> method which
 - and can ship the test and training data predictions.</p>
 <p><img alt="ADBox ship prediction sequence diagram" src="assets/1B3A4_DIA_IDPS_ESCAPE_shipper-training_pipeline_v1.2.png" title="ADBox ship prediction sequence diagram" width="80%" /></p>
 <p><em>Parent links:</em> <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a></p>
+<h1 id="SWD-018">18 RATF: ingestion phase <small>SWD-018</small></h1>
+<h2>Sequence diagram of data ingestion and user setup in RATF</h2>
+<p>The diagram below depicts the sequence of actions orchestrated by the RADAR Automated Test Framework in ingestion phase, which
+- bulk ingests the corresponding dataset into Opensearch index.
+- and for Suspicious Login scenario creates users in Single Sign-On system.</p>
+<p><img alt="RADAR Automated Test Framework ingestion phase sequence diagram" src="assets/RATF-ingest-sequence-diagram.png" title="RADAR Automated Test Framework ingestion phase sequence diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a></p>
+<h1 id="SWD-019">19 RATF: setup phase <small>SWD-019</small></h1>
+<h2>Sequence diagram of environment setup in RATF</h2>
+<p>The diagram below depicts the sequence of actions orchestrated by the RADAR Automated Test Framework in setup phase, which
+- sets up Docker environments by copying rules, active responses and setting needed permissions.</p>
+<p><img alt="RADAR Automated Test Framework setup phase sequence diagram" src="assets/RATF-setup-sequence-diagram.png" title="RADAR Automated Test Framework setup phase sequence diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a></p>
+<h1 id="SWD-020">20 RATF: simulation phase <small>SWD-020</small></h1>
+<h2>Sequence diagram of threat simulation in RATF</h2>
+<p>The diagram below depicts the sequence of actions orchestrated by the RADAR Automated Test Framework in simulation phase, which
+- simulates the threat scenario in corresponding agent
+- feeds the resulted log to corresponding index in Opensearch.</p>
+<p><img alt="RADAR Automated Test Framework simulation phase sequence diagram" src="assets/RATF-simulate-sequence-diagram.png" title="RADAR Automated Test Framework simulation phase sequence diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a></p>
+<h1 id="SWD-021">21 RATF: evaluation phase <small>SWD-021</small></h1>
+<h2>Sequence diagram of metrics evaluation in RATF</h2>
+<p>The diagram below depicts the sequence of actions orchestrated by the RADAR Automated Test Framework in evaluation phase, which
+- retrieves the events from corresponding index to scenario
+- calculates evaluation metrics by comparing with the dataset and simulation results.</p>
+<p><img alt="RADAR Automated Test Framework evaluation phase sequence diagram" src="assets/RATF-evaluate-sequence-diagram.png" title="RADAR Automated Test Framework evaluation phase sequence diagram" width="80%" /></p>
+<p><em>Parent links:</em> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a></p>
       </div>
     </div>
 </div>

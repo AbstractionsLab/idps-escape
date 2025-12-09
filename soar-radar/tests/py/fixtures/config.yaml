@@ -1,0 +1,16 @@
+default_scenario: suspicious_login
+scenarios:
+  suspicious_login:
+    index_prefix: wazuh-ad-suspicious-login
+    time_field: "@timestamp"
+    categorical_field: "entity"
+    result_index: ".opendistro-anomaly-results"
+    features:
+      - {"feature_name":"grade_max","feature_enabled":true,"aggregation_query":{"max":{"field":"anomaly_grade"}}}
+    detector_interval: 5
+    delay_minutes: 1
+    anomaly_grade_threshold: 0.6
+    confidence_threshold: 0.7
+webhook:
+  name: "RADAR Hook"
+  url: "http://webhook:8080/hit"

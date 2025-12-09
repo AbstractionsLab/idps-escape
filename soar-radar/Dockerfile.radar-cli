@@ -1,0 +1,30 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_ROOT_USER_ACTION=ignore
+
+RUN apt-get update -y \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /app \
+ && mkdir -p /app/ddos_detection \
+ && mkdir -p /app/insider_threat \
+ && mkdir -p /app/malware_communication \
+ && mkdir -p /app/suspicious_login \
+ && useradd -r -u 999 -g root -d /nonexistent -s /usr/sbin/nologin appuser \
+ && chown -R appuser:root /app \
+ && pip install --no-cache-dir requests PyYAML
+
+WORKDIR /app
+
+COPY detector.py monitor.py webhook.py config.yaml ./
+COPY ddos_detection/wazuh_ingest.py ./ddos_detection/
+COPY insider_threat/wazuh_ingest.py ./insider_threat/
+COPY insider_threat/convert.py ./insider_threat/
+COPY malware_communication/wazuh_ingest.py ./malware_communication/
+COPY suspicious_login/wazuh_ingest.py ./suspicious_login/
+
+USER appuser
+

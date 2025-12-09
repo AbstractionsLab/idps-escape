@@ -69,6 +69,13 @@
 <li><a href="#SRS-047">47 Interactive Use Case Builder</a></li>
 <li><a href="#SRS-048">48 Default Detector Training</a></li>
 <li><a href="#SRS-049">49 Anomaly Shipping to Indexer</a></li>
+<li><a href="#SRS-050">50 Insider Threat Detection and Prevention: Data exfiltration</a></li>
+<li><a href="#SRS-051">51 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a></li>
+<li><a href="#SRS-052">52 DDoS Detection and Prevention: SYN-flood</a></li>
+<li><a href="#SRS-053">53 Malware Communication Detection and Prevention: Beaconing</a></li>
+<li><a href="#SRS-054">54 RADAR Automated Test Framework</a></li>
+<li><a href="#SRS-055">55 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a></li>
+<li><a href="#SRS-056">56 Log volume spike detection per endpoint</a></li>
 </ul>
           </nav>
       </div>
@@ -86,6 +93,10 @@ so that I can update user-exposed settings of subsystems tackling data collectio
 <ol start="4">
 <li>Configure components via respective software configuration management (SCM) mechanism.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To centralize and simplify IDPS components configuration management.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-002">MRS-002 Command &amp; Control</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-020">TST-020 Wazuh installation in a containerized environment</a></p>
 <table>
@@ -96,18 +107,6 @@ so that I can update user-exposed settings of subsystems tackling data collectio
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -123,10 +122,6 @@ so that I can update user-exposed settings of subsystems tackling data collectio
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To centralize and simplify IDPS components configuration management.</td>
 </tr>
 <tr>
 <td>version</td>
@@ -144,6 +139,10 @@ so that I can check the status of end-point monitoring solutions deployed, if an
 <li>If deployed, check C-CyFORT-Suricata and mirroring status</li>
 <li>If any deployed, remote connect to endpoint and check local CyFORT-Suricata status.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To centralize and simplify agent/sensor configuration management.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-002">MRS-002 Command &amp; Control</a></p>
 <table>
 <thead>
@@ -153,18 +152,6 @@ so that I can check the status of end-point monitoring solutions deployed, if an
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -180,10 +167,6 @@ so that I can check the status of end-point monitoring solutions deployed, if an
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To centralize and simplify agent/sensor configuration management.</td>
 </tr>
 <tr>
 <td>version</td>
@@ -200,6 +183,10 @@ I want deploy HIDS agents on the hosts monitored system so that I can enable the
 <li>Enroll Wazuh Agent in CyFORT-Wazuh manager.</li>
 <li>Configure Wazuh Agent.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To enable a multi-node deployment of monitoring endpoints host.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-005">MRS-005 Host-based Intrusion Detection</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-021">TST-021 Wazuh agent installation and enrollment: the local machine</a></p>
 <table>
@@ -210,18 +197,6 @@ I want deploy HIDS agents on the hosts monitored system so that I can enable the
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -239,10 +214,6 @@ I want deploy HIDS agents on the hosts monitored system so that I can enable the
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To enable a multi-node deployment of monitoring endpoints host.</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -256,6 +227,10 @@ I want to enabled/disabled HIDS agents deployed on the host monitored system.</p
 <li>Enroll/unenroll  Wazuh Agent from CyFORT-Wazuh manager</li>
 <li>Possibly, remove logs and config files.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To enable system hosts security posture monitoring</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-005">MRS-005 Host-based Intrusion Detection</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-023">TST-023 Wazuh agent deletion and uninstallation</a>, <a href="TST.html#TST-024">TST-024 Wazuh agent unenrollment</a></p>
 <table>
@@ -266,18 +241,6 @@ I want to enabled/disabled HIDS agents deployed on the host monitored system.</p
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -293,10 +256,6 @@ I want to enabled/disabled HIDS agents deployed on the host monitored system.</p
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To enable system hosts security posture monitoring</td>
 </tr>
 <tr>
 <td>version</td>
@@ -313,6 +272,10 @@ I want to enable/disable network monitoring within IDPS-ESCAPE subsystem boundar
 <li>Set up channel to be connections to be monitored</li>
 <li>Possibly, add custom rules.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To enable traffic monitoring</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-006">MRS-006 NIDS Support</a></p>
 <table>
 <thead>
@@ -322,18 +285,6 @@ I want to enable/disable network monitoring within IDPS-ESCAPE subsystem boundar
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -351,10 +302,6 @@ I want to enable/disable network monitoring within IDPS-ESCAPE subsystem boundar
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To enable traffic monitoring</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -368,6 +315,10 @@ I want a centralized NIDPS in the C&amp;C server.</p>
 <li>Deploy C-CyFORT-Suricata</li>
 <li>Activate prevention in the config and set up actions behavior.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To be able to take reactive corrective measures and mitigate intrusions</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
 <table>
 <thead>
@@ -377,18 +328,6 @@ I want a centralized NIDPS in the C&amp;C server.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -404,14 +343,6 @@ I want a centralized NIDPS in the C&amp;C server.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To be able to take reactive corrective measures and mitigate intrusions</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>version</td>
@@ -429,6 +360,10 @@ to run NIDS on such a traffic.</p>
 <li>Identify host capture interface (CI), C&amp;C CI and IP.</li>
 <li>Run port mirroring activation script with above arguments.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To collect events for threat hunting and CTI operations, reducing the NIDS overhead and to do customized AD.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-008">MRS-008 Network Capture Forwarding</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-026">TST-026 Port mirroring for remote machines</a></p>
 <table>
@@ -439,18 +374,6 @@ to run NIDS on such a traffic.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -468,14 +391,6 @@ to run NIDS on such a traffic.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To collect events for threat hunting and CTI operations, reducing the NIDS overhead and to do customized AD.</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -490,6 +405,10 @@ to monitor traffic and store logs locally.</p>
 <li>Deploy using custom script.</li>
 <li>Update the configs file (.yml) with local configuration.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To ensure the following properties: consistent and reproducible environments, isolation, resource efficiency, scalability, portability, fast spawning and shutdown, improved CI/CD, support of micro services architecture, improved dependency management.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-009">MRS-009 Docker Deployment Option</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-019">TST-019 Suricata installation in a containerized environment</a></p>
 <table>
@@ -500,18 +419,6 @@ to monitor traffic and store logs locally.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -529,14 +436,6 @@ to monitor traffic and store logs locally.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To ensure the following properties: consistent and reproducible environments, isolation, resource efficiency, scalability, portability, fast spawning and shutdown, improved CI/CD, support of micro services architecture, improved dependency management.</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -552,6 +451,10 @@ I want to enable host intrusion detection via pattern matching with known/expect
 <li>Set up local configs and logs.</li>
 <li>Possibly, define custom rules.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-011">MRS-011 Signature-based Host IDS</a></p>
 <table>
 <thead>
@@ -561,18 +464,6 @@ I want to enable host intrusion detection via pattern matching with known/expect
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -590,14 +481,6 @@ I want to enable host intrusion detection via pattern matching with known/expect
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To build on the mature and existing rule-based detection and CTI body of knowledge and to mitigate low AD detection risk.</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -613,6 +496,10 @@ to have a centralized overview of the system for threat detection, investigation
 <li>Deploy (C-)CyFORT-Suricata</li>
 <li>Integrate CyFORT-Suricata and CyFORT-Wazuh using custom script and procedure</li>
 </ol>
+<h3>Rationale</h3>
+<p>None</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-012">MRS-012 XDR &amp; SIEM Integration</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-025">TST-025 Suricata and Wazuh Integration</a></p>
 <table>
@@ -623,18 +510,6 @@ to have a centralized overview of the system for threat detection, investigation
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -665,6 +540,10 @@ I want a graphic visualization of the network events detected in my system.</p>
 <li>Access CyFORT-Wazuh Dashboard</li>
 <li>Filter security events generate by NIDS group rules</li>
 </ol>
+<h3>Rationale</h3>
+<p>To improve accessibility and easy-of-use for IDPS-ESCAPE end-users</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-027">TST-027 Traffic monitoring on Wazuh (local)</a>, <a href="TST.html#TST-028">TST-028 Traffic monitoring on Wazuh (remote)</a>, <a href="TST.html#TST-032">TST-032 Wazuh filters using the Wazuh Dashboard</a></p>
 <table>
@@ -675,18 +554,6 @@ I want a graphic visualization of the network events detected in my system.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -702,10 +569,6 @@ I want a graphic visualization of the network events detected in my system.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To improve accessibility and easy-of-use for IDPS-ESCAPE end-users</td>
 </tr>
 <tr>
 <td>version</td>
@@ -721,6 +584,10 @@ I want a graphic visualization of the host events detected in my system.</p>
 <li>Access CyFORT-Wazuh Dashboard</li>
 <li>Filter security events generate by HIDS group rules</li>
 </ol>
+<h3>Rationale</h3>
+<p>To improve accessibility and easy-of-use for IDPS-ESCAPE end-users</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a></p>
 <table>
 <thead>
@@ -730,18 +597,6 @@ I want a graphic visualization of the host events detected in my system.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -757,10 +612,6 @@ I want a graphic visualization of the host events detected in my system.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To improve accessibility and easy-of-use for IDPS-ESCAPE end-users</td>
 </tr>
 <tr>
 <td>version</td>
@@ -776,6 +627,10 @@ I want to check the status of HIDS agents.</p>
 <li>Access CyFORT-Wazuh Dashboard.</li>
 <li>Look dedicated panel and click to the agent ID for additional info.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To improve IDPS-ESCAPE status management for the end-users</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a></p>
 <table>
 <thead>
@@ -785,18 +640,6 @@ I want to check the status of HIDS agents.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -812,10 +655,6 @@ I want to check the status of HIDS agents.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To improve IDPS-ESCAPE status management for the end-users</td>
 </tr>
 <tr>
 <td>version</td>
@@ -831,6 +670,10 @@ I want the detected event to be correctly decoded and transformed before usage a
 <li>Access CyFORT-Wazuh manager</li>
 <li>Run testing and verification of rules and decoders via CyFORT-Wazuh server API</li>
 </ol>
+<h3>Rationale</h3>
+<p>To ensure avoid errors and inaccuracy</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-014">MRS-014 Data Extraction API</a></p>
 <table>
 <thead>
@@ -840,18 +683,6 @@ I want the detected event to be correctly decoded and transformed before usage a
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -867,10 +698,6 @@ I want the detected event to be correctly decoded and transformed before usage a
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To ensure avoid errors and inaccuracy</td>
 </tr>
 <tr>
 <td>version</td>
@@ -886,6 +713,10 @@ I want my SIEM to interpret a new type of data forwarded by agents/sensors.</p>
 <li>Access CyFORT-Wazuh manager</li>
 <li>Add custom rules and custom decoders.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To extend the detection capability of IDPS-ESCAPE and tailor the detection to my system</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-014">MRS-014 Data Extraction API</a></p>
 <table>
 <thead>
@@ -895,18 +726,6 @@ I want my SIEM to interpret a new type of data forwarded by agents/sensors.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -922,14 +741,6 @@ I want my SIEM to interpret a new type of data forwarded by agents/sensors.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To extend the detection capability of IDPS-ESCAPE and tailor the detection to my system</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>version</td>
@@ -946,6 +757,10 @@ to improve the security level of the admin password.</p>
 <li>Access CyFORT-Wazuh manager</li>
 <li>Update <code>config/wazuh_indexer/internal_users.yml</code> file.</li>
 </ol>
+<h3>Rationale</h3>
+<p>Maintain/improve the security of IDPS-ESCAPE</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-029">TST-029 Changing password for Wazuh indexer users</a>, <a href="TST.html#TST-030">TST-030 Changing password for Wazuh API users</a></p>
 <table>
@@ -956,18 +771,6 @@ to improve the security level of the admin password.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -985,10 +788,6 @@ to improve the security level of the admin password.</p>
 <td>F/S</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>Maintain/improve the security of IDPS-ESCAPE</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1002,6 +801,10 @@ I want to define a ADBox to fetch data from an indexer at specific host address.
 <li>Access ADBox</li>
 <li>Modify IP address in  <code>../siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To connect ADBox to a specific data source containing data of interest, possibly different from the default one</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-034">TST-034 ADBox set up indexer host address</a></p>
 <table>
@@ -1012,18 +815,6 @@ I want to define a ADBox to fetch data from an indexer at specific host address.
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -1041,14 +832,6 @@ I want to define a ADBox to fetch data from an indexer at specific host address.
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To connect ADBox to a specific data source containing data of interest, possibly different from the default one</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1062,6 +845,10 @@ I want to modify the default hyperparameter of ML methods used by ADBox.</p>
 <li>Access ADBox</li>
 <li>Modify values in <code>siem_mtad_gat/assets/default_configs/mtad_gat_train_config_default_args.json</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To globally tune ML algorithm to a specify system/scenario</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-012">LARC-012 ADBox ConfigManager</a></p>
 <table>
@@ -1072,18 +859,6 @@ I want to modify the default hyperparameter of ML methods used by ADBox.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -1099,10 +874,6 @@ I want to modify the default hyperparameter of ML methods used by ADBox.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To globally tune ML algorithm to a specify system/scenario</td>
 </tr>
 <tr>
 <td>version</td>
@@ -1118,6 +889,10 @@ I want to modify the datatype transformation map operated by ADBox on fetched.</
 <li>Access ADBox</li>
 <li>Modify key values <code>../siem_mtad_gat/assets/wazuh/wazuh_columns.json</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To maintain the consistency with SIEM solution</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a></p>
 <table>
 <thead>
@@ -1128,28 +903,12 @@ I want to modify the datatype transformation map operated by ADBox on fetched.</
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
-<tr>
 <td>urgency</td>
 <td>1</td>
 </tr>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To maintain the consistency with SIEM solution</td>
 </tr>
 <tr>
 <td>version</td>
@@ -1165,6 +924,10 @@ I want to update the default fields fetched at ingestion phase by ADBox.</p>
 <li>Access ADBox</li>
 <li>Update key and values in <code>../siem_mtad_gat/assets/wazuh/wazuh_columns.json</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To maintain the consistency with SIEM solution, add custom feature</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a></p>
 <table>
 <thead>
@@ -1175,28 +938,12 @@ I want to update the default fields fetched at ingestion phase by ADBox.</p>
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
-<tr>
 <td>urgency</td>
 <td>1</td>
 </tr>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To maintain the consistency with SIEM solution, add custom feature</td>
 </tr>
 <tr>
 <td>version</td>
@@ -1212,6 +959,10 @@ I want to update the default use case of ADBox.</p>
 <li>Access ADBox</li>
 <li>Modify <code>../siem_mtad_gat/assets/default_configs/default_detector_input_config.json</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To adapt ADBox default behavior</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-012">LARC-012 ADBox ConfigManager</a></p>
 <table>
@@ -1222,18 +973,6 @@ I want to update the default use case of ADBox.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -1251,10 +990,6 @@ I want to update the default use case of ADBox.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To adapt ADBox default behavior</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1268,8 +1003,12 @@ I want to update indexer credentials in ADBox.</p>
 <li>Access ADBox</li>
 <li>Update CyFORT-Wazuh indexer credentials in  <code>../siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To adapt to local configuration</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-035">TST-035 ADBox change indexer credentil</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-035">TST-035 ADBox change indexer credentials</a></p>
 <table>
 <thead>
 <tr>
@@ -1278,18 +1017,6 @@ I want to update indexer credentials in ADBox.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -1307,10 +1034,6 @@ I want to update indexer credentials in ADBox.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To adapt to local configuration</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1319,13 +1042,14 @@ I want to update indexer credentials in ADBox.</p>
 <h1 id="SRS-023">23 Agent Registration Process <small>SRS-023</small></h1>
 <p>As a user,
 I want to register a new agent in the central SIEM&amp;XDR.</p>
-<p>Assuming: CyFORT-Wazuh Manager running on C&amp;C and agent on selected host</p>
-<ol>
-<li>Either:</li>
-</ol>
+<p>Assuming the CyFORT-Wazuh Manager is running on C&amp;C and an agent is running on the selected host, either:</p>
 <p>a. Add the manager IP as an environment variable during the agent installation process.</p>
 <p>b. Set the manager IP in the agent configuration file.</p>
 <p>c. Requests the key from the manager API and manually imports it into the agent.</p>
+<h3>Rationale</h3>
+<p>To enable a non-static configuration of monitored nodes.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-016">MRS-016 Agent (De)Registration</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-022">TST-022 Wazuh agent installation and enrollment: remote machine</a></p>
 <table>
@@ -1336,18 +1060,6 @@ I want to register a new agent in the central SIEM&amp;XDR.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -1365,10 +1077,6 @@ I want to register a new agent in the central SIEM&amp;XDR.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To enable a non-static configuration of monitored nodes.</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1382,6 +1090,10 @@ I want to run queries on data such as events, alerts and statistics.</p>
 <li>Formulate query as Wazuh Query Language</li>
 <li>Query to indexer via Wazuh API</li>
 </ol>
+<h3>Rationale</h3>
+<p>To achieve a programmatic access to security alert and event data.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-031">TST-031 Wazuh filters using the RESTful API</a></p>
 <table>
@@ -1392,18 +1104,6 @@ I want to run queries on data such as events, alerts and statistics.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -1421,10 +1121,6 @@ I want to run queries on data such as events, alerts and statistics.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To achieve a programmatic access to security alert and event data.</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1439,6 +1135,10 @@ I want to map a detected event to the MITRE ATT&amp;CK framework.</p>
 <li>Check if the following keys exist in the attributes
   <code>rule.mitre.id , rule.mitre.tactic , rule.mitre.technique</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To improve and speed up threat detection and classification, thereby facilitating CTI analysis.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-023">MRS-023 MITRE ATT&amp;CK Mapping</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-036">TST-036 Map a detected event to MITRE ATT&amp;CKS</a></p>
 <table>
@@ -1449,18 +1149,6 @@ I want to map a detected event to the MITRE ATT&amp;CK framework.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -1478,14 +1166,6 @@ I want to map a detected event to the MITRE ATT&amp;CK framework.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To improve and speed up threat detection and classification, thereby facilitating CTI analysis.</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1494,6 +1174,10 @@ I want to map a detected event to the MITRE ATT&amp;CK framework.</p>
 <h1 id="SRS-026">26 TIP Data Export <small>SRS-026</small></h1>
 <p>As a user,
 I want to export data from IDPS-ESCAPE to a TIP.</p>
+<h3>Rationale</h3>
+<p>To enable programmatic access, which would also in turn support integration with SATRAP-DL.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-025">MRS-025 Threat Detection API</a></p>
 <table>
 <thead>
@@ -1504,32 +1188,12 @@ I want to export data from IDPS-ESCAPE to a TIP.</p>
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
-<tr>
 <td>urgency</td>
 <td>1</td>
 </tr>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To enable programmatic access, which would also in turn support integration with SATRAP-DL.</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>version</td>
@@ -1546,8 +1210,12 @@ I want to run a machine learning algorithm to detect anomalous behaviors within 
 <li>Select a trained detector</li>
 <li>Run a prediction script using the chosen detection either for a selected time interval or in real time.</li>
 </ol>
+<h3>Rationale</h3>
+<p>None</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-007">TST-007 ADBox use case 1 with a Wazuh connection</a>, <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a>, <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a>, <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a>, <a href="TST.html#TST-012">TST-012 ADBox use case 3 without a Wazuh connection</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-007">TST-007 ADBox use case 1 with a Wazuh connection</a>, <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a>, <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a>, <a href="TST.html#TST-012">TST-012 ADBox use case 3 without a Wazuh connection</a>, <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a></p>
 <table>
 <thead>
 <tr>
@@ -1556,18 +1224,6 @@ I want to run a machine learning algorithm to detect anomalous behaviors within 
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -1604,6 +1260,10 @@ I want to compare the outcome of different anomaly detection algorithms on my da
 <li>Run a prediction script using D2.</li>
 <li>Compare output using dedicated Dashboard.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To validate the AD capabilities.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-031">MRS-031 Multiple ML Techniques</a></p>
 <table>
 <thead>
@@ -1613,18 +1273,6 @@ I want to compare the outcome of different anomaly detection algorithms on my da
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -1642,10 +1290,6 @@ I want to compare the outcome of different anomaly detection algorithms on my da
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To validate the AD capabilities.</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -1658,6 +1302,10 @@ I want to compare the outcome of different anomaly detection algorithms on my da
 <li>Access ADBox</li>
 <li>Set up data ingestion and transformation of data derived from CyFORT-Wazuh and CyFORT-Suricata logs arguments.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To enable holistic system monitoring.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-003">LARC-003 ADBox preprocessing flow</a></p>
 <table>
@@ -1668,18 +1316,6 @@ I want to compare the outcome of different anomaly detection algorithms on my da
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>4</td>
@@ -1695,10 +1331,6 @@ I want to compare the outcome of different anomaly detection algorithms on my da
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To enable holistic system monitoring.</td>
 </tr>
 <tr>
 <td>version</td>
@@ -1718,6 +1350,10 @@ I want to read/plot AD results of training and test data.</p>
    - train subset AD output: <code>train_output.pkl</code>
    - test subset AD output: <code>test_output.pkl</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To enable programmatic use of such data to further elaborate and evaluate output of training</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034 Standardized AD Output</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-037">TST-037 Open prediction file of training data</a></p>
 <table>
@@ -1728,18 +1364,6 @@ I want to read/plot AD results of training and test data.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -1755,14 +1379,6 @@ I want to read/plot AD results of training and test data.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To enable programmatic use of such data to further elaborate and evaluate output of training</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>version</td>
@@ -1782,6 +1398,10 @@ I want to read/plot losses of training and test data.</p>
    - train : <code>train_losses.png</code>
    - test : <code>test_losses.png</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To evaluate quality of output of training</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034 Standardized AD Output</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-038">TST-038 Visualize train losses</a></p>
 <table>
@@ -1793,18 +1413,6 @@ I want to read/plot losses of training and test data.</p>
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
-<tr>
 <td>importance</td>
 <td>1</td>
 </tr>
@@ -1815,10 +1423,6 @@ I want to read/plot losses of training and test data.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To evaluate quality of output of training</td>
 </tr>
 <tr>
 <td>version</td>
@@ -1834,6 +1438,10 @@ I want to read/plot losses of training and test data.</p>
 <li>Access ADBox</li>
 <li>Within <code>siem_mtad_gat/assets/detector_models/uuid/prediction</code> folder, open: <code>uc-x_predicted_anomalies_data-*.json</code></li>
 </ol>
+<h3>Rationale</h3>
+<p>To enable programmatic use of such data to further elaborate and evaluate output of prediction</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-034">MRS-034 Standardized AD Output</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-039">TST-039 Open prediction raw outcome</a></p>
 <table>
@@ -1844,18 +1452,6 @@ I want to read/plot losses of training and test data.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>4</td>
@@ -1871,14 +1467,6 @@ I want to read/plot losses of training and test data.</p>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To enable programmatic use of such data to further elaborate and evaluate output of prediction</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>version</td>
@@ -1897,6 +1485,10 @@ I want to deploy IDPS end-point monitoring solutions on a remote end-point by ch
 <ol start="4">
 <li>Connect local solution to C&amp;C sub-system.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To adapt and improve performance</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-037">MRS-037 Multiple Deployment Models</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-004">LARC-004 IDPS-ESCAPE end-point integrated arch.</a>, <a href="LARC.html#LARC-005">LARC-005 IDPS-ESCAPE end-point hybrid arch.</a>, <a href="LARC.html#LARC-006">LARC-006 IDPS-ESCAPE end-point host-only IDS arch.</a>, <a href="LARC.html#LARC-007">LARC-007 IDPS-ESCAPE end-point capture-only arch.</a></p>
 <table>
@@ -1907,18 +1499,6 @@ I want to deploy IDPS end-point monitoring solutions on a remote end-point by ch
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -1934,10 +1514,6 @@ I want to deploy IDPS end-point monitoring solutions on a remote end-point by ch
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To adapt and improve performance</td>
 </tr>
 <tr>
 <td>version</td>
@@ -1959,8 +1535,12 @@ I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM
       run_mode: "historical"
       index_date: YYYY-MM-DD
       detector_id: uuid</code></p>
+<h3>Rationale</h3>
+<p>To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating a possible threat</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a>, <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a>, <a href="TST.html#TST-010">TST-010 ADBox use case 2 without a Wazuh connection</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a>, <a href="TST.html#TST-010">TST-010 ADBox use case 2 without a Wazuh connection</a>, <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a></p>
 <table>
 <thead>
 <tr>
@@ -1969,18 +1549,6 @@ I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>4</td>
@@ -1996,14 +1564,6 @@ I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To detect anomalies without real-time obstacles and possibly after pre-selection, and to review events from the past investigating a possible threat</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>version</td>
@@ -2024,6 +1584,10 @@ I want to add a new custom rule set signature to a specific network related even
     - /path/to/local.rules</code></p>
 </li>
 </ol>
+<h3>Rationale</h3>
+<p>To extend the detection capability of IDPS-ESCAPE and tailor the detection to my system</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-040">MRS-040 Signature-Based NIDS</a></p>
 <table>
 <thead>
@@ -2033,18 +1597,6 @@ I want to add a new custom rule set signature to a specific network related even
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -2062,14 +1614,6 @@ I want to add a new custom rule set signature to a specific network related even
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To extend the detection capability of IDPS-ESCAPE and tailor the detection to my system</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -2085,6 +1629,10 @@ I want to find anomalies in the network traffic to detect threats not recognized
 <li>Add an use-case file <code>siem_mtad_gat/assets/drivers/uc_x.yaml</code> including as features attributes from Suricata <code>eve.log</code> decoding</li>
 <li>Run ADBox</li>
 </ol>
+<h3>Rationale</h3>
+<p>None</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-015">TST-015 ADBox use case 5 with a Wazuh connection</a>, <a href="TST.html#TST-016">TST-016 ADBox use case 5 without a Wazuh connection</a></p>
 <table>
@@ -2095,18 +1643,6 @@ I want to find anomalies in the network traffic to detect threats not recognized
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>status</td>
 <td>To detect deviations from an a priori normal baseline system behavior, possibly caused by malicious actors.</td>
@@ -2144,6 +1680,10 @@ I want to find anomalies in the network traffic to detect threats not recognized
 <li>Access ADBox</li>
 <li>Train a detector using features derived from CyFORT-Wazuh and CyFORT-Suricata logs arguments.</li>
 </ol>
+<h3>Rationale</h3>
+<p>None</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-001">LARC-001 ADBox training pipeline flow</a>, <a href="TST.html#TST-013">TST-013 ADBox use case 4 with a Wazuh connection</a>, <a href="TST.html#TST-014">TST-014 ADBox use case 4 without a Wazuh connection</a></p>
 <table>
@@ -2154,18 +1694,6 @@ I want to find anomalies in the network traffic to detect threats not recognized
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -2196,6 +1724,10 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 <li>Access ADBox</li>
 <li>Select the ML-package to be used by the training/test pipelines.</li>
 </ol>
+<h3>Rationale</h3>
+<p>Adapt AD functionality to different scenarios and maximize accuracy.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-031">MRS-031 Multiple ML Techniques</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a></p>
 <table>
@@ -2206,18 +1738,6 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
 <tr>
 <td>status</td>
 <td>unavaliable</td>
@@ -2239,10 +1759,6 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>Adapt AD functionality to different scenarios and maximize accuracy.</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -2250,6 +1766,10 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 </table>
 <h1 id="SRS-040">40 Data Management Subpackage <small>SRS-040</small></h1>
 <p>ADBox should include a Data Management subpackage, centralizing data storage, retrieval and all other operation concerning the management of data along the AD pipelines.</p>
+<h3>Rationale</h3>
+<p>To consolidate the data management operation</p>
+<h3>Acceptance criteria</h3>
+<p>Code inspection</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-010">LARC-010 ADBox data manager</a></p>
 <table>
@@ -2261,18 +1781,6 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Code inspection</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
-<tr>
 <td>importance</td>
 <td>3</td>
 </tr>
@@ -2289,10 +1797,6 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 <td>A</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To consolidate the data management operation</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -2300,6 +1804,10 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 </table>
 <h1 id="SRS-041">41 Time Management Package <small>SRS-041</small></h1>
 <p>ADBox should include a Time Management package, handling various aspects of time-related operations given the time-series based approach.</p>
+<h3>Rationale</h3>
+<p>To consolidate the time management operation</p>
+<h3>Acceptance criteria</h3>
+<p>Code inspection</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a></p>
 <p><em>Child links:</em> <a href="LARC.html#LARC-011">LARC-011 ADBox TimeManager</a></p>
 <table>
@@ -2311,18 +1819,6 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Code inspection</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>dependence</td>
-<td>[]</td>
-</tr>
-<tr>
 <td>importance</td>
 <td>3</td>
 </tr>
@@ -2337,10 +1833,6 @@ I want to be able to select the algorithm to use for AD to run AD according to t
 <tr>
 <td>type</td>
 <td>A</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To consolidate the time management operation</td>
 </tr>
 <tr>
 <td>version</td>
@@ -2365,8 +1857,12 @@ I want the prediction of the anomaly detection subsystem to be shipped to the ce
 <li>Run ADBox training with the shipping flag enabled</li>
 <li>When using the created detector, turn the shipping on.</li>
 </ol>
+<h3>Rationale</h3>
+<p>Centralization and integration of information</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-013">LARC-013 ADBox RequestResponseHandler</a>, <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a>, <a href="TST.html#TST-018">TST-018 ADBox Create detector data stream</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-018">TST-018 ADBox Create detector data stream</a>, <a href="LARC.html#LARC-013">LARC-013 ADBox RequestResponseHandler</a>, <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a></p>
 <table>
 <thead>
 <tr>
@@ -2375,14 +1871,6 @@ I want the prediction of the anomaly detection subsystem to be shipped to the ce
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -2398,10 +1886,6 @@ I want the prediction of the anomaly detection subsystem to be shipped to the ce
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>Centralization and integration of information</td>
 </tr>
 <tr>
 <td>version</td>
@@ -2426,6 +1910,10 @@ I want a graphic visualization of the data produced by the anomaly detection sub
 <li>Add the detector's pattern to Dashboard pattern list.</li>
 <li>(Optional) Create an ad hoc visualization and a Dashboard.</li>
 </ol>
+<h3>Rationale</h3>
+<p>Accessibility of AD data for the end-users and centralise forensics</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-017">MRS-017 Monitoring Frontend</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-033">TST-033 ADBox Wazuh integration Dashboard</a></p>
 <table>
@@ -2436,14 +1924,6 @@ I want a graphic visualization of the data produced by the anomaly detection sub
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -2459,10 +1939,6 @@ I want a graphic visualization of the data produced by the anomaly detection sub
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>Accessibility of AD data for the end-users and centralise forensics</td>
 </tr>
 <tr>
 <td>version</td>
@@ -2481,6 +1957,10 @@ and to further develop it.</p>
 <ol>
 <li>Deploy ADBox using dev container.</li>
 </ol>
+<h3>Rationale</h3>
+<p>Ensure cross-platform compatibility and portability both for usage and develpment.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-020">MRS-020 Platform Independence</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a></p>
 <table>
@@ -2491,14 +1971,6 @@ and to further develop it.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
 <tr>
 <td>importance</td>
 <td>4</td>
@@ -2514,14 +1986,6 @@ and to further develop it.</p>
 <tr>
 <td>type</td>
 <td>F/A</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>Ensure cross-platform compatibility and portability both for usage and develpment.</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
 </tr>
 <tr>
 <td>version</td>
@@ -2540,6 +2004,10 @@ I want to understand IDPS-ESCAPE high level architecture.</p>
 <li>Open the <code>docs\specs</code> project folder.</li>
 <li>Open HARC</li>
 </ol>
+<h3>Rationale</h3>
+<p>To follow a consistent and well-defined process, while improving development security.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-026">MRS-026 C5-DEC Development Model</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-040">TST-040 Visualize IDPS-ESCAPE high level architecture</a></p>
 <table>
@@ -2551,14 +2019,6 @@ I want to understand IDPS-ESCAPE high level architecture.</p>
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>urgency</td>
 <td>3</td>
 </tr>
@@ -2569,10 +2029,6 @@ I want to understand IDPS-ESCAPE high level architecture.</p>
 <tr>
 <td>type</td>
 <td>S</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To follow a consistent and well-defined process, while improving development security.</td>
 </tr>
 <tr>
 <td>version</td>
@@ -2590,6 +2046,10 @@ I want to deploy ADBox as a platform independent solution.</p>
 <ol>
 <li>Deploy ADBox via Docker and shell scripts.</li>
 </ol>
+<h3>Rationale</h3>
+<p>Ensure cross-platform compatibility and portability for usage.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-020">MRS-020 Platform Independence</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-001">TST-001 Deploy ADBox via Docker and shell scripts</a></p>
 <table>
@@ -2600,14 +2060,6 @@ I want to deploy ADBox as a platform independent solution.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
 <tr>
 <td>importance</td>
 <td>5</td>
@@ -2625,10 +2077,6 @@ I want to deploy ADBox as a platform independent solution.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>Ensure cross-platform compatibility and portability for usage.</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -2643,6 +2091,10 @@ to create an anomaly detector and run predictions.</p>
 <li>Access ADBox</li>
 <li>Run interactive shell.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To simplify the process of preparing use-case files.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-004">TST-004 Run ADBox console</a></p>
 <table>
@@ -2654,24 +2106,12 @@ to create an anomaly detector and run predictions.</p>
 </thead>
 <tbody>
 <tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
-<tr>
 <td>urgency</td>
 <td>2</td>
 </tr>
 <tr>
 <td>type</td>
 <td>F</td>
-</tr>
-<tr>
-<td>rationale</td>
-<td>To simplify the process of preparing use-case files.</td>
 </tr>
 <tr>
 <td>version</td>
@@ -2687,6 +2127,10 @@ I want to train a base detector using default parameters.</p>
 <li>Access ADBox</li>
 <li>ADBox with default option.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To obtain a detector without use case specification.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a>, <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a></p>
 <table>
@@ -2697,14 +2141,6 @@ I want to train a base detector using default parameters.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
 <tr>
 <td>importance</td>
 <td>2</td>
@@ -2722,10 +2158,6 @@ I want to train a base detector using default parameters.</p>
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To obtain a detector without use case specification.</td>
-</tr>
-<tr>
 <td>version</td>
 <td>0.1</td>
 </tr>
@@ -2739,6 +2171,10 @@ I want to enable the shipping of anomaly detection outcomes to the central index
 <li>Access ADBox.</li>
 <li>Run shipping installation script.</li>
 </ol>
+<h3>Rationale</h3>
+<p>To ensure consisten integration of AD outcomes with SIEM</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-021">MRS-021 IaC Deployment</a></p>
 <p><em>Child links:</em> <a href="TST.html#TST-017">TST-017 ADBox shipping install</a></p>
 <table>
@@ -2749,14 +2185,6 @@ I want to enable the shipping of anomaly detection outcomes to the central index
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>acceptance</td>
-<td>Successful validation according to the corresponding test case specification</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
-</tr>
 <tr>
 <td>importance</td>
 <td>3</td>
@@ -2774,12 +2202,332 @@ I want to enable the shipping of anomaly detection outcomes to the central index
 <td>F</td>
 </tr>
 <tr>
-<td>rationale</td>
-<td>To ensure consisten integration of AD outcomes with SIEM</td>
+<td>version</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-050">50 Insider Threat Detection and Prevention: Data exfiltration <small>SRS-050</small></h1>
+<p>As a security engineer,</p>
+<p>I want RADAR to detect high-volume file read/copy behavior on endpoints and automatically trigger a host active response mitigations with a clear audit trail.</p>
+<ol>
+<li>RADAR shall emit an Insider Threat alert when the per-user anomaly detection model classifies current file-access activity as abnormal, i.e. when observed read volume and/or copy indicators exceed the user’s learned baseline in RRCF model.</li>
+<li>The alert includes user/host context, anomaly score and confidence, and timestamp period.</li>
+<li>The Wazuh Monitor sends the alert to webhook upon passing the value of risk threshold defined per the RADAR Technical Specification:<ul>
+<li>RADAR’s active response system is designed around a risk-aware tiering model that integrates statistical detection results with contextual scenario severity. Instead of relying on static or arbitrary thresholds, the framework interprets anomaly scores through the lens of a Risk = Likelihood × Impact formulation, allowing it to react proportionately to the threat level of each event.</li>
+</ul>
+</li>
+<li>If passed the threshold, the active response executes the configured agent active responses: logging of events for the anomalous period, and user lock on the host. In the case if the computed risk score is below the threshold, the alert is logged in the index.</li>
+<li>The records of active responses are logged.</li>
+</ol>
+<h2>Rationale</h2>
+<p>Detecting massive reads and copy indicators is a reliable early sign of data exfiltration, converting these signals into a single scored alert lets us enforce the risk threshold and automatically apply agent-level containment.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test case specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
 </tr>
 <tr>
 <td>version</td>
-<td>0.1</td>
+<td>0.4</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-051">51 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts <small>SRS-051</small></h1>
+<p>As a security engineer,
+I want RADAR to detect suspicious login activity (failed-login bursts and impossible travel) and apply the existing risk policy to contain the attack.</p>
+<ol>
+<li>RADAR shall emit a Suspicious Login alert when rule-based conditions classify the current authentication pattern as abnormal. Concretely, we flag: (i) a failed-login burst—≥5 failed attempts for the same user within 60 seconds; (ii) impossible travel—a successful login with a country change and computed geo-velocity ≥ 900 km/h; and (iii) a correlation rule where a failed-login burst is followed by an impossible-travel success for the same user within a short window (e.g., 5 minutes). These rules operate alongside the AD pipeline but provide deterministic, immediate detection.</li>
+<li>The alert carries the user/host context, anomaly score and confidence, and time window.</li>
+<li>The Wazuh Monitor sends the alert to webhook upon passing the value of risk threshold.</li>
+<li>If passed the threshold, RADAR triggers the configured actions on agent: logging of events for the anomalous period, user lock on the SSO, and firewall block. In the case if the computed risk score is below the threshold, the alert is logged in the index.</li>
+<li>The records of active responses are logged.</li>
+</ol>
+<h2>Rationale</h2>
+<p>Rapid failed-login bursts and impossible-travel logins are strong indicators of credential compromise, aggregating them into a scored alert with triggered containment enables risk-based actions.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test case specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-042">TST-042 RADAR: build suspicious login</a>, <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.4</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-052">52 DDoS Detection and Prevention: SYN-flood <small>SRS-052</small></h1>
+<p>As a security engineer,
+I want RADAR to detect inbound traffic surges consistent with DDoS against protected services and output the configured mitigation with auditable evidence.</p>
+<ol>
+<li>RADAR shall emit a DDoS alert when the per-endpoint anomaly detection model flags the current traffic profile as anomalous relative to the endpoint’s learned baseline.</li>
+<li>The alert includes the user/host context, anomaly score and confidence, and time window.</li>
+<li>The Wazuh Monitor sends the alert to webhook upon passing the value of risk threshold.</li>
+<li>If passed the threshold, RADAR produces the mitigation output wired for this scenario: firewall block and rate-limiting of the host connections. In the case if the computed risk score is below the threshold, the alert is logged in the index.</li>
+<li>The records of active responses are logged.</li>
+</ol>
+<h2>Rationale</h2>
+<p>Sudden traffic surges against a protected service are a practical indicator of DDoS, turning this into a scored alert enables the risk threshold to trigger mitigations with auditable records.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test case specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.4</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-053">53 Malware Communication Detection and Prevention: Beaconing <small>SRS-053</small></h1>
+<p>As a security engineer,
+I want RADAR to detect malware command-and-control communication through beaconing patterns and contain the attack using the configured flow.</p>
+<ol>
+<li>RADAR shall emit a C2 alert when it observes beacon-like behavior, i.e. the per-host baseline detector finds a connection with the same destination at nearly regular intervals within the analysis window.</li>
+<li>The alert includes the user/host context, anomaly score and confidence, and time window.</li>
+<li>The Wazuh Monitor sends the alert to webhook upon passing the value of risk threshold.</li>
+<li>If passed the threshold, RADAR executes host isolation as configured: firewall block, service termination and quarantining the host. In the case if the computed risk score is below the threshold, the alert is logged in the index.</li>
+<li>The records of active responses are logged.</li>
+</ol>
+<h2>Rationale</h2>
+<p>Regular beaconing to external destinations is a sign of C2 activity, converting it to a scored alert lets RADAR apply the configured containment with an audit trail.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test case specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.4</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-054">54 RADAR Automated Test Framework <small>SRS-054</small></h1>
+<p>As a security engineer,
+I want the RADAR test workflow to be automated end-to-end for reproducibly to bring up the stack, feed scenario data, exercise active responses, and collect results without manual steps.</p>
+<ol>
+<li>Automated ingest datasets into Opensearch and create needed users in scenario-specific systems.</li>
+<li>Automated setup of RADAR environment and dependencies.</li>
+<li>Automated threat simulation for testing the functionality of active responses.</li>
+<li>Automated evaluation of the results including the threat simulations with calculated evaluation metrics.</li>
+</ol>
+<h2>Rationale</h2>
+<p>It guarantees repeatable setup, realistic data flow, reliable exercising of responses, and consistent evidence (artifacts + metrics).</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test case specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.4</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-055">55 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention <small>SRS-055</small></h1>
+<p>As a security engineer,
+I want RADAR to detect access attempts from non-whitelisted countries and apply the existing active response, so that connections from not approved geographies are detected.</p>
+<ol>
+<li>RADAR shall maintain a country whitelist as a machine-readable configuration (e.g., Wazuh CDB list) that can be updated without code changes. The whitelist shall support at least ISO country names or codes consistent with the <code>srcgeoip</code> field produced by the GeoIP enrichment pipeline.</li>
+<li>For each relevant security event (e.g., interactive logins, VPN sessions, exposed service access), the Wazuh pipeline shall enrich the event with: <code>srcip</code> (source IP address), <code>srcgeoip</code> (resolved country/region), user identifier, destination service / hostname, and timestamp.</li>
+<li>RADAR shall emit a "Non-whitelisted Country Access" alert when the <code>srcgeoip</code> value does not match any entry in the configured country whitelist, and the source IP is public and not part of an internal/private address range.</li>
+<li>When the alert is emitted, an active response in the form of email shall be sent to corresponding responsible person.</li>
+<li>The records of active responses are logged.</li>
+</ol>
+<h2>Rationale</h2>
+<p>Country-based access control is a practical policy for reducing exposure of critical services to high-risk or non-business-relevant regions. By combining GeoIP enrichment, a centrally managed country whitelist, and Wazuh active responses, we can automatically detect and contain access attempts from non-approved geographies.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test case specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-043">TST-043 RADAR: build non-whitelist GeoIP detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-056">56 Log volume spike detection per endpoint <small>SRS-056</small></h1>
+<p>As a security engineer,
+I want RADAR to detect unusual log volume spikes for each endpoint based on its own normal behavior, and then apply the existing risk policy to decide how to react.</p>
+<ol>
+<li>RADAR shall emit a "Log volume spike" alert when the detector for an endpoint sees that the number of logs in the current time window is much higher than the learned baseline for that same endpoint, and the anomaly score from the detector is above a configured threshold. The baseline is behavioral and per endpoint (each endpoint has its own “normal” log rate learned from history).</li>
+<li>The "Log volume spike" alert shall include: endpoint identity, detector name/ID, time window (start and end), anomaly score and confidence.</li>
+<li>The Wazuh Monitor sends the alert to webhook upon passing the value of risk threshold.</li>
+<li>If passed the threshold, RADAR shall trigger the configured active responses in the form of email alert and logging.</li>
+<li>The records of active responses are logged.</li>
+</ol>
+<h2>Rationale</h2>
+<p>Each endpoint has its own “normal” log rate. A strong, sudden spike in log volume for a specific endpoint can mean misconfiguration, abuse, or an ongoing attack. Detecting spikes relative to each endpoint’s own baseline reduces noise and allows RADAR’s risk policy to decide when to alert responsible person.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-044">TST-044 RADAR: build log volume abnormal growth</a>, <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
 </tr>
 </tbody>
 </table>

@@ -1,13 +1,12 @@
 settings:
   digits: 3
-  itemformat: yaml
+  itemformat: markdown
   parent: MRS
   prefix: SRS
   sep: '-'
 
 attributes:
   defaults:
-    acceptance: 'Successful validation according to the corresponding test case specification'
     dependence: []
     status: ''
     importance: ''
@@ -19,8 +18,14 @@ attributes:
     rationale: ''
     version: ''
     release: 'Alpha'
+    text: |
+      Description
+
+      ## Rationale
+      - 
+      
+      ## Acceptance criteria
   reviewed:
-  - acceptance
   - dependence
   - status
   - importance
@@ -28,16 +33,11 @@ attributes:
   - risk
   - outlay
   - type
-  - rationale
   - version
   publish:
-    - acceptance
-    - dependence
     - status
     - importance
     - urgency
     - risk
-    - outlay
     - type
-    - rationale
     - version

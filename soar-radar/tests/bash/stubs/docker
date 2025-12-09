@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+: "${LOG_DIR:?LOG_DIR must be set by tests}"
+# Emit a fake detector id when we "run detector.py"
+if printf "%s " "$@" | grep -q "python detector.py"; then
+  echo "det-12345"   # stdout captured into DET_ID by the script
+fi
+echo "docker $*" >> "$LOG_DIR/calls.log"
+exit 0

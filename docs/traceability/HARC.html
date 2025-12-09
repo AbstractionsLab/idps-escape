@@ -24,25 +24,47 @@
 <li><a href="#HARC-001">1.0 ADBox subsystem</a></li>
 <li><a href="#HARC-002">2.0 ADBox architecture</a></li>
 <li><a href="#HARC-003">3.0 IDPS-ESCAPE context</a></li>
+<li><a href="#HARC-004">4.0 RADAR architecture</a></li>
+<li><a href="#HARC-005">5.0 RADAR Automated Test Framework architecture</a></li>
+<li><a href="#HARC-006">6.0 RADAR deployment: Remote Agent and Remote Manager mode</a></li>
+<li><a href="#HARC-007">7.0 RADAR deployment: Remote Agent and Local Manager mode</a></li>
+<li><a href="#HARC-008">8.0 RADAR deployment: Local Agent and Local Manager mode</a></li>
 </ul>
           </nav>
       </div>
       <div class="col-lg-8" id="main">
         <h1 id="HARC-001">1.0 ADBox subsystem <small>HARC-001</small></h1>
-<h2>ADBox subsystem diagram</h2>
 <p>The diagram below depicts the context of the ADBox subsystem.</p>
 <p><img alt="ADBox context diagram" src="assets/1B3A4_DIA_IDPS_ESCAPE_ADBoxDiagrams-ADBox-context_v1.3.png" title="ADBox context diagram" width="80%" /></p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-002">MRS-002 Command &amp; Control</a>, <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a>, <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a>, <a href="MRS.html#MRS-033">MRS-033 API Data Retrieval</a>, <a href="MRS.html#MRS-039">MRS-039 Offline AD</a>, <a href="MRS.html#MRS-041">MRS-041 Standalone AD Subsystem</a></p>
 <h1 id="HARC-002">2.0 ADBox architecture <small>HARC-002</small></h1>
-<h2>ADBox architecture diagram</h2>
 <p>The diagram below depicts the high-level architecture of the ADBox subsystem.</p>
 <p><img alt="ADBox high level architecture" src="assets/1B3A4_DIA_IDPS_ESCAPE_ADBoxDiagrams-ADBox-components_v1.3.png" title="ADBox high level architecture" width="70%" /></p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a>, <a href="MRS.html#MRS-031">MRS-031 Multiple ML Techniques</a>, <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a>, <a href="MRS.html#MRS-033">MRS-033 API Data Retrieval</a>, <a href="MRS.html#MRS-039">MRS-039 Offline AD</a>, <a href="MRS.html#MRS-041">MRS-041 Standalone AD Subsystem</a></p>
 <h1 id="HARC-003">3.0 IDPS-ESCAPE context <small>HARC-003</small></h1>
-<h2>IPDS-ESCAPE context diagram</h2>
-<p>The diagram below illustrates the overall context of the IDPS-ESCAPE SOAR system.</p>
-<p><img alt="IDPS-ESCAPE context diagram" src="assets/IDPS-ESCAPE-context-diagram.png" title="IDPS-ESCAPE context diagram" width="80%" /></p>
+<p>The diagram below illustrates the overall context of the IDPS-ESCAPE system.</p>
+<p><img alt="IDPS-ESCAPE context diagram" src="assets/IDPS-ESCAPE-context-diagram-RADAR.png" title="IDPS-ESCAPE context diagram" width="80%" /></p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-002">MRS-002 Command &amp; Control</a>, <a href="MRS.html#MRS-003">MRS-003 Agent Data Centralization</a>, <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a>, <a href="MRS.html#MRS-005">MRS-005 Host-based Intrusion Detection</a>, <a href="MRS.html#MRS-006">MRS-006 NIDS Support</a>, <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a>, <a href="MRS.html#MRS-008">MRS-008 Network Capture Forwarding</a>, <a href="MRS.html#MRS-011">MRS-011 Signature-based Host IDS</a>, <a href="MRS.html#MRS-012">MRS-012 XDR &amp; SIEM Integration</a>, <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a>, <a href="MRS.html#MRS-017">MRS-017 Monitoring Frontend</a>, <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a>, <a href="MRS.html#MRS-019">MRS-019 3rd-Party Open-source Signature-based NIDS</a>, <a href="MRS.html#MRS-020">MRS-020 Platform Independence</a>, <a href="MRS.html#MRS-022">MRS-022 Network Endpoint Monitoring</a>, <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a>, <a href="MRS.html#MRS-033">MRS-033 API Data Retrieval</a>, <a href="MRS.html#MRS-037">MRS-037 Multiple Deployment Models</a>, <a href="MRS.html#MRS-039">MRS-039 Offline AD</a>, <a href="MRS.html#MRS-040">MRS-040 Signature-Based NIDS</a>, <a href="MRS.html#MRS-041">MRS-041 Standalone AD Subsystem</a></p>
+<h1 id="HARC-004">4.0 RADAR architecture <small>HARC-004</small></h1>
+<p>The diagram below depicts the high-level architecture of the RADAR subsystem.</p>
+<p><img alt="RADAR high level architecture" src="assets/RADAR-component-diagram.png" title="RADAR high level architecture" width="70%" /></p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a>, <a href="MRS.html#MRS-012">MRS-012 XDR &amp; SIEM Integration</a></p>
+<h1 id="HARC-005">5.0 RADAR Automated Test Framework architecture <small>HARC-005</small></h1>
+<p>The diagram below depicts the high-level architecture of the RADAR Automated Test Framework.</p>
+<p><img alt="RATF high level architecture" src="assets/RATF-component-diagram.png" title="RADAR Automated Test Framework high level architecture" width="70%" /></p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<h1 id="HARC-006">6.0 RADAR deployment: Remote Agent and Remote Manager mode <small>HARC-006</small></h1>
+<p>The diagram below illustrates the RADAR build-time and run-time architecture for a deployment in which both the Wazuh Manager and the Wazuh agents are hosted on remote endpoints.</p>
+<p><img alt="RADAR architecture in Remote Agent and Remote Manager mode" src="assets/RADAR-deployment-modes-remote-remote.drawio.png" title="RADAR: Remote Agent and Remote Manager" width="70%" /></p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<h1 id="HARC-007">7.0 RADAR deployment: Remote Agent and Local Manager mode <small>HARC-007</small></h1>
+<p>The diagram below illustrates the RADAR build-time and run-time architecture for a deployment in which the Wazuh Manager is hosted locally, while the Wazuh agent runs on a remote endpoint.</p>
+<p><img alt="RADAR architecture in Remote Agent and Local Manager mode" src="assets/RADAR-deployment-modes-local-remote.drawio.png" title="RADAR: Remote Agent and Local Manager" width="70%" /></p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<h1 id="HARC-008">8.0 RADAR deployment: Local Agent and Local Manager mode <small>HARC-008</small></h1>
+<p>The diagram below illustrates the RADAR build-time and run-time architecture for a deployment in which both the Wazuh Manager and the Wazuh agent are hosted locally using Docker containers.</p>
+<p><img alt="RADAR architecture in Local Agent and Local Manager mode" src="assets/RADAR-deployment-modes-local-local.drawio.png" title="RADAR: Local Agent and Local Manager" width="70%" /></p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
       </div>
     </div>
 </div>

@@ -13,7 +13,7 @@ ENV MY_ENV=${MY_ENV} \
   POETRY_VERSION=1.5.0
 
 ENV user=alab
-ENV SIEM_MTAD_GAT_FOLDER=siem-mtad-gat
+ENV SIEM_MTAD_GAT_FOLDER=soar
 
 # Update and install depencencies
 RUN apt update --fix-missing
@@ -35,10 +35,10 @@ USER ${user}
 RUN pip3 install poetry=="${POETRY_VERSION}"
 
 WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
-COPY poetry.lock pyproject.toml /home/${user}/${SIEM_MTAD_GAT_FOLDER}/
+COPY --chown=${user}:${user} poetry.lock pyproject.toml /home/${user}/${SIEM_MTAD_GAT_FOLDER}/
 
 # Project initialization
-RUN poetry install
+RUN poetry lock && poetry install --only radar
 
 # Creating folders, and files for a project
 COPY . /home/${user}/${SIEM_MTAD_GAT_FOLDER}

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+: "${LOG_DIR:?LOG_DIR must be set by tests}"
+echo "ansible-playbook $*" >> "$LOG_DIR/calls.log"
+exit 0

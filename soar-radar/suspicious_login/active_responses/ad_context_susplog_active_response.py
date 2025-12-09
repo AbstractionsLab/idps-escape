@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import os
 import sys
 import json
 import logging
@@ -9,19 +10,19 @@ import requests
 # ──────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ──────────────────────────────────────────────────────────────────────────────
-OPENSEARCH_URL   = "https://wazuh.indexer:9200"
+OPENSEARCH_URL   = os.environ.get("OS_URL", "https://localhost:9200") 
 # New index for suspicious logins
 OPENSEARCH_INDEX = "wazuh-ad-suspicious-login-2025.*"
-OPENSEARCH_USER  = "admin"
-OPENSEARCH_PASS  = "SecretPassword"
+OPENSEARCH_USER  = os.environ.get("OS_USER", "")
+OPENSEARCH_PASS  = os.environ.get("OS_PASS", "")
 
-WAZUH_API_URL    = "https://192.168.0.28:55000"
-WAZUH_AUTH_USER  = "wazuh-wui"
-WAZUH_AUTH_PASS  = "MyS3cr37P450r.*-"
+WAZUH_API_URL    = os.environ.get("WAZUH_API_URL", "https://localhost:55000")
+WAZUH_AUTH_USER  = os.environ.get("WAZUH_AUTH_USER", "")
+WAZUH_AUTH_PASS  = os.environ.get("WAZUH_AUTH_PASS", "")
 
 HEADERS_JSON     = {"Content-Type": "application/json"}
 MAX_HITS         = 1000
-LOG_FILE         = "/var/ossec/logs/active-responses.log"
+LOG_FILE         = os.environ.get("AR_LOG_FILE", "/var/ossec/logs/active-responses.log")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Logging (to both console and a file)
@@ -127,7 +128,7 @@ def main():
     params = wrapper.get("parameters", {})
     alert  = params.get("alert", {})
     data   = alert.get("data", {})
-    user   = data.get("user_keyword")
+    user   = data.get("entity_keyword")
     start  = data.get("period_start")
     end    = data.get("period_end")
     agent_id = None

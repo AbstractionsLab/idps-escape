@@ -1,0 +1,38 @@
+@startuml Wazuh-RADAR-Data-Flow
+
+left to right direction
+
+
+rectangle "Wazuh Manager" as wazuh {
+  component "Rule Engine" as rules
+}
+
+database "Wazuh Indexer\n(OpenSearch)" as opensearch {
+  component "Scenario Indexes:\nwazuh-ad-*-*" as indexes
+}
+
+rectangle "Anomaly Detectors" as detectors {
+  component "Feature Aggregation" as features
+  component "RRCF Algorithm" as rrcf
+}
+
+rectangle "Monitors" as monitors {
+  component "Threshold Checks" as thresholds
+}
+
+rectangle "ad-webhook" as webhook
+rectangle "RADAR Test Framework" as radar {
+  component "Ansible/Python" as scripts
+}
+
+opensearch --> detectors : Indexed Data
+detectors --> rrcf : Aggregated\nFeatures
+rrcf --> monitors : Anomaly Scores
+monitors --> webhook : Alerts
+webhook --> wazuh : Events
+
+radar -[hidden]-> detectors
+scripts --> detectors : Configures:\n- Detector Logic\n- Shingle Size\n- Window Delay
+
+
+@enduml

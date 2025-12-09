@@ -1,16 +1,71 @@
-<group name="opensearch_ad_alerts">
+<group name="suspicious_login,">
 
-  <!-- 1) Catch-all for any OpenSearch AD alert -->
-  <rule id="100300" level="5">
-    <decoded_as>opensearch_ad</decoded_as>
-    <description>OpenSearch AD alert received</description>
+  <!-- 1) Rule for failed burst logins -->
+  <rule id="210011" level="8" timeframe="60" frequency="5">
+    <if_matched_group>authentication_failed</if_matched_group>
+    <same_field>dstuser</same_field>
+    <description>RADAR SuspiciousLogin: failed-burst (≥5 in 60s)</description>
+    <group>authentication_failure,brute_force</group>
   </rule>
 
-  <!-- 2) Only if it was ‘Suspicious-Login-Detected’ -->
-  <rule id="100302" level="12">
-    <if_sid>100300</if_sid>
-    <match>Suspicious-Login-Detected</match>
-    <description>OpenSearch AD: Suspicious Login Detected</description>
+  <rule id="210012" level="8" timeframe="60" frequency="5">
+    <if_matched_group>authentication_failed</if_matched_group>
+    <same_field>srcuser</same_field>
+    <description>RADAR SuspiciousLogin: failed-burst (≥5 in 60s)</description>
+    <group>authentication_failure,brute_force</group>
   </rule>
 
+  <rule id="210013" level="8" timeframe="60" frequency="5">
+    <if_matched_group>authentication_failed</if_matched_group>
+    <same_field>user</same_field>
+    <description>RADAR SuspiciousLogin: failed-burst (≥5 in 60s)</description>
+    <group>authentication_failure,brute_force</group>
+  </rule>
+
+  <!-- 2) Rule for impossible travel -->
+  <rule id="210020" level="10">
+    <if_group>authentication_failed</if_group>
+    <field name="radar_country_change_i">^1$</field>
+    <field name="radar_geo_velocity_kmh" type="pcre2">^(?:9(?:0[1-9]|[1-9]\d)|[1-9]\d{3,})(?:\.\d+)?$</field>
+    <description>RADAR SuspiciousLogin: impossible travel with failure (≥900 km/h + country change)</description>
+    <group>authentication_success,impossible_travel,geo</group>
+  </rule>
+  <rule id="210021" level="10">
+    <if_group>authentication_success</if_group>
+    <field name="radar_country_change_i">^1$</field>
+    <field name="radar_geo_velocity_kmh" type="pcre2">^(?:9(?:0[1-9]|[1-9]\d)|[1-9]\d{3,})(?:\.\d+)?$</field>
+    <description>RADAR SuspiciousLogin: impossible travel (≥900 km/h + country change)</description>
+    <group>authentication_success,impossible_travel,geo</group>
+  </rule>
+
+  <!-- 3) Rule for failed burst logins + impossible travel -->
+  <rule id="210030" level="12" timeframe="300">
+    <if_matched_sid>210011</if_matched_sid>
+    <if_matched_sid>210020</if_matched_sid>
+    <same_field>dstuser</same_field>
+    <description>RADAR SuspiciousLogin: failed-burst followed by impossible travel</description>
+    <group>authentication,correlation</group>
+    <mitre><id>T1078</id></mitre>
+  </rule>
+  <rule id="210031" level="12" timeframe="300">
+    <if_matched_sid>210012</if_matched_sid>
+    <if_matched_sid>210020</if_matched_sid>
+    <same_field>srcuser</same_field>
+    <description>RADAR SuspiciousLogin: failed-burst invalid user followed by impossible travel</description>
+    <group>authentication,correlation</group>
+    <mitre><id>T1078</id></mitre>
+  </rule>
+  <rule id="210032" level="12" timeframe="300">
+    <if_matched_sid>210013</if_matched_sid>
+    <if_matched_sid>210020</if_matched_sid>
+    <same_field>user</same_field>
+    <description>RADAR SuspiciousLogin: failed-burst invalid user followed by impossible travel</description>
+    <group>authentication,correlation</group>
+    <mitre><id>T1078</id></mitre>
+  </rule>
 </group>
+
+
+
+
+  

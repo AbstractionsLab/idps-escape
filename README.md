@@ -4,9 +4,9 @@ IDPS-ESCAPE, short for Intrusion Detection and Prevention Systems for Evading Su
 
 <img src="./docs/manual/_figures/CyFORT-IDPS-ESCAPE-logo.png" alt="cyfort_logo" width="500"/>
 
-IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into a comprehensive package that implements a Security Orchestration, Automation, and Response (SOAR) system.
+IDPS-ESCAPE is aimed at closely capturing the notion of **MAPE-K** (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into a comprehensive package that implements a Security Orchestration, Automation, and Response (**SOAR**) system.
 
-The resulting SOAR system combines the following building blocks: a Security Information and Event Management (SIEM) system, an Intrusion Detection and Prevention System (IDPS), Cyber Threat Intelligence (CTI) tools, an anomaly detection (AD) subsystem called [**ADBox**](/docs/manual/README.md), and a Risk-aware AD-based Automated Response ([**RADAR**](/soar-radar/README.md)) subsystem providing AD scenario implementations, coupled with active response solutions and SOAR playbooks facilitating security orchestration.
+The resulting SOAR system combines the following building blocks: a Security Information and Event Management (SIEM) system, an Intrusion Detection and Prevention System (IDPS), Cyber Threat Intelligence (CTI) tools, a Risk-aware AD-based Automated Response ([**RADAR**](/soar-radar/README.md)) subsystem providing AD scenario implementations, coupled with active response solutions and SOAR playbooks facilitating security orchestration, and an anomaly detection (AD) subsystem called [**ADBox**](/docs/manual/README.md).
 
 We adopt a hybrid method aimed at robustness and resilience to adversarial interference involving three elements: (i) signature-based detection with (ii) AD based on deep learning models via MTAD-GAT, relying on state-of-the-art advances in artificial intelligence (AI) and machine learning (ML) such as the *attention mechanism* and (iii) a classical algorithm for AD on streams such as the Robust Random Cut Forest (RRCF) algorithm supporting categorical features.
 
@@ -19,10 +19,10 @@ This repository contains the source code and full documentation (requirements, t
 - [User manual](#user-manual)
 - [Technical specifications](#documentation-and-technical-specifications)
 - [Getting started](#getting-started)
-- [ADBox usage](#adbox-usage)
-- [Use case scenario example](#example-of-a-use-case-scenario)
-- [Wazuh-ADBox integration and detector dashboard](#wazuh-adbox-integration-and-detectors-dashboard)
-- [RADAR](#radar)
+  - [RADAR usage](#radar-usage)
+  - [ADBox usage](#adbox-usage)
+    - [Use case scenario example](#example-of-a-use-case-scenario)
+    - [Wazuh-ADBox integration and detector dashboard](#wazuh-adbox-integration-and-detector-dashboard)
 - [Integrations](#integrations)
 - [Disclaimer](#disclaimer-use-of-alphaexperimental-software)
 - [Testing](#testing)
@@ -62,6 +62,26 @@ As a consequence, ADBox also provides a stepping stone towards settling various 
 - Integrated with well-known open-source security solutions such as [OpenSearch](https://opensearch.org/), [Wazuh](https://wazuh.com/), [Suricata](https://suricata.io/);
 - Thanks to building on top of Wazuh, an easy integration with other well-known [third-party solutions](https://documentation.wazuh.com/current/getting-started/use-cases/threat-hunting.html) such as [MISP](https://www.misp-project.org/) using existing mechanisms.
 
+### RADAR
+
+A collection of Risk-aware Anomaly Detection-based Automated Response ([**RADAR**](/soar-radar/README.md)) modules that complete the Security Orchestration, Automation and Response ([**SOAR**](/soar-radar/README.md)) mission of IDPS-ESCAPE, enhancing a traditional IDS/IPS setup by adding intelligent, adaptive, and automated decision-making capabilities on top of both signature-based detections and ML-based anomaly detection signals, providing
+
+- RADAR scenario implementations, including anomaly detectors along with their corresponding active response solutions implemented for Wazuh, currently geared towards an [Amazon AWS implementation](https://github.com/aws/random-cut-forest-by-aws/) of the classical [Robust Random Cut Forest (RRCF) AD on streams algorithm](https://www.amazon.science/publications/robust-random-cut-forest-based-anomaly-detection-on-streams) integrated into Wazuh, enabled by installing the [OpenSearch AD plugin](https://wazuh.com/blog/enhancing-it-security-with-anomaly-detection/), supporting [categorical features](https://docs.opensearch.org/docs/latest/observing-your-data/ad/index/#setting-categorical-fields-for-high-cardinality);
+- **Hybrid detection approach**, for a blended strategy aimed at reducing false negatives and increasing coverage across both known and emerging threat types:
+  - ML-based anomaly detection (via ADBox and RRCF) for identifying previously unknown or behavior-based threats,
+  - Signature-based detection (via Wazuh, Suricata, and a rule-based system) for precise detection of known attacks.
+- **Risk-aware automated response**: RADAR is designed to evaluate alerts in context (severity, type, asset value, correlation with other events) and can apply automated response actions such as:
+  - host isolation,
+  - network rule deployment,
+  - escalation or alerting,
+  - remediation tasks.
+- **Native integration with open-source tooling**:
+  - Wazuh (log collection, endpoint monitoring, signature-based detection),
+  - Suricata (network IDS/IPS),
+  - [ADBox](#adbox) (custom anomaly detection engine powered by deep learning).
+- A dedicated [RADAR test framework](/soar-radar/radar-test-framework/README.md) capable of automating the execution of RADAR experimentation pipelines, from data ingestion to attack simulation, detection and post-processing;
+- A comprehensive [RADAR manual](/soar-radar/README.md) describing best practices for making use of our ADBox for AD powered by deep learning, in hybrid mode, together with the classical RRCF-based AD algorithm built into OpenSearch to tackle various AD and ML challenges, e.g., adversarial ML involving training data set poisoning and trained model manipulation.
+
 ### ADBox
 
 [ADBox](/docs/manual/README.md) is a custom-designed and implemented _anomaly detection_ subsystem, with its key features summarized as follows:
@@ -76,13 +96,15 @@ As a consequence, ADBox also provides a stepping stone towards settling various 
 - A set of AD use-case scenario definitions encoded as YAML files, which can be directly used by the user, but they can also easily form the basis for creating new ones, tailored to the user's preferences for adjusting the training part as well as the prediction part of the ML-based algorithm and pipeline;
 - A data shipper module to integrate the output anomaly detection data into Wazuh, allowing the user to view and analyze the ADBox prediction results using the native Wazuh GUI and dashboards.
 
-### SOAR-RADAR
+### Fully automated deployment with Ansible
 
-A collection of Risk-aware Anomaly Detection-based Automated Response ([**RADAR**](/soar-radar/README.md)) modules that complete the Security Orchestration, Automation and Response ([**SOAR**](/soar-radar/README.md)) mission of IDPS-ESCAPE, providing
+IIDPS-ESCAPE [provides a complete **Infrastructure-as-Code** (IaC)](/soar-radar/README.md) deployment mechanism using [Ansible](https://github.com/ansible/ansible), enabling teams to spin up a fully operational environment automatically and consistently. This ensures a reproducible, scalable installation process suitable for production environments, testbeds, or research.
 
-- RADAR scenario implementations, including anomaly detectors along with their corresponding active response solutions implemented for Wazuh, currently geared towards an [Amazon AWS implementation](https://github.com/aws/random-cut-forest-by-aws/) of the classical [Robust Random Cut Forest (RRCF) AD on streams algorithm](https://www.amazon.science/publications/robust-random-cut-forest-based-anomaly-detection-on-streams) integrated into Wazuh, enabled by installing the [OpenSearch AD plugin](https://wazuh.com/blog/enhancing-it-security-with-anomaly-detection/), supporting [categorical features](https://docs.opensearch.org/docs/latest/observing-your-data/ad/index/#setting-categorical-fields-for-high-cardinality);
-- A dedicated [RADAR test framework](/soar-radar/radar-test-framework/README.md) capable of automating the execution of RADAR experiment pipelines, from data ingestion to attack simulation, detection and post-processing;
-- A comprehensive [RADAR manual](/soar-radar/README.md) describing best practices for making use of our ADBox for AD powered by deep learning, in hybrid mode, together with the classical RRCF-based AD algorithm built into OpenSearch to tackle various AD and ML challenges, e.g., adversarial ML involving training data set poisoning and trained model manipulation.
+The automated setup includes:
+
+- **Wazuh Manager**: automatically installed and configured for signature-based and ML-based monitoring, AD and alerting.
+- **Wazuh Agents**: deployed to monitored endpoints without manual intervention.
+- **RADAR stack**: including all dependencies, configuration templates, and communication channels between RADAR, Wazuh, and ADBox.
 
 ### Front-end
 
@@ -107,77 +129,62 @@ Please see our extensive and detailed [IDPS-ESCAPE user manual](./docs/manual/RE
 
 ## Documentation and technical specifications
 
-You can visit our [traceability page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) to view the technical specifications of IDPS-ESCAPE.
+You can visit our [traceability page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) to view the technical specifications of IDPS-ESCAPE, e.g., [HARC](https://abstractionslab.github.io/idps-escape/docs/traceability/HARC.html) for high-level and [LARC](https://abstractionslab.github.io/idps-escape/docs/traceability/LARC.html) for low-level architectural diagrams, mission and system requirement specifications ([MRS](https://abstractionslab.github.io/idps-escape/docs/traceability/MRS.html) and [SRS](https://abstractionslab.github.io/idps-escape/docs/traceability/SRS.html)), software design artifacts ([SWD](https://abstractionslab.github.io/idps-escape/docs/traceability/SWD.html)), software validation test case specifications ([TST](https://abstractionslab.github.io/idps-escape/docs/traceability/TST.html)) and validation test campaign test reports ([TRB](https://abstractionslab.github.io/idps-escape/docs/traceability/TRB.html)).
 
 ## Getting Started
 
-### IDPS and SIEM integrated deployment
+### RADAR and full stack automated installation
 
-Note that if you already have a running instance of Wazuh, and do not wish to integrate Suricata, you can simply skip to the [ADBox installation section](#adbox-installation).
+See the [main RADAR manual page](./soar-radar/README.md) to learn how to use the `build-rader.sh` script to bootstrap the entire IDPS-ESCAPE stack and RADAR dependencies, powered by Ansible.
 
-A complete and installation of the signature-based intrusion detection and the SIEM subsystems of IDPS-ESCAPE can be done using the following guides:
+### RADAR usage
 
-1. Suricata, to enable network monitoring capabilities:
+The [RADAR](/soar-radar/README.md) subsystem provides solutions for completing the SOAR mission of IDPS-ESCAPE enabling security orchestration and automation driven by a Risk-aware AD-based active response (AR) paradigm. Please see the corresponding RADAR [README](/soar-radar/README.md) for more information.
 
-      a.  [installation in a containerized environment](./deployment/suricata/suricata_installation.md#installation-and-configuration-of-suricata)
-      
-      b.  [configuration to local network](./deployment/suricata/suricata_installation.md#suricata-configuration-file)
-1. Wazuh central components installation, for SIEM \& XDR:
+Run `build-radar.sh` to bring up core services, optionally agent containers, run the Ansible playbook limited to the manager + agent group for the selected scenario, and build `radar-cli:latest`.
 
-    a. [installation of Dashboard, Manager and Indexer in a containerized environment ](./deployment/wazuh/wazuh_installation.md)
+**Usage:**
+```bash
+build-radar.sh <scenario> --agent <local|remote> --manager <local|remote> 
+                          --manager_exists <true|false> [--ssh-key </path/to/private_key>]
 
-    b. [configuration to local system](./deployment/wazuh/wazuh_installation.md#next-steps)
+Scenarios:
+  suspicious_login | insider_threat | ddos_detection | malware_communication | geoip_detection | log_volume
 
-1. [Installation of a Wazuh agent](./deployment/wazuh/wazuh_agents.md) to enable host monitoring capabilities.
+Flags:
+  --agent           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)
+  --manager         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)
+  --manager_exists  Whether the manager already exists at that location:
+                      - true  : do not bootstrap a manager
+                      - false : bootstrap (local: docker compose up; remote: let Ansible bootstrap)
+  --ssh-key         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: $HOME/.ssh/id_ed25519
+```
 
-    a. Possibly, deployment of additional agents on other remote hosts (system *endpoints*), same as above.
-  
-    b. Possibly, [enable remote traffic monitoring](./deployment/remote_monitoring/remote_monitoring.md).
+Example
 
-1. Follow [integration procedure of Suricata and Wazuh](./deployment/integration.md).
+- Suspicious login scenario set up for a customer: local manager does not exist (single node or multi node), deploy Wazuh agents on remote endpoints.
+```
+./build-radar.sh suspicious_login --agent remote --manager local --manager_exists false
+```
 
- Details of the above steps and scripts are provided in the [Guide for IDPS and SIEM integrated deployment](./deployment/README.md).
+- Geo IP detection set up for a customer: local manager does not exist (single node or multi node), deploy Wazuh agents on remote endpoints.
+```
+./build-radar.sh suspicious_login --agent remote --manager local --manager_exists false
+```
 
- This integration guarantees:
- 
- - joint monitoring of host and network events, and
- - centralized storage.
+#### RADAR outcome in Wazuh Dashboard
 
-All the data ending up in the central SIEM \& XDR can now be fed to ADBox for training ML models and anomaly detection, providing a holistic view of the system(s) under monitoring.
+Here we provide a screenshot of a successful run of the Geo IP detection RADAR scenario:
+
+![Wazuh Dashboard Discover RADAR geo IP detection](/docs/manual/_figures/RADAR-GeoIP-detection-Wazuh-Dashboard-result.png "Wazuh Dashboard Discover RADAR Geo IP detection")
+
+The currently implemented active response sends an email to a designated recipient.
+![](/docs/manual/_figures/RADAR-GeoIP-detection-Automated-Response-email.png)
 
 ### ADBox installation
 
-ADBox can be deployed using the following methods:
-  
-- [Deployment using Docker and our shell scripts](./docs/manual/installation.md#installing-adbox-via-docker-and-shell-script) (**recommended for end-users**);
-
-- [Deployment in a development containerized environment in VS Code](./docs/manual/installation.md#installing-adbox-in-a-development-containerized-environment-in-vs-code) (**recommended for developers**);
-
-Below we describe the deployment using Docker and shell scripts. For other installation methods, please see the [installation](./docs/manual/installation.md) page of the user manual.
-
-#### Installing ADBox via Docker and shell scripts
-
-The easiest and recommended way to deploy and run ADBox is described in this section and can be achieved using our Docker definition file and build/execution scripts, which can be found in the repository. The instructions below work on GNU/Linux, MacOS and Windows Subsystem for Linux (WSL). ADBox is run as a service in a Docker container.
-
-##### Requirements
-
-The following pieces of software are necessary for setting up the ADBox as a service in a Docker container.
-
-- A local installation of [Docker Engine](https://docs.docker.com/engine/install/), with the Docker service running prior to launching ADBox.
-
-##### Installation
-
-1. Simply clone the repository or download a ZIP archive of the project 
-
-    ```sh
-    git clone https://github.com/AbstractionsLab/idps-escape.git
-    ```
-
-2. Unzip the archive, switch to the extracted directory (`cd foldername`) via a terminal running a shell (e.g., bash, zsh) and make the two shell scripts executable: `chmod +x script-name.sh`. Then, change working directory to the cloned folder containing all the files along with the Dockerfile and build the image by running our build script: `./build-adbox.sh`;
-
-3. Finally, launch ADBox by executing `./adbox.sh`, which runs the default mode if no arguments are provided to the command-line interface (CLI); running `./adbox.sh -h` displays the CLI help menu describing the available commands.
-
-![ADBox CLI](./docs/manual/_figures/adbox-cli.png)
+For a description of the deployment model using Docker and shell scripts and other installation methods, please see the [installation](./docs/manual/adbox_installation.md) page of the user manual.
 
 ### ADBox usage
 
@@ -195,286 +202,27 @@ The ADBox driver/CLI currently provides four options:
 
 1. Running ADBox using the `-s` flag enables data shipping to Wazuh on top of the expected behavior. Namely, `./adbox.sh -s`  and `./adbox.sh -u 2 -s`, perform the same operations as without this flag, plus the shipping to Wazuh. We recommend to read the manual's page about [ADBox integration in Wazuh](/docs/manual/detector_data_stream.md) before the usage. 
 
+#### Example of a use-case scenario
 
-#### Verifying connection with Wazuh
+For a detailed walkthrough and ADBox use-case scenario preparation and execution, see our [dedicated example](/docs/manual/example.md) illustrating the usage of ADBox, adopting the end user point of view.
 
-Before running ADBox training and prediction scenarios, you can verify whether a connection between ADBox and an instance of Wazuh can be established successfully using the `-c` flag:
+#### Wazuh-ADBox integration and detector dashboard
 
-```sh
-./adbox.sh -c
-```
-
-You can set/modify the parameters (IP, port, username and password) for connecting to Wazuh via the [Wazuh credentials JSON file](./siem_mtad_gat/assets/secrets/wazuh_credentials.json).
-
-#### Executing a use-case from a YAML file
-
-The ADBox takes inputs from a YAML file stored in the `/siem_mtad_gat/assets/drivers/` folder. By default, the folder contains several YAML-encoded use-cases, which can be used for training models and running predictions.
-
-A training and detection use-case can be run by providing the `-u` flag along with an integer to the script.
-
-```sh
-./adbox.sh -u {number}
-```
-
-For example, to run use-case 1, execute the script as follows:
-
-```sh
-./adbox.sh -u 1
-```
-
-With this input, the ADBox will take the inputs specified in the `uc_1.yaml` file.
-
-The folder containing the YAML files also contains a `driver.yaml` file that provides a template for writing your own custom YAML files.
-
-For example, one can run a new [use-case](./docs/manual/use_case.md), by specifying different input parameters in a new YAML file, called `uc_6.yaml` and then run the adbox as follows:
-
-```sh
-./adbox.sh -u 6
-```
-
-All the outputs produced as a result of running use-cases are stored in `./siem_mtad_gat/assets/detector_models/{detector_id}/prediction_{current_date}/predict_output.json`.
-
-#### Interacting with a console (contains bugs in the alpha version):
-
-```sh
-./adbox.sh -i
-```
-
-Running the script using the `-i` flag will open an interactive console which will ask for user inputs.
-
-The output of the all the detections performed through the console are stored in `./siem_mtad_gat/assets/detector_models/{detector_id}/prediction_{current_date}/predict_output.json` file.
-
-
-#### Executing as default:
-
-```sh
-./adbox.sh
-```
-
-In this mode, the ADBox will train a detector using the default arguments and then also perform detection based on default arguments, with the detector trained using the previously mentioned default arguments. To know more about the input arguments used in default mode, visit the [user manual](./docs/manual/README.md) page.
-
-The output of the default detection is also stored in `./siem_mtad_gat/assets/detector_models/{detector_id}/prediction` folder.
-
-#### Shipping Data to Wazuh
-
-#### Install ADBox-Wazuh shipping
-
-Adding the "shipping flag" for the first time installs dedicated ADBox index templates and policies in the Wazuh indexer. We recommend reading the manual page about [ADBox integration in Wazuh](/docs/manual/detector_data_stream.md) before using this option. 
-
-```sh
-./adbox.sh -s
-```
-#### Executing use cases and shipping to Wazuh
-By adding the `-s` flag,
-
-```sh
-./adbox.sh -u 2 -s
-```
-the computed predictions are shipped to a custom data stream in the Wazuh indexer. We recommend reading the manual page about [ADBox integration in Wazuh](/docs/manual/detector_data_stream.md) before using this option. 
-
-## Example of a use-case scenario
-
-In this section, we present an example illustrating the usage of ADBox, adopting the end user point of view.
-
-### My system
-
-I have deployed all the components as explained in the [guide for IDPS and SIEM integrated deployment](./deployment/guide_sids.md) and the
-[ADBox user manual installation page](./docs/manual/installation.md). Moreover, I have enabled [Linux resource monitoring](./docs/manual/linux_resource.md).
-
-### My use-case
-
-I want a detector which correlates resource usage and rules statistics. Once created, I want this detector to keep running on new data.
-
-Therefore, I prepare a dedicated [use-case file](./docs/manual/use_case.md).
-
-Namely,
-
-- I have to identify the features of the [multivariate time-series](./docs/manual/time_series.md) that I want to perform detection on. To do so, I analyze the event logs of my system.
-
-- For every feature, I choose a suitable aggregation method for the *granularity* I wish to use. 
-
-- For example, I would like a new point every 30 seconds (**lowest advised granularity**). Every point has 3 dimensions representing the average CPU percent usage, average memory percent usage and the total `firedtimes` rule statistics parameter.
-
-I have to decide:
-
-- how I wish to handle missing values,
-- the detector name,
-- the data that is to be used to train my detector,
-- the detection interval (window size), and
-- the number of epochs for training.
-
-For example, I want anomalies to be flagged over intervals of 3.5 minutes, so the window size should be 8. Then, I also want to use all my data of the current month that is already available to train the detector.
-
-For the prediction, I want almost real-time results but I would like to fetch data in batches. For example, I want to get points every 6 minutes, then in batches of 12 points.
-
-I encode this in [`siem_mtad_gat/assets/drivers/uc-9.yaml`](../../siem_mtad_gat/assets/drivers/uc_9.yaml)
-
-```YAML
-training:
-  aggregation: true
-  aggregation_config:
-    features:
-      data.cpu_usage_%:
-      - average
-      data.memory_usage_%:
-      - average
-      rule.firedtimes:
-      - count
-    fill_na_method: Zero
-    granularity: 30s
-    padding_value: 0
-  categorical_features: false
-  columns:
-  - data.cpu_usage_%
-  - data.memory_usage_%
-  - rule.firedtimes
-  display_name: detector_example
-  index_date: '2024-08-*'
-  train_config:
-    epochs: 8
-    window_size: 6
-
-prediction: 
-    run_mode: BATCH
-    batch_size: 12
-```
-#### Running the pipeline
-
-I run ADBox
-
-```sh
-./adbox.sh -u 9
-```
-
-and stop it after a few hours.
-
-This produces a detector with id `2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc9` and the associated folder [`siem_mtad_gat/assets/detector_models/2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc9`](./siem_mtad_gat/assets/detector_models/2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95/).
-
-```sh
-2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc9
-├── input
-│   ├── detector_input_parameters.json
-│   └── training_config.json
-├── prediction
-│   ├── uc-9_predicted_anomalies_data-1_2024-08-30_10-24-15.json
-│   └── uc-9_predicted_data-1_2024-08-30_10-24-15.json
-└── training
-    ├── losses_train_data.json
-    ├── model.pt
-    ├── scaler.pkl
-    ├── spot
-    │   ├── spot_feature-0.pkl
-    │   ├── spot_feature-1.pkl
-    │   ├── spot_feature-2.pkl
-    │   └── spot_feature-global.pkl
-    ├── test_output.pkl
-    ├── train_losses.png
-    ├── train_output.pkl
-    └── validation_losses.png
-```
-
-### Detection analysis
-
-Using the [ADBox Result Visualizer Notebook](./siem_mtad_gat/frontend/viznotebook/result_visualizer.ipynb), I can plot the results and analyze them. Here, I collect a few observations.
-
-#### Training
-
-The training losses are rather good for 8 epochs, while the same cannot be said about the validation losses. I could try the same setting, while training the detector for more epochs.
-
-![training losses](./siem_mtad_gat/assets/detector_models/2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95/training/train_losses.png)
-
-![validation losses](./siem_mtad_gat/assets/detector_models/2d36a80a-c47a-4eb4-bb3e-5b2bfb90dc95/training/validation_losses.png)
-
-#### Prediction
-
-I ran the batch prediction from `2024-08-30T10:18:04Z` to `2024-08-30T13:05:30Z` UTC time.
-
-**Global overview**
-
-![Batch](./docs/manual/_figures/example_global.png)
-
-During this time period, 5 anomalous windows were flagged, 4 consecutive and 1 alone. Let's call them A1 and A2, respectively.
-
-![a1](./docs/manual/_figures/example-a1.png)
-
-![a2](./docs/manual/_figures/example-a2.png)
-
-**Feature overview**
-
-Looking at the feature statistics, we can see these two anomalies expressing two different cases:
-
-- anomalies in A1 can be also considered anomalies at the feature level.
-- the anomaly in A2 is anomalous **only** at a global level. 
-
-![f1](./docs/manual/_figures/f1.png)
-
-![f2](./docs/manual/_figures/f2.png)
-
-![t1](./docs/manual/_figures/true.png)
-
-**Wazuh Dashboard**
-
-Looking at the Wazuh Dashboard, we can observe a high number of events in proximity of A1:
-
-![w1](./docs/manual/_figures/example-w1.png)
-
-![w2](./docs/manual/_figures/example-w2.png)
-
-### Mapping anomalies to real events
-
-We traced the two anomalies to two real events that had happened in the corresponding detections intervals:
-
-- A1 matches with the running of `apt update` and `apt upgrade` on the host machine.
-- A2 matches with a reboot.
-
-### Remarks
-
-In both cases, the actions that (most probably) generated the anomalies had been carried out by a system administrator. Otherwise, while A1 would have been noticed by looking at single features and/or Wazuh; A2 would not have been as obvious to track.
-
-## Wazuh-ADBox integration and detector dashboard
-
-Since IDPS-ESCAPE version 0.1.4, it is possible to ship prediction outcomes to the Wazuh indexer and consult them directly using the Wazuh dashboard.
-We summarize the key points below, referring to the corresponding manual page [Wazuh-ADBox integration](/docs/manual/detector_data_stream).
-
-### Data shipping to the Wazuh indexer and dashboard integration
-
-The training and prediction pipelines are instructed via [use cases](/docs/manual/use_case.md). To enable the data shipping to the Wazuh indexer, it is sufficient to run ADBox with the flag `-s`:
-
-```sh
-$ ./build-adbox.sh
-...
-$ ./adbox.sh -u {number} -s
-```
-
-This way, ADBox:
-- at *training time*,  creates a [**detector data stream**](/docs/manual/detector_data_stream.md#detector-data-streams) associated with the detector.
-- at *prediction time*, adds the outcomes to the corresponding detector data stream.
-
-A **detector stream** is a [data stream index](https://opensearch.org/docs/latest/im-plugin/data-streams/) of the Wazuh Indexer (i.e., its underlying OpenSearch  distribution).  
-
-Following the [**integration procedure**](/docs/manual/detector_data_stream.md#integrate-in-wazuhs-dashboard) described in the manual it is possible to explore a detector's anomaly predictions via the Wazuh Discovery Dashboard.
+Since IDPS-ESCAPE version `0.1.4`, it is possible to ship prediction outcomes to the Wazuh indexer and consult them directly using the Wazuh dashboard. We summarize the key points in the [installation page](/docs/manual/adbox_installation.md#shipping-data-to-wazuh), referring to the corresponding manual page [Wazuh-ADBox integration](/docs/manual/detector_data_stream).
 
 ![Wazuh Dashboard Discover ADBox Detector](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_30-Discover.png "Wazuh Dashboard Discover ADBox Detector")
 
 With a customized Dashboard example provided below. You can find instructions for building such a dashboard in a [dedicated manual page](/docs/manual/dashboard_tutorial.md).
 ![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_25-Dashboard-10.png)
 
-### Video walkthrough of ADBox Detector dashboard creation in Wazuh
-
 For an improved visualization, we explain in our [Detector Dashboard Tutorial](/docs/manual/dashboard_tutorial.md) how to construct a dedicated Detector Dashboard in the Wazuh Dashboard, combining multiple visualizations of global and feature-wise results, and related data from other Wazuh indices as well.
 
 Combining Discover Dashboard and our Detector Dashboard we can monitor (in realtime) and investigate anomalies.
 ![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_36-Dashboard-video-2.gif)
 
-## RADAR
-
-The [RADAR](/soar-radar/) subsystem provides solutions for completing the SOAR 
-mission of IDPS-ESCAPE enabling security orchestration and automation driven by a 
-Risk-aware AD-based active response (AR) paradigm. Please see the corresponding RADAR [README](/soar-radar/README.md) for more information.
-
 ## Integrations
 
-In the [manual page](/integrations/README.md) of our integrations [package](/integrations/), you will find a concise overview of the artifacts (manuals, Docker compose files, configuration files, code and scripts) for integrating other tools with IDPS-ESCAPE, e.g., MISP, OpenCTI, OpenBAS, [SATRAP](https://github.com/AbstractionsLab/satrap-dl) and [OpenTRICK](https://github.com/itrust-consulting/OpenTRICK). We also discuss best practices for improving such integrations and avoiding certain pitfalls.
+In the [manual page](/integrations/README.md) of our integrations [package](/integrations/), you will find a concise overview of the artifacts (manuals, Docker compose files, configuration files, code and scripts) for integrating other tools with IDPS-ESCAPE, e.g., MISP, OpenCTI, OpenBAS. We also discuss best practices for improving such integrations and avoiding certain pitfalls.
 
 ## Disclaimer: use of alpha/experimental software
 
@@ -502,6 +250,16 @@ Furthermore, we highlight the following points:
 
 ## Testing
 
+For software validation test cases, please see the test campaign results (e.g., TRA and TRB) on our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html). The test artifacts described below deal with unit/integration/system testing.
+
+### RADAR
+
+RADAR is also shipped with an extensive [unit test suite](./soar-radar/tests/), which can be run in a dedicated containerized environment using a [test entry point](./soar-radar/test.sh).
+
+#### RADAR test framework
+
+Moreover, the RADAR subsystem comes with a dedicated test framework with support for Infrastructure as Code (IaC) via Ansible aimed at automating the experimentation and validation chain of activities, i.e., a pipeline handling ingestion of datasets, preprocessing, training and ML model baseline establishment, attack simulation, data collection, followed by post-processing and computation of statistical measures. See [RADAR test framework](/soar-radar/radar-test-framework/README.md) for more details.
+
 ### ADBox
 
 ADBox comes with an extensive suite of unit tests. A dedicated containerized environment can be built by running `./build-adbox.sh` (the script needs to be made executable). Then, the full set of unit tests can be run as follows
@@ -515,26 +273,22 @@ Otherwise, a test file can be specified:
 ./run_test.sh  tests/{name}_test.py
 ```
 
-For software validation test cases, please see the test campaign results (e.g., TRA and TRB) on our [traceability web page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html).
-
-### RADAR test framework
-
-The RADAR subsystem comes with a dedicated test framework with support for Infrastructure as Code (IaC) via Ansible aimed at automating the experimentation and validation chain of activities, i.e., a pipeline handling ingestion of datasets, preprocessing, training and ML model baseline establishment, attack simulation, data collection, followed by post-processing and computation of statistical measures. See [RADAR test framework](/soar-radar/radar-test-framework/README.md) for more details.
-
 ## Roadmap
 
 Some of the currently planned items include:
 
+- More advanced hybrid correlation logic between signatures and anomalies;
+- Enhanced RADAR response strategies and orchestration;
+- Automatic model training pipelines within ADBox (policy-based, e.g. schedule, custom criteria, etc.);
+- Improved support for categorical and mixed-type anomaly detection in ADBox;
+- Greater robustness against missing or noisy data;
+- Extended integrations with additional open-source security tools;
 - Adding new reusable RADAR and ADBox use case scenarios;
-- Hybridizing RADAR scenarios: AD + signature-based detection;
 - Combining classical AD with deep learning, in our case: RRCF + MTAD-GAT;
 - [SATRAP](https://github.com/AbstractionsLab/satrap-dl) engine integration for advanced real-time CTI on a system security graph combined with world CTI;
 - [OpenTRICK](https://github.com/itrust-consulting/OpenTRICK) asset dependency conversion to a SATRAP system security graph;
 - [OpenTide](https://github.com/OpenTideHQ) integration;
 - Interconnecting ADBox and RADAR;
-- ADBox: add support for categorical features;
-- ADBox: add automatic (online) retraining (policy-based, e.g. schedule, custom criteria, etc.);
-- Stabilizing the current implementation and improving its resilience/fault tolerance, especially when it comes to dealing with missing and ill-formed raw data.
 
 For details on our roadmap and features planned for future releases, please see the [Wiki](https://github.com/AbstractionsLab/idps-escape/wiki) section of this repository.
 
@@ -543,6 +297,8 @@ For details on our roadmap and features planned for future releases, please see 
 Copyright (c) itrust Abstractions Lab and itrust consulting. All rights reserved.
 
 Licensed under the [GNU Affero General Public License (AGPL) v3.0](LICENSE) license.
+
+For more information, please consult the [list of authors and contributors page](/AUTHORS).
 
 ## Acknowledgment
 

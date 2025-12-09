@@ -1,29 +1,52 @@
 #!/usr/bin/env python3
-import csv
-import glob
-import json
-import os
+from __future__ import annotations
+import csv, glob, json, os
 from datetime import datetime, date, timedelta, timezone
+from pathlib import Path
 import requests
 from requests.auth import HTTPBasicAuth
+
+from convert import convert_row_to_wazuh_docs
 
 # ────────────────────────────
 # Configuration
 # ────────────────────────────
-ES_URL = "https://wazuh.indexer:9200"
-AUTH = HTTPBasicAuth("admin", "SecretPassword")
-CA_CERT = "/etc/ssl/root-ca.pem"
+
+def load_env(env_path: Path) -> None:
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line: 
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip())
+
+load_env(Path(".env"))
+ES_URL = os.environ.get("OS_URL", "")
+os_user = os.environ.get("OS_USER", "")
+os_pass = os.environ.get("OS_PASS", "")
+AUTH = HTTPBasicAuth(os_user, os_pass)
+CA_CERT = os.environ.get("OS_VERIFY_SSL", "")
 CHUNK_SIZE = 200
 REQUEST_TIMEOUT = 60
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+PIPELINE_NAME = None
+
 # ────────────────────────────
-# Send bulk via HTTP
+# HTTP bulk
 # ────────────────────────────
 def send_bulk(lines):
+    params = []
+    if PIPELINE_NAME:
+        params.append(f"pipeline={PIPELINE_NAME}")
+    params.append("refresh=true")
+    url = f"{ES_URL}/_bulk?{'&'.join(params)}"
+
     data = "\n".join(lines) + "\n"
     resp = requests.post(
-        f"{ES_URL}/_bulk?refresh=true",
+        url,
         auth=AUTH,
         headers={"Content-Type": "application/x-ndjson"},
         data=data,
@@ -33,19 +56,19 @@ def send_bulk(lines):
     resp.raise_for_status()
     result = resp.json()
     if result.get("errors"):
-        print("Bulk errors:", result["items"])
+        failures = [it for it in result.get("items", []) if it.get("index", {}).get("error")]
+        print(f"Bulk had {len(failures)} errors; first: {failures[:3]}")
     else:
-        print(f"Indexed chunk of {len(lines) // 2} docs")
-
+        print(f"Indexed chunk of {len(lines)//2} docs")
 
 # ────────────────────────────
-# Date shifting
+# Date shifting + bulk
 # ────────────────────────────
-def shift_and_bulk(file_pattern, index_prefix, date_field, date_fmt, day_shift):
+def shift_and_bulk(file_pattern: str, index_prefix: str, date_field: str, date_fmt: str, day_shift: int):
     """
     day_shift:
-      -1 => map events to yesterday (for training)
-       0 => map events to today (simulate real-time)
+      < 0 => treat as training day   → index_prefix-YYYY.MM.DD
+      >=0 => treat as prod/sim day   → index_prefix-YYYY.MM.DD
     """
     target_date = date.today() + timedelta(days=day_shift)
     mode = "Training" if day_shift < 0 else "Simulation"
@@ -56,36 +79,25 @@ def shift_and_bulk(file_pattern, index_prefix, date_field, date_fmt, day_shift):
         with open(path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                # parse original timestamp
                 orig = datetime.strptime(row[date_field], date_fmt)
-                # new timestamp with shifted date
-                new_ts = datetime.combine(target_date, orig.time())
-                utc_ts = new_ts.astimezone(timezone.utc)
-                iso_ts = utc_ts.isoformat()
+                shifted_local = datetime.combine(target_date, orig.time())
 
-                # enrich row
-                row["@timestamp"] = iso_ts
-                row["event_hour"] = utc_ts.hour
-                # compute bytes of content if present
-                if "content" in row:
-                    row["content_bytes"] = len(row["content"].encode("utf-8"))
+                syscall_doc, path_doc = convert_row_to_wazuh_docs(row, shifted_local)
 
-                # prepare NDJSON: meta + source
-                idx = f"{index_prefix}-{new_ts.strftime('%Y.%m.%d')}"
-                buffer.append(json.dumps({"index": {"_index": idx}}))
-                buffer.append(json.dumps(row))
+                idx = f"{index_prefix}-{shifted_local.strftime('%Y.%m.%d')}"
+                buffer.append(json.dumps({"index": {"_index": idx}})); buffer.append(json.dumps(syscall_doc, separators=(",",":")))
+                buffer.append(json.dumps({"index": {"_index": idx}})); buffer.append(json.dumps(path_doc,    separators=(",",":")))
 
-                # send in chunks
                 if len(buffer) >= CHUNK_SIZE * 2:
-                    send_bulk(buffer)
-                    buffer.clear()
+                    send_bulk(buffer); buffer.clear()
 
-        # send leftovers
         if buffer:
             send_bulk(buffer)
         print(f" → Completed {mode}, indexed into {idx}")
 
-
+# ────────────────────────────
+# Main
+# ────────────────────────────
 if __name__ == "__main__":
     to_load = [
         ("file2-5.csv", -5),
@@ -93,20 +105,20 @@ if __name__ == "__main__":
         ("file2-3.csv", -3),
         ("file2-2.csv", -2),
         ("file2-1.csv", -1),
-        ("file2+0.csv", 0),
-        ("file2+1.csv", 1),
-        ("file2+2.csv", 2),
-        ("file2+3.csv", 3),
-        ("file2+4.csv", 4),
-        ("file2+5.csv", 5)
+        ("file2+0.csv",  0),
+        ("file2+1.csv",  1),
+        ("file2+2.csv",  2),
+        ("file2+3.csv",  3),
+        ("file2+4.csv",  4),
+        ("file2+5.csv",  5)
     ]
 
     for filename, shift in to_load:
         file_pattern = os.path.join(BASE_DIR, "dataset", filename)
         shift_and_bulk(
-            file_pattern,
-            "wazuh-ad-insider-threat",
-            "date",
-            "%m/%d/%Y %H:%M:%S",
+            file_pattern=file_pattern,
+            index_prefix="wazuh-ad-insider-threat",
+            date_field="date",
+            date_fmt="%m/%d/%Y %H:%M:%S",
             day_shift=shift
         )

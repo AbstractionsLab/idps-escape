@@ -1,6 +1,6 @@
 settings:
   digits: 3
-  itemformat: yaml
+  itemformat: markdown
   parent: TST
   prefix: TRA
   sep: '-'
@@ -13,10 +13,35 @@ attributes:
     defect_description: ''
     comments: ''
     text: |
-      Test execution results for the test case (TST) referred in the parent link.
-      ## Test environment details
-      - OS
-      - ..
+      ## Relevant test environment and configuration details
+
+      - Software deviations: aligned with test case specification, N/A
+      - Hardware deviations: aligned with test case specification, N/A
+
+      ## Test execution results
+
+      Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.
+
+      **Test case step 1**: Verify that...
+
+      - ?c5-defect-0 OR ?c5-defect-1 OR ?c5-defect-2 OR ?c5-defect-3 OR ?c5-defect-4
+
+      ### Defect summary description
+      
+      Defect-free test execution, i.e., defect category: ?c5-defect-0 OR ?c5-defect-1 OR ?c5-defect-2 OR ?c5-defect-3 OR ?c5-defect-4
+
+      ### Text execution evidence
+      
+      See linked files (if any), e.g., screenshots, logs, etc.
+
+      ### Comments
+      
+      Any additional informative details not fitting in the above sections.
+
+      ## Guide
+
+      - Defect category: ?c5-defect-0; ?c5-defect-1; ?c5-defect-2; ?c5-defect-3; ?c5-defect-4
+      - Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)
 
   publish:
     - test_date

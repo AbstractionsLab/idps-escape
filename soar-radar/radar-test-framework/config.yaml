@@ -165,26 +165,28 @@ scenarios:
     dataset_dir: suspicious_login/dataset
     time_field: "@timestamp"
     categorical_field: "User ID.keyword"
-    detector_interval: 10
+    detector_interval: 1
     delay_minutes: 1
-    monitor_name: "SuspiciousLogin-Monitor"
-    trigger_name: "Suspicious-Login-Detected"
-    anomaly_grade_threshold: 0.8
-    confidence_threshold: 0.85
+    monitor_name: "SuspiciousLogin-Monitor1"
+    trigger_name: "Suspicious-Login-Detected1"
+    anomaly_grade_threshold: 0.1
+    confidence_threshold: 0.1
+    shingle_size: 1
     features:
+      - feature_name: geo_velocity_kmh
+        feature_enabled: true
+        aggregation_query:
+          geo_velocity_kmh:
+            max:
+              field: geo_velocity_kmh
+              missing: 0
+
       - feature_name: login_count
         feature_enabled: true
         aggregation_query:
           login_count:
             value_count:
               field: User ID.keyword
-
-      - feature_name: distinct_geo_country
-        feature_enabled: true
-        aggregation_query:
-          distinct_geo_country:
-            cardinality:
-              field: Country.keyword
 
       - feature_name: login_hour_cardinality
         feature_enabled: true
@@ -193,9 +195,36 @@ scenarios:
             cardinality:
               field: event_hour
 
-#      - feature_name: login_hour_avg
+      - feature_name: distinct_geo_country
+        feature_enabled: true
+        aggregation_query:
+          distinct_geo_country:
+            cardinality:
+              field: Country.keyword
+#      - feature_name: avg_country_change
 #        feature_enabled: true
 #        aggregation_query:
-#          login_hour_avg:
+#          avg_country_change:
 #            avg:
-#              field: event_hour
+#              field: country_change_i
+#      - feature_name: avg_asn_novelty
+#        feature_enabled: true
+#        aggregation_query:
+#          avg_asn_novelty:
+#            avg:
+#              field: asn_novelty_i
+#      - feature_name: avg_device_novelty
+#        feature_enabled: true
+#        aggregation_query:
+#          avg_device_novelty:
+#            avg:
+#              field: device_novelty_i
+#      - feature_name: docs_per_bucket
+#        feature_enabled: true
+#        aggregation_query:
+#          docs_per_bucket:
+#            value_count:
+#              field: "@timestamp"
+
+
+      

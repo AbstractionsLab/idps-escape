@@ -2,6 +2,7 @@ settings:
   digits: 3
   prefix: MRS
   sep: '-'
+  itemformat: markdown
 
 attributes:
   defaults:
@@ -10,10 +11,14 @@ attributes:
     importance: "5"
     urgency: "5"
     vm: 'T'
-    acceptance-criteria: |
-      Successful validation according to the
-      corresponding test case specification
     release: "Alpha"
+    text: |
+      Description
+
+      ## Rationale
+      - 
+      
+      ## Acceptance criteria
     # the following are optional, uncomment as needed
     #risk: ''
     #difficulty: ''
@@ -25,7 +30,6 @@ attributes:
     - importance
     - urgency
     - vm
-    - acceptance-criteria
     - release
   
   reviewed:
@@ -34,5 +38,4 @@ attributes:
     - importance
     - urgency
     - vm
-    - acceptance-criteria
     - release

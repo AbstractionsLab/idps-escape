@@ -1,45 +1,60 @@
-version: '3.7'
+# Use v2.4 so mem_limit/cpu_quota are honored outside Swarm
+version: "2.4"
 
 networks:
-  opencti-wazuh-network:
-    driver: bridge
+  opencti-wazuh-network: { driver: bridge }
 
 services:
   wazuh.indexer:
     image: wazuh/wazuh-indexer:4.12.0
     hostname: wazuh.indexer
     container_name: wazuh-indexer
-    restart: always
-    networks:
-      - opencti-wazuh-network
-    ports:
-      - "9200:9200"
+    restart: unless-stopped
+    networks: [opencti-wazuh-network]
+    ports: ["9200:9200"]
     environment:
-      - "OPENSEARCH_JAVA_OPTS=-Xms8g -Xmx8g"
+      # Match heap to reality — start small for dev. Bump to 2g if queries fail.
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+      # Reduce OpenSearch disk churn & background tasks for a tiny lab
+      - DISABLE_SECURITY_PLUGIN=false
+      - "bootstrap.memory_lock=true"
+      - "plugins.security.disabled=false"
+      # Fewer shards/replicas to cut disk usage
+      - "action.auto_create_index=true"
+      - "cluster.routing.allocation.disk.watermark.low=90%"
+      - "cluster.routing.allocation.disk.watermark.high=95%"
+      - "cluster.routing.allocation.disk.watermark.flood_stage=98%"
+      - "index.number_of_shards=1"
+      - "index.number_of_replicas=0"
+      # Keep translog modest
+      - "index.translog.flush_threshold_size=256mb"
+    # Engine-level limits (supported in v2.4 compose)
+    mem_limit: 2g                 # room for 1g heap + native
+    cpu_quota: 150000
+    cpu_period: 100000
     ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+      memlock: { soft: -1, hard: -1 }
+      nofile:  { soft: 65536, hard: 65536 }
     volumes:
-      - wazuh-indexer-data:/var/lib/wazuh-indexer
-      - ./config/wazuh_indexer_ssl_certs/root-ca.pem:/usr/share/wazuh-indexer/certs/root-ca.pem
-      - ./config/wazuh_indexer_ssl_certs/wazuh.indexer-key.pem:/usr/share/wazuh-indexer/certs/wazuh.indexer.key
-      - ./config/wazuh_indexer_ssl_certs/wazuh.indexer.pem:/usr/share/wazuh-indexer/certs/wazuh.indexer.pem
-      - ./config/wazuh_indexer_ssl_certs/admin.pem:/usr/share/wazuh-indexer/certs/admin.pem
-      - ./config/wazuh_indexer_ssl_certs/admin-key.pem:/usr/share/wazuh-indexer/certs/admin-key.pem
-      - ./config/wazuh_indexer/wazuh.indexer.yml:/usr/share/wazuh-indexer/opensearch.yml
-      - ./config/wazuh_indexer/internal_users.yml:/usr/share/wazuh-indexer/opensearch-security/internal_users.yml
+      - wazuh-indexer-data:/var/lib/wazuh-indexer        # keep
+      # certs/config as read-only to avoid accidental writes
+      - ./config/wazuh_indexer_ssl_certs/root-ca.pem:/usr/share/wazuh-indexer/certs/root-ca.pem:ro
+      - ./config/wazuh_indexer_ssl_certs/wazuh.indexer-key.pem:/usr/share/wazuh-indexer/certs/wazuh.indexer.key:ro
+      - ./config/wazuh_indexer_ssl_certs/wazuh.indexer.pem:/usr/share/wazuh-indexer/certs/wazuh.indexer.pem:ro
+      - ./config/wazuh_indexer_ssl_certs/admin.pem:/usr/share/wazuh-indexer/certs/admin.pem:ro
+      - ./config/wazuh_indexer_ssl_certs/admin-key.pem:/usr/share/wazuh-indexer/certs/admin-key.pem:ro
+      - ./config/wazuh_indexer/wazuh.indexer.yml:/usr/share/wazuh-indexer/opensearch.yml:ro
+      - ./config/wazuh_indexer/internal_users.yml:/usr/share/wazuh-indexer/opensearch-security/internal_users.yml:ro
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
 
   wazuh.manager:
     image: wazuh/wazuh-manager:4.12.0
     hostname: wazuh.manager
     container_name: wazuh-manager
-    restart: always
-    networks:
-      - opencti-wazuh-network
+    restart: unless-stopped
+    networks: [opencti-wazuh-network]
     ports:
       - "1514:1514"
       - "1515:1515"
@@ -55,43 +70,48 @@ services:
       - SSL_KEY=/etc/ssl/filebeat.key
       - API_USERNAME=wazuh-wui
       - API_PASSWORD=MyS3cr37P450r.*-
+    mem_limit: 1.5g               # Wazuh manager + Filebeat can be hungry
+    cpu_quota: 150000
+    cpu_period: 100000
     ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 655360
-        hard: 655360
+      memlock: { soft: -1, hard: -1 }
+      nofile:  { soft: 131072, hard: 131072 }
     volumes:
+      # KEEP: configs
       - wazuh_api_configuration:/var/ossec/api/configuration
       - wazuh_etc:/var/ossec/etc
+      # LOG/STATE: for dev you can switch some to tmpfs to avoid disk growth:
       - wazuh_logs:/var/ossec/logs
       - wazuh_queue:/var/ossec/queue
+      # Optional/usually small — keep
       - wazuh_var_multigroups:/var/ossec/var/multigroups
       - wazuh_integrations:/var/ossec/integrations
       - wazuh_active_response:/var/ossec/active-response/bin
       - wazuh_agentless:/var/ossec/agentless
       - wazuh_wodles:/var/ossec/wodles
-      - wazuh-webhook-logs:/var/log
+      # Filebeat state can grow; for short dev sessions, consider tmpfs instead of volume
       - filebeat_etc:/etc/filebeat
       - filebeat_var:/var/lib/filebeat
-      - ./config/wazuh_indexer_ssl_certs/root-ca-manager.pem:/etc/ssl/root-ca.pem
-      - ./config/wazuh_indexer_ssl_certs/wazuh.manager.pem:/etc/ssl/filebeat.pem
-      - ./config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem:/etc/ssl/filebeat.key
-      - ./config/wazuh_cluster/wazuh_manager.conf:/wazuh-config-mount/etc/ossec.conf
-      - ./config/wazuh_cluster/manager_internal_options.conf:/wazuh-config-mount/etc/internal_options.conf
+      # certs/config read-only
+      - ./config/wazuh_indexer_ssl_certs/root-ca-manager.pem:/etc/ssl/root-ca.pem:ro
+      - ./config/wazuh_indexer_ssl_certs/wazuh.manager.pem:/etc/ssl/filebeat.pem:ro
+      - ./config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem:/etc/ssl/filebeat.key:ro
+      - ./config/wazuh_cluster/wazuh_manager.conf:/wazuh-config-mount/etc/ossec.conf:ro
+      - ./config/wazuh_cluster/manager_internal_options.conf:/wazuh-config-mount/etc/internal_options.conf:ro
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
 
+  # Use official dashboard image unless you truly need a custom build
   wazuh.dashboard:
     build:
       context: docker/wazuh-dashboard
       dockerfile: Dockerfile
     hostname: wazuh.dashboard
     container_name: wazuh-dashboard
-    restart: always
-    networks:
-      - opencti-wazuh-network
-    ports:
-      - "443:5601"
+    restart: unless-stopped
+    networks: [opencti-wazuh-network]
+    ports: ["443:5601"]
     environment:
       - INDEXER_USERNAME=admin
       - INDEXER_PASSWORD=SecretPassword
@@ -100,85 +120,115 @@ services:
       - DASHBOARD_PASSWORD=kibanaserver
       - API_USERNAME=wazuh-wui
       - API_PASSWORD=MyS3cr37P450r.*-
+    mem_limit: 1g
+    cpu_quota: 100000
+    cpu_period: 100000
     volumes:
-      - ./config/wazuh_indexer_ssl_certs/wazuh.dashboard.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard.pem
-      - ./config/wazuh_indexer_ssl_certs/wazuh.dashboard-key.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard-key.pem
-      - ./config/wazuh_indexer_ssl_certs/root-ca.pem:/usr/share/wazuh-dashboard/certs/root-ca.pem
-      - ./config/wazuh_dashboard/opensearch_dashboards.yml:/usr/share/wazuh-dashboard/config/opensearch_dashboards.yml
-      - ./config/wazuh_dashboard/wazuh.yml:/usr/share/wazuh-dashboard/data/wazuh/config/wazuh.yml
-      - wazuh-dashboard-config:/usr/share/wazuh-dashboard/data/wazuh/config
-      - wazuh-dashboard-custom:/usr/share/wazuh-dashboard/plugins/wazuh/public/assets/custom
-    depends_on:
-      - wazuh.indexer
+      - ./config/wazuh_indexer_ssl_certs/wazuh.dashboard.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard.pem:ro
+      - ./config/wazuh_indexer_ssl_certs/wazuh.dashboard-key.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard-key.pem:ro
+      - ./config/wazuh_indexer_ssl_certs/root-ca.pem:/usr/share/wazuh-dashboard/certs/root-ca.pem:ro
+      - ./config/wazuh_dashboard/opensearch_dashboards.yml:/usr/share/wazuh-dashboard/config/opensearch_dashboards.yml:ro
+      - ./config/wazuh_dashboard/wazuh.yml:/usr/share/wazuh-dashboard/data/wazuh/config/wazuh.yml:ro
+      # For dev, avoid persisting theme/assets unless you need them:
+      # - wazuh-dashboard-config:/usr/share/wazuh-dashboard/data/wazuh/config
+      # - wazuh-dashboard-custom:/usr/share/wazuh-dashboard/plugins/wazuh/public/assets/custom
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    depends_on: [wazuh.indexer]
 
   agent.insider:
     build:
       context: ../insider_threat
       dockerfile: Dockerfile.agent
     container_name: agent.insider
-    privileged: true
-    networks:
-      - opencti-wazuh-network
+    privileged: false
+    networks: [opencti-wazuh-network]
     tty: true
-    command: ["tail", "-f", "/dev/null"]
+    command: ["sleep", "infinity"]
+    mem_limit: 512m
+    cpu_quota: 50000
+    cpu_period: 100000
     volumes:
-      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
+      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf:ro
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
 
   agent.ddos:
     build:
       context: ../ddos_detection
       dockerfile: Dockerfile.agent
     container_name: agent.ddos
-    networks:
-      - opencti-wazuh-network
+    networks: [opencti-wazuh-network]
     tty: true
-    ports:
-      - "8800:80"
-    command: ["tail", "-f", "/dev/null"]
+    ports: ["8800:80"]
+    command: ["sleep", "infinity"]
+    mem_limit: 512m
+    cpu_quota: 50000
+    cpu_period: 100000
     volumes:
-      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
+      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf:ro
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
 
   agent.malcom:
     build:
       context: ../malware_communication
       dockerfile: Dockerfile.agent
     container_name: agent.malcom
-    networks:
-      - opencti-wazuh-network
+    networks: [opencti-wazuh-network]
     tty: true
-    command: [ "tail", "-f", "/dev/null" ]
+    command: ["sleep", "infinity"]
+    mem_limit: 512m
+    cpu_quota: 50000
+    cpu_period: 100000
     volumes:
-      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
+      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf:ro
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
 
   agent.suspicious:
     build:
       context: ../suspicious_login
       dockerfile: Dockerfile.agent
     container_name: agent.suspicious
-    restart: always
-    networks:
-      - opencti-wazuh-network
-    ports:
-      - "8080:8080"
+    restart: unless-stopped
+    networks: [opencti-wazuh-network]
+    ports: ["8080:8080"]
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=secret
     command: start-dev
+    mem_limit: 1g
+    cpu_quota: 100000
+    cpu_period: 100000
     volumes:
-      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
+      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf:ro
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
 
   webhook:
     build:
       context: ../webhook
       dockerfile: Dockerfile
     container_name: ad-webhook
-    restart: always
-    volumes:
-      - wazuh-webhook-logs:/var/log
-    networks:
-      - opencti-wazuh-network
-    ports:
-      - "8888:8888"
+    restart: unless-stopped
+    networks: [opencti-wazuh-network]
+    ports: ["8888:8888"]
+    mem_limit: 256m
+    cpu_quota: 25000
+    cpu_period: 100000
+    # Write logs to container fs only (not a named volume) to avoid growth
+    # If you need persistence, keep wazuh-webhook-logs
+    # volumes:
+    #   - wazuh-webhook-logs:/var/log
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
 
 volumes:
   wazuh_api_configuration:
@@ -193,6 +243,7 @@ volumes:
   filebeat_etc:
   filebeat_var:
   wazuh-indexer-data:
-  wazuh-dashboard-config:
-  wazuh-dashboard-custom:
-  wazuh-webhook-logs:
+  # Optional in dev:
+  # wazuh-dashboard-config:
+  # wazuh-dashboard-custom:
+  # wazuh-webhook-logs:

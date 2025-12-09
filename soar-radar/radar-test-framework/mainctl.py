@@ -59,6 +59,7 @@ def setup_scenario(scenario: str, config, os_config):
         detector_delay=scenario_cfg.get("delay_minutes", 1),
         result_index=scenario_cfg.get("result_index", ""),
         name=f"radar-{scenario}",
+        shingle_size=scenario_cfg.get("shingle_size", 8),
         description=f"Detector for {scenario}"
     )
 
@@ -93,8 +94,7 @@ def run_simulation(scenario: str, config):
         kc.authenticate()
         sim = SuspiciousLoginSimulator(app_config=config)
         sim.keycloak = kc
-        sim.simulate_logins(num_logins=10000)
-        sim.collect_and_send_logs()
+        sim.simulate_logins()
     elif scenario == "ddos_detection":
         sim = DDoSSimulator(app_config=config)
         sim.run_simulation(num_packets=15000, capture_timeout=500)

@@ -1,6 +1,6 @@
 settings:
   digits: 3
-  itemformat: yaml
+  itemformat: markdown
   parent: MRS
   prefix: HARC
   sep: '-'

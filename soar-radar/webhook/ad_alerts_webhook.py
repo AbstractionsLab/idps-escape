@@ -8,7 +8,7 @@ LOG_FILE = "/var/log/ad_alerts.log"
 
 app = Flask(__name__)
 
-@app.route("/opensearch-alert", methods=["POST"])
+@app.route("/notify", methods=["POST"])
 def receive_alert():
     data = request.get_json(force=True)
     if not data:
@@ -36,4 +36,4 @@ def receive_alert():
 
 if __name__ == "__main__":
     # for production, run under gunicorn or as systemd service
-    app.run(host="0.0.0.0", port=8888)
+    app.run(host="0.0.0.0", port=8080)

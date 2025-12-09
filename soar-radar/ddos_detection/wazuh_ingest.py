@@ -11,7 +11,7 @@ import os
 # Configuration
 ES_URL = "https://wazuh.indexer:9200"
 AUTH = HTTPBasicAuth("admin", "SecretPassword")
-CA_CERT = "/etc/ssl/root-ca.pem"
+CA_CERT = "config/wazuh_indexer_ssl_certs/root-ca.pem"
 CHUNK_SIZE = 200
 REQUEST_TIMEOUT = 60
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

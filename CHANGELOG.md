@@ -1,3 +1,31 @@
+# 0.5 (2025-12-09)
+
+## Added
+
+- Dataset standardization via RADAR helpers to enable usage of RADAR on real Wazuh data
+- 3 new RADAR scenario implementations capable of operating on real Wazuh monitoring data:
+    - RADAR scenario: Signature-based anomaly detection of connection from non-whitelist countries
+    - RADAR scenario: ML-based anomaly detection for unusual changes in log volumes
+    - RADAR scenario: Signature-based anomaly detection for suspicious login (failed attempts burst and impossible travel)
+- New dev container config file and Dockerfile for a lightweight dev container without pre-installing all ADBox dependencies
+- Fully automated RADAR deployment, including core IDPS-ESCAPE dependencies (Wazuh manager and agents) powered by Ansible, managed and bootstrapped via `soar-radar/build-radar.sh` and `soar-radar/run-radar.sh`
+- Support for remote Wazuh Manager for RADAR (Wazuh manager deployed on a VM different from the orchestration node)
+- System requirement for new use case: detection of connection from non-whitelisted country list
+- System requirement for new use case: anomalous size change of certain logs per endpoint
+- RADAR and RATF technical specifications `HARC`, `LARC`, `SRS` and `SWD` added
+- RADAR TST and TRB specifications for the December release validation test campaign
+
+## Modified
+
+- Migration of technical specs (under `docs/specs`) from YAML to Markdown with YAML front matter
+- Moved ADBox dev container JSON config `devcontainer.json` file to `.devcontainer/adbox`
+- Assigned meaningful names to both dev container configuration files under `.devcontainer`
+- Technical specifications under `docs/specs/` and traceability page: `HARC`, `LARC`, `SRS`, `SWD`, `TST`, `TRB`
+
+## Fixed
+
+- Detection in the RADAR suspicious login scenario
+
 # 0.4 (2025-09-03)
 
 ## Added

@@ -123,7 +123,7 @@ def main():
     params = wrapper.get("parameters", {})
     alert   = params.get("alert", {})
     data   = alert.get("data", {})
-    user   = data.get("user_keyword")
+    user   = data.get("entity_keyword")
     start  = data.get("period_start")
     end    = data.get("period_end")
 

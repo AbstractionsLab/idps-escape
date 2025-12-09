@@ -1,0 +1,5 @@
+all:
+  children:
+    wazuh_manager: { hosts: { manager1: {} } }
+    wazuh_agents_container: { hosts: { agentc1: {} } }
+    wazuh_agents_ssh: { hosts: { agentssh1: {} } }

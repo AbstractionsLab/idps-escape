@@ -177,3 +177,7 @@ siem_mtad_gat/logs
 siem_mtad_gat/output
 siem_mtad_gat/mtad_gat_pytorch/datasets
 siem_mtad_gat/assets/detector_models
+
+# keys and certs
+*.key
+*.pem

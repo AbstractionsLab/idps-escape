@@ -21,51 +21,68 @@
           <nav id="TOC" class="nav nav-stacked fixed sidebar">
               <h3>Table of Contents</h3>
 <ul>
-<li><a href="#TST-001">1 Deploy ADBox via Docker and shell scripts</a></li>
-<li><a href="#TST-003">3 Install ADBox as dev container</a></li>
-<li><a href="#TST-004">4 Run ADBox console</a></li>
-<li><a href="#TST-005">5 Run ADBox in default mode with a Wazuh connection</a></li>
-<li><a href="#TST-006">6 Run ADBox in default mode without a Wazuh connection</a></li>
-<li><a href="#TST-007">7 ADBox use case 1 with a Wazuh connection</a></li>
-<li><a href="#TST-008">8 ADBox use case 1 without a Wazuh connection</a></li>
-<li><a href="#TST-009">9 ADBox use case 2 with a Wazuh connection</a></li>
-<li><a href="#TST-010">10 ADBox use case 2 without a Wazuh connection</a></li>
-<li><a href="#TST-011">11 ADBox use case 3 with a Wazuh connection</a></li>
-<li><a href="#TST-012">12 ADBox use case 3 without a Wazuh connection</a></li>
-<li><a href="#TST-013">13 ADBox use case 4 with a Wazuh connection</a></li>
-<li><a href="#TST-014">14 ADBox use case 4 without a Wazuh connection</a></li>
-<li><a href="#TST-015">15 ADBox use case 5 with a Wazuh connection</a></li>
-<li><a href="#TST-016">16 ADBox use case 5 without a Wazuh connection</a></li>
-<li><a href="#TST-017">17 ADBox shipping install</a></li>
-<li><a href="#TST-018">18 ADBox Create detector data stream</a></li>
-<li><a href="#TST-019">19 Suricata installation in a containerized environment</a></li>
-<li><a href="#TST-020">20 Wazuh installation in a containerized environment</a></li>
-<li><a href="#TST-021">21 Wazuh agent installation and enrollment: the local machine</a></li>
-<li><a href="#TST-022">22 Wazuh agent installation and enrollment: remote machine</a></li>
-<li><a href="#TST-023">23 Wazuh agent deletion and uninstallation</a></li>
-<li><a href="#TST-024">24 Wazuh agent unenrollment</a></li>
-<li><a href="#TST-025">25 Suricata and Wazuh Integration</a></li>
-<li><a href="#TST-026">26 Port mirroring for remote machines</a></li>
-<li><a href="#TST-027">27 Traffic monitoring on Wazuh (local)</a></li>
-<li><a href="#TST-028">28 Traffic monitoring on Wazuh (remote)</a></li>
-<li><a href="#TST-029">29 Changing password for Wazuh indexer users</a></li>
-<li><a href="#TST-030">30 Changing password for Wazuh API users</a></li>
-<li><a href="#TST-031">31 Wazuh filters using the RESTful API</a></li>
-<li><a href="#TST-032">32 Wazuh filters using the Wazuh Dashboard</a></li>
-<li><a href="#TST-033">33 ADBox Wazuh integration Dashboard</a></li>
-<li><a href="#TST-034">34 ADBox set up indexer host address</a></li>
-<li><a href="#TST-035">35 ADBox change indexer credentil</a></li>
-<li><a href="#TST-036">36 Map a detected event to MITRE ATT&amp;CKS</a></li>
-<li><a href="#TST-037">37 Open prediction file of training data</a></li>
-<li><a href="#TST-038">38 Visualize train losses</a></li>
-<li><a href="#TST-039">39 Open prediction raw outcome</a></li>
-<li><a href="#TST-040">40 Visualize IDPS-ESCAPE high level architecture</a></li>
-<li><a href="#TST-041">41 Add a short description here</a></li>
+<li><a href="#TST-ADBox">1.0 ADBox test case specifications</a><ul>
+<li><a href="#TST-001">1.1 Deploy ADBox via Docker and shell scripts</a></li>
+<li><a href="#TST-003">1.3 Install ADBox as dev container</a></li>
+<li><a href="#TST-004">1.4 Run ADBox console</a></li>
+<li><a href="#TST-005">1.5 Run ADBox in default mode with a Wazuh connection</a></li>
+<li><a href="#TST-006">1.6 Run ADBox in default mode without a Wazuh connection</a></li>
+<li><a href="#TST-007">1.7 ADBox use case 1 with a Wazuh connection</a></li>
+<li><a href="#TST-008">1.8 ADBox use case 1 without a Wazuh connection</a></li>
+<li><a href="#TST-009">1.9 ADBox use case 2 with a Wazuh connection</a></li>
+<li><a href="#TST-010">1.10 ADBox use case 2 without a Wazuh connection</a></li>
+<li><a href="#TST-011">1.11 ADBox use case 3 with a Wazuh connection</a></li>
+<li><a href="#TST-012">1.12 ADBox use case 3 without a Wazuh connection</a></li>
+<li><a href="#TST-013">1.13 ADBox use case 4 with a Wazuh connection</a></li>
+<li><a href="#TST-014">1.14 ADBox use case 4 without a Wazuh connection</a></li>
+<li><a href="#TST-015">1.15 ADBox use case 5 with a Wazuh connection</a></li>
+<li><a href="#TST-016">1.16 ADBox use case 5 without a Wazuh connection</a></li>
+<li><a href="#TST-017">1.17 ADBox shipping install</a></li>
+<li><a href="#TST-018">1.18 ADBox Create detector data stream</a></li>
+<li><a href="#TST-033">1.19 ADBox Wazuh integration Dashboard</a></li>
+<li><a href="#TST-034">1.20 ADBox set up indexer host address</a></li>
+<li><a href="#TST-035">1.21 ADBox change indexer credentials</a></li>
+<li><a href="#TST-037">1.22 Open prediction file of training data</a></li>
+<li><a href="#TST-038">1.23 Visualize train losses</a></li>
+<li><a href="#TST-039">1.24 Open prediction raw outcome</a></li>
+</ul>
+</li>
+<li><a href="#TST-Foundation">2.0 IDPS-ESCAPE foundation test cases</a><ul>
+<li><a href="#TST-019">2.1 Suricata installation in a containerized environment</a></li>
+<li><a href="#TST-020">2.2 Wazuh installation in a containerized environment</a></li>
+<li><a href="#TST-021">2.3 Wazuh agent installation and enrollment: the local machine</a></li>
+<li><a href="#TST-022">2.4 Wazuh agent installation and enrollment: remote machine</a></li>
+<li><a href="#TST-023">2.5 Wazuh agent deletion and uninstallation</a></li>
+<li><a href="#TST-024">2.6 Wazuh agent unenrollment</a></li>
+<li><a href="#TST-025">2.7 Suricata and Wazuh Integration</a></li>
+<li><a href="#TST-026">2.8 Port mirroring for remote machines</a></li>
+<li><a href="#TST-027">2.9 Traffic monitoring on Wazuh (local)</a></li>
+<li><a href="#TST-028">2.10 Traffic monitoring on Wazuh (remote)</a></li>
+<li><a href="#TST-029">2.11 Changing password for Wazuh indexer users</a></li>
+<li><a href="#TST-030">2.12 Changing password for Wazuh API users</a></li>
+<li><a href="#TST-031">2.13 Wazuh filters using the RESTful API</a></li>
+<li><a href="#TST-032">2.14 Wazuh filters using the Wazuh Dashboard</a></li>
+<li><a href="#TST-036">2.15 Map a detected event to MITRE ATT&amp;CKS</a></li>
+<li><a href="#TST-040">2.16 Visualize IDPS-ESCAPE high level architecture</a></li>
+</ul>
+</li>
+<li><a href="#TST-RADAR">3.0 RADAR test case specifications</a><ul>
+<li><a href="#TST-041">3.1 Setup RADAR foundation</a></li>
+<li><a href="#TST-042">3.2 RADAR: build suspicious login</a></li>
+<li><a href="#TST-043">3.3 RADAR: build non-whitelist GeoIP detection</a></li>
+<li><a href="#TST-044">3.4 RADAR: build log volume abnormal growth</a></li>
+<li><a href="#TST-045">3.5 Run RADAR for log volume abnormal growth</a></li>
+<li><a href="#TST-046">3.6 Suspicious login detection validation</a></li>
+<li><a href="#TST-047">3.7 Non-whitelist GeoIP detection validation</a></li>
+<li><a href="#TST-048">3.8 Log volume abnormal growth validation</a></li>
+</ul>
+</li>
 </ul>
           </nav>
       </div>
       <div class="col-lg-8" id="main">
-        <h1 id="TST-001">1 Deploy ADBox via Docker and shell scripts <small>TST-001</small></h1>
+        <h1 id="TST-ADBox">1.0 ADBox test case specifications</h1>
+<h2 id="TST-001">1.1 Deploy ADBox via Docker and shell scripts <small>TST-001</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -158,7 +175,7 @@ options:
 </tr>
 </tbody>
 </table>
-<h1 id="TST-003">3 Install ADBox as dev container <small>TST-003</small></h1>
+<h2 id="TST-003">1.3 Install ADBox as dev container <small>TST-003</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker engine version 26.1.3</li>
@@ -188,7 +205,7 @@ options:
 Are you sure you wish to run the default ADBox in default mode? (y/n):
 </code></pre>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-044">SRS-044 Platform-Independent Deployment</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRB.html#TRB-003">TRB-003 TCER: ADBox in dev container</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-003">TRB-003 TCER: ADBox in dev container</a>, <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
 <table>
 <thead>
 <tr>
@@ -227,7 +244,7 @@ Are you sure you wish to run the default ADBox in default mode? (y/n):
 </tr>
 </tbody>
 </table>
-<h1 id="TST-004">4 Run ADBox console <small>TST-004</small></h1>
+<h2 id="TST-004">1.4 Run ADBox console <small>TST-004</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -291,7 +308,7 @@ Enter a number (1-4):
 </tr>
 </tbody>
 </table>
-<h1 id="TST-005">5 Run ADBox in default mode with a Wazuh connection <small>TST-005</small></h1>
+<h2 id="TST-005">1.5 Run ADBox in default mode with a Wazuh connection <small>TST-005</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -366,7 +383,7 @@ Data ingestion.
 </tr>
 </tbody>
 </table>
-<h1 id="TST-006">6 Run ADBox in default mode without a Wazuh connection <small>TST-006</small></h1>
+<h2 id="TST-006">1.6 Run ADBox in default mode without a Wazuh connection <small>TST-006</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -448,7 +465,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-007">7 ADBox use case 1 with a Wazuh connection <small>TST-007</small></h1>
+<h2 id="TST-007">1.7 ADBox use case 1 with a Wazuh connection <small>TST-007</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -516,7 +533,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-008">8 ADBox use case 1 without a Wazuh connection <small>TST-008</small></h1>
+<h2 id="TST-008">1.8 ADBox use case 1 without a Wazuh connection <small>TST-008</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -586,7 +603,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-009">9 ADBox use case 2 with a Wazuh connection <small>TST-009</small></h1>
+<h2 id="TST-009">1.9 ADBox use case 2 with a Wazuh connection <small>TST-009</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -653,7 +670,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-010">10 ADBox use case 2 without a Wazuh connection <small>TST-010</small></h1>
+<h2 id="TST-010">1.10 ADBox use case 2 without a Wazuh connection <small>TST-010</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -721,7 +738,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-011">11 ADBox use case 3 with a Wazuh connection <small>TST-011</small></h1>
+<h2 id="TST-011">1.11 ADBox use case 3 with a Wazuh connection <small>TST-011</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -789,7 +806,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-012">12 ADBox use case 3 without a Wazuh connection <small>TST-012</small></h1>
+<h2 id="TST-012">1.12 ADBox use case 3 without a Wazuh connection <small>TST-012</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -861,7 +878,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-013">13 ADBox use case 4 with a Wazuh connection <small>TST-013</small></h1>
+<h2 id="TST-013">1.13 ADBox use case 4 with a Wazuh connection <small>TST-013</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -930,7 +947,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-014">14 ADBox use case 4 without a Wazuh connection <small>TST-014</small></h1>
+<h2 id="TST-014">1.14 ADBox use case 4 without a Wazuh connection <small>TST-014</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -999,7 +1016,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-015">15 ADBox use case 5 with a Wazuh connection <small>TST-015</small></h1>
+<h2 id="TST-015">1.15 ADBox use case 5 with a Wazuh connection <small>TST-015</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1066,7 +1083,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-016">16 ADBox use case 5 without a Wazuh connection <small>TST-016</small></h1>
+<h2 id="TST-016">1.16 ADBox use case 5 without a Wazuh connection <small>TST-016</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1135,7 +1152,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h1 id="TST-017">17 ADBox shipping install <small>TST-017</small></h1>
+<h2 id="TST-017">1.17 ADBox shipping install <small>TST-017</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1204,7 +1221,7 @@ Exit shipper installation. Check ADBox templates and policy correct installation
 </tr>
 </tbody>
 </table>
-<h1 id="TST-018">18 ADBox Create detector data stream <small>TST-018</small></h1>
+<h2 id="TST-018">1.18 ADBox Create detector data stream <small>TST-018</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1297,7 +1314,391 @@ Prediction ended
 </tr>
 </tbody>
 </table>
-<h1 id="TST-019">19 Suricata installation in a containerized environment <small>TST-019</small></h1>
+<h2 id="TST-033">1.19 ADBox Wazuh integration Dashboard <small>TST-033</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Docker version 26.0.0</li>
+<li>User with root privileges</li>
+<li>An instance of CyFORT-Wazuh distribution should be running.</li>
+<li>A detector data stream <code>adbox_detector_mtad_gat_{detector_id}</code> available in Wazuh indexer</li>
+</ul>
+<h2>Test steps</h2>
+<p>A detailed description of the integration procedure can be found at <code>docs/manual/dashboard_tutorial.md</code></p>
+<ol>
+<li>Open <strong>Dashboard Management</strong>.</li>
+<li>Select <strong>Dashboard Management&gt;Index patterns</strong> and create a new index.</li>
+<li>Add the data stream pattern using the.</li>
+<li>Select <code>timestamp</code> as time field.</li>
+<li>Finally, the pattern is created. The field names correspond to the prediction outcome fields.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>The pattern is created. The field names correspond to the prediction outcome fields.</li>
+<li>The data can be navigated using <strong>Discover</strong> dashboard.</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-043">SRS-043 AD Data Visualization</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-034">1.20 ADBox set up indexer host address <small>TST-034</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
+<li>Wazuh central component deployed.</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Open the <code>/siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
+<li>Set "host" as indexer's host address</li>
+<li>Set "port" as indexer's port</li>
+<li>Run</li>
+</ol>
+<pre><code>./adbox.sh -c
+</code></pre>
+<h2>Expected outcome</h2>
+<ol>
+<li>Succesful connection</li>
+</ol>
+<pre><code>IDPS-ESCAPE ADBox checking connection with Wazuh/OpenSearch...
+Wazuh data ingestor establishing connection to Wazuh...
+Connection with Wazuh established successfully!
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-017">SRS-017 Custom Data Source</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>Ubuntu 22.04.4 LTS</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-035">1.21 ADBox change indexer credentials <small>TST-035</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
+<li>Wazuh central component deployed.</li>
+<li>User with root privileges</li>
+<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
+<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Open the <code>/siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
+<li>Update "username" as indexer's username</li>
+<li>Update "password" as indexer's password</li>
+<li>Run</li>
+</ol>
+<pre><code>./adbox.sh -c
+</code></pre>
+<h2>Expected outcome</h2>
+<ol>
+<li>Succesful connection</li>
+</ol>
+<pre><code>IDPS-ESCAPE ADBox checking connection with Wazuh/OpenSearch...
+Wazuh data ingestor establishing connection to Wazuh...
+Connection with Wazuh established successfully!
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-022">SRS-022 Indexer Credentials Update</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-037">1.22 Open prediction file of training data <small>TST-037</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>ADBox dev container running.</li>
+<li>Wazuh central component deployed.</li>
+<li>User with root privileges</li>
+<li>At lease a trained detector.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Choose one of the detectors avaliable in  <code>siem_mtad_gat/assets/detector_models</code>.
+      E.g, <code>siem_mtad_gat/assets/detector_models/9a447100-39d1-4e00-83fc-8c618444edf7</code>.</li>
+<li>Open <code>siem_mtad_gat/frontend/viznotebook/result_visualizer.ipynb</code> within dev container</li>
+<li>Insert dector id in <strong>Variables and path to be modified</strong></li>
+<li>Run Notebook</li>
+<li>Go to <strong>Running ADBox with a use-case&gt;Training&gt;Training output table</strong></li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>Table showing prediction aver train data</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-030">SRS-030 AD Results Visualization</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-038">1.23 Visualize train losses <small>TST-038</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Wazuh central component deployed.</li>
+<li>ADBox deployed</li>
+<li>User with root privileges</li>
+<li>At lease a trained detector.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Choose one of the detectors avaliable in <code>siem_mtad_gat/assets/detector_models</code>.</li>
+<li>Open <code>siem_mtad_gat/assets/detector_models/uuid/training/train_losses.png</code> using system default software.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>Graph displaying train_losses.png</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-031">SRS-031 Training Loss Visualization</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>M</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-039">1.24 Open prediction raw outcome <small>TST-039</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Wazuh central component deployed.</li>
+<li>ADBox deployed</li>
+<li>User with root privileges</li>
+<li>At lease a trained detector used for running prediction at least once (i.e., stored prediction data).</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Open the cloned ADBox repository</li>
+<li>Choose one of the detectors avaliable in <code>siem_mtad_gat/assets/detector_models</code>.</li>
+<li>Open <code>siem_mtad_gat/assets/detector_models/uuid/prediction</code></li>
+<li>Open a prediction file of the <code>uc-x_predicted_anomalies_data-*.json</code> using system default software.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>
+<p>Prediction info store using json format. E.g.</p>
+<p><code>{
+    "run_mode": "REALTIME",
+    "detector_id": "563394be-5079-424d-b2ba-cfda0812cf88",
+    "start_time": "2024-10-25T08:51:00Z",
+    "end_time": "2024-10-25T08:52:00Z",
+    "results": [
+        {
+            "timestamp": "2024-10-25T08:51:00Z",
+            "is_anomaly": false,
+            "anomaly_score": 0.029846280813217163,
+            "threshold": 0.12186630221790373,
+            "Forecast_data.5mins_loadAverage_average": 0.1334819793701172,
+            "Recon_data.5mins_loadAverage_average": 0.11187170445919037,
+            "True_data.5mins_loadAverage_average": 0.1077537015080452,
+            "A_Score_data.5mins_loadAverage_average": 0.029846280813217163,
+            "Thresh_data.5mins_loadAverage_average": 0.12186630221790373,
+            "A_Pred_data.5mins_loadAverage_average": 0.0
+        }
+    ]
+  }</code></p>
+</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-032">SRS-032 Predicted Anomalies Visualization</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>MacOS, Windows, GNU/Linux</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated/Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-Foundation">2.0 IDPS-ESCAPE foundation test cases</h1>
+<h2 id="TST-019">2.1 Suricata installation in a containerized environment <small>TST-019</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1373,7 +1774,7 @@ be accessed by the following command.
 </tr>
 </tbody>
 </table>
-<h1 id="TST-020">20 Wazuh installation in a containerized environment <small>TST-020</small></h1>
+<h2 id="TST-020">2.2 Wazuh installation in a containerized environment <small>TST-020</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1462,7 +1863,7 @@ the background (with -d option)</li>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-021">21 Wazuh agent installation and enrollment: the local machine <small>TST-021</small></h1>
+<h2 id="TST-021">2.3 Wazuh agent installation and enrollment: the local machine <small>TST-021</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1529,6 +1930,10 @@ sudo systemctl status wazuh-agent.</li>
 <td>M</td>
 </tr>
 <tr>
+<td>verification_method</td>
+<td>I</td>
+</tr>
+<tr>
 <td>release</td>
 <td>alpha</td>
 </tr>
@@ -1546,7 +1951,7 @@ sudo systemctl status wazuh-agent.</li>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-022">22 Wazuh agent installation and enrollment: remote machine <small>TST-022</small></h1>
+<h2 id="TST-022">2.4 Wazuh agent installation and enrollment: remote machine <small>TST-022</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1632,7 +2037,7 @@ sudo systemctl status wazuh-agent.</li>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-023">23 Wazuh agent deletion and uninstallation <small>TST-023</small></h1>
+<h2 id="TST-023">2.5 Wazuh agent deletion and uninstallation <small>TST-023</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1723,7 +2128,7 @@ work.</li>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-024">24 Wazuh agent unenrollment <small>TST-024</small></h1>
+<h2 id="TST-024">2.6 Wazuh agent unenrollment <small>TST-024</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1801,7 +2206,7 @@ machine, which can be checked by the following command.
 </tr>
 </tbody>
 </table>
-<h1 id="TST-025">25 Suricata and Wazuh Integration <small>TST-025</small></h1>
+<h2 id="TST-025">2.7 Suricata and Wazuh Integration <small>TST-025</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1911,7 +2316,7 @@ the Wazuh Dashboard <strong>Threat Hunting</strong>.
 </tr>
 </tbody>
 </table>
-<h1 id="TST-026">26 Port mirroring for remote machines <small>TST-026</small></h1>
+<h2 id="TST-026">2.8 Port mirroring for remote machines <small>TST-026</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Ubuntu 22.04.4 LTS (Machine 1, central monitoring host)</li>
@@ -1994,7 +2399,7 @@ egress ICMP packets from machine 2, encapsulated within GRE packets</p>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-027">27 Traffic monitoring on Wazuh (local) <small>TST-027</small></h1>
+<h2 id="TST-027">2.9 Traffic monitoring on Wazuh (local) <small>TST-027</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2068,7 +2473,7 @@ the Wazuh Dashboard.</p>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-028">28 Traffic monitoring on Wazuh (remote) <small>TST-028</small></h1>
+<h2 id="TST-028">2.10 Traffic monitoring on Wazuh (remote) <small>TST-028</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2155,7 +2560,7 @@ the Wazuh Dashboard.</p>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-029">29 Changing password for Wazuh indexer users <small>TST-029</small></h1>
+<h2 id="TST-029">2.11 Changing password for Wazuh indexer users <small>TST-029</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2281,7 +2686,7 @@ Please try again." error while trying to login with the old password.
 </tr>
 </tbody>
 </table>
-<h1 id="TST-030">30 Changing password for Wazuh API users <small>TST-030</small></h1>
+<h2 id="TST-030">2.12 Changing password for Wazuh API users <small>TST-030</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2379,7 +2784,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-031">31 Wazuh filters using the RESTful API <small>TST-031</small></h1>
+<h2 id="TST-031">2.13 Wazuh filters using the RESTful API <small>TST-031</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2453,7 +2858,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-032">32 Wazuh filters using the Wazuh Dashboard <small>TST-032</small></h1>
+<h2 id="TST-032">2.14 Wazuh filters using the Wazuh Dashboard <small>TST-032</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2521,196 +2926,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tr>
 </tbody>
 </table>
-<h1 id="TST-033">33 ADBox Wazuh integration Dashboard <small>TST-033</small></h1>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>Docker version 26.0.0</li>
-<li>User with root privileges</li>
-<li>An instance of CyFORT-Wazuh distribution should be running.</li>
-<li>A detector data stream <code>adbox_detector_mtad_gat_{detector_id}</code> available in Wazuh indexer</li>
-</ul>
-<h2>Test steps</h2>
-<p>A detailed description of the integration procedure can be found at <code>docs/manual/dashboard_tutorial.md</code></p>
-<ol>
-<li>Open <strong>Dashboard Management</strong>.</li>
-<li>Select <strong>Dashboard Management&gt;Index patterns</strong> and create a new index.</li>
-<li>Add the data stream pattern using the.</li>
-<li>Select <code>timestamp</code> as time field.</li>
-<li>Finally, the pattern is created. The field names correspond to the prediction outcome fields.</li>
-</ol>
-<h2>Expected outcome</h2>
-<ol>
-<li>The pattern is created. The field names correspond to the prediction outcome fields.</li>
-<li>The data can be navigated using <strong>Discover</strong> dashboard.</li>
-</ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-043">SRS-043 AD Data Visualization</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>Ubuntu 22.04.4 LTS</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>M</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>I</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>4</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.2</td>
-</tr>
-</tbody>
-</table>
-<h1 id="TST-034">34 ADBox set up indexer host address <small>TST-034</small></h1>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
-<li>Wazuh central component deployed.</li>
-<li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
-<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Open the cloned ADBox repository</li>
-<li>Open the <code>/siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
-<li>Set "host" as indexer's host address</li>
-<li>Set "port" as indexer's port</li>
-<li>Run</li>
-</ol>
-<pre><code>./adbox.sh -c
-</code></pre>
-<h2>Expected outcome</h2>
-<ol>
-<li>Succesful connection</li>
-</ol>
-<pre><code>IDPS-ESCAPE ADBox checking connection with Wazuh/OpenSearch...
-Wazuh data ingestor establishing connection to Wazuh...
-Connection with Wazuh established successfully!
-</code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-017">SRS-017 Custom Data Source</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>Ubuntu 22.04.4 LTS</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>M</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.2</td>
-</tr>
-</tbody>
-</table>
-<h1 id="TST-035">35 ADBox change indexer credentil <small>TST-035</small></h1>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
-<li>Wazuh central component deployed.</li>
-<li>User with root privileges</li>
-<li>Built image <code>siem-mtad-gat:v0.1.4</code></li>
-<li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Open the cloned ADBox repository</li>
-<li>Open the <code>/siem_mtad_gat/assets/secrets/wazuh_credentials.json</code></li>
-<li>Update "username" as indexer's username</li>
-<li>Update "password" as indexer's password</li>
-<li>Run</li>
-</ol>
-<pre><code>./adbox.sh -c
-</code></pre>
-<h2>Expected outcome</h2>
-<ol>
-<li>Succesful connection</li>
-</ol>
-<pre><code>IDPS-ESCAPE ADBox checking connection with Wazuh/OpenSearch...
-Wazuh data ingestor establishing connection to Wazuh...
-Connection with Wazuh established successfully!
-</code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-022">SRS-022 Indexer Credentials Update</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>MacOS, Windows, GNU/Linux</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>M</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.2</td>
-</tr>
-</tbody>
-</table>
-<h1 id="TST-036">36 Map a detected event to MITRE ATT&amp;CKS <small>TST-036</small></h1>
+<h2 id="TST-036">2.15 Map a detected event to MITRE ATT&amp;CKS <small>TST-036</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Wazuh central component deployed.</li>
@@ -2789,201 +3005,7 @@ Connection with Wazuh established successfully!
 </tr>
 </tbody>
 </table>
-<h1 id="TST-037">37 Open prediction file of training data <small>TST-037</small></h1>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>ADBox dev container running.</li>
-<li>Wazuh central component deployed.</li>
-<li>User with root privileges</li>
-<li>At lease a trained detector.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Open the cloned ADBox repository</li>
-<li>Choose one of the detectors avaliable in  <code>siem_mtad_gat/assets/detector_models</code>.
-      E.g, <code>siem_mtad_gat/assets/detector_models/9a447100-39d1-4e00-83fc-8c618444edf7</code>.</li>
-<li>Open <code>siem_mtad_gat/frontend/viznotebook/result_visualizer.ipynb</code> within dev container</li>
-<li>Insert dector id in <strong>Variables and path to be modified</strong></li>
-<li>Run Notebook</li>
-<li>Go to <strong>Running ADBox with a use-case&gt;Training&gt;Training output table</strong></li>
-</ol>
-<h2>Expected outcome</h2>
-<ol>
-<li>Table showing prediction aver train data</li>
-</ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-030">SRS-030 AD Results Visualization</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>MacOS, Windows, GNU/Linux</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>M</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>I</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.2</td>
-</tr>
-</tbody>
-</table>
-<h1 id="TST-038">38 Visualize train losses <small>TST-038</small></h1>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>Wazuh central component deployed.</li>
-<li>ADBox deployed</li>
-<li>User with root privileges</li>
-<li>At lease a trained detector.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Open the cloned ADBox repository</li>
-<li>Choose one of the detectors avaliable in <code>siem_mtad_gat/assets/detector_models</code>.</li>
-<li>Open <code>siem_mtad_gat/assets/detector_models/uuid/training/train_losses.png</code> using system default software.</li>
-</ol>
-<h2>Expected outcome</h2>
-<ol>
-<li>Graph displaying train_losses.png</li>
-</ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-031">SRS-031 Training Loss Visualization</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>MacOS, Windows, GNU/Linux</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>M</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>I</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>1</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.2</td>
-</tr>
-</tbody>
-</table>
-<h1 id="TST-039">39 Open prediction raw outcome <small>TST-039</small></h1>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>Wazuh central component deployed.</li>
-<li>ADBox deployed</li>
-<li>User with root privileges</li>
-<li>At lease a trained detector used for running prediction at least once (i.e., stored prediction data).</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Open the cloned ADBox repository</li>
-<li>Choose one of the detectors avaliable in <code>siem_mtad_gat/assets/detector_models</code>.</li>
-<li>Open <code>siem_mtad_gat/assets/detector_models/uuid/prediction</code></li>
-<li>Open a prediction file of the <code>uc-x_predicted_anomalies_data-*.json</code> using system default software.</li>
-</ol>
-<h2>Expected outcome</h2>
-<ol>
-<li>
-<p>Prediction info store using json format. E.g.</p>
-<p><code>{
-    "run_mode": "REALTIME",
-    "detector_id": "563394be-5079-424d-b2ba-cfda0812cf88",
-    "start_time": "2024-10-25T08:51:00Z",
-    "end_time": "2024-10-25T08:52:00Z",
-    "results": [
-        {
-            "timestamp": "2024-10-25T08:51:00Z",
-            "is_anomaly": false,
-            "anomaly_score": 0.029846280813217163,
-            "threshold": 0.12186630221790373,
-            "Forecast_data.5mins_loadAverage_average": 0.1334819793701172,
-            "Recon_data.5mins_loadAverage_average": 0.11187170445919037,
-            "True_data.5mins_loadAverage_average": 0.1077537015080452,
-            "A_Score_data.5mins_loadAverage_average": 0.029846280813217163,
-            "Thresh_data.5mins_loadAverage_average": 0.12186630221790373,
-            "A_Pred_data.5mins_loadAverage_average": 0.0
-        }
-    ]
-  }</code></p>
-</li>
-</ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-032">SRS-032 Predicted Anomalies Visualization</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>MacOS, Windows, GNU/Linux</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Automated/Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>I</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.2</td>
-</tr>
-</tbody>
-</table>
-<h1 id="TST-040">40 Visualize IDPS-ESCAPE high level architecture <small>TST-040</small></h1>
+<h2 id="TST-040">2.16 Visualize IDPS-ESCAPE high level architecture <small>TST-040</small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>A copy of ADBox project repository</li>
@@ -3035,15 +3057,135 @@ Connection with Wazuh established successfully!
 </tr>
 </tbody>
 </table>
-<h1 id="TST-041">41 Add a short description here <small>TST-041</small></h1>
+<h1 id="TST-RADAR">3.0 RADAR test case specifications</h1>
+<h2 id="TST-041">3.1 Setup RADAR foundation <small>TST-041</small></h2>
 <h2>Preconditions and setup actions</h2>
-<p>-</p>
+<ul>
+<li>A test controller host/node is available:<ul>
+<li>A Linux machine/VM (the Ansible control node) is available to the tester.</li>
+<li>OS: recent GNU/Linux distribution, preferably an Ubuntu distribution (22.04+).</li>
+</ul>
+</li>
+<li>A second test node (accessible via the controller node) is available: GNU/Linux distro e.g. Debian GNU/Linux 13 (trixie)</li>
+<li>Ansible is installed on the controller host:<ul>
+<li>Location: install Ansible only on the controller node.</li>
+<li>Installation reference:<ul>
+<li>if <code>pipx</code> is available, follow the instruction` in <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html#pipx-install">Ansible Installation Documentation using pipx</a>.</li>
+<li>otherwise, follow the <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/installation_distros.html">official instructions for Linux distributions</a>.</li>
+<li>Minimum version: Ansible <code>2.15+</code>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Targeted Wazuh manager and agent versions: <code>4.12.0</code></li>
+<li>Environment values such as <code>OS_URL</code>, <code>OS_USER</code>, <code>OS_PASS</code>, <code>DASHBOARD_URL</code>, <code>DASHBOARD_USER</code>, <code>DASHBOARD_PASS</code> and SMTP credentials are available to the tester. The tester has network access (SSH) from the test controller node to controlled endpoints.</li>
+<li>If either the Wazuh agent (aka agent) or the Wazuh manager (aka manager) is chosen to be <code>remote</code>:<ul>
+<li>the remote agent/manager needs to have Docker and Docker Compose installed following the official documentations for <a href="https://docs.docker.com/engine/install/">Docker</a> and <a href="https://docs.docker.com/compose/install">Docker Compose</a>.</li>
+<li>an available user in remote agent or manager with sudo access, and tester needs to have SSH access to the user from test controller host.</li>
+</ul>
+</li>
+<li>If the agents are to be deployed on <code>remote</code> nodes, the Wazuh agents must be installed in the monitored endpoints using <a href="https://documentation.wazuh.com/4.12/installation-guide/wazuh-agent/wazuh-agent-package-linux.html">the official documentation</a>.</li>
+<li>The agent must be registered with the Wazuh manager following <a href="https://documentation.wazuh.com/4.12/user-manual/agent/agent-enrollment/enrollment-methods/via-agent-configuration/linux-endpoint.html">the official documentation</a>.</li>
+</ul>
 <h2>Test steps</h2>
 <ol>
-<li>follow steps in SRS.</li>
+<li>In the controller host, the working directory is required to be <code>soar-radar</code>:</li>
+</ol>
+<pre><code>cd soar-radar
+</code></pre>
+<ol start="2">
+<li>Set <code>.env</code> file with required variables:</li>
+</ol>
+<pre><code># =======================
+# OpenSearch Configuration
+# =======================
+OS_URL=https://192.168.5.4:9200
+OS_USER=admin
+OS_PASS=SecretPassword
+OS_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
+
+DASHBOARD_URL=https://192.168.5.4
+DASHBOARD_USER=admin
+DASHBOARD_PASS=SecretPassword
+DASHBOARD_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
+
+WAZUH_API_URL=https://192.168.5.4:55000
+WAZUH_AUTH_USER=wazuh-wui
+WAZUH_AUTH_PASS=MyS3cr37P450r.*-
+
+WAZUH_AGENT_VERSION=4.12.0-1
+WAZUH_MANAGER_ADDRESS=192.168.5.4
+
+WEBHOOK_NAME=&quot;RADAR_Webhook&quot;
+WEBHOOK_URL=http://192.168.5.4:8080/notify
+
+# =======================
+# Logging
+# =======================
+
+AR_LOG_FILE=/var/ossec/logs/active-responses.log
+
+# =======================
+# SMTP
+# =======================
+
+SMTP_HOST=SMTP_HOST # Change accordingly
+SMTP_PORT=SMTP_PORT # Change accordingly
+SMTP_USER=SMTP_USER # Change accordingly
+SMTP_PASS=SMTP_PASS # Change accordingly
+EMAIL_TO=RECEIVER_EMAIL@example.com # Change accordingly
+SMTP_STARTTLS=yes
+</code></pre>
+<ol start="3">
+<li>
+<p>In case either the agent or the manager is remote:</p>
+<p>3.1. Change <code>inventory.yaml</code> based on remote agent/manager data, user credentials and docker container names. Change is needed:</p>
+<ul>
+<li>for remote agents, the endpoint part <code>wazuh_agents_ssh</code> must be configured.</li>
+<li>for a remote manager, the endpoint part <code>wazuh_manager_ssh</code> must be configured.</li>
+<li>in each of the above two, you may need to define a <code>ansible_ssh_private_key_file: &lt;path-to-ssh-key&gt;</code> attribute (to enable access from the control node to the controlled node)</li>
+</ul>
+<p>3.2. Create a vault for each host in <code>inventory.yaml</code> (IMPORTANT: the vault name and host name must match):</p>
+<ul>
+<li>for remote agents: <code>ansible-vault create host_vars/edge.vm.yml</code></li>
+<li>for remote manager: <code>ansible-vault create host_vars/mgr.remote.yml</code></li>
+</ul>
+<p>3.3. Assign a vault password and set sudo password:
+<code>ansible_become_password: &lt;selected-user-sudo-password&gt;</code></p>
+</li>
+<li>
+<p>Existence of Wazuh manager on targeted endpoint (local/remote) (signaled via <code>manager_exists</code> flag used by <code>build-radar.sh</code>):</p>
+<p>4.1. In case the manager does not exist, certificates must be issued matching the <code>MANAGER_IP</code> and <code>INDEXER_IP</code> according to the documentation in <code>config/wazuh_indexer_ssl_certs/README.md</code>; in short, once you have adapted <code>config/certs.yml</code> according to your endpoints (IP address and container name), from within the <code>config</code> folder, run</p>
+<p><code>docker run --rm -it   -v "PWD/certs.yml:/config/certs.yml:ro"−v"PWD/certs.yml:/config/certs.yml:ro"   -v "PWD/certs.yml:/config/certs.yml:ro"−v"PWD/wazuh_indexer_ssl_certs:/certificates"   wazuh/wazuh-certs-generator:0.0.2</code></p>
+<p>4.2. If the manager is already in place, certificates must be copied into <code>config/wazuh_indexer_ssl_certs</code>.</p>
+</li>
 </ol>
 <h2>Expected outcome</h2>
-<p>1.</p>
+<ol start="3">
+<li>
+<p>In the controller host, the vaults are created and SSH access is set correctly:</p>
+<ul>
+<li>if the agent is chosen to be remote:</li>
+</ul>
+<p>3.1 The vault is created and exists in <code>host_vars/</code>:
+<code>ansible-vault view host_vars/edge.vm.yml</code></p>
+<p>3.2 Ansible reaches the SSH group:
+<code>ansible -i inventory.yaml wazuh_agents_ssh -m ping --ask-vault-pass</code></p>
+<ul>
+<li>if the manager is chosen to be remote:</li>
+</ul>
+<p>3.1 The vault is created and exists in <code>host_vars/</code>:
+<code>ansible-vault view host_vars/mgr.remote.yml</code></p>
+<p>3.2 Ansible reaches the SSH group:
+<code>ansible -i inventory.yaml wazuh_manager_ssh -m ping --ask-vault-pass</code></p>
+</li>
+<li>
+<p>The certificates are available under <code>config/wazuh_indexer_ssl_certs/</code>:</p>
+</li>
+</ol>
+<pre><code>ls config/wazuh_indexer_ssl_certs/
+</code></pre>
+<p><em>Child links:</em> <a href="TRB.html#TRB-008">TRB-008 TCER: Setup RADAR foundation</a></p>
 <table>
 <thead>
 <tr>
@@ -3054,7 +3196,7 @@ Connection with Wazuh established successfully!
 <tbody>
 <tr>
 <td>platform</td>
-<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
 </tr>
 <tr>
 <td>execution_type</td>
@@ -3062,7 +3204,7 @@ Connection with Wazuh established successfully!
 </tr>
 <tr>
 <td>verification_method</td>
-<td>Test (T)/Review of design (R)/Inspection (I)/Analysis (A)</td>
+<td>T</td>
 </tr>
 <tr>
 <td>release</td>
@@ -3070,7 +3212,7 @@ Connection with Wazuh established successfully!
 </tr>
 <tr>
 <td>complexity</td>
-<td>1-5</td>
+<td>3</td>
 </tr>
 <tr>
 <td>test_data</td>
@@ -3078,7 +3220,783 @@ Connection with Wazuh established successfully!
 </tr>
 <tr>
 <td>version</td>
-<td>0.1</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-042">3.2 RADAR: build suspicious login <small>TST-042</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>In the controller host, the working directory is required to be <code>soar-radar</code>:</li>
+</ol>
+<pre><code>cd soar-radar
+</code></pre>
+<ol start="2">
+<li>Build RADAR with SCENARIO_NAME suspicious_login:</li>
+</ol>
+<pre><code>./build-radar.sh suspicious_login --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<p>In this step, please choose options according to your setup:</p>
+<ul>
+<li>
+<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
+</li>
+<li>
+<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
+</li>
+<li>
+<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
+<ul>
+<li>true  : do not bootstrap a manager</li>
+<li>false : bootstrap a manager</li>
+</ul>
+</li>
+<li>
+<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
+</li>
+</ul>
+<ol start="3">
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-046">TST-046</a>:</li>
+</ol>
+<ul>
+<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --all
+</code></pre>
+<ul>
+<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the manager endpoint, run these commands to clean up the test environment:</li>
+</ul>
+<pre><code>cd /tmp/radar_mgr_XXXXXXX
+ls docker-compose.core.yml
+./stop-radar.sh --all
+cd /tmp
+rm -rf radar_mgr_*
+</code></pre>
+<p>Each Ansible run creates a staging directory in the endpoint where the manager is bootstrapped. The successful run directory (starts with <code>radar_mgr_</code> ending with a random identifier <code>XXXXXXX</code>) should be checked for the existence of a Docker Compose file and then cleaned.</p>
+<ul>
+<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>docker compose -f docker-compose.agents.yml down -v
+</code></pre>
+<h2>Expected outcome</h2>
+<h3>2. Check the setup</h3>
+<h4>In Wazuh Manager</h4>
+<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
+<pre><code>docker exec -it wazuh.manager bash
+</code></pre>
+<ul>
+<li><strong>2.1</strong> Custom <code>0310 SSH</code> decoder deployed; verify this by running</li>
+</ul>
+<pre><code>ls -l /var/ossec/etc/decoders/0310-ssh.xml
+</code></pre>
+<p>to ensure that <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</p>
+<ul>
+<li><strong>2.2</strong> Custom <code>0310 SSH</code> decoder should contain the decoders <code>sshd-*-with-radar</code> (e.g., including RADAR fields like <code>ASN</code>, <code>country</code>, <code>geo_velocity</code>)</li>
+</ul>
+<pre><code>tail -n20 /var/ossec/etc/decoders/0310-ssh.xml
+</code></pre>
+<p>to ensure that RADAR enrichment fields will be parsed.</p>
+<ul>
+<li><strong>2.3</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>; verify via</li>
+</ul>
+<pre><code>grep '&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to ensure that a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</p>
+<ul>
+<li><strong>2.4</strong> RADAR rules for suspicious_login are in <code>local_rules.xml</code>; verify via</li>
+</ul>
+<pre><code>grep -n 'RADAR_RULES: suspicious_login' /var/ossec/etc/rules/local_rules.xml
+</code></pre>
+<p>to ensure <code>local_rules.xml</code> contains a <code>&lt;!-- RADAR_RULES: suspicious_login BEGIN/END --&gt;</code> block with rules for suspicious SSH logins.</p>
+<ul>
+<li><strong>2.5</strong> Suspicious login rules are bound to active responses; verify via</li>
+</ul>
+<pre><code>grep -A5 'email_ar' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to ensure that suspicious login rule ID(s) references the intended <code>&lt;group&gt;</code>, <code>&lt;options&gt;</code> or <code>&lt;active-response&gt;</code> that trigger <code>ad_context_*</code> and <code>email_ar.py</code>.</p>
+<ul>
+<li><strong>2.6</strong> Agent is registered with the manager; verify via</li>
+</ul>
+<pre><code>/var/ossec/bin/agent_control -l
+</code></pre>
+<p>to ensure that an entry exists for each agent.</p>
+<ul>
+<li><strong>2.7</strong> Wazuh Manager is running after restart; verify via</li>
+</ul>
+<pre><code>/var/ossec/bin/wazuh-control status
+</code></pre>
+<p>to ensure that status output indicates the manager is <code>running</code> with no error messages.</p>
+<h4>In endpoints running agents</h4>
+<ul>
+<li><strong>2.8</strong> RADAR helper directory and script are installed on the SSH agent host; verify via</li>
+</ul>
+<pre><code>ls -ld /opt/radar
+ls -l /opt/radar/radar-helper.py
+</code></pre>
+<p>to ensure <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
+<ul>
+<li><strong>2.9</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running; verify via</li>
+</ul>
+<pre><code>systemctl status radar-helper.service
+</code></pre>
+<p>to ensure the service is active.</p>
+<ul>
+<li><strong>2.10</strong> Agent <code>ossec.conf</code> on SSH agent includes the suspicious_login RADAR snippet; verify via</li>
+</ul>
+<pre><code>grep -n 'RADAR' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to ensure that <code>/var/ossec/etc/ossec.conf</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code>, and contains a <code>&lt;!-- RADAR: suspicious_login BEGIN/END --&gt;</code> block inserted before <code>&lt;/ossec_config&gt;</code>.</p>
+<ul>
+<li><strong>2.11</strong> Active response scripts for suspicious_login are present on SSH agents; verify via</li>
+</ul>
+<pre><code>ls -l /var/ossec/active-response/bin/
+</code></pre>
+<p>to ensure that files from <code>soar-radar/suspicious_login/active_responses/*</code> are present under <code>/var/ossec/active-response/bin/</code> with owner <code>root:wazuh</code> and mode <code>0750</code>.</p>
+<ul>
+<li><strong>2.12</strong> Wazuh agent service is running on SSH agents after restart; verify via</li>
+</ul>
+<pre><code>/var/ossec/bin/wazuh-control status
+</code></pre>
+<p>to ensure that the status output indicates the agent is <code>running</code> with no error messages.</p>
+<h4>Post-test cleanup</h4>
+<ul>
+<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
+</ul>
+<pre><code>docker ps
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-009">TRB-009 TCER: RADAR build suspicious login</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-043">3.3 RADAR: build non-whitelist GeoIP detection <small>TST-043</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>In the controller host, the working directory is required to be <code>soar-radar</code>:</li>
+</ol>
+<pre><code>cd soar-radar
+</code></pre>
+<ol start="2">
+<li>Build RADAR with SCENARIO_NAME geoip_detection:</li>
+</ol>
+<pre><code>./build-radar.sh geoip_detection --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<p>In this step, please choose options according to your setup:</p>
+<ul>
+<li>
+<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
+</li>
+<li>
+<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
+</li>
+<li>
+<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
+<ul>
+<li>true  : do not bootstrap a manager</li>
+<li>false : bootstrap a manager</li>
+</ul>
+</li>
+<li>
+<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
+</li>
+</ul>
+<ol start="3">
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-046">TST-046</a>:</li>
+</ol>
+<ul>
+<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --all
+</code></pre>
+<ul>
+<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the manager endpoint, run these commands to clean up the test environment:</li>
+</ul>
+<pre><code>cd /tmp/radar_mgr_XXXXXXX
+ls docker-compose.core.yml
+./stop-radar.sh --all
+cd /tmp
+rm -rf radar_mgr_*
+</code></pre>
+<p>Each Ansible run creates a staging directory in the endpoint where the manager is bootstrapped. The successful run directory (starts with <code>radar_mgr_</code> ending with a random identifier <code>XXXXXXX</code>) should be checked for the existence of a Docker Compose file and then cleaned.</p>
+<ul>
+<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>docker compose -f docker-compose.agents.yml down -v
+</code></pre>
+<h2>Expected outcome</h2>
+<h3>2. Check the setup</h3>
+<h4>In Wazuh Manager</h4>
+<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
+<pre><code>docker exec -it wazuh.manager bash
+</code></pre>
+<ul>
+<li><strong>2.1</strong> Whitelist file exists</li>
+</ul>
+<pre><code>ls -l /var/ossec/etc/lists/whitelist_countries
+</code></pre>
+<p>to ensure that <code>/var/ossec/etc/lists/whitelist_countries</code> exists, its contents match the scenario’s <code>whitelist_countries</code>, and its owner is <code>root:wazuh</code>, with mode <code>0644</code>.</p>
+<ul>
+<li><strong>2.2</strong> <code>ossec.conf</code> has <code>&lt;list&gt;</code> entry for <code>whitelist_countries</code></li>
+</ul>
+<pre><code>grep -n 'whitelist_countries' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to ensure under <code>&lt;ruleset&gt;</code>, there is a <code>&lt;list&gt;...whitelist_countries&lt;/list&gt;</code> entry with the RADAR marker for <code>geoip_detection</code>.</p>
+<ul>
+<li><strong>2.3</strong> Custom <code>0310 SSH</code> decoder deployed; verify this by running</li>
+</ul>
+<pre><code>ls -l /var/ossec/etc/decoders/0310-ssh.xml
+</code></pre>
+<p>to ensure that <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</p>
+<ul>
+<li><strong>2.4</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>; verify via</li>
+</ul>
+<pre><code>grep '&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to ensure that a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</p>
+<ul>
+<li><strong>2.5</strong> RADAR rules for <code>geoip_detection</code> exist</li>
+</ul>
+<pre><code>grep -n 'RADAR_RULES: geoip_detection' /var/ossec/etc/rules/local_rules.xml
+</code></pre>
+<p>to check <code>local_rules.xml</code> contains a <code>RADAR_RULES: geoip_detection block</code> rules use <code>whitelist_countries</code> to detect non-whitelisted countries.</p>
+<ul>
+<li><strong>2.6</strong> GeoIP non-whitelist rules are bound to active responses</li>
+</ul>
+<pre><code>grep -A10 'email_ar' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to check GeoIP non-whitelist rule ID(s) reference the correct <code>&lt;active-response&gt;</code>.</p>
+<h4>In endpoints running agents</h4>
+<ul>
+<li><strong>2.7</strong> RADAR helper directory and script are installed on the SSH agent host.</li>
+</ul>
+<pre><code>ls -ld /opt/radar
+ls -l /opt/radar/radar-helper.py
+</code></pre>
+<p>to check <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
+<ul>
+<li><strong>2.8</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</li>
+</ul>
+<pre><code>systemctl status radar-helper.service
+</code></pre>
+<p>to check that the service is active.</p>
+<ul>
+<li><strong>2.9</strong> Agent <code>ossec.conf</code> on SSH agent includes the <code>geoip_detection</code> RADAR snippet.</li>
+</ul>
+<pre><code>grep -n 'RADAR' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to check: <code>/var/ossec/etc/ossec.conf</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code>, and contains a <code>&lt;!-- RADAR: geoip_detection BEGIN/END --&gt;</code> block inserted before <code>&lt;/ossec_config&gt;</code>.</p>
+<ul>
+<li><strong>2.10</strong> Wazuh agent service is running on SSH agents after restart.</li>
+</ul>
+<pre><code>/var/ossec/bin/wazuh-control status
+</code></pre>
+<p>to ensure status output indicates the agent is <code>running</code> with no error messages.</p>
+<h4>Post-test cleanup</h4>
+<ul>
+<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
+</ul>
+<pre><code>docker ps
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-055">SRS-055 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-010">TRB-010 TCER: RADAR build non-whitelist GeoIP</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-044">3.4 RADAR: build log volume abnormal growth <small>TST-044</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>The working directory is required to be <code>soar-radar</code>:</li>
+</ol>
+<pre><code>cd soar-radar
+</code></pre>
+<ol start="2">
+<li>Build RADAR with SCENARIO_NAME log_volume:</li>
+</ol>
+<pre><code>./build-radar.sh log_volume --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<p>In this step, please choose options according to your setup:</p>
+<ul>
+<li>
+<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
+</li>
+<li>
+<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
+</li>
+<li>
+<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
+<ul>
+<li>true  : do not bootstrap a manager</li>
+<li>false : bootstrap a manager</li>
+</ul>
+</li>
+<li>
+<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
+</li>
+</ul>
+<ol start="3">
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-046">TST-046</a>:</li>
+</ol>
+<ul>
+<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --all
+docker compose -f docker-compose.webhook.yml down -v
+</code></pre>
+<ul>
+<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the manager endpoint, run these commands to clean up the test environment:</li>
+</ul>
+<pre><code>cd /tmp/radar_mgr_XXXXXXX
+ls docker-compose.core.yml
+./stop-radar.sh --all
+docker compose -f docker-compose.webhook.yml down -v
+cd /tmp
+rm -rf radar_mgr_*
+</code></pre>
+<p>Each Ansible run creates a staging directory in the endpoint where the manager is bootstrapped. The successful run directory (starts with <code>radar_mgr_</code> ending with a random identifier <code>XXXXXXX</code>) should be checked for the existence of a Docker Compose file and then cleaned.</p>
+<ul>
+<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>docker compose -f docker-compose.agents.yml down -v
+</code></pre>
+<h2>Expected outcome</h2>
+<ol start="2">
+<li>Check the setup:</li>
+</ol>
+<h3>2. Check the setup</h3>
+<h4>In Wazuh Manager</h4>
+<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
+<pre><code>docker exec -it wazuh.manager bash
+</code></pre>
+<ul>
+<li><strong>2.1</strong> RADAR snippet for log_volume is present in ossec.conf</li>
+</ul>
+<pre><code>grep -n 'RADAR: log_volume' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to check ossec.conf contains a <code>RADAR: log_volume BEGIN/END</code> block with the log_volume-related settings.</p>
+<ul>
+<li><strong>2.2</strong> RADAR decoders for log_volume exist</li>
+</ul>
+<pre><code>grep -n 'RADAR_DECODERS: log_volume' /var/ossec/etc/decoders/local_decoder.xml
+</code></pre>
+<p>to check local_decoder.xml contains a <code>RADAR_DECODERS: log_volume</code> block defining decoders that produce a <code>log_bytes</code> field.</p>
+<ul>
+<li><strong>2.3</strong> RADAR rules for log_volume exist</li>
+</ul>
+<pre><code>grep -n 'RADAR_RULES: log_volume' /var/ossec/etc/rules/local_rules.xml
+</code></pre>
+<p>too check local_rules.xml contains a <code>RADAR_RULES: log_volume</code> block with rules using <code>log_bytes</code> for anomaly detection.</p>
+<ul>
+<li><strong>2.4</strong> OpenSearch template radar-log-volume is present</li>
+</ul>
+<pre><code>curl -u &quot;$OS_USER:$OS_PASS&quot; -k &quot;$OS_URL/_index_template/radar-log-volume?pretty&quot;
+</code></pre>
+<p>to ensure HTTP status is 200 and the template JSON exists with mappings for <code>log_bytes</code> as a numeric type.</p>
+<ul>
+<li><strong>2.5</strong> log_volume rules are bound to active responses</li>
+</ul>
+<pre><code>grep -A5 'email_ar' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to check Log volume anomaly rule ID(s) reference <code>email_ar.py</code> as intended.</p>
+<h4>In endpoints running agents</h4>
+<ul>
+<li><strong>2.6</strong> RADAR helper directory and script are installed on the SSH agent host.</li>
+</ul>
+<pre><code>ls -ld /opt/radar
+ls -l /opt/radar/radar-helper.py
+</code></pre>
+<p>to check <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
+<ul>
+<li><strong>2.7</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</li>
+</ul>
+<pre><code>systemctl status radar-helper.service
+</code></pre>
+<p>to check that the service is active.</p>
+<ul>
+<li><strong>2.8</strong> Agent <code>ossec.conf</code> on agent includes the <code>log_volume</code> RADAR snippet.</li>
+</ul>
+<pre><code>grep -n 'RADAR' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to check <code>/var/ossec/etc/ossec.conf</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code>, and contains a <code>RADAR: log_volume BEGIN/END</code> block inserted before <code>&lt;/ossec_config&gt;</code>.</p>
+<ul>
+<li><strong>2.9</strong> Wazuh agent service is running on SSH agents after restart.</li>
+</ul>
+<pre><code>/var/ossec/bin/wazuh-control status
+</code></pre>
+<p>to check status output indicates the agent is <code>running</code> with no error messages.</p>
+<h4>Post-test cleanup</h4>
+<ul>
+<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
+</ul>
+<pre><code>docker ps
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-011">TRB-011 TCER: RADAR build log volume growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-045">3.5 Run RADAR for log volume abnormal growth <small>TST-045</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is built according to the scenario <a href="./TST.html#TST-044">TST-044</a>.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>The working directory is required to be <code>soar-radar</code>:</li>
+</ol>
+<pre><code>cd soar-radar
+</code></pre>
+<ol start="2">
+<li>Run RADAR with SCENARIO_NAME log_volume</li>
+</ol>
+<pre><code>./run-radar.sh log_volume
+</code></pre>
+<h2>Expected outcome</h2>
+<ol start="2">
+<li>
+<p>In Wazuh Dashboard:</p>
+<p>2.1. The detector <code>LOG_VOLUME_DETECTOR</code> is created in Wazuh Dashboard with the correct configurations. In Anomaly Detection menu the created detector should be visible. The correct configurations can be found in <a href="/soar-radar/config.yaml"><code>config.yaml</code></a> under <code>log_volume</code> key.</p>
+<p>2.2. The monitor is created in Wazuh Dashboard with the trigger to the webhook. In Alerting menu created Monitor should be listed under Monitors tab.</p>
+</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a></p>
+<p><em>Child links:</em> <a href="TRB.html#TRB-012">TRB-012 TCER: Add log volume growth anomaly detector</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-046">3.6 Suspicious login detection validation <small>TST-046</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is built according to the scenario <a href="./TST.html#TST-042">TST-042</a>.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Paste these logs into <code>/var/log/auth.log</code>, adjusting the timestamps on the agent so that all entries fall within a one-minute interval:</li>
+</ol>
+<pre><code>2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 8.8.8.8 port 1045 ssh2: ED25519 SHA256:A.
+2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 1.0.136.99 port 1045 ssh2: ED25519 SHA256:A.
+2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 89.31.143.90 port 1045 ssh2: ED25519 SHA256:A.
+2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 47.91.170.222 port 1045 ssh2: ED25519 SHA256:A.
+2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 150.95.255.38 port 1045 ssh2: ED25519 SHA256:A.
+2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 84.32.84.32 port 1045 ssh2: ED25519 SHA256:A.
+2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Accepted publickey for test01 from 8.8.8.8 port 60850 ssh2: ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+</code></pre>
+<p>For example, the first log line should start <code>2025-12-06T15:10:20.227122+01:00</code> and the last line should end with <code>2025-12-06T15:11:20.227122+01:00</code>, so that the entire sequence remains within a one-minute window.</p>
+<h2>Expected outcome</h2>
+<ol>
+<li>In Wazuh Dashboard Discovery page, the rule ID starting with <code>210***</code> should be triggered.</li>
+<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-041">TST-041</a>) specified receives an email about the alert.</li>
+</ol>
+<p><em>Child links:</em> <a href="TRB.html#TRB-013">TRB-013 TCER: Validate RADAR suspicious login detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-047">3.7 Non-whitelist GeoIP detection validation <small>TST-047</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is built according to the scenario <a href="./TST.html#TST-043">TST-043</a>.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Paste these logs into <code>/var/log/auth.log</code> with modification of the date in the agent:</li>
+</ol>
+<pre><code>2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Accepted publickey for test01 from 8.8.8.8 port 60850 ssh2: ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+</code></pre>
+<p>For example, a single log line starting with <code>2025-12-06T15:10:20.227122+01:00 edge.vm ...</code></p>
+<h2>Expected outcome</h2>
+<ol>
+<li>In the Wazuh Dashboard Discovery page, the rule ID starting with <code>10090*</code> should be triggered.</li>
+<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-041">TST-041</a>) specified receives an email about the alert.</li>
+</ol>
+<p><em>Child links:</em> <a href="TRB.html#TRB-014">TRB-014 TCER: Validate RADAR non-whitelist GeoIP detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-048">3.8 Log volume abnormal growth validation <small>TST-048</small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is built according to the scenario <a href="./TST.html#TST-045">TST-045</a>.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>In Wazuh Dashboard -&gt; Indexer Management -&gt; Dev Tools, run this query with adapting the timestamp:</li>
+</ol>
+<pre><code>POST wazuh-archives-4.x-XXXX.XX.XX/_doc
+{
+  &quot;@timestamp&quot;: &quot;XXXX-XX-XXTXX:XX:00.000Z&quot;,
+  &quot;data&quot;: {
+    &quot;log_path&quot;: &quot;/var/log&quot;,
+    &quot;log_bytes&quot;: 63210547182
+  },
+  &quot;agent&quot;: { &quot;name&quot;: &quot;edge.vm&quot; },
+  &quot;manager&quot;: { &quot;name&quot;: &quot;wazuh.manager&quot; }
+}
+</code></pre>
+<h2>Expected outcome</h2>
+<ol>
+<li>In the Wazuh Dashboard Discovery page, the rule ID starting with <code>100309</code> should be triggered.</li>
+<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-041">TST-041</a>) specified receives an email about the alert.</li>
+</ol>
+<p><em>Child links:</em> <a href="TRB.html#TRB-015">TRB-015 TCER: Validate RADAR log volume growth anomaly detector</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.5</td>
 </tr>
 </tbody>
 </table>

@@ -35,6 +35,10 @@
 <li><a href="#LARC-012">12 ADBox ConfigManager</a></li>
 <li><a href="#LARC-013">13 ADBox RequestResponseHandler</a></li>
 <li><a href="#LARC-014">14 ADBox Shipper</a></li>
+<li><a href="#LARC-015">15 RADAR scenario setup flow</a></li>
+<li><a href="#LARC-016">16 RADAR active response flow</a></li>
+<li><a href="#LARC-017">17 RADAR integration with Opensearch modules</a></li>
+<li><a href="#LARC-018">18 RADAR logical flow</a></li>
 </ul>
           </nav>
       </div>
@@ -46,7 +50,7 @@
 <p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a></p>
 <p><em>Child links:</em> <a href="SWD.html#SWD-001">SWD-001 ADBox training pipeline</a></p>
 <h1 id="LARC-002">2.0 ADBox historical data prediction pipeline flow <small>LARC-002</small></h1>
-<h2>Prediction pipeline flow diagram for historical (offline) runmode</h2>
+<h2>Prediction pipeline flow diagram for historical (offline) run mode</h2>
 <p>The diagram summarizes the flow of the predict pipeline for historical (offline) runmode orchestrated by the ADBox Engine.</p>
 <p><img alt="ADBox predict pipeline flow - historical diagram" src="assets/1B3A4D_DIA_IDPS_ESCAPE_ADBoxDiagrams-engine-predict-pipeline-flow-offline_v1.2.png" title="ADBox predict pipeline flow - historical" /></p>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a></p>
@@ -115,7 +119,7 @@
 <p>The diagram below depicts the ADBox <code>ConfigManager</code>.</p>
 <p><img alt="ADBox Time Manager" src="assets/1B3A4_DIA_IDPS_ESCAPE_ADBoxDiagrams-ConfigManager_v1.1.png" title="ADBox Config Manager" /></p>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-018">SRS-018 ML Hyperparameter Tuning</a>, <a href="SRS.html#SRS-021">SRS-021 Default Use Case Update</a></p>
-<p><em>Child links:</em> <a href="SWD.html#SWD-014">SWD-014 ADBox config managers</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-014">SWD-014 ADBox config managersactive: true</a></p>
 <h1 id="LARC-013">13 ADBox RequestResponseHandler <small>LARC-013</small></h1>
 <h2>ADBox RequestResponseHandler context diagram</h2>
 <p>The diagram below depicts the ADBox <code>RequestResponse Handler</code> subpackage.</p>
@@ -127,6 +131,24 @@
 <p><img alt="ADBox Shipper" src="assets/1B3A4_DIA_IDPS_ESCAPE_shipper-component-v1.2.png" title="ADBox Shipper" /></p>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a></p>
 <p><em>Child links:</em> <a href="SWD.html#SWD-015">SWD-015 ADBox Shipper and Template Handler</a>, <a href="SWD.html#SWD-016">SWD-016 ADBox shipping of prediction data</a>, <a href="SWD.html#SWD-017">SWD-017 ADBox creation of a detector stream</a></p>
+<h1 id="LARC-015">15 RADAR scenario setup flow <small>LARC-015</small></h1>
+<p>The diagram below depicts the RADAR scenario setup flow.</p>
+<p><img alt="RADAR scenario setup" src="assets/RADAR-scenario-setup-flow.png" title="RADAR scenario setup" width="90%" /></p>
+<p><em>Parent links:</em> <a href="HARC.html#HARC-004">HARC-004 RADAR architecture</a>, <a href="HARC.html#HARC-005">HARC-005 RADAR Automated Test Framework architecture</a>, <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a>, <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a>, <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a>, <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-018">SWD-018 RATF: ingestion phase</a>, <a href="SWD.html#SWD-019">SWD-019 RATF: setup phase</a></p>
+<h1 id="LARC-016">16 RADAR active response flow <small>LARC-016</small></h1>
+<p>The diagram below depicts the RADAR active response flow.</p>
+<p><img alt="RADAR active response" src="assets/RADAR-active-response-flowdiagram.png" title="RADAR active response" width="50%" /></p>
+<p><em>Parent links:</em> <a href="HARC.html#HARC-004">HARC-004 RADAR architecture</a>, <a href="HARC.html#HARC-005">HARC-005 RADAR Automated Test Framework architecture</a>, <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a>, <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a>, <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a>, <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a></p>
+<p><em>Child links:</em> <a href="SWD.html#SWD-019">SWD-019 RATF: setup phase</a>, <a href="SWD.html#SWD-020">SWD-020 RATF: simulation phase</a>, <a href="SWD.html#SWD-021">SWD-021 RATF: evaluation phase</a></p>
+<h1 id="LARC-017">17 RADAR integration with Opensearch modules <small>LARC-017</small></h1>
+<p>The diagram below depicts how RADAR integrates with Wazuh Opensearch modules.</p>
+<p><img alt="RADAR integration" src="assets/RADAR-integration.png" title="RADAR integration" width="90%" /></p>
+<p><em>Parent links:</em> <a href="HARC.html#HARC-004">HARC-004 RADAR architecture</a>, <a href="HARC.html#HARC-005">HARC-005 RADAR Automated Test Framework architecture</a>, <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a>, <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a>, <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a>, <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a>, <a href="SRS.html#SRS-054">SRS-054 RADAR Automated Test Framework</a></p>
+<h1 id="LARC-018">18 RADAR logical flow <small>LARC-018</small></h1>
+<p>The diagram below depicts the logical flow of RADAR.</p>
+<p><img alt="RADAR logical flow" src="assets/RADAR-logical-flow-diagram.png" title="RADAR logical flow" width="50%" /></p>
+<p><em>Parent links:</em> <a href="HARC.html#HARC-004">HARC-004 RADAR architecture</a>, <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a>, <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a>, <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a>, <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a></p>
       </div>
     </div>
 </div>

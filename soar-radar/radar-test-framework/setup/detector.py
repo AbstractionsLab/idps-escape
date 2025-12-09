@@ -34,7 +34,7 @@ class DetectorManager:
 
     def create_detector(self, index_name, time_field, feature_attributes, categorical_field,
                         detector_interval=5, detector_delay=1, result_index="opensearch-ad-plugin-result-scenario",
-                        name="detector", description="AD Detector"):
+                        name="detector", description="AD Detector", shingle_size=8):
         existing_id = self.get_detector_id_by_name(name)
         if existing_id:
             return existing_id
@@ -55,6 +55,7 @@ class DetectorManager:
                 "period": {"interval": detector_delay, "unit": "Minutes"}
             },
             "category_field": [categorical_field],
+            "shingle_size": shingle_size,
             "result_index": f"{result_index}",
             "rules": []
         }

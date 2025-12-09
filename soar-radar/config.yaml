@@ -1,0 +1,240 @@
+default_scenario: insider_threat
+
+scenarios:
+  insider_threat:
+    container_name: agent.insider
+    index_prefix: wazuh-ad-insider-threat
+    result_index: opensearch-ad-plugin-result-insider_threat
+    label_csv_path: insider_threat/dataset/answers*.csv
+    time_field: "@timestamp"
+    categorical_field: "user.keyword"
+    detector_interval: 5
+    delay_minutes: 1
+    monitor_name: "InsiderThreat-Monitor"
+    trigger_name: "Insider-Threat-Detected"
+    anomaly_grade_threshold: 0.1
+    confidence_threshold: 0.1
+    features:
+      - feature_name: file_access_count
+        feature_enabled: true
+        aggregation_query:
+          file_access_count:
+            value_count:
+              field: user.keyword
+
+      - feature_name: volume_bytes
+        feature_enabled: true
+        aggregation_query:
+          volume_bytes:
+            sum:
+              field: content_bytes
+
+      - feature_name: distinct_file_count
+        feature_enabled: true
+        aggregation_query:
+          distinct_file_count:
+            cardinality:
+              field: filename.keyword
+
+  ddos_detection:
+    container_name: agent.ddos
+    container_port: 8800
+    index_prefix: wazuh-ad-ddos-detection
+    result_index: opensearch-ad-plugin-result-ddos_detection
+    label_csv_path: ddos_detection/dataset/Syn.csv
+    time_field: "@timestamp"
+    categorical_field: "Destination_IP.keyword"
+    detector_interval: 10
+    delay_minutes: 1
+    monitor_name: "DDoS-Monitor"
+    trigger_name: "DDoS-Attack-Detected"
+    anomaly_grade_threshold: 0.7
+    confidence_threshold: 0.7
+    features:
+      - feature_name: flow_packets_per_second
+        feature_enabled: true
+        aggregation_query:
+          flow_packets_per_second:
+            avg:
+              field: Flow_Packets_s
+
+      - feature_name: flow_bytes_per_second
+        feature_enabled: true
+        aggregation_query:
+          flow_bytes_per_second:
+            avg:
+              field: Flow_Bytes_s
+
+      - feature_name: syn_flag_count
+        feature_enabled: true
+        aggregation_query:
+          syn_flag_count:
+            sum:
+              field: SYN_Flag_Count
+
+      - feature_name: packet_length_average
+        feature_enabled: true
+        aggregation_query:
+          packet_length_average:
+            avg:
+              field: Packet_Length_Mean
+
+      - feature_name: total_bwd_packets
+        feature_enabled: true
+        aggregation_query:
+          total_bwd_packets:
+            avg:
+              field: Total_Backward_Packets
+
+  malware_communication:
+    container_name: agent.malcom
+    index_prefix: wazuh-ad-malware-c2
+    result_index: opensearch-ad-plugin-result-malware_communication
+    log_index_pattern: wazuh-ad-malware-c2-*
+    dataset_dir: malware_communication/dataset
+    time_field: "@timestamp"
+    categorical_field: "id.orig_h.keyword"
+    detector_interval: 10
+    delay_minutes: 1
+    monitor_name: "MalwareCommunication-Monitor"
+    trigger_name: "Malware-Communication-Detected"
+    anomaly_grade_threshold: 0.8
+    confidence_threshold: 0.85
+    features:
+#      - feature_name: conn_interval_avg
+#        feature_enabled: true
+#        aggregation_query:
+#          conn_interval_avg:
+#            avg:
+#              field: conn_interval
+#
+#      - feature_name: orig_bytes_avg
+#        feature_enabled: true
+#        aggregation_query:
+#          orig_bytes_avg:
+#            avg:
+#              field: orig_bytes
+#
+#      - feature_name: resp_bytes_avg
+#        feature_enabled: true
+#        aggregation_query:
+#          resp_bytes_avg:
+#            avg:
+#              field: resp_bytes
+
+      - feature_name: conn_count
+        feature_enabled: true
+        aggregation_query:
+          conn_count:
+            value_count:
+              field: uid.keyword
+
+      - feature_name: bytes_sent
+        feature_enabled: true
+        aggregation_query:
+          bytes_sent:
+            sum:
+              field: orig_bytes
+
+      - feature_name: bytes_received
+        feature_enabled: true
+        aggregation_query:
+          bytes_received:
+            sum:
+              field: resp_bytes
+
+      - feature_name: unique_dst_ips
+        feature_enabled: true
+        aggregation_query:
+          unique_dst_ips:
+            cardinality:
+              field: id.resp_h.keyword
+
+      - feature_name: unique_dst_ports
+        feature_enabled: true
+        aggregation_query:
+          unique_dst_ports:
+            cardinality:
+              field: id.resp_p.keyword
+
+  log_volume:
+    index_prefix: wazuh-archives-*
+    result_index: opensearch-ad-plugin-result-log-volume
+    log_index_pattern: wazuh-archives-*
+    time_field: "@timestamp"
+    categorical_field: "agent.name.keyword"
+    detector_interval: 5
+    delay_minutes: 1
+    monitor_name: "LogVolume-Monitor"
+    trigger_name: "LogVolume-Growth-Detected"
+    anomaly_grade_threshold: 0.5
+    confidence_threshold: 0.5
+    features:
+      - feature_name: log_volume_max
+        feature_enabled: true
+        aggregation_query:
+          log_volume_max:
+            max:
+              field: data.log_bytes
+
+  log_volume_general:
+    index_prefix: wazuh-archives-*
+    result_index: opensearch-ad-plugin-result-log-volume
+    log_index_pattern: wazuh-archives-*
+    time_field: "@timestamp"
+    detector_interval: 5
+    delay_minutes: 1
+    monitor_name: "LogVolume-Monitor"
+    trigger_name: "LogVolume-Growth-Detected"
+    anomaly_grade_threshold: 0.8
+    confidence_threshold: 0.85
+    features:
+      - feature_name: log_volume_avg
+        feature_enabled: true
+        aggregation_query:
+          log_volume_avg:
+            avg:
+              field: data.log_bytes
+
+  suspicious_login:
+    container_name: agent.suspicious
+    index_prefix: wazuh-ad-suspicious-login
+    result_index: opensearch-ad-plugin-result-suspicious_login
+    log_index_pattern: wazuh-ad-suspicious-login-*
+    dataset_dir: suspicious_login/dataset
+    time_field: "@timestamp"
+    categorical_field: "User ID.keyword"
+    detector_interval: 10
+    delay_minutes: 1
+    monitor_name: "SuspiciousLogin-Monitor"
+    trigger_name: "Suspicious-Login-Detected"
+    anomaly_grade_threshold: 0.8
+    confidence_threshold: 0.85
+    features:
+      - feature_name: login_count
+        feature_enabled: true
+        aggregation_query:
+          login_count:
+            value_count:
+              field: User ID.keyword
+
+      - feature_name: distinct_geo_country
+        feature_enabled: true
+        aggregation_query:
+          distinct_geo_country:
+            cardinality:
+              field: Country.keyword
+
+      - feature_name: login_hour_cardinality
+        feature_enabled: true
+        aggregation_query:
+          login_hour_cardinality:
+            cardinality:
+              field: event_hour
+
+#      - feature_name: login_hour_avg
+#        feature_enabled: true
+#        aggregation_query:
+#          login_hour_avg:
+#            avg:
+#              field: event_hour

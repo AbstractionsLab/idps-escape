@@ -1,0 +1,9 @@
+OS_URL=http://indexer:9200
+OS_USER=admin
+OS_PASS=admin
+OS_VERIFY_SSL=false
+OS_TIMEOUT=5
+DASHBOARD_URL=http://dash:5601
+DASHBOARD_USER=admin
+DASHBOARD_PASS=admin
+DASHBOARD_VERIFY_SSL=false

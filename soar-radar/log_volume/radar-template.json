@@ -1,0 +1,16 @@
+{
+  "index_patterns": ["wazuh-alerts-*", "wazuh-archives-*"],
+  "priority": 300,
+  "template": {
+    "mappings": {
+      "properties": {
+        "data": {
+          "properties": {
+            "log_path": { "type": "keyword" },
+            "log_bytes": { "type": "long" }
+          }
+        }
+      }
+    }
+  }
+}

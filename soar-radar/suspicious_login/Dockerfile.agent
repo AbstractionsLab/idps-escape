@@ -12,7 +12,8 @@ RUN apt update && apt install -y \
 RUN curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --dearmor -o /usr/share/keyrings/wazuh-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/wazuh-archive-keyring.gpg] https://packages.wazuh.com/4.x/apt/ stable main" > /etc/apt/sources.list.d/wazuh.list && \
     apt update && \
-    apt install -y wazuh-agent=4.12.0-1
+    apt install -y wazuh-agent=4.12.0-1 && \
+    rm -rf /var/lib/apt/lists/*
 
 # 3. Download and unzip Keycloak
 RUN curl -L -o /tmp/keycloak.zip https://github.com/keycloak/keycloak/releases/download/${KEYCLOAK_VERSION}/keycloak-${KEYCLOAK_VERSION}.zip && \
@@ -21,7 +22,11 @@ RUN curl -L -o /tmp/keycloak.zip https://github.com/keycloak/keycloak/releases/d
     rm /tmp/keycloak.zip
 
 # 4. Make sure the keycloak script is executable
-RUN chmod +x ${KEYCLOAK_HOME}/bin/kc.sh
+RUN chmod +x ${KEYCLOAK_HOME}/bin/kc.sh && \
+    mkdir -p /var/log && \
+    touch /var/log/suspicious_login.json && \
+    chmod 0644 /var/log/suspicious_login.json
+
 
 # 5. Set working directory
 WORKDIR ${KEYCLOAK_HOME}

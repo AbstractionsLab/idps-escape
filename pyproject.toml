@@ -1,16 +1,18 @@
 [tool.poetry]
 name = "siem-mtad-gat"
-version = "0.3"
-description = "This is the main repository for IDPS-ESCAPE and ADBox, which is a subsystem of the former."
-authors = ["Agnese Gini <agnese@abstractionslab.lu>", "Arash Atashpendar <arash@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>", "Gulsezim Duisen <duisen@itrust.lu>"]
+version = "0.5"
+description = "This is the main repository for IDPS-ESCAPE, along with ADBox and RADAR, two key subsystems of the former."
+authors = ["Arash Atashpendar <arash@abstractionslab.lu>", "Agnese Gini <agnese@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>", "Gulsezim Duisen <duisen@itrust.lu>", "Itzel Vazquez Sandoval <itzel@abstractionslab.lu>"]
 readme = "README.md"
  
 
 
 [tool.poetry.dependencies]
 python = "3.10.12" 
+
+[tool.poetry.group.adbox.dependencies]
 opensearch-sdk-py = {git = "https://github.com/opensearch-project/opensearch-sdk-py.git", rev = "fb412ad3fe4c58d990ab0c84b9cc7972870b707b" }
-opensearch-py = "2.5.0"
+opensearch-py = "3.0.0"
 
 # Added these for deployment 
 torch = "2.3.0"
@@ -33,6 +35,18 @@ more-itertools = "8.10.0"
 tabulate = "^0.9.0"
 plotly = "^5.23.0"
 nbformat = "^5.10.4"
+
+[tool.poetry.group.radar.dependencies]
+ansible-core = ">=2.16,<2.17"
+pyyaml = "6.0.2"
+python-dotenv = "1.1.1"
+requests = "2.32.4"
+pandas = "2.2.2"
+geoip2 = "5.1.0"
+selenium = "4.34.2"
+scapy = "2.6.1"
+netifaces = "0.11.0"
+faker = "37.4.2"
 
 
 [tool.isort]

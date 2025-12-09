@@ -1,0 +1,15 @@
+<command>
+    <name>write_contextual_logs_susplog_active_response.sh</name>
+    <executable>write_contextual_logs_susplog_active_response.sh</executable>
+    <timeout_allowed>yes</timeout_allowed>
+</command>
+
+<command>
+    <name>disable_sso_user.py</name>
+    <executable>disable_sso_user.py</executable>
+    <timeout_allowed>no</timeout_allowed>
+</command>
+<localfile>
+    <location>/var/log/suspicious_login.log</location>
+    <log_format>syslog</log_format>
+</localfile>

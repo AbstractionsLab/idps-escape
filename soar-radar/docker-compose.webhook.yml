@@ -1,0 +1,31 @@
+version: '3.7'
+
+# networks:
+#   soar-radar:
+#     driver: bridge
+
+services:
+  webhook:
+    build:
+      context: webhook
+      dockerfile: Dockerfile
+      args:
+        WAZUH_AGENT_VERSION: ${WAZUH_AGENT_VERSION}
+        WAZUH_MANAGER_ADDRESS: ${WAZUH_MANAGER_ADDRESS}
+    container_name: ad-webhook
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8080' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    volumes:
+      - wazuh-webhook-logs:/var/log
+    # networks:
+    #   - soar-radar
+    ports:
+      - "8080:8080"
+
+volumes:
+  wazuh-webhook-logs:
