@@ -195,9 +195,12 @@
       changed_when: _scripts_sync.stdout is search("CHANGED")
 
     #### core RADAR snippets (ossec, decoders, rules) ####
-    - name: local docker | Ensure /tmp/radar_snippets inside container
+    - name: local docker | Reset /tmp/radar_snippets inside container
       delegate_to: localhost
-      shell: docker exec "{{ _mgr_container }}" bash -lc 'mkdir -p /tmp/radar_snippets'
+      shell: |
+        docker exec "{{ _mgr_container }}" bash -lc '
+          rm -rf /tmp/radar_snippets && mkdir -p /tmp/radar_snippets
+        '
       args:
         executable: /bin/bash
 
@@ -210,70 +213,16 @@
         docker exec "$C" mkdir -p "$DEST_SNIP"
 
         docker cp "$SRC/radar-ossec-snippet.xml" "$C:$DEST_SNIP/radar-ossec-snippet.xml"
-        docker cp "$SRC/local_decoder.xml"       "$C:$DEST_SNIP/local_decoder.xml"
         docker cp "$SRC/local_rules.xml"         "$C:$DEST_SNIP/local_rules.xml"
+        if [ -f "$SRC/local_decoder.xml" ]; then
+          docker cp "$SRC/local_decoder.xml" "$C:$DEST_SNIP/local_decoder.xml"
+        fi
 
         echo "COPIED"
       args:
         executable: /bin/bash
       register: _docker_cp_snips_local
       changed_when: "'COPIED' in _docker_cp_snips_local.stdout"
-
-    #### ossec.conf ####
-    - name: local docker | Check RADAR ossec snippet exists on controller
-      delegate_to: localhost
-      stat:
-        path: "{{ _scenario_path }}/radar-ossec-snippet.xml"
-      register: _radar_ossec_snip_local
-      changed_when: false
-
-    - name: local docker | Copy ossec.conf from container to local /tmp for RADAR insertion
-      delegate_to: localhost
-      shell: |
-        docker cp "{{ _mgr_container }}:/var/ossec/etc/ossec.conf" "/tmp/ossec.conf.radar" || true
-        test -s /tmp/ossec.conf.radar
-      args:
-        executable: /bin/bash
-      register: _ossec_pull_radar
-      changed_when: false
-      when: _radar_ossec_snip_local.stat.exists
-
-    - name: local docker | Insert RADAR ossec snippet into local copy (idempotent)
-      delegate_to: localhost
-      blockinfile:
-        path: /tmp/ossec.conf.radar
-        marker: "<!-- RADAR: {{ scenario_name }} {mark} -->"
-        insertbefore: '</ossec_config>'
-        block: "{{ lookup('file', _scenario_path ~ '/radar-ossec-snippet.xml') }}"
-        backup: false
-      register: _ossec_insert
-      when: _radar_ossec_snip_local.stat.exists
-
-    - name: local docker | Copy modified RADAR ossec.conf back into container
-      delegate_to: localhost
-      shell: |
-        docker cp /tmp/ossec.conf.radar "{{ _mgr_container }}:/var/ossec/etc/ossec.conf"
-        echo COPIED
-      args:
-        executable: /bin/bash
-      register: _ossec_push_radar
-      changed_when: "'COPIED' in _ossec_push_radar.stdout"
-      when:
-        - _radar_ossec_snip_local.stat.exists
-        - _ossec_insert is changed
-
-    - name: local docker | Fix ownership/perm of ossec.conf in container
-      delegate_to: localhost
-      shell: |
-        docker exec "{{ _mgr_container }}" bash -lc '
-          if [ -f "/var/ossec/etc/ossec.conf" ]; then
-            chown root:wazuh "/var/ossec/etc/ossec.conf" || true
-            chmod 0640 "/var/ossec/etc/ossec.conf" || true
-          fi
-        '
-      args:
-        executable: /bin/bash
-      when: _ossec_insert is changed
 
     #### decoders ####
     - name: local docker | Append RADAR decoders (idempotent, EOF)
@@ -284,6 +233,12 @@
           s="/tmp/radar_snippets/local_decoder.xml"
           begin="<!-- RADAR_DECODERS: {{ scenario_name }} BEGIN -->"
           end="<!-- RADAR_DECODERS: {{ scenario_name }} END -->"
+
+          # If this scenario has no decoder snippet, do nothing
+          if [ ! -f "$s" ]; then
+            echo "NOCHANGE"
+            exit 0
+          fi
 
           # ensure target file exists and has proper perms (do NOT truncate)
           touch "$f"
@@ -371,27 +326,153 @@
           register: _docker_local_0310_changes
           changed_when: "'CHANGED' in _docker_local_0310_changes.stdout"
       when: scenario_name == 'suspicious_login' or scenario_name == 'geoip_detection'
-      
+
+    #### ossec.conf ####
+    - name: local docker | Check RADAR ossec snippet exists on controller
+      delegate_to: localhost
+      stat:
+        path: "{{ _scenario_path }}/radar-ossec-snippet.xml"
+      register: _radar_ossec_snip_local
+      changed_when: false
+
+    - name: local docker | Check custom SSH decoder override exists in manager container
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ _mgr_container }}" test -f /var/ossec/etc/decoders/0310-ssh.xml
+      args:
+        executable: /bin/bash
+      register: _ssh_decoder_override_local
+      changed_when: false
+      failed_when: false
+
+    - name: local docker | Copy ossec.conf from container to local /tmp
+      delegate_to: localhost
+      shell: |
+        docker cp "{{ _mgr_container }}:/var/ossec/etc/ossec.conf" "/tmp/ossec.conf.from_container" || true
+        test -s /tmp/ossec.conf.from_container
+        echo SOURCE=/tmp/ossec.conf.from_container
+      args:
+        executable: /bin/bash
+      register: _ossec_pull
+      changed_when: false
+
+    - name: local docker | Insert RADAR ossec snippet into local copy (idempotent)
+      delegate_to: localhost
+      blockinfile:
+        path: /tmp/ossec.conf.from_container
+        marker: "<!-- RADAR: {{ scenario_name }} {mark} -->"
+        insertbefore: '</ossec_config>'
+        block: "{{ lookup('file', _scenario_path ~ '/radar-ossec-snippet.xml') }}"
+        backup: false
+      register: _ossec_insert
+      when:
+        - _radar_ossec_snip_local.stat.exists
+        - _ossec_pull.rc == 0       
+
+    - name: local docker | Check if SSH decoder_exclude already exists in ossec.conf
+      delegate_to: localhost
+      shell: |
+        grep -F '<decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>' /tmp/ossec.conf.from_container
+      args:
+        executable: /bin/bash
+      register: _ssh_decoder_exclude_present_local
+      changed_when: false
+      failed_when: false
+      when:
+        - _ossec_pull.rc == 0
+        - _ssh_decoder_override_local.rc == 0
+
+    - name: local docker | Ensure default SSH decoders are excluded when custom override exists
+      delegate_to: localhost
+      blockinfile:
+        path: /tmp/ossec.conf.from_container
+        marker: "<!-- RADAR: ssh decoder_exclude {mark} -->"
+        insertbefore: "</ruleset>"
+        block: |
+          <!-- RADAR: exclude built-in SSH decoders because /etc/decoders/0310-ssh.xml is used -->
+          <decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>
+      register: _ssh_decoder_exclude_insert_local
+      when:
+        - _ossec_pull.rc == 0
+        - _ssh_decoder_override_local.rc == 0        # 0310-ssh.xml exists
+        - _ssh_decoder_exclude_present_local.rc != 0 # exclude not already present
+
+    - name: local docker | Ensure logall is 'yes' in ossec.conf
+      delegate_to: localhost
+      ansible.builtin.replace:
+        path: /tmp/ossec.conf.from_container
+        regexp: '(<logall>)[^<]*(</logall>)'
+        replace: '\1yes\2'
+        backup: no
+      register: _ossec_logall
+      when: _ossec_pull.rc == 0
+
+    - name: local docker | Ensure logall_json is 'yes' in ossec.conf
+      delegate_to: localhost
+      ansible.builtin.replace:
+        path: /tmp/ossec.conf.from_container
+        regexp: '(<logall_json>)[^<]*(</logall_json>)'
+        replace: '\1yes\2'
+        backup: no
+      register: _ossec_logall_json
+      when: _ossec_pull.rc == 0
+
+    - name: local docker | Copy modified ossec.conf back into container (if changed)
+      delegate_to: localhost
+      shell: |
+        docker cp /tmp/ossec.conf.from_container "{{ _mgr_container }}:/var/ossec/etc/ossec.conf"
+        echo COPIED
+      args:
+        executable: /bin/bash
+      register: _ossec_push
+      changed_when: "'COPIED' in _ossec_push.stdout"
+      when:
+        - _ossec_pull.rc == 0
+        - >
+          (
+            (_ossec_insert is defined and _ossec_insert.changed) or
+            (_ssh_decoder_exclude_insert_local is defined and _ssh_decoder_exclude_insert_local.changed) or
+            (_ossec_logall is defined and _ossec_logall.changed) or
+            (_ossec_logall_json is defined and _ossec_logall_json.changed)
+          )
+
+    - name: local docker | Fix ownership/perm of ossec.conf in container
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ _mgr_container }}" bash -lc '
+          if [ -f "/var/ossec/etc/ossec.conf" ]; then
+            chown root:wazuh "/var/ossec/etc/ossec.conf" || true
+            chmod 0640 "/var/ossec/etc/ossec.conf" || true
+          fi
+        '
+      args:
+        executable: /bin/bash
+      when: _ossec_push is defined and _ossec_push.changed
 
     #### restart wazuh service inside container (not full container restart) ####
     - name: local docker | Decide if restart is needed
       set_fact:
         _restart_needed: >-
           {{
-            (_ossec_insert.changed | default(false)) or
-            (_dec_insert.changed   | default(false)) or
-            (_rules_insert.changed | default(false)) or
-            (_scripts_sync.changed | default(false)) or
-            (_docker_insert_list_local.changed | default(false))
+            (_ossec_insert is defined and _ossec_insert.changed) or
+            (_ssh_decoder_exclude_insert_local is defined and _ssh_decoder_exclude_insert_local.changed) or
+            (_ossec_logall is defined and _ossec_logall.changed) or
+            (_ossec_logall_json is defined and _ossec_logall_json.changed) or
+            (_dec_insert is defined and _dec_insert.changed) or
+            (_rules_insert is defined and _rules_insert.changed) or
+            (_scripts_sync is defined and _scripts_sync.changed) or
+            (_docker_insert_list_local is defined and _docker_insert_list_local.changed)
           }}
 
     - name: local docker | Restart Wazuh service in manager container
       delegate_to: localhost
       command: docker exec "{{ _mgr_container }}" /var/ossec/bin/wazuh-control restart
-      when: _restart_needed
+      when:
+        - _restart_needed | default(false) | bool
+        - _ossec_push is defined
+        - _ossec_push.changed
 
     #### template ####
-
     - block:
       - name: local docker | Upload RADAR index template into OpenSearch
         uri:
@@ -421,61 +502,6 @@
         changed_when: _filebeat_setup.stdout is search("Created|created|Created pipeline") or (_filebeat_setup.rc == 0)
         failed_when: false
       when: scenario_name == 'log_volume'
-
-    #### enable archives in ossec.conf ####
-    - name: local docker | Copy ossec.conf from container to local /tmp
-      delegate_to: localhost
-      shell: |
-        docker cp "{{ _mgr_container }}:/var/ossec/etc/ossec.conf" "/tmp/ossec.conf.from_container" || true
-        test -s /tmp/ossec.conf.from_container
-        echo SOURCE=/tmp/ossec.conf.from_container
-      args:
-        executable: /bin/bash
-      register: _ossec_pull
-      changed_when: false
-
-    - name: local docker | Ensure logall is 'yes' in ossec.conf
-      delegate_to: localhost
-      ansible.builtin.replace:
-        path: /tmp/ossec.conf.from_container
-        regexp: '(<logall>)[^<]*(</logall>)'
-        replace: '\1yes\2'
-        backup: no
-      register: _ossec_logall
-
-    - name: local docker | Ensure logall_json is 'yes' in ossec.conf
-      delegate_to: localhost
-      ansible.builtin.replace:
-        path: /tmp/ossec.conf.from_container
-        regexp: '(<logall_json>)[^<]*(</logall_json>)'
-        replace: '\1yes\2'
-        backup: no
-      register: _ossec_logall_json
-
-    - name: local docker | Copy modified ossec.conf back into container (if changed)
-      delegate_to: localhost
-      shell: |
-        docker cp /tmp/ossec.conf.from_container "{{ _mgr_container }}:/var/ossec/etc/ossec.conf"
-        echo COPIED
-      args:
-        executable: /bin/bash
-      register: _ossec_push
-      changed_when: "'COPIED' in _ossec_push.stdout"
-      when: >
-        (_ossec_logall.changed | default(false))
-
-    - name: local docker | Fix ownership/perm of ossec.conf in container
-      delegate_to: localhost
-      shell: |
-        docker exec "{{ _mgr_container }}" bash -lc '
-          if [ -f "/var/ossec/etc/ossec.conf" ]; then
-            chown root:wazuh "/var/ossec/etc/ossec.conf" || true
-            chmod 0640 "/var/ossec/etc/ossec.conf" || true
-          fi
-        '
-      args:
-        executable: /bin/bash
-      when: _ossec_push is defined and _ossec_push.changed
 
     #### filebeat.yml archives enabled ####
     - name: local docker | Copy filebeat.yml from container to local /tmp (if present)
@@ -729,6 +755,13 @@
               until: _webhook_boot_ps.rc == 0
 
     #### stage configs from controller onto remote host ####
+    - name: remote docker | Stat scenario local_decoder snippet on controller
+      delegate_to: localhost
+      stat:
+        path: "{{ _scenario_path }}/local_decoder.xml"
+      register: _sc_local_decoder_remote
+      changed_when: false
+
     - name: remote docker | Stage ossec + decoders + rules snippets (from controller)
       become: true
       copy:
@@ -737,10 +770,17 @@
         mode: "0640"
       loop:
         - { src: "{{ _scenario_path }}/radar-ossec-snippet.xml", dest: "radar-ossec-snippet.xml" }
-        - { src: "{{ _scenario_path }}/local_decoder.xml",       dest: "local_decoder.xml" }
         - { src: "{{ _scenario_path }}/local_rules.xml",         dest: "local_rules.xml" }
 
-    - name: remote docker | Stage 0310-ssh.xml (suspicious_login only)
+    - name: remote docker | Stage local_decoder.xml if present
+      become: true
+      when: _sc_local_decoder_remote.stat.exists
+      copy:
+        src: "{{ _scenario_path }}/local_decoder.xml"
+        dest: "{{ _stage.path }}/local_decoder.xml"
+        mode: "0640"
+
+    - name: remote docker | Stage 0310-ssh.xml (suspicious_login / geoip_detection only)
       become: true
       when: scenario_name == 'suspicious_login' or scenario_name == 'geoip_detection'
       copy:
@@ -787,9 +827,14 @@
         mode: "0750"
       become: true
 
-    - name: remote docker | Ensure /tmp/radar_snippets inside container
+    - name: remote docker | Reset /tmp/radar_snippets inside container
       become: true
-      shell: docker exec {{ _mgr_container }} bash -lc 'mkdir -p /tmp/radar_snippets'
+      shell: |
+        docker exec "{{ _mgr_container }}" bash -lc '
+          rm -rf /tmp/radar_snippets && mkdir -p /tmp/radar_snippets
+        '
+      args:
+        executable: /bin/bash
 
     - name: remote docker | docker cp staged snippets into container (including whitelist + email_ar)
       become: true
@@ -801,8 +846,11 @@
 
         # core snippets
         docker cp "$SRC/radar-ossec-snippet.xml" "$C:$DEST_SNIP/radar-ossec-snippet.xml"
-        docker cp "$SRC/local_decoder.xml"       "$C:$DEST_SNIP/local_decoder.xml"
         docker cp "$SRC/local_rules.xml"         "$C:$DEST_SNIP/local_rules.xml"
+
+        if [ -f "$SRC/local_decoder.xml" ]; then
+          docker cp "$SRC/local_decoder.xml" "$C:$DEST_SNIP/local_decoder.xml"
+        fi
 
         # whitelist -> /var/ossec/etc/lists/
         if [ -f "$SRC/{{ _whitelist_name }}" ]; then
@@ -825,50 +873,36 @@
       register: _docker_cp_all
       changed_when: "'COPIED' in _docker_cp_all.stdout"
 
-    #### ossec.conf ####
-    - name: remote docker | Insert RADAR ossec snippet (idempotent)
+    #### deploy 0310-ssh.xml into decoders (no ossec.conf change here) ####
+    - name: remote docker | Ensure 0310-ssh.xml deployed into decoders (if staged)
       become: true
       shell: |
-        docker exec "{{ _mgr_container }}" bash -lc '
-          f="/var/ossec/etc/ossec.conf"
-          s="/tmp/radar_snippets/radar-ossec-snippet.xml"
-          begin="<!-- RADAR: {{ scenario_name }} BEGIN -->"
-          end="<!-- RADAR: {{ scenario_name }} END -->"
+        C="{{ _mgr_container }}"
+        SRC_LOCAL="{{ _stage.path }}/0310-ssh.xml"
+        DST_LOCAL="/var/ossec/etc/decoders/0310-ssh.xml"
 
-          [[ -f "$f" ]] || { echo "NOCHANGE"; exit 0; }
-          grep -Fq "$begin" "$f" && { echo "NOCHANGE"; exit 0; }
+        if [ ! -f "$SRC_LOCAL" ]; then
+          echo NOCHANGE
+          exit 0
+        fi
 
-          awk -v b="$begin" -v e="$end" -v s="$s" -f - "$f" > "$f.new" <<'\''AWK'\'' 
-          /<\/ossec_config>/ && !done {
-          print b;
-          while ((getline line < s) > 0) print line;
-          print e;
-          done=1
-          }
-          { print }
-        AWK
-          mv "$f.new" "$f"
-          echo "CHANGED"
-        '
+        if docker exec "$C" test -f "$DST_LOCAL"; then
+          lsum="$(sha256sum "$SRC_LOCAL" | awk '{print $1}')"
+          rsum="$(docker exec "$C" bash -lc "sha256sum '$DST_LOCAL' | awk '{print \\$1}'" 2>/dev/null || echo MISSING)"
+          if [ "$lsum" = "$rsum" ]; then
+            echo NOCHANGE
+            exit 0
+          fi
+        fi
+
+        docker cp "$SRC_LOCAL" "$C:$DST_LOCAL"
+        docker exec "$C" bash -lc "chown root:wazuh '$DST_LOCAL' && chmod 0640 '$DST_LOCAL'"
+        echo CHANGED
       args:
         executable: /bin/bash
-      register: _ossec_insert
-      changed_when: _ossec_insert.stdout is search("CHANGED")
-
-    - name: remote docker | ensure <list> entry present in container ossec.conf ruleset (if whitelist staged)
-      become: true
-      shell: |
-        OSSEC_CONF="/var/ossec/etc/ossec.conf"
-        LIST_PATH="/var/ossec/etc/lists/{{ _whitelist_name }}"
-        LIST_ENTRY="<list>etc/lists/{{ _whitelist_name }}</list>"
-
-        [ ! -f "$LIST_PATH" ] && exit 0
-
-        grep -Fq "$LIST_ENTRY" "$OSSEC_CONF" || \
-        sed -i "/<ruleset>/a $LIST_ENTRY" "$OSSEC_CONF"
-      args:
-        executable: /bin/bash
-      when: _wl_controller_stat.stat.exists
+      register: _docker_0310_copy
+      changed_when: _docker_0310_copy.stdout is search('CHANGED')
+      when: scenario_name == 'suspicious_login' or scenario_name == 'geoip_detection'
 
     #### decoders ####
     - name: remote docker | Append RADAR decoders (idempotent, EOF)
@@ -879,6 +913,11 @@
           s="/tmp/radar_snippets/local_decoder.xml"
           begin="<!-- RADAR_DECODERS: {{ scenario_name }} BEGIN -->"
           end="<!-- RADAR_DECODERS: {{ scenario_name }} END -->"
+
+          if [ ! -f "$s" ]; then
+            echo "NOCHANGE"
+            exit 0
+          fi
 
           # ensure target file exists and has proper perms (do NOT truncate)
           touch "$f"
@@ -963,57 +1002,24 @@
       register: _scripts_sync
       changed_when: _scripts_sync.stdout is search("CHANGED")
 
-    - block:
-      - name: remote docker | Copy shipped 0310-ssh.xml to local decoders and exclude default decoder
-        become: true
-        shell: |
-          set -euo pipefail
-          C="{{ _mgr_container }}"
-          SRC_LOCAL="{{ _stage.path }}/0310-ssh.xml"
-          DST_LOCAL="/var/ossec/etc/decoders/0310-ssh.xml"
-          OSSEC_CONF="/var/ossec/etc/ossec.conf"
-          EXCL_LINE="    <decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>"
-          CHANGED=0
+    #### unified ossec.conf + archives ####
+    - name: remote docker | Check RADAR ossec snippet exists on controller
+      delegate_to: localhost
+      stat:
+        path: "{{ _scenario_path }}/radar-ossec-snippet.xml"
+      register: _radar_ossec_snip_remote
+      changed_when: false
 
-          docker cp "$SRC_LOCAL" "$C:$DST_LOCAL"
-          docker exec "$C" bash -lc "chown root:wazuh '$DST_LOCAL' && chmod 0640 '$DST_LOCAL'"
-          CHANGED=1
-
-          if ! docker exec "$C" bash -lc "grep -Fq '$EXCL_LINE' '$OSSEC_CONF' >/dev/null 2>&1"; then
-            docker exec "$C" bash -lc "awk -v excl='$EXCL_LINE' '1; /<ruleset>/ && !x { print excl; x=1 }' '$OSSEC_CONF' > /tmp/ossec.conf.ansible && mv /tmp/ossec.conf.ansible '$OSSEC_CONF' && chown root:wazuh '$OSSEC_CONF' && chmod 0640 '$OSSEC_CONF'"
-            CHANGED=1
-          fi
-
-          if [ "$CHANGED" -eq 1 ]; then
-            echo CHANGED
-          else
-            echo NOCHANGE
-          fi
-        args:
-          executable: /bin/bash
-        register: _docker_0310_changes
-        changed_when: "'CHANGED' in _docker_0310_changes.stdout"
-      when: scenario_name == 'suspicious_login' or scenario_name == 'geoip_detection'
-
-
-    #### restart ####
-    - name: remote docker | Decide if restart is needed
-      set_fact:
-        _restart_needed: >-
-          {{
-            (_ossec_insert.changed | default(false)) or
-            (_dec_insert.changed   | default(false)) or
-            (_rules_insert.changed | default(false)) or
-            (_scripts_sync.changed | default(false)) or
-            (_docker_insert_list_remote.changed | default(false))
-          }}
-
-    - name: remote docker | Restart Wazuh service in manager container
+    - name: remote docker | Check custom SSH decoder override exists in manager container
       become: true
-      command: docker exec "{{ _mgr_container }}" /var/ossec/bin/wazuh-control restart
-      when: _restart_needed
+      shell: |
+        docker exec "{{ _mgr_container }}" test -f /var/ossec/etc/decoders/0310-ssh.xml
+      args:
+        executable: /bin/bash
+      register: _ssh_decoder_override_remote
+      changed_when: false
+      failed_when: false
 
-    #### enable archives ####
     - name: remote docker | Copy ossec.conf from container to remote /tmp
       become: true
       shell: |
@@ -1022,8 +1028,60 @@
         echo SOURCE=/tmp/ossec.conf.from_container
       args:
         executable: /bin/bash
-      register: _ossec_pull
+      register: _ossec_pull_remote
       changed_when: false
+
+    - name: remote docker | Insert RADAR ossec snippet into local copy (idempotent)
+      become: true
+      blockinfile:
+        path: /tmp/ossec.conf.from_container
+        marker: "<!-- RADAR: {{ scenario_name }} {mark} -->"
+        insertbefore: '</ossec_config>'
+        block: "{{ lookup('file', _scenario_path ~ '/radar-ossec-snippet.xml') }}"
+        backup: false
+      register: _ossec_insert_remote
+      when:
+        - _radar_ossec_snip_remote.stat.exists
+        - _ossec_pull_remote.rc == 0
+
+    - name: remote docker | ensure <list> entry present in ossec.conf ruleset (if whitelist staged)
+      become: true
+      lineinfile:
+        path: /tmp/ossec.conf.from_container
+        insertafter: '<ruleset>'
+        line: "    <list>etc/lists/{{ _whitelist_name }}</list>"
+      register: _docker_insert_list_remote
+      when:
+        - _ossec_pull_remote.rc == 0
+        - _wl_controller_stat.stat.exists
+
+    - name: remote docker | Check if SSH decoder_exclude already exists in ossec.conf
+      become: true
+      shell: |
+        grep -F '<decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>' /tmp/ossec.conf.from_container
+      args:
+        executable: /bin/bash
+      register: _ssh_decoder_exclude_present_remote
+      changed_when: false
+      failed_when: false
+      when:
+        - _ossec_pull_remote.rc == 0
+        - _ssh_decoder_override_remote.rc == 0
+
+    - name: remote docker | Ensure default SSH decoders are excluded when custom override exists
+      become: true
+      blockinfile:
+        path: /tmp/ossec.conf.from_container
+        marker: "<!-- RADAR: ssh decoder_exclude {mark} -->"
+        insertbefore: "</ruleset>"
+        block: |
+          <!-- RADAR: exclude built-in SSH decoders because /etc/decoders/0310-ssh.xml is used -->
+          <decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>
+      register: _ssh_decoder_exclude_insert_remote
+      when:
+        - _ossec_pull_remote.rc == 0
+        - _ssh_decoder_override_remote.rc == 0
+        - _ssh_decoder_exclude_present_remote.rc != 0
 
     - name: remote docker | Ensure logall is 'yes' in ossec.conf
       become: true
@@ -1032,7 +1090,8 @@
         regexp: '(<logall>)[^<]*(</logall>)'
         replace: '\1yes\2'
         backup: no
-      register: _ossec_logall
+      register: _ossec_logall_remote
+      when: _ossec_pull_remote.rc == 0
 
     - name: remote docker | Ensure logall_json is 'yes' in ossec.conf
       become: true
@@ -1041,7 +1100,8 @@
         regexp: '(<logall_json>)[^<]*(</logall_json>)'
         replace: '\1yes\2'
         backup: no
-      register: _ossec_logall_json
+      register: _ossec_logall_json_remote
+      when: _ossec_pull_remote.rc == 0
 
     - name: remote docker | Copy modified ossec.conf back into container (if changed)
       become: true
@@ -1050,10 +1110,55 @@
         echo COPIED
       args:
         executable: /bin/bash
-      register: _ossec_push
-      changed_when: "'COPIED' in _ossec_push.stdout"
-      when: >
-        (_ossec_logall.changed | default(false))
+      register: _ossec_push_remote
+      changed_when: "'COPIED' in _ossec_push_remote.stdout"
+      when:
+        - _ossec_pull_remote.rc == 0
+        - >
+          (
+            (_ossec_insert_remote is defined and _ossec_insert_remote.changed) or
+            (_ssh_decoder_exclude_insert_remote is defined and _ssh_decoder_exclude_insert_remote.changed) or
+            (_ossec_logall_remote is defined and _ossec_logall_remote.changed) or
+            (_ossec_logall_json_remote is defined and _ossec_logall_json_remote.changed) or
+            (_docker_insert_list_remote is defined and _docker_insert_list_remote.changed)
+          )
+
+    - name: remote docker | Fix ownership/perm of ossec.conf in container
+      become: true
+      shell: |
+        docker exec "{{ _mgr_container }}" bash -lc '
+          if [ -f "/var/ossec/etc/ossec.conf" ]; then
+            chown root:wazuh "/var/ossec/etc/ossec.conf" || true
+            chmod 0640 "/var/ossec/etc/ossec.conf" || true
+          fi
+        '
+      args:
+        executable: /bin/bash
+      when: _ossec_push_remote is defined and _ossec_push_remote.changed
+
+    #### restart Wazuh ####
+    - name: remote docker | Decide if restart is needed
+      set_fact:
+        _restart_needed: >-
+          {{
+            (_ossec_insert_remote is defined and _ossec_insert_remote.changed) or
+            (_ssh_decoder_exclude_insert_remote is defined and _ssh_decoder_exclude_insert_remote.changed) or
+            (_ossec_logall_remote is defined and _ossec_logall_remote.changed) or
+            (_ossec_logall_json_remote is defined and _ossec_logall_json_remote.changed) or
+            (_docker_insert_list_remote is defined and _docker_insert_list_remote.changed) or
+            (_dec_insert is defined and _dec_insert.changed) or
+            (_rules_insert is defined and _rules_insert.changed) or
+            (_scripts_sync is defined and _scripts_sync.changed) or
+            (_docker_0310_copy is defined and _docker_0310_copy.changed)
+          }}
+
+    - name: remote docker | Restart Wazuh service in manager container
+      become: true
+      command: docker exec "{{ _mgr_container }}" /var/ossec/bin/wazuh-control restart
+      when:
+        - _restart_needed | default(false) | bool
+        - _ossec_push_remote is defined
+        - _ossec_push_remote.changed
 
     #### filebeat.yml ####
 
@@ -1167,7 +1272,7 @@
       failed_when: false
       when: scenario_name == 'log_volume'
 
-    - name: remote docker | Restart manager container if we pushed changes
+    - name: remote docker | Restart manager container if filebeat.yml changed
       become: true
       shell: |
         docker restart "{{ _mgr_container }}" >/dev/null && echo RESTARTED || echo NOCHANGE
@@ -1175,10 +1280,11 @@
         executable: /bin/bash
       register: _container_restart
       changed_when: "'RESTARTED' in _container_restart.stdout"
-      when: >
-        (_ossec_push is defined and _ossec_push is changed) or
-        (_filebeat_push is defined and _filebeat_push is changed)
+      when:
+        _filebeat_push is defined and _filebeat_push.changed
+
   when: _mgr_mode == 'docker_remote'
+
 
 # ================
 # host_remote

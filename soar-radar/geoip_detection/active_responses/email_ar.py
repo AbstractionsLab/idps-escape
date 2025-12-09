@@ -59,33 +59,6 @@ def log_exc(prefix="Exception"):
     tb = traceback.format_exc()
     log("ERROR", f"{prefix}: {tb}")
 
-def read_wrapper():
-    raw = sys.stdin.read()
-    if raw is None:
-        return None
-    raw = raw.strip()
-    log("DEBUG", f"Raw STDIN length={len(raw)}. Raw head: {raw[:1000]!r}")
-    if not raw:
-        log("DEBUG", "No raw input from stdin")
-        return None
-    try:
-        wrapper = json.loads(raw)
-        log("DEBUG", f"Parsed JSON wrapper keys: {list(wrapper.keys())}")
-    except Exception as e:
-        log("ERROR", f"Cannot parse AR wrapper JSON: {e}. Raw (first 2000 chars): {raw[:2000]!r}")
-        log_exc("JSON parse error")
-        return None
-
-    alert_obj = wrapper
-    if isinstance(wrapper, dict):
-        params = wrapper.get("parameters")
-        if isinstance(params, dict):
-            inner_alert = params.get("alert")
-            if isinstance(inner_alert, dict):
-                alert_obj = inner_alert
-                log("DEBUG", f"Using parameters.alert as alert object, keys: {list(inner_alert.keys())}")
-
-    return alert_obj
 
 def send_email(subject, body):
     log("INFO", f"Preparing to send email: subject={subject!r} from={EMAIL_FROM} to={EMAIL_TO} via {SMTP_HOST}:{SMTP_PORT} starttls={USE_STARTTLS}")
@@ -202,8 +175,18 @@ def build_message_from_alert(alert):
 
 def main():
     log("INFO", "email_ar active-response started")
+    input_str = ""
+    for line in sys.stdin.readline().strip():
+        input_str += line
 
-    alert = read_wrapper()
+    try:
+        wrapper = json.loads(input_str)
+    except ValueError as e:
+        log("ERROR", str(e))
+
+    params = wrapper.get("parameters", {})
+    alert   = params.get("alert", {})
+    
     if alert is None:
         log("WARNING", "No alert wrapper parsed - exiting")
         return

@@ -29,16 +29,19 @@ _Ready to be used with real data from Wazuh:_
 
 ### ML-based AD with RRCF
 
-_Partially ready to be used with real data from Wazuh:_
+_Variant in `v0.5` partially ready to be used with real data from Wazuh:_
 - [Log volume growth detection](/soar-radar/log_volume/README.md): before `build-radar.sh` and `run-radar.sh`, requires a `./stop-radar.sh --all --purge`, thus currently only recommended for testing on real data but in a test/dev environments, but **not** in production environments.
 
-_Currently, working with demo datasets only:_
-> **Important:** These scenarios are demonstration-oriented and not directly suitable for real-world Wazuh environments. Deployment to production requires adaptation of indices/aliases, field mappings, time/category fields, decoders/ingest pipelines, TLS/hostnames, and detector/monitor parameters to align with your organization’s actual log schema and infrastructure.
+_The runner in `v0.5.1` is broken._
+
+_Scenarios currently working with demo datasets only follow:_
 
 - [Insider threat](/soar-radar/insider_threat/README.md)
 - [Suspicious login](/soar-radar/suspicious_login/README.md#behavior-based-approach)
 - [DDoS](/soar-radar/ddos_detection/README.md)
 - [C2 malware communication](/soar-radar/malware_communication/README.md)
+
+> **Important:** These scenarios are demonstration-oriented and not directly suitable for real-world Wazuh environments. Deployment to production requires adaptation of indices/aliases, field mappings, time/category fields, decoders/ingest pipelines, TLS/hostnames, and detector/monitor parameters to align with your organization’s actual log schema and infrastructure.
 
 ## Getting started
 
@@ -48,6 +51,8 @@ RADAR orchestrates risk-aware anomaly detection (OpenSearch AD) and automated re
 - `run-radar.sh` – ingests a scenario dataset, ensures/starts an AD detector, and ensures a monitor with a webhook (prints `DET_ID`/`MON_ID`).
 
 Below, we explain the pre-requisites and steps for bringing a scenario to life. At the end you will find a script for testing via a lightweight Docker runner.
+
+For a very detailed breakdown of the Ansible playbook providing the automation pipeline for deploying and setting up the Wazuh manager, see our dedicated [page describing our approach to the automated manager deployment via an Ansible playbook](/docs/manual/radar-manager-ansible-playbook.md).
 
 ---
 

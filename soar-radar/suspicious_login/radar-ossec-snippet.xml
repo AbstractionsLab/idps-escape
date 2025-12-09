@@ -17,7 +17,7 @@
     <disabled>no</disabled>
     <command>email_ar_suspicious_login</command>
     <location>server</location>
-    <rules_id>210011,210012,210020,210030,210031</rules_id>
+    <rules_id>210011,210012,210020,210021,210030,210031,210032</rules_id>
   </active-response>
   <command>
     <name>ad_context_susplog_active_response_2.py</name>
@@ -28,5 +28,5 @@
     <disabled>no</disabled>
     <command>ad_context_susplog_active_response_2.py</command>
     <location>server</location>
-    <rules_id>210011,210012,210020,210030,210031</rules_id>
+    <rules_id>210011,210012,210020,210021,210030,210031,210032</rules_id>
   </active-response>

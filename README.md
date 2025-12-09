@@ -20,6 +20,8 @@ This repository contains the source code and full documentation (requirements, t
 - [Technical specifications](#documentation-and-technical-specifications)
 - [Getting started](#getting-started)
   - [RADAR usage](#radar-usage)
+    - [RADAR and full stack automated installation](#radar-and-full-stack-automated-installation)
+    - [RADAR outcome in Wazuh](#radar-outcome-in-wazuh-dashboard)
   - [ADBox usage](#adbox-usage)
     - [Use case scenario example](#example-of-a-use-case-scenario)
     - [Wazuh-ADBox integration and detector dashboard](#wazuh-adbox-integration-and-detector-dashboard)
@@ -36,20 +38,7 @@ IDPS-ESCAPE, part of the [CyFORT](https://abstractionslab.com/index.php/research
  
 As part of the alpha release, the main bulk of this repository is dedicated to a novel open-source and extensively documented anomaly detection (AD) toolbox and framework, called [**ADBox**](/docs/manual/README.md), and a Risk-aware AD-based Automated Response ([**RADAR**](/soar-radar/README.md)) subsystem implementing AD scenarios and automated response to fulfill the SOAR mission of IDPS-ESCAPE.
 
-IDPS-ESCAPE builds on top of well-known open-source solutions such as [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) and [OpenCTI](https://github.com/OpenCTI-Platform/opencti) for bidirectional SIEM-TIP enrichment of SIEM alerts and CTI content, and finally [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
-
-The ADBox implementation provides a modular and extensible software framework for efficiently integrating ML and AD algorithms and it already comes with a deep learning-based paradigm, namely the Multivariate Time-series Anomaly Detection (MTAD) via Graph Attention Network (GAT) algorithm. We recommend following a hybrid method combining MTAD-GAT with signature-based detection and a classical AD algorithm such as the RRCF-based AD plugin built into OpenSearch that is used by our RADAR subsystem for more robust AD, resilient to adversarial interference, with support for categorical features.
-
-In addition to providing security practitioners such as SOC operators or CTI analysts with anomaly detection over Wazuh indices (alerts, archives, statistics, etc.) in multiple modes (batch, real-time and historical), ADBox and RADAR can be used to simplify and refine the work of security practitioners across several dimensions, e.g.,
-
-- rule management,
-- events correlation,
-- alert-to-incident derivation, and,
-- alert/response policy tuning and mappings to KBs such as MITRE ATT&CK.
-
-ADBox can also be used as a software library to deploy various ML based AD algorithms in different environments, while allowing for a high degree of tailoring thanks to its modular and extensible design. An environment-driven customization can not only contribute to reducing false positives, but it can also help detect suspicious behavior with arguably limited information, or to otherwise provide an investigation entry point dealing with adversarial patterns for which prior signatures or indicators of compromise may not be readily available.
-
-As a consequence, ADBox also provides a stepping stone towards settling various controversial statements and at times questionable findings and claims from the academic literature and those made by practitioners in the industry: plug in the latest implementation of a deep learning based AD algorithm into ADBox, integrated with a real-world security tool such as Wazuh, to assess and (in)validate such claims.
+IDPS-ESCAPE builds on top of well-known open-source solutions such as [Ansible](https://github.com/ansible/ansible) for configuration management, deployment and infrastructure automation, [OpenSearch](https://opensearch.org/) for search and analytics, [Wazuh](https://wazuh.com/) as our SIEM\&XDR of choice, in turn connected to [MISP](https://www.misp-project.org/) and [OpenCTI](https://github.com/OpenCTI-Platform/opencti) for bidirectional SIEM-TIP enrichment of SIEM alerts and CTI content, and finally [Suricata](https://suricata.io/), acting both as our network-based IDPS of choice, as well as a network-level data acquisition source.
 
 ## Features
 
@@ -82,6 +71,16 @@ A collection of Risk-aware Anomaly Detection-based Automated Response ([**RADAR*
 - A dedicated [RADAR test framework](/soar-radar/radar-test-framework/README.md) capable of automating the execution of RADAR experimentation pipelines, from data ingestion to attack simulation, detection and post-processing;
 - A comprehensive [RADAR manual](/soar-radar/README.md) describing best practices for making use of our ADBox for AD powered by deep learning, in hybrid mode, together with the classical RRCF-based AD algorithm built into OpenSearch to tackle various AD and ML challenges, e.g., adversarial ML involving training data set poisoning and trained model manipulation.
 
+### Fully automated deployment with Ansible
+
+We [provide a complete **Infrastructure-as-Code** (IaC)](/soar-radar/README.md) deployment mechanism using [Ansible](https://github.com/ansible/ansible), enabling teams to spin up a fully operational environment automatically and consistently, currently supporting only RADAR. This ensures a reproducible, scalable installation process suitable for production environments, testbeds, or research. We also provide a [**detailed technical documentation**](/docs/manual/radar-manager-ansible-playbook.md) of the manager automation pipeline.
+
+The automated setup includes:
+
+- **Wazuh Manager**: automatically installed and configured for signature-based and ML-based monitoring, AD and alerting.
+- **Wazuh Agents**: deployed to monitored endpoints without manual intervention.
+- **RADAR stack**: including all dependencies, configuration templates, and communication channels between RADAR, Wazuh, and ADBox.
+
 ### ADBox
 
 [ADBox](/docs/manual/README.md) is a custom-designed and implemented _anomaly detection_ subsystem, with its key features summarized as follows:
@@ -95,16 +94,6 @@ A collection of Risk-aware Anomaly Detection-based Automated Response ([**RADAR*
 - A driver module providing the entry point to the ADBox and currently using a CLI to interact with the user;
 - A set of AD use-case scenario definitions encoded as YAML files, which can be directly used by the user, but they can also easily form the basis for creating new ones, tailored to the user's preferences for adjusting the training part as well as the prediction part of the ML-based algorithm and pipeline;
 - A data shipper module to integrate the output anomaly detection data into Wazuh, allowing the user to view and analyze the ADBox prediction results using the native Wazuh GUI and dashboards.
-
-### Fully automated deployment with Ansible
-
-IIDPS-ESCAPE [provides a complete **Infrastructure-as-Code** (IaC)](/soar-radar/README.md) deployment mechanism using [Ansible](https://github.com/ansible/ansible), enabling teams to spin up a fully operational environment automatically and consistently. This ensures a reproducible, scalable installation process suitable for production environments, testbeds, or research.
-
-The automated setup includes:
-
-- **Wazuh Manager**: automatically installed and configured for signature-based and ML-based monitoring, AD and alerting.
-- **Wazuh Agents**: deployed to monitored endpoints without manual intervention.
-- **RADAR stack**: including all dependencies, configuration templates, and communication channels between RADAR, Wazuh, and ADBox.
 
 ### Front-end
 
@@ -121,11 +110,11 @@ The automated setup includes:
 
 To achieve comprehensive monitoring capabilities, we combine well-established open-source solutions, namely [Wazuh](https://wazuh.com/), a cybersecurity platform that integrates SIEM and XDR capabilities and [Suricata](https://suricata.io/), an open-source Network Intrusion Detection System (NIDS). We provide deployment solutions that allow centralized monitoring for coping with limited resources (network agents relaying traffic data to a central node for processing) as well as running monitoring instances on each node and only grouping the obtained monitoring data in a centralized node for analysis.
 
-See our [Instructions for IDPS and SIEM integrated deployment](./deployment/README.md) page for further details.
+See our [instructions for a joint deployment of IDPS, SIEM and ML-based OpenSearch AD](./deployment/README.md) for further details.
 
 ## User manual
 
-Please see our extensive and detailed [IDPS-ESCAPE user manual](./docs/manual/README.md) to learn more about the installation, setup requirements, overall usage, specific modules of the ADBox and technical details covering internal aspects that are relevant for an effective use of the suite IDPS-ESCAPE tools. You will also find dedicated [instructions for a network IDPS plus SIEM integrated deployment](./deployment/README.md), describing our combined architectural setup using Wazuh, Suricata and various networking deployment solutions.
+Please see our extensive and detailed [IDPS-ESCAPE user manual](./docs/manual/README.md) to learn more about [RADAR](/soar-radar/README.md), and [ADBox](/docs/manual/adbox.md); we cover their setup requirements, installation, overall usage, specific modules of each and technical details covering internal aspects that are relevant for an effective use of the IDPS-ESCAPE suite of tools. You will also find dedicated [instructions for a network IDPS plus SIEM integrated deployment](./deployment/README.md), describing our combined architectural setup using Wazuh, Suricata and various networking deployment solutions.
 
 ## Documentation and technical specifications
 

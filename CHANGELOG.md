@@ -1,3 +1,18 @@
+# 0.5.1 (2025-12-09)
+
+## Added
+
+- Detailed technical documentation of the automation pipeline for the Wazuh manager and all the RADAR core stack: `/docs/manual/radar-manager-ansible-playbook.md`
+
+## Modified
+
+- Main README, RADAR README, ADBox README, and user manual README
+
+## Fixed
+
+- RADAR email notification automated response, used by suspicious login, geo ip detection and log volume size change detection
+- RADAR `build-radar.sh` for the `log_volume` scenario, previously broken when run after building other scenarios
+
 # 0.5 (2025-12-09)
 
 ## Added
