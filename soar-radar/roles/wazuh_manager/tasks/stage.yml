@@ -1,0 +1,93 @@
+- name: remote docker | Stat .env on controller
+  delegate_to: localhost
+  stat:
+    path: ".env"
+  register: _active_responses_env_stat
+  changed_when: false
+
+- name: remote docker | Stat email_ar.py on controller
+  delegate_to: localhost
+  stat:
+    path: "{{ _email_ar_src }}"
+  register: _email_ar_controller_stat
+  changed_when: false
+
+- name: remote docker | Stat whitelist source on controller
+  delegate_to: localhost
+  stat:
+    path: "{{ _whitelist_src }}"
+  register: _wl_controller_stat
+  changed_when: false
+
+- name: remote docker | Create staging dir on remote
+  become: true
+  tempfile:
+    state: directory
+    prefix: radar_mgr_
+  register: _stage
+
+- name: remote docker | Stage ossec + decoders + rules snippets (from controller)
+  become: true
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ _stage.path }}/{{ item.dest }}"
+    mode: "0640"
+  loop:
+    - { src: "{{ _scenario_path }}/radar-ossec-snippet.xml", dest: "radar-ossec-snippet.xml" }
+    - { src: "{{ _scenario_path }}/local_rules.xml",         dest: "local_rules.xml" }
+
+- name: remote docker | Stage .env into _stage if present
+  when: _active_responses_env_stat.stat.exists
+  become: true
+  copy:
+    src: ".env"
+    dest: "{{ _stage.path }}/.env"
+    mode: "0600"
+
+- name: remote docker | Stage email_ar.py into _stage (if present)
+  when: _email_ar_controller_stat.stat.exists
+  become: true
+  copy:
+    src: "{{ _email_ar_src }}"
+    dest: "{{ _stage.path }}/email_ar.py"
+    mode: "0750"
+
+- name: remote docker | Stage ad_context_*.py (from controller)
+  become: true
+  with_fileglob:
+    - "{{ _scenario_path }}/active_responses/ad_context_*.py"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ _stage.path }}/{{ item | basename }}"
+    mode: "0750"
+
+- name: remote docker | Stat scenario local_decoder snippet on controller
+  delegate_to: localhost
+  stat:
+    path: "{{ _scenario_path }}/local_decoder.xml"
+  register: _sc_local_decoder_remote
+  changed_when: false
+
+- name: remote docker | Stage local_decoder.xml if present
+  when: _sc_local_decoder_remote.stat.exists
+  become: true
+  copy:
+    src: "{{ _scenario_path }}/local_decoder.xml"
+    dest: "{{ _stage.path }}/local_decoder.xml"
+    mode: "0640"
+
+- name: remote docker | Stage 0310-ssh.xml (suspicious_login / geoip_detection only)
+  when: scenario_name == 'suspicious_login' or scenario_name == 'geoip_detection'
+  become: true
+  copy:
+    src: "{{ _scenario_path }}/0310-ssh.xml"
+    dest: "{{ _stage.path }}/0310-ssh.xml"
+    mode: "0640"
+
+- name: remote docker | Stage whitelist into _stage (if present)
+  when: _wl_controller_stat.stat.exists
+  become: true
+  copy:
+    src: "{{ _whitelist_src }}"
+    dest: "{{ _stage.path }}/{{ _whitelist_name }}"
+    mode: "0644"

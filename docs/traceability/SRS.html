@@ -2489,7 +2489,7 @@ I want RADAR to detect access attempts from non-whitelisted countries and apply 
 <p>As a security engineer,
 I want RADAR to detect unusual log volume spikes for each endpoint based on its own normal behavior, and then apply the existing risk policy to decide how to react.</p>
 <ol>
-<li>RADAR shall emit a "Log volume spike" alert when the detector for an endpoint sees that the number of logs in the current time window is much higher than the learned baseline for that same endpoint, and the anomaly score from the detector is above a configured threshold. The baseline is behavioral and per endpoint (each endpoint has its own “normal” log rate learned from history).</li>
+<li>RADAR shall emit a "Log volume spike" alert when the detector for an endpoint sees that the number of logs in the current time window is much higher than the learned baseline for that same endpoint, and the anomaly score from the detector is above a configured threshold. The baseline is behavioral and per endpoint (each endpoint has its own “normal” log rate learned from history). Log volume refers to logs produced under the directory <code>/var/log</code> on each endpoint.</li>
 <li>The "Log volume spike" alert shall include: endpoint identity, detector name/ID, time window (start and end), anomaly score and confidence.</li>
 <li>The Wazuh Monitor sends the alert to webhook upon passing the value of risk threshold.</li>
 <li>If passed the threshold, RADAR shall trigger the configured active responses in the form of email alert and logging.</li>

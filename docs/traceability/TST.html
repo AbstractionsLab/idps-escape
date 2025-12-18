@@ -3766,7 +3766,7 @@ ls -l /opt/radar/radar-helper.py
 <pre><code>cd soar-radar
 </code></pre>
 <ol start="2">
-<li>Run RADAR with SCENARIO_NAME log_volume</li>
+<li>After building the scenario, wait about 3 minutes for index creation and correct mapping. Then, run RADAR with SCENARIO_NAME log_volume</li>
 </ol>
 <pre><code>./run-radar.sh log_volume
 </code></pre>
@@ -3943,9 +3943,9 @@ ls -l /opt/radar/radar-helper.py
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>In Wazuh Dashboard -&gt; Indexer Management -&gt; Dev Tools, run this query with adapting the timestamp:</li>
+<li>After starting detector, 30 minutes should be passed for normalizing the training to insert a spike. To insert a spike, in Wazuh Dashboard -&gt; Indexer Management -&gt; Dev Tools, run this query with adapting the timestamp:</li>
 </ol>
-<pre><code>POST wazuh-archives-4.x-XXXX.XX.XX/_doc
+<pre><code>POST wazuh-ad-log-volume-XXXX.XX.XX/_doc
 {
   &quot;@timestamp&quot;: &quot;XXXX-XX-XXTXX:XX:00.000Z&quot;,
   &quot;data&quot;: {
@@ -3953,7 +3953,8 @@ ls -l /opt/radar/radar-helper.py
     &quot;log_bytes&quot;: 63210547182
   },
   &quot;agent&quot;: { &quot;name&quot;: &quot;edge.vm&quot; },
-  &quot;manager&quot;: { &quot;name&quot;: &quot;wazuh.manager&quot; }
+  &quot;manager&quot;: { &quot;name&quot;: &quot;wazuh.manager&quot; },
+  &quot;predecoder&quot;: {&quot;program_name&quot;: &quot;log_volume_metric&quot;}
 }
 </code></pre>
 <h2>Expected outcome</h2>

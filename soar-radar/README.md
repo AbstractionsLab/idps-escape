@@ -54,6 +54,8 @@ Below, we explain the pre-requisites and steps for bringing a scenario to life. 
 
 For a very detailed breakdown of the Ansible playbook providing the automation pipeline for deploying and setting up the Wazuh manager, see our dedicated [page describing our approach to the automated manager deployment via an Ansible playbook](/docs/manual/radar-manager-ansible-playbook.md).
 
+For a detailed description of the `run-radar.sh` workflow, refer to [the dedicated documentation page](/docs/manual/radar-run-ad.md).
+
 ---
 
 ### Modes of deployment

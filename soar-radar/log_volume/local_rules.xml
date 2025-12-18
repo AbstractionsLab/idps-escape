@@ -1,9 +1,3 @@
-<group name="log_volume_metric,">
-<rule id="100700" level="3">
-  <decoded_as>log_volume_metric</decoded_as>
-  <description>Log volume metrics</description>
-</rule>
-</group>
 <group name="opensearch_ad_alerts,">
 
   <!-- 1) Catch-all for any OpenSearch AD alert -->
@@ -19,3 +13,7 @@
     <description>OpenSearch AD: Log Volume Growth Detected</description>
   </rule>
 </group>
+
+
+
+

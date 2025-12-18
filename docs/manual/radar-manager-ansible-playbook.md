@@ -124,6 +124,40 @@ START
 
 ---
 
+## Refactor: task decomposition & shared interface
+
+The manager playbook was decomposed into small task files, each responsible for a single configuration domain. The key refactor idea is: tasks are mode-agnostic; only the source path changes between `docker_local` and `docker_remote`. 
+
+The orchestration is centralized in `main.yml`, which acts as a control plane, not an execution script.
+
+Common task modules (`roles/wazuh_manager/tasks/`):
+
+| Task file       | Responsibility                         | Modified resources                   |
+| --------------- | -------------------------------------- | ------------------------------------ |
+| `stage.yml`     | Stage scenario artifacts (remote only) | Remote temp directory                |
+| `responses.yml` | Active response scripts & env          | `/var/ossec/active-response/bin`     |
+| `lists.yml`     | Whitelists / lists                     | `/var/ossec/etc/lists`, `ossec.conf` |
+| `decoders.yml`  | Custom decoders                        | `local_decoder.xml`, SSH overrides   |
+| `rules.yml`     | Custom rules                           | `local_rules.xml`                    |
+| `ossec.yml`     | Core manager configuration             | `ossec.conf`                         |
+| `filebeat.yml`  | Ingest & indexing logic                | Filebeat config, pipelines           |
+| `bootstrap.yml` | Manager / webhook bootstrap            | Docker Compose stack                 |
+
+Each task file:
+
+- Has one clear responsibility
+- Is idempotent by design
+- Is reusable across deployment modes
+
+Shared interface (`src` argument):
+
+- docker_local: `src = {{ _scenario_path }}`
+- docker_remote: `src = {{ _stage.path }}`
+
+This keeps business logic identical across modes and prevents divergence.
+
+---
+
 ## Pseudocode: automation algorithm
 
 Here we provide a summarized description of the entire automation pipeline in the form of pseudocode.
@@ -459,16 +493,7 @@ Deploy scenario to a **local Docker container** on the controller machine.
 
 ---
 
-#### 2.2 OpenSearch template upload
-**What**: Upload wazuh-alerts index template to OpenSearch  
-**How**: HTTP PUT request to `/_index_template/wazuh-alerts-*`  
-**When**: Always executed (essential for dashboard)  
-**Idempotency**: Check HTTP status (200/201 = success)  
-**TLS**: `validate_certs: no` (handles self-signed certs)
-
----
-
-#### 2.3 Configuration files copy
+#### 2.2 Configuration files copy
 Transfers scenario-specific files into container:
 
 | File | Source | Destination | Purpose |
@@ -486,7 +511,7 @@ Transfers scenario-specific files into container:
 
 ---
 
-#### 2.4 Decoder insertion
+#### 2.3 Decoder insertion
 **What**: Append scenario decoders to `/var/ossec/etc/decoders/local_decoder.xml`
 
 **Idempotency mechanism**:
@@ -504,12 +529,12 @@ marker: "<!-- RADAR_DECODERS: {{ scenario_name }} END -->"
 
 ---
 
-#### 2.5 Rules insertion
+#### 2.4 Rules insertion
 **Identical to decoders**, but for `/var/ossec/etc/rules/local_rules.xml`
 
 ---
 
-#### 2.6 SSH decoder override
+#### 2.5 SSH decoder override
 **When**: Only for `suspicious_login` or `geoip_detection` scenarios
 
 **What**: 
@@ -520,7 +545,7 @@ marker: "<!-- RADAR_DECODERS: {{ scenario_name }} END -->"
 
 ---
 
-#### 2.7 ossec.conf modification
+#### 2.6 ossec.conf modification
 **Complex multi-step process**:
 
 1. **Pull**: Copy `/var/ossec/etc/ossec.conf` from container to `/tmp/ossec.conf.from_container`
@@ -537,7 +562,7 @@ marker: "<!-- RADAR_DECODERS: {{ scenario_name }} END -->"
 
 ---
 
-#### 2.8 Service restart
+#### 2.7 Service restart
 **When**: If any of these changed:
 - ossec.conf modifications
 - Decoders
@@ -549,7 +574,7 @@ marker: "<!-- RADAR_DECODERS: {{ scenario_name }} END -->"
 
 ---
 
-#### 2.9 Filebeat configuration
+#### 2.8 Filebeat configuration
 **What**: Enable archives in filebeat.yml for log collection
 
 **Steps**:
@@ -565,16 +590,33 @@ marker: "<!-- RADAR_DECODERS: {{ scenario_name }} END -->"
 
 ---
 
-#### 2.10 Filebeat setup
-**What**: Initialize filebeat ingest pipelines and index templates
+#### 2.9 OpenSearch template upload
+**What**: Upload wazuh-ad-log-volume index template to OpenSearch  
+**How**: HTTP PUT request to `/_index_template/wazuh-ad-log-volume-*`  
+**When**:  Only for scenario_name == 'log_volume'
+**Idempotency**: Check HTTP status (200/201 = success)  
+**TLS**: `validate_certs: no` (handles self-signed certs)
+**Why**: This creates a template for index to store log volume metric events
 
-**Command**: `filebeat setup --pipelines --modules wazuh --strict.ssl=false`
+---
 
-**Why**: 
-- Creates ingest pipelines for Wazuh log processing
-- `--strict.ssl=false` handles self-signed cert validation
+#### 2.10 RADAR log_volume index template & archives pipeline routing
+**What**: Configures a dedicated OpenSearch index for the log volume scenario and routes only `log_volume_metric` events into it via the Wazuh archives ingest pipeline.
 
-**Error Handling**: `failed_when: false` (non-critical if fails)
+**When**: Only for `scenario_name == 'log_volume'`
+
+**Steps**:
+1. Pull and patch Wazuh archives ingest pipeline `/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json` from the manager container to `/tmp/pipeline.wazuh.archives.orig.json` on the controller.
+2. Keep a backup copy as `/tmp/pipeline.wazuh.archives.backup.json`.
+3. Read a small text snippet (`radar-pipeline.txt`) from the scenario directory. This snippet contains two date_index_name processors:
+
+  - If `predecoder.program_name == "log_volume_metric"` → index prefix `wazuh-ad-log-volume-*`
+  - Else → fallback to the default `{{fields.index_prefix}}` (standard `wazuh-archives-*` behaviour).
+
+4. Replace the original single `date_index_name` block in `pipeline.json` with this two-branch snippet.
+5. Push patched pipeline back and reload Filebeat pipelines
+
+**Why**: This isolates the log volume metrics into a RADAR-controlled index with correct mappings (e.g., `data.log_bytes` as numeric), without changing the global `wazuh-archives-*` schema or impacting existing dashboards. Any future events from the `log_volume_metric` program are now indexed into the dedicated `wazuh-ad-log-volume-*` indices, while all other archives events remain under the standard Wazuh index pattern.
 
 ---
 
@@ -779,7 +821,7 @@ controller:/home/user/soar-radar/{{ scenario_name }}/
 | Scenario | Conditional Block |
 |----------|------------------|
 | `suspicious_login`, `geoip_detection` | 0310 SSH decoder override |
-| `log_volume` | Index template upload + filebeat setup |
+| `log_volume` | Index template upload + archives pipeline routing + filebeat setup |
 | All | Decoders + Rules + ossec.conf modifications |
 
 ---
@@ -812,6 +854,7 @@ Each block:
 - `/var/ossec/active-response/bin/email_ar.py` (conditional)
 - `/var/ossec/active-response/bin/ad_context_*.py` (conditional)
 - `/etc/filebeat/filebeat.yml` (conditional)
+- `/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json` (conditional, only for `log_volume` scenario)
 - OpenSearch: `/_index_template/wazuh-alerts-*` (HTTP PUT)
 - OpenSearch: `/_index_template/radar-log-volume` (conditional, HTTP PUT)
 

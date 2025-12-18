@@ -1,25 +1,18 @@
 <group name="suspicious_login,">
 
   <!-- 1) Rule for failed burst logins -->
-  <rule id="210011" level="8" timeframe="60" frequency="5">
-    <if_matched_group>authentication_failed</if_matched_group>
-    <same_field>dstuser</same_field>
-    <description>RADAR SuspiciousLogin: failed-burst (≥5 in 60s)</description>
-    <group>authentication_failure,brute_force</group>
-  </rule>
-
   <rule id="210012" level="8" timeframe="60" frequency="5">
-    <if_matched_group>authentication_failed</if_matched_group>
-    <same_field>srcuser</same_field>
+    <if_matched_sid>5760</if_matched_sid>
+    <same_srcuser />
     <description>RADAR SuspiciousLogin: failed-burst (≥5 in 60s)</description>
-    <group>authentication_failure,brute_force</group>
+    <group>authentication_failures,brute_force</group>
   </rule>
 
   <rule id="210013" level="8" timeframe="60" frequency="5">
-    <if_matched_group>authentication_failed</if_matched_group>
-    <same_field>user</same_field>
+    <if_matched_sid>5760</if_matched_sid>
+    <same_user />
     <description>RADAR SuspiciousLogin: failed-burst (≥5 in 60s)</description>
-    <group>authentication_failure,brute_force</group>
+    <group>authentication_failures,brute_force</group>
   </rule>
 
   <!-- 2) Rule for impossible travel -->
@@ -36,32 +29,6 @@
     <field name="radar_geo_velocity_kmh" type="pcre2">^(?:9(?:0[1-9]|[1-9]\d)|[1-9]\d{3,})(?:\.\d+)?$</field>
     <description>RADAR SuspiciousLogin: impossible travel (≥900 km/h + country change)</description>
     <group>authentication_success,impossible_travel,geo</group>
-  </rule>
-
-  <!-- 3) Rule for failed burst logins + impossible travel -->
-  <rule id="210030" level="12" timeframe="300">
-    <if_matched_sid>210011</if_matched_sid>
-    <if_matched_sid>210020</if_matched_sid>
-    <same_field>dstuser</same_field>
-    <description>RADAR SuspiciousLogin: failed-burst followed by impossible travel</description>
-    <group>authentication,correlation</group>
-    <mitre><id>T1078</id></mitre>
-  </rule>
-  <rule id="210031" level="12" timeframe="300">
-    <if_matched_sid>210012</if_matched_sid>
-    <if_matched_sid>210020</if_matched_sid>
-    <same_field>srcuser</same_field>
-    <description>RADAR SuspiciousLogin: failed-burst invalid user followed by impossible travel</description>
-    <group>authentication,correlation</group>
-    <mitre><id>T1078</id></mitre>
-  </rule>
-  <rule id="210032" level="12" timeframe="300">
-    <if_matched_sid>210013</if_matched_sid>
-    <if_matched_sid>210020</if_matched_sid>
-    <same_field>user</same_field>
-    <description>RADAR SuspiciousLogin: failed-burst invalid user followed by impossible travel</description>
-    <group>authentication,correlation</group>
-    <mitre><id>T1078</id></mitre>
   </rule>
 </group>
 

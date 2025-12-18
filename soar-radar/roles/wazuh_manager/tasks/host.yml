@@ -1,0 +1,284 @@
+    - name: remote host | Ensure target dirs (parents too)
+      become: true
+      vars: { ansible_become_flags: "-S -n" }
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: wazuh
+        mode: "0750"
+      loop:
+        - /var/ossec
+        - /var/ossec/etc
+        - /var/ossec/etc/decoders
+        - /var/ossec/etc/rules
+        - /var/ossec/active-response
+        - /var/ossec/active-response/bin
+
+    #### ossec.conf ####
+    - name: remote host | Compute absolute snippet path on controller
+      set_fact:
+        _radar_snippet_path: "{{ (scenario_path | realpath if (scenario_path is search('^/')) else (playbook_dir ~ '/' ~ scenario_path)) ~ '/radar-ossec-snippet.xml' }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: remote host | Assert ossec.conf contains closing tag
+      become: true
+      shell: "grep -q '</ossec_config>' /var/ossec/etc/ossec.conf"
+      register: _has_close
+      changed_when: false
+      failed_when: _has_close.rc != 0
+
+    - name: remote host | Read RADAR snippet from controller
+      set_fact:
+        _radar_snippet: "{{ lookup('ansible.builtin.file', _radar_snippet_path) }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: remote host | Insert RADAR blocks into ossec.conf (idempotent)
+      become: true
+      vars:
+        _marker: "RADAR"
+      blockinfile:
+        path: /var/ossec/etc/ossec.conf
+        marker: "<!-- {_marker}: {{ scenario_name }} {mark} -->"
+        insertbefore: '</ossec_config>'
+        block: "{{ _radar_snippet }}"
+        backup: true
+      register: _insert
+
+    - name: remote host | Ensure ossec.conf ownership/mode
+      become: true
+      file:
+        path: /var/ossec/etc/ossec.conf
+        owner: root
+        group: wazuh
+        mode: '0640'
+
+    - name: remote host | Locate python for XML validation
+      become: true
+      shell: |
+        if [ -x /usr/bin/python3 ]; then
+          echo /usr/bin/python3
+        elif command -v python3 >/dev/null 2>&1; then
+          command -v python3
+        else
+          echo NONE
+        fi
+      register: _py
+      changed_when: false
+
+    - name: remote host | Skip XML validation (no python found)
+      debug:
+        msg: "No python found on host; skipping XML well-formedness check."
+      when: _py.stdout == "NONE"
+
+    #### template ####
+
+    - name: Upload RADAR index template into OpenSearch
+      uri:
+        url: "{{ indexer_host }}/_index_template/radar-log-volume"
+        method: PUT
+        user: "{{ os_user }}"
+        password: "{{ os_pass }}"
+        force_basic_auth: yes
+        validate_certs: no
+        headers:
+          Content-Type: "application/json"
+        body: "{{ lookup('file', _scenario_path ~ '/radar-template.json') }}"
+        body_format: json
+      delegate_to: localhost
+      register: radar_template_apply
+      changed_when: radar_template_apply.status in [200, 201]
+      when: scenario_name == 'log_volume'
+
+    #### decoder and rule ####
+
+    - name: remote host | Read RADAR decoders snippet
+      set_fact:
+        _radar_decoders_snippet: "{{ lookup('ansible.builtin.file', (_scenario_path ~ '/local_decoder.xml')) }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: remote host | Read RADAR rules snippet
+      set_fact:
+        _radar_rules_snippet: "{{ lookup('ansible.builtin.file', (_scenario_path ~ '/local_rules.xml')) }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: remote host | Append RADAR decoders to /var/ossec/etc/decoders/local_decoder.xml
+      become: true
+      blockinfile:
+        path: /var/ossec/etc/decoders/local_decoder.xml
+        create: yes
+        marker: "<!-- RADAR_DECODERS: {{ scenario_name }} {mark} -->"
+        insertafter: EOF         
+        block: "{{ _radar_decoders_snippet }}"
+        backup: true
+      register: _dec_ins
+
+    - name: remote host | Ensure ownership/mode for decoders file
+      become: true
+      file:
+        path: /var/ossec/etc/decoders/local_decoder.xml
+        owner: root
+        group: wazuh
+        mode: "0640"
+
+    - name: remote host | Append RADAR rules to /var/ossec/etc/rules/local_rules.xml
+      become: true
+      blockinfile:
+        path: /var/ossec/etc/rules/local_rules.xml
+        create: yes
+        marker: "<!-- RADAR_RULES: {{ scenario_name }} {mark} -->"
+        insertafter: EOF        
+        block: "{{ _radar_rules_snippet }}"
+        backup: true
+      register: _rules_ins
+
+    - name: remote host | Ensure ownership/mode for rules file
+      become: true
+      file:
+        path: /var/ossec/etc/rules/local_rules.xml
+        owner: root
+        group: wazuh
+        mode: "0640"
+
+    - block:
+      - name: remote host | Prepare variables for 0310 suspicious_login
+        set_fact:
+          _local_copied_decoder: /var/ossec/etc/decoders/0310-ssh.xml
+          _ossec_conf_path: /var/ossec/etc/ossec.conf
+          _decoder_exclude_line: "0310-ssh_decoders.xml"
+          _shipped_decoder_src: "{{ _scenario_path }}/0310-ssh.xml"
+
+      - name: remote host | Ensure local decoders directory exists
+        file:
+          path: /var/ossec/etc/decoders
+          state: directory
+          owner: root
+          group: wazuh
+          mode: "0750"
+
+      - name: remote host | Fail if shipped decoder missing locally
+        stat:
+          path: "{{ _shipped_decoder_src }}"
+        register: _shipped_decoder_stat
+
+      - name: remote host | Abort if shipped decoder not found locally
+        fail:
+          msg: "Shipped decoder {{ _shipped_decoder_src }} not found on controller"
+        when: not _shipped_decoder_stat.stat.exists
+
+      - name: remote host | Copy shipped decoder into local decoders
+        copy:
+          src: "{{ _shipped_decoder_src }}"
+          dest: "{{ _local_copied_decoder }}"
+          owner: root
+          group: wazuh
+          mode: "0640"
+          backup: yes
+        register: _copied_decoder
+
+      - name: remote host | Ensure decoder_exclude exists in ossec.conf
+        blockinfile:
+          path: "{{ _ossec_conf_path }}"
+          marker: "# {mark} ANSIBLE MANAGED DECODER EXCLUDE"
+          insertafter: "<ruleset>"
+          block: |
+            <decoder_exclude>{{ _decoder_exclude_line }}</decoder_exclude>
+        register: _decoder_exclude_changed
+      when: scenario_name == 'suspicious_login' or scenario_name == 'geoip_detection'
+
+    #### active response ####
+
+    - name: remote host | Stat whitelist source on controller
+      delegate_to: localhost
+      stat:
+        path: "{{ _whitelist_src }}"
+      register: _wl_controller_stat
+      changed_when: false
+
+    - name: remote host | Copy whitelist_countries to host if present
+      when: _wl_controller_stat.stat.exists
+      copy:
+        src: "{{ _whitelist_src }}"
+        dest: "{{ _lists_dir }}/{{ _whitelist_name }}"
+        owner: root
+        group: wazuh
+        mode: "0644"
+      become: true
+
+    - name: remote host | Insert whitelist <list> into /var/ossec/etc/ossec.conf ruleset (if whitelist exists)
+      become: true
+      when: _wl_controller_stat.stat.exists
+      blockinfile:
+        path: /var/ossec/etc/ossec.conf
+        marker: "<!-- {{ _list_marker }} {mark} -->"
+        insertbefore: '</ruleset>'
+        block: |
+          {{ _list_entry }}
+      register: _host_insert_list
+
+    - name: remote host | Stat email_ar.py on controller
+      delegate_to: localhost
+      stat:
+        path: "{{ _email_ar_src }}"
+      register: _email_src_controller_stat
+      changed_when: false
+
+    - name: remote host | Copy .env to /var/ossec/active-response/bin if present
+      when: _active_responses_env_stat.stat.exists
+      copy:
+        src: ".env"
+        dest: "{{ _active_responses_env_dest }}"
+        owner: root
+        group: wazuh
+        mode: "0640"
+      become: true
+
+    - name: remote host | Copy email_ar.py to /var/ossec/active-response/bin if present
+      when: _email_src_controller_stat.stat.exists
+      copy:
+        src: "{{ _email_ar_src }}"
+        dest: "{{ _email_ar_dest }}"
+        owner: root
+        group: wazuh
+        mode: "0750"
+      become: true
+
+    - name: remote host | Copy ad_context_*.py (only)
+      become: true
+      with_fileglob:
+        - "{{ _scenario_path }}/active_responses/ad_context_*.py"
+      copy:
+        src: "{{ item }}"
+        dest: "/var/ossec/active-response/bin/{{ item | basename }}"
+        owner: root
+        group: wazuh
+        mode: "0750"
+      register: _scripts
+
+    #### restart ####
+
+    - name: remote host | Decide if restart is needed
+      set_fact:
+        _restart_needed: >-
+          {{
+            (_insert.changed | default(false)) or
+            (_dec_ins.changed | default(false)) or
+            (_rules_ins.changed | default(false)) or
+            (
+              (_scripts.results | default([]))
+              | selectattr('changed')
+              | list | length > 0
+            ) or
+            (_host_insert_list.changed | default(false))
+          }}
+
+    - name: remote host | Restart Wazuh manager
+      become: true
+      vars: { ansible_become_flags: "-S -n" }
+      command: /var/ossec/bin/wazuh-control restart
+      when:
+        - _restart_needed

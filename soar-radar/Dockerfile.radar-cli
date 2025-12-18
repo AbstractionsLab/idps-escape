@@ -10,6 +10,7 @@ RUN apt-get update -y \
 
 RUN mkdir -p /app \
  && mkdir -p /app/ddos_detection \
+ && mkdir -p /app/log_volume \
  && mkdir -p /app/insider_threat \
  && mkdir -p /app/malware_communication \
  && mkdir -p /app/suspicious_login \
@@ -25,6 +26,7 @@ COPY insider_threat/wazuh_ingest.py ./insider_threat/
 COPY insider_threat/convert.py ./insider_threat/
 COPY malware_communication/wazuh_ingest.py ./malware_communication/
 COPY suspicious_login/wazuh_ingest.py ./suspicious_login/
+COPY log_volume/wazuh_ingest.py ./log_volume/
 
 USER appuser
 

@@ -1,3 +1,37 @@
+# 0.6 (2025-12-18)
+
+## Added
+
+- Documentation on the internals of `run-radar.sh` (`/docs/manual/radar-run-ad.md`): comprehensive guide to the three-stage pipeline (data ingestion, detector creation, monitor setup)
+- New RADAR log volume scenario configurations: `agent-conf.xml`, `agent-config.xml`, `radar-pipeline.json`, `radar-transform.json`, and `wazuh_ingest.py`
+- Refactored Ansible playbook tasks for Wazuh manager: modularized role split into `bootstrap.yml`, `host.yml`, `decoders.yml`, `rules.yml`, `responses.yml`, `ossec.yml`, `filebeat.yml`, `lists.yml`, and `stage.yml` for improved maintainability
+- Archive of original monolithic Ansible playbook: `roles/wazuh_manager/tasks/archive/main_original.yml`
+
+## Modified
+
+- Main README
+- RADAR README and main README updated with v0.5.3 information
+- Technical documentation of automated Wazuh and RADAR deployment and activation: `/docs/manual/radar-manager-ansible-playbook.md`
+- RADAR configuration in `config.yaml`: updated with log volume scenario parameters and detector configuration adjustments
+- Ansible playbook main.yml: refactored from monolithic 1542 lines to modular tasks
+- RADAR `monitor.py`: enhanced webhook and monitor configuration
+- RADAR `webhook.py`: improved alert handling and integration
+- RADAR `detector.py`: added connectivity improvements
+- Exact launch commands used in `TRB-009`, `TRB-010` and `TRB-011` 
+- Test results updated in `TRB-009`, `TRB-010`, `TRB-011`, `TRB-012`, and `TRB-015` for `v0.5.3` after software validation test case executions
+- SRS-056 and TST-045, TST-048 specification updates
+- RADAR suspicious login rules: enhanced detection logic in `local_rules.xml`
+- Rebuilt the traceability web site
+- Docker compose configuration cleanup in `docker-compose.core.yml`
+
+## Fixed
+
+- bugs in RADAR build corrupting previously installed scenarios depending on the order of execution
+- RADAR Dockerfile.radar-cli: corrected CLI image configuration
+- Log volume scenario README: resolved deployment documentation gaps
+- Log volume detector template and pipeline configurations for improved aggregation accuracy
+- Suspicious login helper script refactored into inline detection logic (removed `radar-auth-helper.py`, integrated directly into rules)
+
 # 0.5.2 (2025-12-09)
 
 ## Modified

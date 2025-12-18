@@ -2,7 +2,7 @@
 
 ## Objectives
 
-**Example scenario:** Each endpoint normally generates a relatively stable amount of log data under /var/log/. A sudden and unexplained spike in log volume can indicate malware activity, brute-force attempts, unauthorized processes, or system misuse. This scenario continuously monitors the raw size of the /var/log directory and identifies abnormal growth based on the endpoint’s own historical baseline.
+**Example scenario:** Each endpoint normally generates a relatively stable amount of log data under `/var/log/`. A sudden and unexplained spike in log volume can indicate malware activity, brute-force attempts, unauthorized processes, or system misuse. This scenario continuously monitors the raw size of the `/var/log` directory and identifies abnormal growth based on the endpoint’s own historical baseline.
 
 Goal: Detect unusually high log volume on any endpoint, generate alerts, and enable automated responses such as email notifications or integration with SOAR workflows.
 
@@ -31,7 +31,7 @@ Active responses handle detected suspicious events:
 
 We distinguish between:
 
-- **Agent side** (the SSH host that produces `/var/log/auth.log`)
+- **Agent side**
 - **Manager side** (Wazuh manager where decoders, rules, and active responses live)
 - **Wazuh Dashboard / OpenSearch** configuration
 
@@ -111,6 +111,27 @@ Click **Next** to **Review**.
 
 ### Monitor and Webhook
 
+#### Create Webhook
+
+This [webhook](/soar-radar/webhook/README.md) is a simple Flask application that receives the monitor's payload and appends a single line to `/var/log/ad_alerts.log`. To deploy the webhook in the Wazuh manager:
+
+1. Copy the [ad_alerts_webhook.py](/soar-radar/webhook/ad_alerts_webhook.py) file from this repository into the Wazuh manager to a custom wazuh_webhook directory.
+2. Ensure execution permissions: 
+```bash
+chmod +x ad_alerts_webhook.py
+```
+3. Run under a python3:
+```bash
+python3 ad_alerts_webhook.py
+```
+4. The resulted log file should be monitored by Wazuh, thus `/var/ossec/etc/ossec.conf` needs to be configured:
+```xml
+<localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/ad_alerts.log</location>
+</localfile>
+```
+
 #### Create an OpenSearch Monitor
 
 In `log_volume-detector` Anomaly overview, set up alert: 
@@ -152,25 +173,3 @@ In `log_volume-detector` Anomaly overview, set up alert:
         
 When the condition is met, this monitor will send structured JSON to the webhook.
 
----
-
-#### Webhook Script (`ad_alerts_webhook.py`)
-
-This [webhook](/soar-radar/webhook/README.md) is a simple Flask application that receives the monitor's payload and appends a single line to `/var/log/ad_alerts.log`. To deploy the webhook in the Wazuh manager:
-
-1. Copy the [ad_alerts_webhook.py](/soar-radar/webhook/ad_alerts_webhook.py) file from this repository into the Wazuh manager to a custom wazuh_webhook directory.
-2. Ensure execution permissions: 
-```bash
-chmod +x ad_alerts_webhook.py
-```
-3. Run under a python3:
-```bash
-python3 ad_alerts_webhook.py
-```
-4. The resulted log file should be monitored by Wazuh, thus `/var/ossec/etc/ossec.conf` needs to be configured:
-```xml
-<localfile>
-    <log_format>syslog</log_format>
-    <location>/var/log/ad_alerts.log</location>
-</localfile>
-```

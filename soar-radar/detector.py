@@ -73,6 +73,7 @@ def detector_spec(scn_name: str, scn: Dict[str, Any]) -> Dict[str, Any]:
         "name": f"{scn_name.upper()}_DETECTOR",
         "description": f"{scn_name} detector",
         "time_field": scn["time_field"],
+        "shingleSize": scn.get("shingle_size",8),
         "indices": [index_pattern(scn)],
         "filter_query": {"match_all": {}},
         "feature_attributes": build_features(scn),

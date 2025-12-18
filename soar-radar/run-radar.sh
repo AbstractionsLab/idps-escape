@@ -14,15 +14,12 @@ EOF
 [[ $# -ge 1 ]] || usage
 SCENARIO_NAME="$1"
 
-if [[ "$SCENARIO_NAME" != "log_volume" ]]; then
-  docker run --rm \
+
+docker run --rm \
   -v "$PWD/${SCENARIO_NAME}/dataset:/app/${SCENARIO_NAME}/dataset" \
   -v "$PWD/config/wazuh_indexer_ssl_certs/root-ca.pem:/app/config/wazuh_indexer_ssl_certs/root-ca.pem" \
   -v "$PWD/.env:/app/.env:ro" \
   radar-cli:latest python "${SCENARIO_NAME}"/wazuh_ingest.py
-fi
-
-
 
 DET_ID="$(docker run --rm \
   -v "$PWD/config.yaml:/app/config.yaml:ro" \

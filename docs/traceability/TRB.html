@@ -611,7 +611,9 @@
 <li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
 </ul>
 <h2>Test execution results</h2>
-<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./build-radar.sh suspicious_login --agent remote --manager local --manager_exists false
+</code></pre>
 <h4>In Wazuh Manager</h4>
 <p><strong>Test case step 2.1:</strong> Custom <code>0310 SSH</code> decoder deployed:</p>
 <ul>
@@ -728,7 +730,9 @@
 <li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
 </ul>
 <h2>Test execution results</h2>
-<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./build-radar.sh geoip_detection --agent remote --manager local --manager_exists false
+</code></pre>
 <h3>In Wazuh Manager</h3>
 <p><strong>Test case step 2.1:</strong> Whitelist file exists</p>
 <ul>
@@ -837,7 +841,9 @@
 <li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
 </ul>
 <h2>Test execution results</h2>
-<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./build-radar.sh log_volume --agent remote --manager local --manager_exists false
+</code></pre>
 <h3>In Wazuh Manager</h3>
 <p><strong>Test case step 2.1:</strong> RADAR snippet for <code>log_volume</code> is present in <code>ossec.conf</code></p>
 <ul>
@@ -942,17 +948,24 @@
 <h2 id="TRB-012">2.5 TCER: Add log volume growth anomaly detector <small>TRB-012</small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
-<li>Software deviations: aligned with test case specification, N/A</li>
-<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
 </ul>
 <h2>Test execution results</h2>
-<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
-<p><strong>Test case step 1</strong>: Verify that...</p>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./run-radar.sh log_volume
+</code></pre>
+<h3>In Wazuh dashboard</h3>
+<p><strong>Test case step 2.1:</strong> The detector <code>LOG_VOLUME_DETECTOR</code> is created in the Wazuh Dashboard with the correct configurations.</p>
 <ul>
-<li><span style="color:green"><strong>0 = flawless</strong></span> OR <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span> OR <span style="color:orange"><strong>2 = minor defect</strong></span> OR <span style="color:DarkOrange"><strong>3 = major defect</strong></span> OR <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: In the Anomaly Detection menu, the created detector is visible. The expected configurations are found in <a href="/soar-radar/config.yaml"><code>config.yaml</code></a> under the <code>log_volume</code> key.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> Monitor creation and trigger to webhook existence</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>:  The monitor is created in the Wazuh Dashboard with a trigger to a RADAR webhook instance. In the Alerting menu, the created Monitor is listed under the Monitors tab.</li>
 </ul>
 <h3>Defect summary description</h3>
-<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span> OR <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span> OR <span style="color:orange"><strong>2 = minor defect</strong></span> OR <span style="color:DarkOrange"><strong>3 = major defect</strong></span> OR <span style="color:red"><strong>4 = critical defect</strong></span></p>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
 <h3>Text execution evidence</h3>
 <p>See linked files (if any), e.g., screenshots, logs, etc.</p>
 <h3>Comments</h3>
@@ -962,9 +975,6 @@
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<blockquote>
-<p><code>docs/specs/c5-keyword.py</code></p>
-</blockquote>
 <p><em>Parent links:</em> <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a></p>
 <table>
 <thead>
@@ -976,23 +986,19 @@
 <tbody>
 <tr>
 <td>test-date</td>
-<td>yyyy-mm-dd</td>
+<td>2025-12-18</td>
 </tr>
 <tr>
 <td>tester</td>
-<td>ACR</td>
+<td>AAT</td>
 </tr>
 <tr>
 <td>defect-category</td>
-<td>0 = flawless; 1 = insignificant defect; 2 = minor defect; 3 = major defect; 4 = critical defect</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
+<td>0 = flawless</td>
 </tr>
 <tr>
 <td>passed-steps</td>
-<td>0</td>
+<td>2</td>
 </tr>
 <tr>
 <td>failed-steps</td>
@@ -1004,11 +1010,11 @@
 </tr>
 <tr>
 <td>release-version</td>
-<td>1.0</td>
+<td>0.6</td>
 </tr>
 <tr>
 <td>verification-method</td>
-<td>T/R/I/A</td>
+<td>T</td>
 </tr>
 </tbody>
 </table>
@@ -1155,17 +1161,18 @@
 <h2 id="TRB-015">2.8 TCER: Validate RADAR log volume growth anomaly detector <small>TRB-015</small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
-<li>Software deviations: aligned with test case specification, N/A</li>
-<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
 </ul>
 <h2>Test execution results</h2>
 <p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
-<p><strong>Test case step 1</strong>: Verify that...</p>
+<h2>In Wazuh Dashboard</h2>
+<p><strong>Test case step 1</strong>: In rule trigger verification in the Wazuh Dashboard Discovery page</p>
 <ul>
-<li><span style="color:green"><strong>0 = flawless</strong></span> OR <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span> OR <span style="color:orange"><strong>2 = minor defect</strong></span> OR <span style="color:DarkOrange"><strong>3 = major defect</strong></span> OR <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: an entry for rule ID <code>100309</code> is registered and an email capturing the alert (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-041">TST-041</a>) is received at the specified address.</li>
 </ul>
 <h3>Defect summary description</h3>
-<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span> OR <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span> OR <span style="color:orange"><strong>2 = minor defect</strong></span> OR <span style="color:DarkOrange"><strong>3 = major defect</strong></span> OR <span style="color:red"><strong>4 = critical defect</strong></span></p>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
 <h3>Text execution evidence</h3>
 <p>See linked files (if any), e.g., screenshots, logs, etc.</p>
 <h3>Comments</h3>
@@ -1175,9 +1182,6 @@
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<blockquote>
-<p><code>docs/specs/c5-keyword.py</code></p>
-</blockquote>
 <p><em>Parent links:</em> <a href="TST.html#TST-048">TST-048 Log volume abnormal growth validation</a></p>
 <table>
 <thead>
@@ -1189,23 +1193,19 @@
 <tbody>
 <tr>
 <td>test-date</td>
-<td>yyyy-mm-dd</td>
+<td>2025-12-18</td>
 </tr>
 <tr>
 <td>tester</td>
-<td>ACR</td>
+<td>AAT</td>
 </tr>
 <tr>
 <td>defect-category</td>
-<td>0 = flawless; 1 = insignificant defect; 2 = minor defect; 3 = major defect; 4 = critical defect</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
+<td>0 = flawless</td>
 </tr>
 <tr>
 <td>passed-steps</td>
-<td>0</td>
+<td>2</td>
 </tr>
 <tr>
 <td>failed-steps</td>
@@ -1217,11 +1217,11 @@
 </tr>
 <tr>
 <td>release-version</td>
-<td>1.0</td>
+<td>0.6</td>
 </tr>
 <tr>
 <td>verification-method</td>
-<td>T/R/I/A</td>
+<td>T</td>
 </tr>
 </tbody>
 </table>

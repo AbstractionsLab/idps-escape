@@ -7,6 +7,7 @@ scenarios:
     result_index: opensearch-ad-plugin-result-insider_threat
     label_csv_path: insider_threat/dataset/answers*.csv
     time_field: "@timestamp"
+    shingle_size: 8
     categorical_field: "user.keyword"
     detector_interval: 5
     delay_minutes: 1
@@ -158,17 +159,18 @@ scenarios:
               field: id.resp_p.keyword
 
   log_volume:
-    index_prefix: wazuh-archives-*
+    index_prefix: wazuh-ad-log-volume-*
     result_index: opensearch-ad-plugin-result-log-volume
-    log_index_pattern: wazuh-archives-*
+    log_index_pattern: wazuh-ad-log-volume-*
     time_field: "@timestamp"
-    categorical_field: "agent.name.keyword"
+    shingle_size: 8
+    categorical_field: "agent.name"
     detector_interval: 5
     delay_minutes: 1
     monitor_name: "LogVolume-Monitor"
     trigger_name: "LogVolume-Growth-Detected"
-    anomaly_grade_threshold: 0.5
-    confidence_threshold: 0.5
+    anomaly_grade_threshold: 0.3
+    confidence_threshold: 0.3
     features:
       - feature_name: log_volume_max
         feature_enabled: true
@@ -178,9 +180,9 @@ scenarios:
               field: data.log_bytes
 
   log_volume_general:
-    index_prefix: wazuh-archives-*
+    index_prefix: wazuh-ad-log-volume-*
     result_index: opensearch-ad-plugin-result-log-volume
-    log_index_pattern: wazuh-archives-*
+    log_index_pattern: wazuh-ad-log-volume-*
     time_field: "@timestamp"
     detector_interval: 5
     delay_minutes: 1
@@ -203,6 +205,7 @@ scenarios:
     log_index_pattern: wazuh-ad-suspicious-login-*
     dataset_dir: suspicious_login/dataset
     time_field: "@timestamp"
+    shingle_size: 8
     categorical_field: "User ID.keyword"
     detector_interval: 10
     delay_minutes: 1
