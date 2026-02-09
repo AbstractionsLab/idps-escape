@@ -1,45 +1,84 @@
 # IDPS-ESCAPE user manual
 
-IDPS-ESCAPE is aimed at closely capturing the notion of MAPE-K (Monitor, Analyze, Plan, Execute and Knowledge) from autonomic computing applied to cybersecurity, which translates into providing a comprehensive package that implements a Security Orchestration, Automation, and Response (SOAR) system.
+This manual provides detailed documentation for all IDPS-ESCAPE components implementing a comprehensive SOAR system following the MAPE-K paradigm (Monitor, Analyze, Plan, Execute, Knowledge).
 
-This resulting SOAR system combines following building blocks: a Security Information and Event Management (SIEM) system, an Intrusion Detection and Prevention System (IDPS), Cyber Threat Intelligence (CTI) tools, a Risk-aware AD-based Active Response ([**RADAR**](/soar-radar/README.md)) subsystem providing AD scenario implementations, coupled with active response solutions and SOAR playbooks facilitating security orchestration, and an anomaly detection (AD) subsystem, called [**ADBox**](/docs/manual/adbox.md).
+**Key subsystems:** [**RADAR**](./radar_docs/README.md) (automated response), [**SONAR**](./sonar_docs/README.md) (production anomaly detection), and [ADBox](./adbox_docs/adbox.md) (legacy research framework).
 
-We adopt a hybrid method aimed at robustness and resilience to adversarial interference involving three elements: (i) signature-based detection with (ii) AD based on deep learning models via MTAD-GAT, relying on state-of-the-art advances in artificial intelligence (AI) and machine learning (ML) such as the *attention mechanism* and (iii) a classical algorithm for AD on streams such as the Robust Random Cut Forest (RRCF) algorithm supporting categorical features.
+**Hybrid detection approach:** Signature-based (Wazuh, Suricata) + multivariate AD (SONAR) + streaming AD (RRCF via OpenSearch AD plugin).
 
-## RADAR and ADBox
+## Core components
 
-The [RADAR](/soar-radar/README.md) subsystem provides solutions for completing the SOAR 
-mission of IDPS-ESCAPE enabling security orchestration and automation driven by a 
-Risk-informed AD-based active response (AR) paradigm.
+### SONAR (Production Anomaly Detection)
 
-The two major missions of ADBox are to:
+[Quick start](./sonar_docs/setup-guide.md) | [Full documentation](./sonar_docs/README.md)
 
-1. perform core time-series anomaly detection operations via ML;
-2. manage the data flow from the indexer to the core machine learning algorithm, and back to the SIEM.
+**SONAR** (SIEM-Oriented Neural Anomaly Recognition) is our production-grade multivariate time-series anomaly detection subsystem:
+- Multivariate anomaly detection using Microsoft MVAD library
+- Scenario-based YAML workflows for repeatable detection strategies
+- Debug mode for offline testing without Wazuh infrastructure
+- Real-time and batch detection modes
+- Data shipping integration to Wazuh data streams for RADAR-driven responses
+
+**Use SONAR for all production deployments.**
+
+### RADAR (Automated Response)
+
+[Getting started](./radar_docs/radar-getting-started.md) | [Full documentation](./radar_docs/README.md)
+
+The [RADAR](/radar/README.md) subsystem provides solutions for completing the SOAR mission of IDPS-ESCAPE:
+- Risk-aware automated response orchestration
+- OpenSearch AD integration (RRCF-based)
+- AD scenario implementations with active response solutions
+- SOAR playbooks facilitating security orchestration
 
 ## Map of content
 
-- [RADAR](/soar-radar/README.md)
-    - [Automated manager deployment via Ansible playbook](/docs/manual/radar-manager-ansible-playbook.md)
-    - [Automated agent deployment via Ansible playbook (soon...)]()
-- [ADBox](/docs/manual/adbox.md) 
-    - [Installation](/docs/manual/adbox_installation.md)
-    - [Setup and prerequisites](/docs/manual/setup_and_prerequisites.md)
-    - [Quick start](/docs/manual/quick_start.md)
-    - [Use case definition guide](/docs/manual/use_case.md)
-    - [Anomaly detection engine](/docs/manual/engine.md)
-    - [MTAD-GAT](/docs/manual/mtad_gat.md)
-    - [Detector](/docs/manual/detector_data_structure.md)
-    - [Front-end](/docs/manual/front_end.md)
-    - [Data transformation](/docs/manual/data_transformation.md)
-    - [Run modes](/docs/manual/runmodes.md)
-    - [Wazuh ADBox integration](/docs/manual/detector_data_stream.md)
-    - [Example](/docs/manual/example.md)
-    - [Detector dashboard tutorial](/docs/manual/dashboard_tutorial.md)
-    - [Data cleaning](/docs/manual/data_cleaning.md)
-- [Joint deployment of IDPS, SIEM and OpenSearch AD](../../deployment/README.md)
-- [Integrations](/integrations/README.md)
-- [Glossary](/docs/manual/glossary.md)
+### SONAR Documentation
+- [SONAR user README](./sonar_docs/README.md) - Documentation hub
+- [SONAR developer README](/sonar/README.md) - Developer quick reference
+- [Setup and usage guide](./sonar_docs/setup-guide.md) - Installation and CLI
+- [Scenario guide](./sonar_docs/scenario-guide.md) - YAML scenario configuration
+- [Data injection guide](./sonar_docs/data-injection-guide.md) - Testing with synthetic data
+- [Data shipping guide](./sonar_docs/data-shipping-guide.md) - Production integration
+- [Troubleshooting](./sonar_docs/troubleshooting.md) - Common issues and solutions
+- [Architecture](./sonar_docs/architecture.md) - System design and patterns
+
+### RADAR Documentation
+- [RADAR README](./radar_docs/README.md) - Main documentation
+- [RADAR developer README](/radar/README.md) - Developer quick reference
+- [Architecture](./radar_docs/radar-architecture.md) - System design and components
+- [Getting started](./radar_docs/radar-getting-started.md) - Setup and deployment
+- [Ansible playbook](./radar_docs/radar-manager-ansible-playbook.md) - Automated deployment
+- [Run AD workflow](./radar_docs/radar-run-ad.md) - Detector and monitor creation
+- [Detection rules](./radar_docs/radar-rules.md) - Wazuh rule definitions
+- [Active response](./radar_docs/radar-active-response.md) - Response logic flow
+- [Scenarios overview](/radar/scenarios/README.md) - Detailed scenario documentation
+- [Webhook service](/radar/webhook/README.md) - Webhook deployment
+
+### Deployment and Integration
+- [Getting started with full stack](./getting-started-stack.md) - Quick deployment
+- [Joint IDPS + SIEM deployment](../../deployment/README.md) - Suricata + Wazuh
+- [Integrations](../../integrations/README.md) - MISP, OpenCTI, SATRAP, OpenTRICK
+
+### ADBox (Legacy - Research Only)
+
+> **⚠️ DEPRECATED**: Use SONAR for production. ADBox maintained for research continuity only.
+
+- [ADBox overview](./adbox_docs/adbox.md) - Main documentation
+- [Installation](./adbox_docs/adbox_installation.md) - Setup instructions
+- [Quick start](./adbox_docs/quick_start.md) - Getting started
+- [Use case definition](./adbox_docs/use_case.md) - YAML configuration
+- [Engine documentation](./adbox_docs/engine.md) - Core components
+- [MTAD-GAT algorithm](./adbox_docs/mtad_gat.md) - Deep learning model
+- [Detector data structure](./adbox_docs/detector_data_structure.md) - Output format
+- [Data transformation](./adbox_docs/data_transformation.md) - Preprocessing pipeline
+- [Run modes](./adbox_docs/runmodes.md) - Batch, realtime, historical
+- [Wazuh integration](./adbox_docs/detector_data_stream.md) - Data shipping
+- [Dashboard tutorial](./adbox_docs/dashboard_tutorial.md) - Visualization guide
+- [Example walkthrough](./adbox_docs/example.md) - Complete example
+
+### Reference
+- [Glossary](./glossary.md) - Terminology and definitions
 
 ## SIEM, network and host IDPS and ML-based AD
 

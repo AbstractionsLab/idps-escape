@@ -1,5 +1,7 @@
 # OpenSearch AD plugin in Wazuh
 
+> Note: starting from v0.6, our RADAR deployment solution automatically installs the AD plugin.
+
 While you can follow the official instructions on the [Wazuh blog post](https://wazuh.com/blog/enhancing-it-security-with-anomaly-detection/) describing the integration of [the OpenSearch AD plugin](https://github.com/opensearch-project/anomaly-detection), if you wish to adopt a Docker-based model, you can follow the instructions below.
 
 ## Integration steps overview
@@ -47,4 +49,4 @@ While you can follow the official instructions on the [Wazuh blog post](https://
 
 - **Compatibility:** The steps above are confirmed to work with Wazuh versions based on OpenSearch (e.g., Wazuh 4.8.0 with OpenSearch 2.10.0).
 - **Troubleshooting:** If you encounter connectivity issues (e.g., `getaddrinfo ENOTFOUND wazuh.indexer`), ensure that all required containers are running and properly networked.
-- **Use cases:** Integrating the Anomaly Detection plugin allows you to detect suspicious activities, such as spikes in failed login attempts, and receive timely alerts; see our [RADAR](/soar-radar/README.md) page for more details.
+- **Use cases:** Integrating the Anomaly Detection plugin allows you to detect suspicious activities, such as spikes in failed login attempts, and receive timely alerts; see our [RADAR](/radar/README.md) page for more details.

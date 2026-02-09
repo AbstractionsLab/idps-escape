@@ -1,0 +1,26 @@
+#### rules (volume-mapped) ####
+- name: rules | Ensure host rules dir exists
+  ansible.builtin.file:
+    path: "{{ _host_rules_dir }}"
+    state: directory
+
+- name: rules | Copy scenario rules to host volume ({{ scenario_name }})
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ _host_rules_dir }}/{{ item | basename }}"
+  with_fileglob:
+    - "{{ src }}/*.xml"
+  register: _rules_copied
+  changed_when: _rules_copied is changed
+
+- name: rules | Normalize rules file ownership/mode in container
+  when: _rules_copied is changed
+  shell: |
+    docker exec "{{ _mgr_container }}" bash -lc '
+      chown root:wazuh /var/ossec/etc/rules/*.xml 2>/dev/null || true
+      chmod 0640 /var/ossec/etc/rules/*.xml 2>/dev/null || true
+    '
+  args:
+    executable: /bin/bash
+  register: _rules_permfix
+  changed_when: false

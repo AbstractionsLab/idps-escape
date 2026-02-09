@@ -14,4 +14,4 @@ reviewed: bf-FfeSrcNu9eD4UTde1vRs8QKYNfM1rpl9HBKNKN3U=
 
 The diagram below depicts the high-level architecture of the RADAR subsystem.
 
-![RADAR high level architecture](assets/RADAR-component-diagram.png "RADAR high level architecture"){: width="70%"}
+![RADAR high level architecture](assets/RADAR-component-diagram.drawio.png "RADAR high level architecture"){: width="70%"}

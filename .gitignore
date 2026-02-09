@@ -173,11 +173,18 @@ cython_debug/
 
 
 # MTAD-GAT output files
-siem_mtad_gat/logs
-siem_mtad_gat/output
-siem_mtad_gat/mtad_gat_pytorch/datasets
-siem_mtad_gat/assets/detector_models
+adbox/logs
+adbox/output
+adbox/mtad_gat_pytorch/datasets
+adbox/assets/detector_models
 
 # keys and certs
 *.key
 *.pem
+
+*.pkl
+*.pt
+
+adboxv2/model/mvad_model.pkl
+
+payloads/

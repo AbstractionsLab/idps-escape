@@ -1,0 +1,82 @@
+---
+# Example SONAR Use Case Scenario
+# This file demonstrates how to define training and detection configurations
+# for a specific anomaly detection use case.
+
+name: "Example AD Use Case"
+description: "Detect anomalies in Wazuh alert patterns over time"
+enabled: true
+
+# Training phase configuration
+training:
+  # How much historical data to use for training
+  lookback_hours: 24
+
+  # Numeric fields to extract from Wazuh alerts as features
+  numeric_fields:
+    - "rule.level"
+    # Add more fields as available in your Wazuh environment, e.g.:
+    # - "data.srcport"
+    # - "data.dstport"
+
+  # Optional categorical fields for one-hot encoding
+  categorical_fields:
+    # - "rule.id"
+    # - "rule.groups"
+
+  # For categorical fields: keep top-k categories, rest → "__other"
+  categorical_top_k: 10
+
+  # Time-series aggregation bucket size (minutes)
+  bucket_minutes: 5
+
+  # MVAD model sliding window (time points)
+  sliding_window: 200
+
+  # Compute device: "cpu" or "cuda"
+  device: "cpu"
+
+  # Additional parameters for MVAD library
+  extra_params: {}
+
+  # Enable derived features for enhanced attack detection
+  # Computes security-relevant features like failed_login_count, success_after_failure ratios
+  derived_features: true
+
+  # Auto-fill sparse history with synthetic alerts
+  fill_with_synthetic: false
+  synthetic_count: 100
+  synthetic_mode: "random"  # constant, random, or copy
+  synthetic_level: 5
+  synthetic_srcip: "192.0.2.0"
+
+# Shipping configuration (optional - can also be set via CLI --ship flag)
+# Enables data streaming to dedicated Wazuh data streams for RADAR integration
+shipping:
+  enabled: false  # Set to true to enable data shipping
+  install_templates: true  # Install base templates on first run
+  scenario_id: null  # Optional custom ID (auto-generated from model_path if null)
+
+# Detection phase configuration
+detection:
+  # Detection mode:
+  #   - "historical": one-shot detection on past lookback_minutes
+  #   - "batch": train first, then run one-shot detection
+  #   - "realtime": continuous polling until user stops (Ctrl+C)
+  mode: "historical"
+
+  # Minutes of recent data to detect on
+  lookback_minutes: 10
+
+  # For "realtime" mode: polling interval in seconds
+  # If null, defaults to bucket_minutes * 60
+  polling_interval_seconds: 300
+
+  # Auto-fill sparse detection windows with synthetic alerts
+  fill_with_synthetic: false
+  synthetic_count: 50
+
+  # Debug/inspection options
+  print_payloads: false
+  dry_run: false
+  payload_dir: null  # null = no payload saving; or set to "./debug_payloads"

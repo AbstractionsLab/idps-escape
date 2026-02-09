@@ -1,0 +1,38 @@
+# Example: Model Naming in SONAR Scenarios
+# ==========================================
+# This demonstrates how to use the model_name field to save and identify trained models
+
+name: "Brute Force Detection Example"
+description: "Detect SSH/RDP brute force authentication attempts"
+
+# Optional: Specify a custom model name
+# If not provided, a unique name is auto-generated from the scenario name + timestamp
+# Example: "brute_force_detection_example_20260112_143022"
+model_name: "brute_force_v1"
+
+# Wazuh connection (optional - uses defaults if omitted)
+wazuh:
+  base_url: "https://localhost:9200"
+  username: "admin"
+  password: "admin"
+
+training:
+  lookback_hours: 168  # 7 days
+  numeric_fields:
+    - "rule.level"
+    - "data.srcip"
+  categorical_fields:
+    - "agent.name"
+    - "rule.groups"
+  bucket_minutes: 5
+  sliding_window: 200
+
+detection:
+  mode: "historical"
+  lookback_minutes: 60
+
+# With model_name specified:
+# Model will be saved to: ./sonar/models/brute_force_v1.pkl
+# 
+# Without model_name:
+# Model will be saved to: ./sonar/models/brute_force_detection_example_20260112_143022.pkl

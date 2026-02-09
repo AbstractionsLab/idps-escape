@@ -1,0 +1,365 @@
+---
+- name: Validate agent_mode
+  assert:
+    that:
+      - agent_mode in ['container','ssh']
+    fail_msg: "Set agent_mode to 'container' or 'ssh' in inventory for {{ inventory_hostname }}"
+
+- name: Compute manager_target from CLI flags
+  vars:
+    _mgr_remote: "{{ (groups.get('wazuh_manager_ssh', []) | first) | default('', true) }}"
+    _mgr_local:  "{{ (groups.get('wazuh_manager_local', []) | first) | default('', true) }}"
+  set_fact:
+    manager_target: >-
+      {{
+        (
+          manager_scope == 'remote'
+          and _mgr_remote
+          and (hostvars[_mgr_remote].manager_address_public | default(''))
+        )
+        or
+        (
+          manager_scope == 'local'
+          and agent_mode == 'ssh'
+          and _mgr_local
+          and (hostvars[_mgr_local].manager_address_public | default(''))
+        )
+        or
+        (
+          manager_scope == 'local'
+          and agent_mode == 'container'
+          and _mgr_local
+          and (hostvars[_mgr_local].manager_address | default('wazuh.manager'))
+        )
+        or 'wazuh.manager'
+      }}
+
+- name: Compute scenario slug and agent snippet path (controller-side)
+  delegate_to: localhost
+  set_fact:
+    _scenario_slug: "{{ scenario_name | replace('_','-') }}"
+    _radar_agent_snippet_path: "{{ scenario_path }}/agent_configs/{{ scenario_name }}/radar-{{ (scenario_name | replace('_','-')) }}-agent-snippet.xml"
+    _radar_active_responses_dir: "{{ scenario_path }}/active_responses"
+  run_once: true
+
+- name: Discover active response .sh scripts on controller
+  delegate_to: localhost
+  become: false
+  run_once: true
+  set_fact:
+    _radar_ar_scripts: >-
+      {{ lookup('ansible.builtin.fileglob', _radar_active_responses_dir ~ '/*.sh', wantlist=True) | default([], true) }}
+
+############################
+# Container agents
+############################
+- name: Configure container agent
+  when: agent_mode == 'container'
+  block:
+    - name: Ensure container_name is provided
+      assert:
+        that: container_name is defined
+        fail_msg: "container_name must be set for container agents ({{ inventory_hostname }})"
+
+    - name: Set radar helper path (inside container)
+      set_fact:
+        radar_target_path: /opt/radar
+
+    - name: Ensure radar directory exists inside container
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ container_name }}" bash -lc '
+          mkdir -p "{{ radar_target_path }}" &&
+          chown root:root "{{ radar_target_path }}" &&
+          chmod 0755 "{{ radar_target_path }}"
+        '
+      args:
+        executable: /bin/bash
+
+    - name: Copy radar-helper.py into container
+      delegate_to: localhost
+      command: >
+        docker cp radar-helper/radar-helper.py
+        "{{ container_name }}:{{ radar_target_path }}/radar-helper.py"
+
+    - name: Set ownership/mode for radar-helper.py inside container
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ container_name }}" bash -lc '
+          chown root:root "{{ radar_target_path }}/radar-helper.py" &&
+          chmod 0750 "{{ radar_target_path }}/radar-helper.py"
+        '
+      args:
+        executable: /bin/bash
+
+    - name: Render radar-helper.service for container on controller
+      delegate_to: localhost
+      template:
+        src: radar-helper/radar-helper.service
+        dest: "/tmp/radar-helper.{{ inventory_hostname }}.service"
+        mode: '0644'
+      vars:
+        container_mode: true
+
+    - name: Copy radar-helper.service into container (no systemd calls)
+      delegate_to: localhost
+      command: >
+        docker cp /tmp/radar-helper.{{ inventory_hostname }}.service
+        "{{ container_name }}:/etc/systemd/system/radar-helper.service"
+
+    - name: Ensure GeoIP directory exists inside container
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ container_name }}" bash -lc '
+          mkdir -p /usr/share/GeoIP &&
+          chown root:root /usr/share/GeoIP &&
+          chmod 0755 /usr/share/GeoIP
+        '
+      args:
+        executable: /bin/bash
+
+    - name: Copy GeoLite2-City.mmdb into container
+      delegate_to: localhost
+      command: >
+        docker cp "geoip/GeoLite2-City.mmdb"
+        "{{ container_name }}:/usr/share/GeoIP/GeoLite2-City.mmdb"
+
+    - name: Copy GeoLite2-ASN.mmdb into container
+      delegate_to: localhost
+      command: >
+        docker cp "geoip/GeoLite2-ASN.mmdb"
+        "{{ container_name }}:/usr/share/GeoIP/GeoLite2-ASN.mmdb"
+
+    - name: Install maxminddb in container via pip
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ container_name }}" bash -lc '
+          if command -v python3 >/dev/null 2>&1; then
+            python3 -m pip install --no-cache-dir maxminddb
+          elif command -v pip3 >/dev/null 2>&1; then
+            pip3 install --no-cache-dir maxminddb
+          else
+            echo "WARNING: No python3/pip3 found to install maxminddb" >&2
+            exit 1
+          fi
+        '
+      args:
+        executable: /bin/bash
+
+    - name: Enable remote commands in local_internal_options.conf (container)
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ container_name }}" bash -lc '
+          f=/var/ossec/etc/local_internal_options.conf
+          touch "$f"
+          grep -qx "wazuh_command.remote_commands=1" "$f" || echo "wazuh_command.remote_commands=1" >> "$f"
+          grep -qx "logcollector.remote_commands=1" "$f" || echo "logcollector.remote_commands=1" >> "$f"
+        '
+      args:
+        executable: /bin/bash
+
+    - name: Ensure active-response bin directory exists inside container
+      delegate_to: localhost
+      shell: |
+        docker exec "{{ container_name }}" bash -lc '
+          mkdir -p /var/ossec/active-response/bin &&
+          chown -R root:root /var/ossec/active-response/bin
+        '
+      args:
+        executable: /bin/bash
+
+    - name: Copy active response .sh scripts into container
+      delegate_to: localhost
+      when: (_radar_ar_scripts | length) > 0
+      loop: "{{ _radar_ar_scripts }}"
+      loop_control:
+        label: "{{ item | basename }}"
+      command: >
+        docker cp "{{ item }}"
+        "{{ container_name }}:/var/ossec/active-response/bin/{{ item | basename }}"
+
+    - name: Ensure active response scripts are executable inside container
+      delegate_to: localhost
+      when: (_radar_ar_scripts | length) > 0
+      shell: |
+        docker exec "{{ container_name }}" bash -lc '
+          chmod 0750 /var/ossec/active-response/bin/*.sh 2>/dev/null || true
+          chown root:wazuh /var/ossec/active-response/bin/*.sh 2>/dev/null || true
+        '
+      args:
+        executable: /bin/bash
+
+    - name: Register agent with manager (container)
+      delegate_to: localhost
+      command: >
+        docker exec {{ container_name }}
+        /var/ossec/bin/agent-auth -m {{ manager_target }} -A {{ inventory_hostname }}
+      register: agent_auth_container
+      failed_when: >
+        agent_auth_container.rc != 0 and
+        ('Duplicate agent name' not in agent_auth_container.stderr)
+
+    - name: Restart Wazuh agent (container)
+      delegate_to: localhost
+      command: >
+        docker exec {{ container_name }}
+        /var/ossec/bin/wazuh-control restart
+
+
+############################
+# SSH agents block
+############################
+- name: Configure SSH agent
+  when: agent_mode == 'ssh'
+  become: true
+  block:
+    - name: Ensure radar helper variables
+      set_fact:
+        radar_target_path: /opt/radar
+        radar_venv_path: /opt/radar/venv
+
+    - name: Ensure python runtime and venv tools are installed
+      package:
+        name:
+          - python3
+          - python3-venv
+          - python3-pip
+        state: present
+
+    - name: Ensure GeoIP directory exists on agent
+      file:
+        path: /usr/share/GeoIP
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy GeoLite2-City.mmdb from controller to agent
+      copy:
+        src: "geoip/GeoLite2-City.mmdb"
+        dest: /usr/share/GeoIP/GeoLite2-City.mmdb
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy GeoLite2-ASN.mmdb from controller to agent
+      copy:
+        src: "geoip/GeoLite2-ASN.mmdb"
+        dest: /usr/share/GeoIP/GeoLite2-ASN.mmdb
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Ensure radar venv and maxminddb are installed
+      pip:
+        name: maxminddb
+        state: present
+        virtualenv: "{{ radar_venv_path }}"
+        virtualenv_command: "python3 -m venv"
+
+    - name: Install RADAR helper and systemd unit (SSH agents)
+      block:
+        - name: Ensure radar directory exists
+          file:
+            path: "{{ radar_target_path }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+
+        - name: Copy radar-helper.py to agent (SSH)
+          copy:
+            src: radar-helper/radar-helper.py
+            dest: "{{ radar_target_path }}/radar-helper.py"
+            owner: root
+            group: root
+            mode: '0750'
+
+        - name: Deploy systemd unit for radar helper (SSH)
+          template:
+            src: radar-helper/radar-helper.service
+            dest: /etc/systemd/system/radar-helper.service
+            owner: root
+            group: root
+            mode: '0644'
+          vars:
+            container_mode: false
+            radar_python: "{{ radar_venv_path }}/bin/python"
+
+        - name: Reload systemd to pick up service (SSH)
+          systemd:
+            daemon_reload: yes
+
+        - name: Enable and start radar-helper service (SSH)
+          systemd:
+            name: "radar-helper.service"
+            enabled: yes
+            state: restarted
+            daemon_reload: no
+
+    - name: Enable remote commands in local_internal_options.conf (SSH)
+      block:
+        - ansible.builtin.lineinfile:
+            path: /var/ossec/etc/local_internal_options.conf
+            line: "wazuh_command.remote_commands=1"
+            create: yes
+            state: present
+        - ansible.builtin.lineinfile:
+            path: /var/ossec/etc/local_internal_options.conf
+            line: "logcollector.remote_commands=1"
+            create: yes
+            state: present
+
+    - name: Ensure active-response bin directory exists on agent
+      file:
+        path: /var/ossec/active-response/bin
+        state: directory
+        owner: root
+        group: wazuh
+        mode: '0755'
+
+    - name: Copy active response .sh scripts to agent
+      when: (_radar_ar_scripts | length) > 0
+      loop: "{{ _radar_ar_scripts }}"
+      loop_control:
+        label: "{{ item | basename }}"
+      copy:
+        src: "{{ item }}"
+        dest: "/var/ossec/active-response/bin/{{ item | basename }}"
+        owner: root
+        group: wazuh
+        mode: '0750'
+
+    - name: Check if agent already enrolled
+      stat:
+        path: /var/ossec/etc/client.keys
+      register: _client_keys
+      changed_when: false
+
+    - name: Check if agent-auth already points to same manager
+      shell: |
+        set -euo pipefail
+        grep -R "address=" -n /var/ossec/etc/ossec.conf | head -n 1 | awk -F= '{print $2}' | tr -d " </>"
+      args:
+        executable: /bin/bash
+      register: _mgr_in_conf
+      changed_when: false
+      failed_when: false
+
+    - name: Register agent with manager only if not already enrolled
+      when: not (_client_keys.stat.exists and (_client_keys.stat.size | int) > 0)
+      command: /var/ossec/bin/agent-auth -m {{ manager_target }} -A {{ inventory_hostname }}
+      register: agent_auth_ssh
+      failed_when: >
+        agent_auth_ssh.rc != 0 and
+        ('Duplicate agent name' not in agent_auth_ssh.stderr)
+
+    # - name: Register agent with manager
+    #   command: /var/ossec/bin/agent-auth -m {{ manager_target }} -A {{ inventory_hostname }}
+    #   register: agent_auth_ssh
+    #   failed_when: >
+    #     agent_auth_ssh.rc != 0 and
+    #     ('Duplicate agent name' not in agent_auth_ssh.stderr)
+
+    - name: Restart Wazuh agent (service)
+      command: /var/ossec/bin/wazuh-control restart

@@ -76,6 +76,7 @@
 <li><a href="#SRS-054">54 RADAR Automated Test Framework</a></li>
 <li><a href="#SRS-055">55 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a></li>
 <li><a href="#SRS-056">56 Log volume spike detection per endpoint</a></li>
+<li><a href="#SRS-057">57 Ransomware attack detection and response</a></li>
 </ul>
           </nav>
       </div>
@@ -1215,7 +1216,7 @@ I want to run a machine learning algorithm to detect anomalous behaviors within 
 <h3>Acceptance criteria</h3>
 <p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-007">TST-007 ADBox use case 1 with a Wazuh connection</a>, <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a>, <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a>, <a href="TST.html#TST-012">TST-012 ADBox use case 3 without a Wazuh connection</a>, <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-007">TST-007 ADBox use case 1 with a Wazuh connection</a>, <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a>, <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a>, <a href="TST.html#TST-012">TST-012 ADBox use case 3 without a Wazuh connection</a>, <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a>, <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a></p>
 <table>
 <thead>
 <tr>
@@ -1540,7 +1541,7 @@ I want to perform off-line AD on a SIEM data registered by Wazuh on date YYYY-MM
 <h3>Acceptance criteria</h3>
 <p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a>, <a href="TST.html#TST-010">TST-010 ADBox use case 2 without a Wazuh connection</a>, <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a>, <a href="TST.html#TST-010">TST-010 ADBox use case 2 without a Wazuh connection</a>, <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a>, <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a></p>
 <table>
 <thead>
 <tr>
@@ -1685,7 +1686,7 @@ I want to find anomalies in the network traffic to detect threats not recognized
 <h3>Acceptance criteria</h3>
 <p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-001">LARC-001 ADBox training pipeline flow</a>, <a href="TST.html#TST-013">TST-013 ADBox use case 4 with a Wazuh connection</a>, <a href="TST.html#TST-014">TST-014 ADBox use case 4 without a Wazuh connection</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-001">LARC-001 ADBox training pipeline flow</a>, <a href="TST.html#TST-013">TST-013 ADBox use case 4 with a Wazuh connection</a>, <a href="TST.html#TST-014">TST-014 ADBox use case 4 without a Wazuh connection</a>, <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a></p>
 <table>
 <thead>
 <tr>
@@ -1862,7 +1863,7 @@ I want the prediction of the anomaly detection subsystem to be shipped to the ce
 <h3>Acceptance criteria</h3>
 <p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-018">TST-018 ADBox Create detector data stream</a>, <a href="LARC.html#LARC-013">LARC-013 ADBox RequestResponseHandler</a>, <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-018">TST-018 ADBox Create detector data stream</a>, <a href="LARC.html#LARC-013">LARC-013 ADBox RequestResponseHandler</a>, <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a>, <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a></p>
 <table>
 <thead>
 <tr>
@@ -2132,7 +2133,7 @@ I want to train a base detector using default parameters.</p>
 <h3>Acceptance criteria</h3>
 <p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a>, <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a>, <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a>, <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a></p>
 <table>
 <thead>
 <tr>
@@ -2271,7 +2272,7 @@ I want RADAR to detect suspicious login activity (failed-login bursts and imposs
 <h2>Acceptance criteria</h2>
 <p>Successful validation according to the corresponding test case specification.</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-042">TST-042 RADAR: build suspicious login</a>, <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-042">TST-042 RADAR: build suspicious login</a>, <a href="TST.html#TST-050">TST-050 RADAR: build suspicious login</a>, <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a></p>
 <table>
 <thead>
 <tr>
@@ -2454,7 +2455,7 @@ I want RADAR to detect access attempts from non-whitelisted countries and apply 
 <h2>Acceptance criteria</h2>
 <p>Successful validation according to the corresponding test case specification.</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-043">TST-043 RADAR: build non-whitelist GeoIP detection</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-043">TST-043 RADAR: build non-whitelist GeoIP detection</a>, <a href="TST.html#TST-051">TST-051 RADAR: build non-whitelist GeoIP detection</a>, <a href="TST.html#TST-058">TST-058 RADAR: build non-whitelist GeoIP detection with case creation</a></p>
 <table>
 <thead>
 <tr>
@@ -2500,7 +2501,7 @@ I want RADAR to detect unusual log volume spikes for each endpoint based on its 
 <h2>Acceptance criteria</h2>
 <p>Successful validation according to the corresponding test specification.</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
-<p><em>Child links:</em> <a href="TST.html#TST-044">TST-044 RADAR: build log volume abnormal growth</a>, <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a></p>
+<p><em>Child links:</em> <a href="TST.html#TST-044">TST-044 RADAR: build log volume abnormal growth</a>, <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a>, <a href="TST.html#TST-052">TST-052 RADAR: build log volume abnormal growth</a>, <a href="TST.html#TST-053">TST-053 Run RADAR for log volume abnormal growth</a></p>
 <table>
 <thead>
 <tr>
@@ -2528,6 +2529,56 @@ I want RADAR to detect unusual log volume spikes for each endpoint based on its 
 <tr>
 <td>version</td>
 <td>0.5</td>
+</tr>
+</tbody>
+</table>
+<h1 id="SRS-057">57 Ransomware attack detection and response <small>SRS-057</small></h1>
+<p>As a security engineer,
+I want RADAR to detect ransomware attacks on endpoints through both signature-based patterns and anomalous file system behavior, and then apply the existing risk policy to decide how to react.</p>
+<ol>
+<li>RADAR shall employ a dual-detection approach for ransomware:
+   - Signature-based detection: Monitor for known ransomware indicators including ransom note file creation, suspicious file extensions, and known ransomware process names.
+   - Anomaly-based detection: Detect unusual file system activity patterns per endpoint, including abnormal rates of file modifications, mass file renaming, rapid encryption-like entropy changes, and unusual file access patterns.</li>
+<li>RADAR shall emit a "Ransomware attack detected" alert when either:
+   - Signature-based detector identifies ransomware indicators, OR
+   - RRCF anomaly detector for file system behavior reports an anomaly score above the configured threshold for metrics indicative of ransomware activity (rapid file modifications, entropy changes, extension changes) per endpoint.</li>
+<li>The "Ransomware attack detected" alert shall include: endpoint identity, detection method, detector name/ID, timestamp of detection, anomaly score and confidence, affected file paths.</li>
+<li>For anomaly-based detection, the Wazuh Monitor sends the alert to webhook upon passing the value of risk threshold. For signature-based, the rule should be triggered.</li>
+<li>RADAR shall run the configured active responses for the triggered rule in the form of email alert, case creation, context collection and logging.</li>
+<li>The records of active responses are logged.</li>
+</ol>
+<h2>Rationale</h2>
+<p>Ransomware represents a time-sensitive threats to organizational infrastructure, capable of causing complete operational disruption. A hybrid-detection approach is helpful because signature-based detection enables immediate identification of known ransomware families and their artifacts, while RRCF anomaly-based detection identifies zero-day and polymorphic variants by recognizing the fundamental behavioral patterns inherent to ransomware—mass file modifications, rapid encryption, and abnormal file system traversal. This combination provides comprehensive protection across both known and unknown threat vectors, delivering the earliest possible warning.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to the corresponding test specification.</p>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.7</td>
 </tr>
 </tbody>
 </table>

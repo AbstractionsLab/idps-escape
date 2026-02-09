@@ -14,7 +14,7 @@ ENV MY_ENV=${MY_ENV} \
 
 #ENV user=alab
 ENV user=root
-ENV SIEM_MTAD_GAT_FOLDER=siem-mtad-gat 
+ENV ADBOX_FOLDER=adbox
 
 # Update and install depencencies
 RUN apt update --fix-missing
@@ -31,8 +31,8 @@ ENV PATH="/home/${user}/.local/bin:${PATH}"
 # RUN pip3 install pipenv
 RUN pip3 install poetry=="${POETRY_VERSION}"
 
-WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
-COPY poetry.lock pyproject.toml /home/${user}/${SIEM_MTAD_GAT_FOLDER}/
+WORKDIR /home/${user}/${ADBOX_FOLDER}
+COPY poetry.lock pyproject.toml /home/${user}/${ADBOX_FOLDER}/
 
 # Project initialization
 RUN poetry install 
@@ -40,13 +40,13 @@ RUN poetry install
 # RUN pip3 install torch
 
 # Creating folders, and files for a project
-COPY . /home/${user}/${SIEM_MTAD_GAT_FOLDER}
+COPY . /home/${user}/${ADBOX_FOLDER}
 
 # Install python virtual environment for the project
-WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER} 
+WORKDIR /home/${user}/${ADBOX_FOLDER} 
 
 # Set PYTHONPATH to include the project directory
-ENV PYTHONPATH=/home/${user}/${SIEM_MTAD_GAT_FOLDER}:${PYTHONPATH} 
+ENV PYTHONPATH=/home/${user}/${ADBOX_FOLDER}:${PYTHONPATH} 
 
 # Clean up unnecessary packages
 #USER root

@@ -1,0 +1,43 @@
+# Privilege Escalation Detection Scenario
+# =========================================
+# This scenario monitors for privilege escalation attempts and successful
+# elevation events that may indicate compromise or insider threats.
+#
+# Monitored activities:
+# - sudo/su usage patterns
+# - Permission changes
+# - User/group modifications
+# - Service account activities
+# - Windows privilege escalation events
+
+name: "Privilege Escalation Detection"
+description: "Detect privilege escalation attempts and anomalous elevated access patterns"
+enabled: true
+
+training:
+  lookback_hours: 168  # 7 days
+  
+  numeric_fields:
+    - "rule.level"
+  
+  categorical_fields:
+    - "rule.groups"
+    - "agent.id"
+    - "decoder.name"  # Capture the source of privilege events
+  
+  categorical_top_k: 12
+  bucket_minutes: 15  # Privilege events are less frequent
+  sliding_window: 96   # ~24 hours at 15-min buckets
+  min_samples: 200
+
+# Shipping configuration (optional - enables data streaming to Wazuh)
+shipping:
+  enabled: false  # Set to true to enable data shipping for RADAR integration
+  install_templates: true  # Install base templates on first run
+  scenario_id: "privilege_escalation"  # Custom ID for this scenario
+
+detection:
+  mode: "historical"
+  lookback_minutes: 180
+  threshold: 0.6  # More sensitive for privilege escalation
+  min_consecutive: 1  # Single anomalous window is concerning

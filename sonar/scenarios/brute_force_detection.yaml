@@ -1,0 +1,78 @@
+# Brute Force & Credential Attack Detection Scenario
+# =====================================================
+# This scenario detects authentication-based attacks including:
+# - Brute force login attempts
+# - Credential stuffing
+# - Password spraying
+# - Successful login after multiple failures (account compromise indicator)
+#
+# Features used:
+# - rule.level: Severity indicator (brute force alerts have higher levels)
+# - rule.groups: Authentication event types (categorical)
+# - agent.id: Target host distribution (categorical)
+# - derived: failed_login_count, success_after_failure ratio
+#
+# Attack patterns detected:
+# 1. High volume of failed logins in short time windows
+# 2. Unusual distribution across agents (lateral targeting)
+# 3. Sudden success after sustained failure (credential compromise)
+
+name: "Brute Force Detection"
+description: "Detect brute force and credential-based attacks using authentication patterns"
+enabled: true
+
+training:
+  # Training window - use at least 7 days for stable baseline
+  lookback_hours: 168  # 7 days
+  
+  # Numeric fields to extract from alerts
+  numeric_fields:
+    - "rule.level"
+  
+  # Categorical fields for one-hot encoding
+  # These capture the "what" and "where" of authentication events
+  categorical_fields:
+    - "rule.groups"   # Event types: authentication_success, failed_login, brute_force
+    - "agent.id"      # Target hosts - detects lateral targeting
+  
+  # Limit categories to prevent feature explosion
+  # Top-k categories kept, rest grouped into __other
+  categorical_top_k: 15
+  
+  # Time bucket size for aggregation
+  # 5 minutes balances granularity vs noise for auth events
+  bucket_minutes: 5
+  
+  # Sliding window size for MVAD model
+  # 200 buckets = ~16.7 hours of context at 5-min buckets
+  sliding_window: 200
+  
+  # Minimum samples required to train
+  # NOTE: This field is currently ignored by the training engine
+  min_samples: 500
+
+# Shipping configuration (optional - enables data streaming to Wazuh)
+shipping:
+  enabled: false  # Set to true to enable data shipping for RADAR integration
+  install_templates: true  # Install base templates on first run
+  scenario_id: "brute_force"  # Custom ID for this scenario
+
+detection:
+  # Detection mode: "historical" for batch, "realtime" for continuous monitoring
+  # NOTE: For fresh Wazuh installations, use "historical" mode initially
+  mode: "historical"
+  
+  # How far back to look for detection
+  # IMPORTANT: Must have enough data for model (minimum 200 time points)
+  # Formula: lookback_minutes / bucket_minutes ≥ 200
+  # With bucket_minutes=5: need lookback_minutes ≥ 1000 (16.7 hours)
+  # For fresh installations with limited data, this may skip detection until
+  # enough alerts accumulate. Monitor logs for "Insufficient data" warnings.
+  lookback_minutes: 60
+  
+  # Anomaly score threshold (0.0 - 1.0)
+  # Lower = more sensitive, higher = fewer false positives
+  threshold: 0.7
+  
+  # Minimum consecutive anomalous buckets to trigger alert
+  min_consecutive: 2

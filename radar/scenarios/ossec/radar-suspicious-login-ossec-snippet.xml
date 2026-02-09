@@ -1,0 +1,11 @@
+
+  <command>
+    <name>radar_ar_suspicious_login</name>
+    <executable>radar_ar.py</executable>
+  </command>
+  <active-response>
+    <disabled>no</disabled>
+    <command>radar_ar_suspicious_login</command>
+    <location>server</location>
+    <rules_id>210013,210012,210020,210021</rules_id>
+  </active-response>

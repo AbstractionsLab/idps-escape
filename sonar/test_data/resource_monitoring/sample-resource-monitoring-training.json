@@ -1,0 +1,303 @@
+{
+  "took": 526,
+  "timed_out": false,
+  "_shards": {
+    "total": 84,
+    "successful": 84,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 10000,
+      "relation": "gte"
+    },
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "wazuh-alerts-4.x-2024.05.01",
+        "_id": "snhzMY8BBMsBYwZ15B5y",
+        "_score": null,
+        "_source": {
+          "predecoder": {
+            "hostname": "vm-intern-cyfort-ids-escape",
+            "program_name": "load_average_check",
+            "timestamp": "May  1 02:00:20"
+          },
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-05-01T00:00:20.851Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "5mins_loadAverage": "0.12",
+            "1min_loadAverage": "0.11",
+            "15mins_loadAverage": "0.05"
+          },
+          "rule": {
+            "firedtimes": 1,
+            "level": 3,
+            "id": "100058"
+          },
+          "location": "load_average_metrics",
+          "decoder": {
+            "parent": "load_average_check",
+            "name": "load_average_check"
+          },
+          "id": "1714521620.0",
+          "timestamp": "2024-05-01T00:00:20.851+0000"
+        },
+        "sort": [
+          1714521620851
+        ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.05.01",
+        "_id": "s3hzMY8BBMsBYwZ15B5y",
+        "_score": null,
+        "_source": {
+          "predecoder": {
+            "hostname": "vm-intern-cyfort-ids-escape",
+            "program_name": "memory_check",
+            "timestamp": "May  1 02:00:20"
+          },
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-05-01T00:00:20.895Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "memory_available_bytes": "5379813376",
+            "memory_used_bytes": "2550063104"
+          },
+          "rule": {
+            "firedtimes": 1,
+            "level": 3,
+            "id": "100059"
+          },
+          "location": "memory_metrics",
+          "decoder": {
+            "parent": "memory_check",
+            "name": "memory_check"
+          },
+          "id": "1714521620.358",
+          "timestamp": "2024-05-01T00:00:20.895+0000"
+        },
+        "sort": [
+          1714521620895
+        ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.05.01",
+        "_id": "tHhzMY8BBMsBYwZ15B5y",
+        "_score": null,
+        "_source": {
+          "predecoder": {
+            "hostname": "vm-intern-cyfort-ids-escape",
+            "program_name": "general_health_check",
+            "timestamp": "May  1 02:00:20"
+          },
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-05-01T00:00:20.912Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "disk_usage_%": "61",
+            "cpu_usage_%": "6.2",
+            "memory_usage_%": "30.85"
+          },
+          "rule": {
+            "firedtimes": 1,
+            "level": 3,
+            "id": "100054"
+          },
+          "location": "general_health_metrics",
+          "decoder": {
+            "parent": "general_health_check",
+            "name": "general_health_check"
+          },
+          "id": "1714521620.692",
+          "timestamp": "2024-05-01T00:00:20.912+0000"
+        },
+        "sort": [
+          1714521620912
+        ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.05.01",
+        "_id": "tXhzMY8BBMsBYwZ15B5y",
+        "_score": null,
+        "_source": {
+          "predecoder": {
+            "hostname": "vm-intern-cyfort-ids-escape",
+            "program_name": "disk_check",
+            "timestamp": "May  1 02:00:22"
+          },
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-05-01T00:00:22.861Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "disk_free_bytes": "19813478400",
+            "disk_used_bytes": "30003970048"
+          },
+          "rule": {
+            "firedtimes": 1,
+            "level": 3,
+            "id": "100060"
+          },
+          "location": "disk_metrics",
+          "decoder": {
+            "parent": "disk_check",
+            "name": "disk_check"
+          },
+          "id": "1714521622.1051",
+          "timestamp": "2024-05-01T00:00:22.861+0000"
+        },
+        "sort": [
+          1714521622861
+        ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.05.01",
+        "_id": "tnh0MY8BBMsBYwZ1RR5s",
+        "_score": null,
+        "_source": {
+          "predecoder": {
+            "hostname": "vm-intern-cyfort-ids-escape",
+            "program_name": "load_average_check",
+            "timestamp": "May  1 02:00:50"
+          },
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-05-01T00:00:50.895Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "5mins_loadAverage": "0.11",
+            "1min_loadAverage": "0.06",
+            "15mins_loadAverage": "0.04"
+          },
+          "rule": {
+            "firedtimes": 2,
+            "level": 3,
+            "id": "100058"
+          },
+          "location": "load_average_metrics",
+          "decoder": {
+            "parent": "load_average_check",
+            "name": "load_average_check"
+          },
+          "id": "1714521650.1373",
+          "timestamp": "2024-05-01T00:00:50.895+0000"
+        },
+        "sort": [
+          1714521650895
+        ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.05.01",
+        "_id": "t3h0MY8BBMsBYwZ1RR5s",
+        "_score": null,
+        "_source": {
+          "predecoder": {
+            "hostname": "vm-intern-cyfort-ids-escape",
+            "program_name": "memory_check",
+            "timestamp": "May  1 02:00:50"
+          },
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-05-01T00:00:50.935Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "memory_available_bytes": "5380157440",
+            "memory_used_bytes": "2549719040"
+          },
+          "rule": {
+            "firedtimes": 2,
+            "level": 3,
+            "id": "100059"
+          },
+          "location": "memory_metrics",
+          "decoder": {
+            "parent": "memory_check",
+            "name": "memory_check"
+          },
+          "id": "1714521650.1734",
+          "timestamp": "2024-05-01T00:00:50.935+0000"
+        },
+        "sort": [
+          1714521650935
+        ]
+      },
+      {
+        "_index": "wazuh-alerts-4.x-2024.05.01",
+        "_id": "uHh0MY8BBMsBYwZ1RR5s",
+        "_score": null,
+        "_source": {
+          "predecoder": {
+            "hostname": "vm-intern-cyfort-ids-escape",
+            "program_name": "general_health_check",
+            "timestamp": "May  1 02:00:51"
+          },
+          "agent": {
+            "ip": "172.17.0.1",
+            "name": "agent-on-host-machine",
+            "id": "014"
+          },
+          "@timestamp": "2024-05-01T00:00:51.062Z",
+          "manager": {
+            "name": "wazuh.manager"
+          },
+          "data": {
+            "disk_usage_%": "61",
+            "cpu_usage_%": "6.1",
+            "memory_usage_%": "30.85"
+          },
+          "rule": {
+            "firedtimes": 2,
+            "level": 3,
+            "id": "100054"
+          },
+          "location": "general_health_metrics",
+          "decoder": {
+            "parent": "general_health_check",
+            "name": "general_health_check"
+          },
+          "id": "1714521651.2069",
+          "timestamp": "2024-05-01T00:00:51.062+0000"
+        },
+        "sort": [
+          1714521651062
+        ]
+      }
+    ]
+  }
+}

@@ -13,7 +13,7 @@ ENV MY_ENV=${MY_ENV} \
   POETRY_VERSION=1.5.0
 
 ENV user=alab
-ENV SIEM_MTAD_GAT_FOLDER=soar
+ENV SOAR_FOLDER=soar
 
 # Update and install depencencies
 RUN apt update --fix-missing
@@ -34,17 +34,17 @@ USER ${user}
 # RUN pip3 install pipenv
 RUN pip3 install poetry=="${POETRY_VERSION}"
 
-WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
-COPY --chown=${user}:${user} poetry.lock pyproject.toml /home/${user}/${SIEM_MTAD_GAT_FOLDER}/
+WORKDIR /home/${user}/${SOAR_FOLDER}
+COPY --chown=${user}:${user} poetry.lock pyproject.toml /home/${user}/${SOAR_FOLDER}/
 
 # Project initialization
-RUN poetry lock && poetry install --only radar
+RUN poetry install --only docs && poetry lock
 
 # Creating folders, and files for a project
-COPY . /home/${user}/${SIEM_MTAD_GAT_FOLDER}
+COPY . /home/${user}/${SOAR_FOLDER}
 
 # Install python virtual environment for the project
-WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
+WORKDIR /home/${user}/${SOAR_FOLDER}
 # RUN pipenv install
 
 # Install Doorstop

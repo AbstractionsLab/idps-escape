@@ -13,7 +13,7 @@ ENV MY_ENV=${MY_ENV} \
   POETRY_VERSION=1.5.0
 
 ENV user=alab
-ENV SIEM_MTAD_GAT_FOLDER=siem-mtad-gat
+ENV RADAR_FOLDAR=soar-radar
 
 # Update and install depencencies + Create a non-root user
 RUN apt update --fix-missing \
@@ -35,15 +35,15 @@ ENV PATH="/home/${user}/.local/bin:${PATH}"
 # Copy the files and install the python environment as user alab 
 USER ${user} 
 
-WORKDIR /home/${user}/${SIEM_MTAD_GAT_FOLDER}
+WORKDIR /home/${user}/${RADAR_FOLDAR}
 RUN pwd
-COPY --chown=${user}:${user} poetry.lock pyproject.toml /home/${user}/${SIEM_MTAD_GAT_FOLDER}/
+COPY --chown=${user}:${user} poetry.lock pyproject.toml /home/${user}/${RADAR_FOLDAR}/
 
 # Project initialization
 RUN poetry install --only radar
 
 # Creating folders, and files for a project
-COPY . /home/${user}/${SIEM_MTAD_GAT_FOLDER}
+COPY . /home/${user}/${RADAR_FOLDAR}
 
 # Set the container starting point, running the project as the user
 CMD ["poetry", "shell"]

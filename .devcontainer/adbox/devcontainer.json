@@ -42,8 +42,8 @@
         }
 	},
 
-	"workspaceMount": "source=${localWorkspaceFolder},target=/home/alab/siem-mtad-gat,type=bind",
-	"workspaceFolder": "/home/alab/siem-mtad-gat"
+	"workspaceMount": "source=${localWorkspaceFolder},target=/home/alab/soar,type=bind",
+	"workspaceFolder": "/home/alab/soar"
 
 	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "devcontainer"

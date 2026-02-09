@@ -1,0 +1,41 @@
+# SONAR Default Configuration
+# SIEM-Oriented Neural Anomaly Recognition
+# This file provides default values for infrastructure and system-level parameters.
+# Training and detection parameters should be defined in scenario YAML files.
+# You can override these by creating your own config file and passing it via --config flag.
+
+# Wazuh Indexer (OpenSearch) connection settings
+wazuh:
+  base_url: "https://localhost:9200"
+  username: "admin"
+  password: "SecretPassword"
+  verify_ssl: false  # Set to CA bundle path in production
+  alerts_index_pattern: "wazuh-alerts-*"
+  anomalies_index: "wazuh-anomalies-mvad"
+
+# Multivariate Anomaly Detector (MVAD) model configuration defaults
+# These can be overridden in scenario files
+mvad:
+  sliding_window: 200
+  device: "cpu"  # Use "cuda" for GPU acceleration if available
+  extra_params: {}
+
+# Feature extraction defaults
+# These can be overridden in scenario files
+features:
+  numeric_fields:
+    - "rule.level"
+  bucket_minutes: 5
+  categorical_fields: []
+  categorical_top_k: 10
+  derived_features: true
+
+# Debug/offline mode configuration (for testing without Wazuh instance)
+debug:
+  enabled: false
+  data_dir: "./test_data/synthetic_alerts"  # Relative to sonar/ directory
+  training_data_file: "normal_baseline.json"
+  detection_data_file: "with_anomalies.json"
+
+# Path where trained model will be saved/loaded
+model_path: "./model/mvad_model.pkl"

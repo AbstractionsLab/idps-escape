@@ -1,3 +1,73 @@
+# 0.7 (2026-02-09)
+
+## Added
+
+- **SONAR (SIEM-Oriented Neural Anomaly Recognition)**: Production-grade multivariate anomaly detection subsystem for Wazuh, a redesign and rewrite of ADBox
+  - Powered by Microsoft's anomaly detection library implementing MTAD-GAT (time-series-anomaly-detector)
+  - Complete SONAR subsystem with dedicated modules including CLI, engine, features, pipeline, and configuration modules
+  - YAML-based scenario configuration system for repeatable detection workflows
+  - CLI with `train`, `detect`, `scenario`, and `check` commands
+  - Debug mode for offline testing with synthetic/historical JSON data without requiring Wazuh infrastructure
+  - Support for real-time, batch, and historical detection modes
+  - Categorical feature support with one-hot encoding (top-k categories per field)
+  - Data shipping module (`sonar/shipper/`) for streaming anomalies to Wazuh data streams (RADAR integration)
+  - Synthetic alert generation for sparse data scenarios with configurable modes (constant, random, copy)
+  - Pre-built scenario templates: brute force detection, lateral movement, privilege escalation, Linux resource monitoring
+  - Comprehensive test data including 12,000+ normal baseline alerts and attack scenario datasets
+  - Full test suite in `tests/sonartests/` with test modules covering CLI, engine, features, scenarios, and integration
+  - Complete documentation suite in `docs/manual/sonar_docs/`: architecture, setup, scenario guide, data shipping, troubleshooting, UML diagrams
+- **RADAR lightweight risk engine** for real-time risk computation and tiered automated response
+  - Mathematical formalization of risk calculation combining AD signals, signature-based detection, and CTI
+  - Normalized risk scores (0-1) with configurable tier boundaries
+  - Three-tier response system: Tier 1 (notify), Tier 2 (notify + remediate + case creation), Tier 3 (notify + isolate)
+  - Time-boxed IOC extraction and context collection within configurable time windows
+  - Scenario-to-rule mapping system for automated scenario identification
+  - Consolidated active response script (`radar/scenarios/active_responses/radar_ar.py`) replacing scenario-specific implementations
+  - Risk calculation documentation and specifications in `docs/manual/radar_docs/radar-risk-math.md`
+- **FlowIntel integration** for automatic risk-oriented case creation upon anomaly detection
+  - Initial minimal version of PyFlowintel as a standalone, self-contained piece of code in `radar_ar.py`
+  - API clients for RADAR to communicate with FlowIntel and Wazuh
+  - Note: Temporary implementation - future releases will migrate to DECIPHER REST API; initial implementation in RADAR has been further developed as part of project CyFORT and released as [PyFlowintel](https://github.com/AbstractionsLab/PyFlowintel)
+- **SATRAP-DL DECIPHER CTI analysis integration** for real-time CTI analysis and incident case handling (stub/mock for now in `radar_ar.py`, integration planned for next update)
+- **RADAR documentation**: New comprehensive guides in `docs/manual/radar_docs/`
+  - `radar-architecture.md`: System architecture and component diagrams
+  - `radar-active-response.md`: Active response logic flows and tier-based actions
+  - `radar-risk-math.md`: Mathematical specification of risk engine
+  - Scenario-specific guides: GeoIP detection, log volume, suspicious login
+- **Dev container reorganization**: Separated configurations for different workflows
+  - `.devcontainer/devcontainer.json`: Default lightweight SONAR-focused container
+  - `.devcontainer/adbox/devcontainer.json`: ADBox legacy development environment
+  - `.devcontainer/radar/devcontainer.json`: RADAR development environment
+- Added SRS for ransomware detection scenario
+- RADAR configuration in `radar/scenarios/active_responses/ar.yaml`: Risk-based active response configuration
+- RADAR responses as lock user and terminate service oriented for Linux OS
+- Added software validation test case `TST-049`-`TST-059` for `v0.7`
+- Test results from `TRB-016` to `TRB-023` for `v0.7` after software validation test case executions
+- Technical documentations for RADAR parts in `/docs/manual/radar_docs/`
+
+## Modified
+
+- **ADBox maintenance status**: Designated as legacy AD engine (MTAD-GAT) for research purposes only
+  - New production deployments should use SONAR
+  - ADBox retained for research continuity and algorithm comparison
+  - Test files reorganized into `tests/adboxtests/` subdirectory
+- **RADAR architecture**: Refactored design and restructured repository organization
+- **Ansible automation**: Switched Wazuh manager customizations to persistent volume-mapped host paths
+- **Active responses**: Consolidated multiple scenario-specific scripts into single generalized `radar_ar.py` implementation
+- **Agent settings**: Moved agent-side configuration from per-agent tasks to centralized manager deployment using Wazuh `agent_config`
+- **Wazuh version**: Upgraded to 4.14.1
+- **stop-radar.sh**: Extended to support remote deployment options
+- **Risk-based active response**: Implemented with FlowIntel case creation and tiered response logic
+- **Project structure**: Renamed `soar-radar/` folder to `radar/` for consistency
+- **pyproject.toml**: Refactored dependency groups for SONAR, ADBox, and RADAR subsystems
+
+## Fixed
+
+- **MVAD predict() TypeError**: Handle library signature changes by trying `context=` parameter first, then falling back to positional arguments
+- **DataLoader validation**: Pre-validate training sample counts to prevent `num_samples=0` errors with informative error messages
+- **SONAR configuration**: Fixed config file handling and default arguments
+- **Dev container**: Fixed IDPS-ESCAPE dev container after ADBox folder refactoring
+
 # 0.6 (2025-12-18)
 
 ## Added

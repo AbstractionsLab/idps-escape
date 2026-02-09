@@ -1,0 +1,28 @@
+#### decoders (volume-mapped) ####
+- name: decoders | Ensure host decoders dir exists
+  file:
+    path: "{{ _host_decoders_dir }}"
+    state: directory
+
+- name: decoders | Copy scenario decoders to host volume ({{ scenario_name }})
+  become: "{{ _mgr_mode == 'docker_remote' }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ _host_decoders_dir }}/{{ item | basename }}"
+    mode: "0644"
+  with_fileglob:
+    - "{{ decoders_src_dir }}/*.xml"
+  register: _decoders_copied
+  changed_when: _decoders_copied is changed
+
+- name: decoders | Normalize decoder file ownership/mode in container
+  when: _decoders_copied is changed
+  ansible.builtin.shell: |
+    docker exec "{{ _mgr_container }}" bash -lc '
+      chown root:wazuh /var/ossec/etc/decoders/*.xml 2>/dev/null || true
+      chmod 0640 /var/ossec/etc/decoders/*.xml 2>/dev/null || true
+    '
+  args:
+    executable: /bin/bash
+  register: _decoders_permfix
+  changed_when: false

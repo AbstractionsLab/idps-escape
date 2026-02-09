@@ -2,12 +2,12 @@
 
 # Define variables
 USER=root
-CONTAINER_NAME=siem-mtad-gat-container
-IMAGE_NAME=siem-mtad-gat:v0.3.0
+CONTAINER_NAME=adbox-container
+IMAGE_NAME=adbox:v0.3.0
 
 # Define volume mounts
-ASSETS_VOLUME=$(pwd)/siem_mtad_gat/assets:/home/$USER/siem-mtad-gat/siem_mtad_gat/assets
-LOGS_VOLUME=$(pwd)/siem_mtad_gat/logs:/home/$USER/siem-mtad-gat/siem_mtad_gat/logs
+ASSETS_VOLUME=$(pwd)/adbox/assets:/home/$USER/adbox/assets
+LOGS_VOLUME=$(pwd)/adbox/logs:/home/$USER/adbox/logs
 
 # Run the Docker container with the specified arguments
 docker run -it --rm --name $CONTAINER_NAME \

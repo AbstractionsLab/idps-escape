@@ -1,40 +1,41 @@
 [tool.poetry]
-name = "siem-mtad-gat"
-version = "0.6"
-description = "This is the main repository for IDPS-ESCAPE, along with ADBox and RADAR, two key subsystems of the former."
+name = "idps-escape"
+version = "0.7"
+description = "IDPS-ESCAPE suite of tools and its subsystems SONAR and RADAR, all part of project CyFORT."
 authors = ["Arash Atashpendar <arash@abstractionslab.lu>", "Agnese Gini <agnese@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>", "Gulsezim Duisen <duisen@itrust.lu>", "Itzel Vazquez Sandoval <itzel@abstractionslab.lu>"]
 readme = "README.md"
- 
 
+[tool.poetry.scripts]
+sonar = "sonar.cli:main"
+adbox = "adbox.ad_driver.driver:main"
 
 [tool.poetry.dependencies]
 python = "3.10.12" 
 
 [tool.poetry.group.adbox.dependencies]
+# ADBox v1 (original - maintained)
 opensearch-sdk-py = {git = "https://github.com/opensearch-project/opensearch-sdk-py.git", rev = "fb412ad3fe4c58d990ab0c84b9cc7972870b707b" }
 opensearch-py = "3.0.0"
-
-# Added these for deployment 
 torch = "2.3.0"
 ipykernel = "^6.29.4"
-torchinfo = "^1.8.0" 
-
+torchinfo = "^1.8.0"
 numpy = "1.26.4"
 pandas = "2.2.2"
 matplotlib = "3.8.4"
 scikit-learn = "1.4.2"
-
-
 black = "24.4.2"
 pre-commit = "3.7.0"
 tqdm = "4.66.4"
 tensorboard = "2.16.2"
 more-itertools = "8.10.0"
-
-
 tabulate = "^0.9.0"
 plotly = "^5.23.0"
 nbformat = "^5.10.4"
+
+[tool.poetry.group.sonar.dependencies]
+time-series-anomaly-detector = "0.4.0"
+pyyaml = "^6.0"
+requests = "^2.31"
 
 [tool.poetry.group.radar.dependencies]
 ansible-core = ">=2.16,<2.17"
@@ -47,6 +48,13 @@ selenium = "4.34.2"
 scapy = "2.6.1"
 netifaces = "0.11.0"
 faker = "37.4.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4"
+pytest-cov = "^4.1"
+pytest-mock = "^3.12"
+coverage = "^7.3"
+mock = "^5.1"
 
 
 [tool.isort]
@@ -76,8 +84,4 @@ nbformat = "^5.10.4"
 
 [build-system]
 requires = ["poetry-core>=1.5.0"]
-build-backend = "poetry.core.masonry.api" 
-
-
-[tool.poetry.scripts]
-adbox = "siem_mtad_gat.ad_driver.driver:main"
+build-backend = "poetry.core.masonry.api"

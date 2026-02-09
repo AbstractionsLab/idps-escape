@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+echo "SSH_AUTH_SOCK=/tmp/fake-ssh-auth.sock; export SSH_AUTH_SOCK;"
+echo "SSH_AGENT_PID=12345; export SSH_AGENT_PID;"
+echo "echo Agent pid 12345;"
+exit 0

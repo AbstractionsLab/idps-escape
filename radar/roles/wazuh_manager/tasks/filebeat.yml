@@ -1,0 +1,149 @@
+- block:
+    - name: filebeat | Upload RADAR index template into OpenSearch
+      uri:
+        url: "{{ indexer_host }}/_index_template/radar-log-volume"
+        method: PUT
+        user: "{{ os_user }}"
+        password: "{{ os_pass }}"
+        force_basic_auth: yes
+        validate_certs: no
+        headers:
+          Content-Type: "application/json"
+        body: "{{ lookup('file', radar_template_src) }}"
+        body_format: json
+      delegate_to: localhost
+      become: false
+      register: radar_template_apply
+      retries: 3
+      delay: 90
+      changed_when: radar_template_apply.status in [200, 201]
+
+    - name: filebeat | Pull wazuh archives pipeline from manager
+      shell: |
+        set -e
+        docker cp "{{ _mgr_container }}:/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json" \
+            "pipeline.wazuh.archives.orig.json"
+        cp pipeline.wazuh.archives.orig.json pipeline.wazuh.archives.backup.json
+      args:
+        executable: /bin/bash
+      register: _archives_pipeline_pull
+      changed_when: false
+      failed_when: _archives_pipeline_pull.rc != 0
+
+    - name: filebeat | Load RADAR log-volume date_index_name snippet
+      delegate_to: localhost
+      become: false
+      set_fact:
+        radar_log_volume_dateindex_snippet: "{{ lookup('file', radar_pipeline_snippet_src) | trim }}"
+
+    - name: filebeat | Inject RADAR date_index_name logic into archives pipeline
+      replace:
+        path: pipeline.wazuh.archives.orig.json
+        regexp: '(?s)\{\s*"date_index_name"\s*:\s*\{.*?"index_name_prefix"\s*:\s*"\{\{fields.index_prefix\}\}".*?"ignore_failure"\s*:\s*(true|false)\s*\}\s*\},'
+        replace: "{{ radar_log_volume_dateindex_snippet }}"
+      register: _archives_pipeline_patched
+
+    - name: filebeat | Push patched archives pipeline into manager container
+      when: _archives_pipeline_patched is changed
+      shell: |
+        docker cp "pipeline.wazuh.archives.orig.json" \
+            "{{ _mgr_container }}:/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json"
+      args:
+        executable: /bin/bash
+      register: _archives_pipeline_push
+      changed_when: _archives_pipeline_push.rc == 0
+      failed_when: _archives_pipeline_push.rc != 0
+
+    - name: filebeat | Run filebeat setup --pipelines --modules wazuh
+      shell: |
+        docker exec "{{ _mgr_container }}" bash -lc \
+          'filebeat setup --pipelines --modules wazuh >/tmp/filebeat-setup-radar.out 2>&1 || true; cat /tmp/filebeat-setup-radar.out'
+      args:
+        executable: /bin/bash
+      register: _filebeat_setup
+      changed_when: _filebeat_setup.stdout is search("Created|created|Updated pipeline")
+      failed_when: false
+
+    - name: filebeat | Cleanup temporary pipeline files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - pipeline.wazuh.archives.orig.json
+        - pipeline.wazuh.archives.backup.json
+      ignore_errors: true
+
+  when: scenario_name == 'log_volume'
+
+- name: filebeat | Stat host filebeat.yml
+  become: true
+  stat:
+    path: "{{ _host_filebeat_yml }}"
+  register: _filebeat_host_stat
+  changed_when: false
+
+- name: filebeat | Try to set archives.enabled to true (only if host file exists)
+  vars:
+    fbpath: "{{ _host_filebeat_yml }}"
+  block:
+    - name: filebeat | Set archives enabled true if an enabled line exists under archives (safe replace)
+      become: true
+      ansible.builtin.replace:
+        path: "{{ fbpath }}"
+        regexp: '(^[ \t]*enabled:[ \t]*).*$'
+        replace: '\1true'
+        backup: yes
+      register: _fb_replace_enabled
+      failed_when: false
+
+    - name: filebeat | ensure var.paths is set if var.paths already present under archives (no append)
+      become: true
+      ansible.builtin.replace:
+        path: "{{ fbpath }}"
+        regexp: '(archives:[\s\S]*?var\.paths:[\s\S]*?)(-.*(?:\n|$))'
+        replace: |
+          archives:
+            enabled: true
+            var.paths:
+              - /var/ossec/logs/archives/archives.json
+        backup: no
+      register: _fb_replace_block
+      failed_when: false
+  when: _filebeat_host_stat.stat.exists
+
+- name: filebeat | Debug - what changed in filebeat replacements
+  debug:
+    msg:
+      - "fb_replace_enabled.changed: {{ _fb_replace_enabled.changed | default(false) }}"
+      - "fb_replace_block.changed: {{ _fb_replace_block.changed | default(false) }}"
+  when: _filebeat_host_stat.stat.exists
+
+- name: filebeat | Normalize filebeat.yml ownership/mode (in container)
+  when:
+    - _filebeat_host_stat.stat.exists
+    - (_fb_replace_enabled.changed | default(false)) or (_fb_replace_block.changed | default(false))
+  shell: |
+    docker exec "{{ _mgr_container }}" bash -lc '
+      f="/etc/filebeat/filebeat.yml"
+      if [ -f "$f" ]; then
+        chown root:root "$f" || true
+        chmod 0644 "$f" || true
+      fi
+    '
+  args:
+    executable: /bin/bash
+  register: _fb_perm
+  changed_when: false
+  failed_when: false
+
+- name: filebeat | Restart manager container if we changed filebeat config/pipeline
+  shell: |
+    docker restart "{{ _mgr_container }}" >/dev/null && echo RESTARTED || echo NOCHANGE
+  args:
+    executable: /bin/bash
+  register: _container_restart
+  changed_when: "'RESTARTED' in _container_restart.stdout"
+  when: >
+    (_archives_pipeline_patched is defined and _archives_pipeline_patched is changed) or
+    (_fb_replace_enabled is defined and _fb_replace_enabled.changed | default(false)) or
+    (_fb_replace_block is defined and _fb_replace_block.changed | default(false))

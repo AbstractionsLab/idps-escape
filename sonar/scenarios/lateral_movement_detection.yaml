@@ -1,0 +1,44 @@
+# Lateral Movement Detection Scenario
+# =====================================
+# This scenario detects potential lateral movement within the network by
+# monitoring authentication patterns across multiple hosts and identifying
+# unusual access patterns that may indicate an attacker moving through
+# the infrastructure.
+#
+# Attack patterns detected:
+# 1. Unusual agent/host access patterns (new hosts being accessed)
+# 2. Rapid authentication across multiple hosts
+# 3. Off-hours authentication activity
+# 4. Geographic anomalies (if GeoIP data available)
+
+name: "Lateral Movement Detection"
+description: "Detect lateral movement via authentication pattern analysis across hosts"
+enabled: true
+
+training:
+  lookback_hours: 336  # 14 days for better baseline
+  
+  numeric_fields:
+    - "rule.level"
+  
+  categorical_fields:
+    - "rule.groups"
+    - "agent.id"
+    - "agent.name"
+  
+  categorical_top_k: 20
+  bucket_minutes: 10  # Larger buckets for movement patterns
+  sliding_window: 144  # ~24 hours at 10-min buckets
+  min_samples: 300
+
+# Shipping configuration (optional - enables data streaming to Wazuh)
+shipping:
+  enabled: false  # Set to true to enable data shipping for RADAR integration
+  install_templates: true  # Install base templates on first run
+  scenario_id: "lateral_movement"  # Custom ID for this scenario
+
+detection:
+  mode: "historical"
+  lookback_minutes: 120
+  threshold: 0.65
+  min_consecutive: 3

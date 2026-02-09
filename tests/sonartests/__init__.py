@@ -1,0 +1,3 @@
+"""
+SONAR test suite.
+"""

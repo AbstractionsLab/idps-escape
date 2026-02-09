@@ -1,0 +1,103 @@
+# Linux Resource Utilization Monitoring Scenario
+# ================================================
+# This scenario detects anomalous system resource usage patterns including:
+# - Unusual CPU utilization spikes
+# - Abnormal memory consumption
+# - Resource exhaustion attacks
+# - Cryptocurrency mining activity
+# - Fork bombs and resource abuse
+#
+# Features used:
+# - data.cpu_usage_%: CPU utilization percentage
+# - data.memory_usage_%: Memory utilization percentage
+# - rule.level: Alert severity
+# - agent.name: System hostname (categorical)
+# - derived: Resource usage trends and correlations
+#
+# Attack patterns detected:
+# 1. Sustained high CPU usage (mining, DoS)
+# 2. Memory leaks or sudden memory spikes
+# 3. Coordinated resource usage across multiple hosts
+# 4. Resource exhaustion leading to system instability
+
+name: "Linux Resource Monitoring"
+description: "Detect anomalous system resource utilization patterns indicative of attacks or misconfigurations"
+enabled: true
+
+model_name: "linux_resource_monitoring_20260112_230114"
+
+training:
+  # Training window - use 24 hours for test data
+  # In production, use 7+ days (168 hours)
+  lookback_hours: 24  # Matches test data duration
+  
+  # Numeric fields to extract from alerts
+  # These represent actual resource metrics
+  numeric_fields:
+    - "data.cpu_usage_%"
+    - "data.memory_usage_%"
+    - "rule.level"
+  
+  # Categorical fields for one-hot encoding
+  # Capture which systems are affected
+  categorical_fields:
+    - "agent.name"      # Hostname - detects per-host anomalies
+    - "rule.groups"     # Alert categories
+  
+  # Limit categories to prevent feature explosion
+  # Top-k hosts monitored, rest grouped into __other
+  categorical_top_k: 20
+  
+  # Time bucket size for aggregation
+  # 1 minute for fine-grained resource monitoring
+  bucket_minutes: 1
+  
+  # Sliding window size for MVAD model
+  # 300 buckets = 5 hours of context at 1-min buckets
+  # Captures both short-term spikes and gradual trends
+  sliding_window: 300
+  
+  # Enable derived features for enhanced detection
+  derived_features: true
+  
+  # Training parameters
+  device: "cpu"  # Use "cuda" if GPU available
+  fill_with_synthetic: false
+  
+  # Extra MVAD parameters
+  extra_params:
+    learning_rate: 0.001
+    batch_size: 32
+
+# Shipping configuration (optional - enables data streaming to Wazuh)
+shipping:
+  enabled: false  # Set to true to enable data shipping for RADAR integration
+  install_templates: true  # Install base templates on first run
+  scenario_id: "resource_monitoring"  # Custom ID for this scenario
+
+# Debug configuration (for testing without Wazuh)
+debug:
+  enabled: false  # Set to true or use --debug CLI flag
+  data_dir: "sonar/test_data/resource_monitoring"
+  training_data_file: "resource_monitoring_training-2.json"
+  detection_data_file: "resource_monitoring_detection.json"
+
+detection:
+  # Detection mode: "historical" for batch analysis
+  mode: "historical"
+  
+  # How far back to look for detection
+  # 30 minutes provides recent context
+  lookback_minutes: 30
+  
+  # Anomaly score threshold (0.0 - 1.0)
+  # 0.75 balances sensitivity for resource anomalies
+  threshold: 0.75
+  
+  # Minimum consecutive anomalous buckets to trigger alert
+  # 3 consecutive 1-min buckets = sustained anomaly
+  min_consecutive: 3
+  
+  # Polling interval for streaming mode (seconds)
+  polling_interval_seconds: 60
+

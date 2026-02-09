@@ -37,9 +37,20 @@
 <li><a href="#TRB-010">2.3 TCER: RADAR build non-whitelist GeoIP</a></li>
 <li><a href="#TRB-011">2.4 TCER: RADAR build log volume growth</a></li>
 <li><a href="#TRB-012">2.5 TCER: Add log volume growth anomaly detector</a></li>
-<li><a href="#TRB-013">2.6 TCER: Validate RADAR suspicious login detection</a></li>
-<li><a href="#TRB-014">2.7 TCER: Validate RADAR non-whitelist GeoIP detection</a></li>
-<li><a href="#TRB-015">2.8 TCER: Validate RADAR log volume growth anomaly detector</a></li>
+<li><a href="#TRB-013">2.6 TCER: RADAR suspicious login detection</a></li>
+<li><a href="#TRB-014">2.7 TCER: RADAR non-whitelist GeoIP detection</a></li>
+<li><a href="#TRB-015">2.8 TCER: RADAR log volume growth anomaly detector</a></li>
+<li><a href="#TRB-016">2.9 TCER: Setup RADAR foundation</a></li>
+<li><a href="#TRB-017">2.10 TCER: RADAR build suspicious login</a></li>
+<li><a href="#TRB-018">2.11 TCER: RADAR build non-whitelist GeoIP</a></li>
+<li><a href="#TRB-019">2.12 TCER: RADAR build log volume growth</a></li>
+<li><a href="#TRB-020">2.13 TCER: Add log volume growth anomaly detector</a></li>
+<li><a href="#TRB-021">2.14 TCER: RADAR suspicious login detection</a></li>
+<li><a href="#TRB-022">2.15 TCER: RADAR non-whitelist GeoIP detection</a></li>
+<li><a href="#TRB-023">2.16 TCER: RADAR log volume growth anomaly detector</a></li>
+<li><a href="#TRB-024">2.17 TCER: RADAR Flowintel case creation via Active Response</a></li>
+<li><a href="#TRB-025">2.18 TCER: RADAR build non-whitelist GeoIP detection with case creation</a></li>
+<li><a href="#TRB-026">2.19 TCER: RADAR non-whitelist GeoIP detection + Flowintel</a></li>
 </ul>
 </li>
 </ul>
@@ -532,7 +543,7 @@
 <p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
 <p><strong>Test case step 1</strong>: Verify working director availability</p>
 <ul>
-<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>soar-radar</code> directory available.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>radar</code> directory available.</li>
 </ul>
 <p><strong>Test case step 2</strong>: Verify configuration of <code>.env</code> file</p>
 <ul>
@@ -658,7 +669,7 @@
 </ul>
 <p><strong>Test case step 2.11:</strong> Active response scripts for suspicious_login are present on SSH agents:</p>
 <ul>
-<li><span style="color:green"><strong>0 = flawless</strong></span>: files from <code>soar-radar/suspicious_login/active_responses/*</code> are present under <code>/var/ossec/active-response/bin/</code> with owner <code>root:wazuh</code> and mode <code>0750</code>.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: files from <code>radar/scenarios/active_responses/*</code> are present under <code>/var/ossec/active-response/bin/</code> with owner <code>root:wazuh</code> and mode <code>0750</code>.</li>
 </ul>
 <p><strong>Test case step 2.12:</strong> Wazuh agent service is running on SSH agents after restart:</p>
 <ul>
@@ -958,7 +969,7 @@
 <h3>In Wazuh dashboard</h3>
 <p><strong>Test case step 2.1:</strong> The detector <code>LOG_VOLUME_DETECTOR</code> is created in the Wazuh Dashboard with the correct configurations.</p>
 <ul>
-<li><span style="color:green"><strong>0 = flawless</strong></span>: In the Anomaly Detection menu, the created detector is visible. The expected configurations are found in <a href="/soar-radar/config.yaml"><code>config.yaml</code></a> under the <code>log_volume</code> key.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: In the Anomaly Detection menu, the created detector is visible. The expected configurations are found in <a href="/radar/config.yaml"><code>config.yaml</code></a> under the <code>log_volume</code> key.</li>
 </ul>
 <p><strong>Test case step 2.2:</strong> Monitor creation and trigger to webhook existence</p>
 <ul>
@@ -1018,7 +1029,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="TRB-013">2.6 TCER: Validate RADAR suspicious login detection <small>TRB-013</small></h2>
+<h2 id="TRB-013">2.6 TCER: RADAR suspicious login detection <small>TRB-013</small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
@@ -1088,7 +1099,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="TRB-014">2.7 TCER: Validate RADAR non-whitelist GeoIP detection <small>TRB-014</small></h2>
+<h2 id="TRB-014">2.7 TCER: RADAR non-whitelist GeoIP detection <small>TRB-014</small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
@@ -1158,7 +1169,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="TRB-015">2.8 TCER: Validate RADAR log volume growth anomaly detector <small>TRB-015</small></h2>
+<h2 id="TRB-015">2.8 TCER: RADAR log volume growth anomaly detector <small>TRB-015</small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
@@ -1218,6 +1229,966 @@
 <tr>
 <td>release-version</td>
 <td>0.6</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-016">2.9 TCER: Setup RADAR foundation <small>TRB-016</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: Verify working director availability</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>radar</code> directory available.</li>
+</ul>
+<p><strong>Test case step 2</strong>: Verify configuration of <code>.env</code> file</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: available as indicated in the test case specification.</li>
+</ul>
+<p><strong>Test case step 3</strong>: Verify Ansible configuration, setup and reachability</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: remote agent configuration successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: remote manager configuration successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: vault creation and setup for agent and manager successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: sudo setup for access to controlled node successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Ansible reaching nodes in the SSH group successful</li>
+</ul>
+<p><strong>Test case step 4</strong>: Verify creation and setup of SSL/TSL certificates</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: certificates created and stored successfully</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-049">TST-049 Setup RADAR foundation v0.7</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>4</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-017">2.10 TCER: RADAR build suspicious login <small>TRB-017</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>sudo ./build-radar.sh suspicious_login --agent remote --manager local --manager_exists false
+</code></pre>
+<h4>In Wazuh Manager</h4>
+<p><strong>Test case step 2.1:</strong> Custom <code>0310 SSH</code> decoder deployed:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, with mode <code>0640</code>.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0310 SSH</code> decoder contains the decoders <code>sshd-*-with-radar</code> (e.g., including RADAR fields like <code>ASN</code>, <code>country</code>, <code>geo_velocity</code>).</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> Default 0310 decoder is excluded in <code>ossec.conf</code>:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: a <decoder_exclude>0310-ssh_decoders.xml</decoder_exclude> line appears (at least once) within the <ruleset> enclosures.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> RADAR rules for suspicious_login are in <code>/var/ossec/etc/rules/</code>:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a3-suspicious-login.xml</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code></li>
+</ul>
+<p><strong>Test case step 2.5:</strong> Suspicious login rules are bound to active responses:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: suspicious login rule ID(s) references the intended <code>&lt;group&gt;</code>, <code>&lt;options&gt;</code> or <code>&lt;active-response&gt;</code> that trigger <code>radar_ar.py</code>.</li>
+</ul>
+<p><strong>Test case step 2.6:</strong> Agent is registered with the manager:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: an entry exists for each agent.</li>
+</ul>
+<p><strong>Test case step 2.7:</strong> Agent configurations are in place:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: agent configurations for suspicious login exists in the <code>&lt;!-- RADAR: suspicious_login agent_config --&gt;</code> block.</li>
+</ul>
+<p><strong>Test case step 2.8:</strong> Wazuh Manager is running after restart:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the status output indicates the manager is <code>running</code> with no error messages.</li>
+</ul>
+<h4>In endpoints running agents</h4>
+<p><strong>Test case step 2.9:</strong> RADAR helper directory and script are installed on the SSH agent host:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</li>
+</ul>
+<p><strong>Test case step 2.10:</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the service is active.</li>
+</ul>
+<h4>Post-test cleanup</h4>
+<p><strong>Test case step 3:</strong> Check the cleanup after successful validations, the command output should be empty:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span> OR <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span> OR <span style="color:orange"><strong>2 = minor defect</strong></span> OR <span style="color:DarkOrange"><strong>3 = major defect</strong></span> OR <span style="color:red"><strong>4 = critical defect</strong></span></li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Almost defect-free test execution, i.e., defect category: <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-050">TST-050 RADAR: build suspicious login</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>1 = insignificant defect</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>13</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-018">2.11 TCER: RADAR build non-whitelist GeoIP <small>TRB-018</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows
+(if manager is local then the command should be run with sudo):</p>
+<pre><code>./build-radar.sh geoip_detection --agent remote --manager local --manager_exists false
+</code></pre>
+<h3>In Wazuh Manager</h3>
+<p><strong>Test case step 2.1:</strong> Whitelist file exists</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/var/ossec/etc/lists/whitelist_countries</code> exists, its contents match the scenario’s <code>whitelist_countries</code>, and its owner is <code>root:wazuh</code>, with mode <code>0644</code>.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> <code>ossec.conf</code> has <code>&lt;list&gt;</code> entry for <code>whitelist_countries</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: under <code>&lt;ruleset&gt;</code>, there is a <code>&lt;list&gt;...whitelist_countries&lt;/list&gt;</code> entry with the RADAR marker for <code>geoip_detection</code>.</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> Custom <code>0310 SSH</code> decoder deployed</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</li>
+</ul>
+<p><strong>Test case step 2.5:</strong> RADAR rules for <code>geoip_detection</code> exist</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a2-geoip-detection.xml</code> contains a <code>RADAR_RULES: geoip_detection block</code> rules use <code>whitelist_countries</code> to detect non-whitelisted countries.</li>
+</ul>
+<p><strong>Test case step 2.6</strong>: GeoIP non-whitelist rules are bound to active responses</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: GeoIP non-whitelist rule ID(s) reference the correct <code>&lt;active-response&gt;</code>.</li>
+</ul>
+<p><strong>Test case step 2.7:</strong> Agent configurations are in place.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Agent configurations for geoip detection exists.</li>
+</ul>
+<h4>In endpoints running agents</h4>
+<p><strong>Test case step 2.8:</strong> RADAR helper directory and script are installed on the SSH agent host.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</li>
+</ul>
+<p><strong>Test case step 2.9:</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the service is active.</li>
+</ul>
+<h4>Post-test cleanup</h4>
+<p><strong>Test case step 3:</strong> Check the cleanup after successful validations, the command output should be empty:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: command output empty.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-051">TST-051 RADAR: build non-whitelist GeoIP detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>10</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-019">2.12 TCER: RADAR build log volume growth <small>TRB-019</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>sudo ./build-radar.sh log_volume --agent remote --manager local --manager_exists false
+</code></pre>
+<h3>In Wazuh Manager</h3>
+<p><strong>Test case step 2.1:</strong> RADAR snippet for <code>log_volume</code> is present in <code>ossec.conf</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>ossec.conf</code> contains a <code>RADAR: log_volume BEGIN/END</code> block with the log volume-related settings.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> RADAR decoders for <code>log_volume</code> exist</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0001-log-volume.xml</code> contains a block defining decoders that produce a <code>log_bytes</code> field.</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> RADAR rules for log_volume exist.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The file <code>a1-log-volume.xml</code> exists in <code>/var/ossec/etc/rules</code>.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> OpenSearch template radar-log-volume is present.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: HTTP status is <code>200</code> and the template JSON exists with mappings for <code>log_bytes</code> as a numeric type.</li>
+</ul>
+<p><strong>Test case step 2.5:</strong> <code>log_volume</code> rules are bound to active responses</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: log volume anomaly rule ID(s) reference <code>radar_ar.py</code> as intended.</li>
+</ul>
+<p><strong>Test case step 2.6:</strong> Agent configurations are in place</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The agent configurations for log volume exists.</li>
+</ul>
+<h4>In endpoints running agents</h4>
+<p><strong>Test case step 2.7:</strong> RADAR helper directory and script installed on the SSH agent host</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</li>
+</ul>
+<p><strong>Test case step 2.8:</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the service is active.</li>
+</ul>
+<h4>Post-test cleanup</h4>
+<ul>
+<li>
+<p><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</p>
+</li>
+<li>
+<p><span style="color:green"><strong>0 = flawless</strong></span>: command output empty.</p>
+</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-052">TST-052 RADAR: build log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>10</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-020">2.13 TCER: Add log volume growth anomaly detector <small>TRB-020</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./run-radar.sh log_volume
+</code></pre>
+<h3>In Wazuh dashboard</h3>
+<p><strong>Test case step 2.1:</strong> The detector <code>LOG_VOLUME_DETECTOR</code> is created in the Wazuh Dashboard with the correct configurations.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: In the Anomaly Detection menu, the created detector is visible. The expected configurations are found in <a href="/radar/config.yaml"><code>config.yaml</code></a> under the <code>log_volume</code> key.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> Monitor creation and trigger to webhook existence</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>:  The monitor is created in the Wazuh Dashboard with a trigger to a RADAR webhook instance. In the Alerting menu, the created Monitor is listed under the Monitors tab.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-053">TST-053 Run RADAR for log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-021">2.14 TCER: RADAR suspicious login detection <small>TRB-021</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: In the Wazuh Dashboard Discovery page, alert with rule ID starting with <code>210***</code> listed.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: instance observed.</li>
+</ul>
+<p><strong>Test case step 2</strong>: Recipient email address specified in <code>.env</code> receives an email about the alert.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: email received.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Successful test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-054">TST-054 Suspicious login detection validation</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-022">2.15 TCER: RADAR non-whitelist GeoIP detection <small>TRB-022</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: In the Wazuh Dashboard Discovery page, alert with rule ID starting with <code>10090*</code> listed.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: instance observed.</li>
+</ul>
+<p><strong>Test case step 2</strong>: Recipient email address specified in <code>.env</code> receives an email about the alert.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Email received.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Successful test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-055">TST-055 Non-whitelist GeoIP detection validation</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-023">2.16 TCER: RADAR log volume growth anomaly detector <small>TRB-023</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: In the Wazuh Dashboard Discovery page, alert with rule ID starting with <code>100309</code> listed.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: instance observed.</li>
+</ul>
+<p><strong>Test case step 2</strong>: Recipient email address specified in <code>.env</code> receives an email about the alert.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Email received.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Successful test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-056">TST-056 Log volume abnormal growth validation</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-01-14</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-024">2.17 TCER: RADAR Flowintel case creation via Active Response <small>TRB-024</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: Verify working director availability</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>radar</code> directory available.</li>
+</ul>
+<p><strong>Test case step 2</strong>: Verify configuration of <code>.env</code> file with FlowIntel configs</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: available as indicated in the test case specification.</li>
+</ul>
+<p><strong>Test case step 3</strong>: Verify Ansible configuration, setup and reachability</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: remote agent configuration successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: remote manager configuration successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: vault creation and setup for agent and manager successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: sudo setup for access to controlled node successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Ansible reaching nodes in the SSH group successful</li>
+</ul>
+<p><strong>Test case step 4</strong>: Verify creation and setup of SSL/TSL certificates</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: certificates created and stored successfully</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-057">TST-057 RADAR FlowIntel case creation via Active Response</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-02-03</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>4</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-025">2.18 TCER: RADAR build non-whitelist GeoIP detection with case creation <small>TRB-025</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows
+(if manager is local then the command should be run with sudo):</p>
+<pre><code>sudo ./build-radar.sh geoip_detection --agent remote --manager local --manager_exists false
+</code></pre>
+<h3>In Wazuh Manager</h3>
+<p><strong>Test case step 2.1:</strong> Whitelist file exists</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/var/ossec/etc/lists/whitelist_countries</code> exists, its contents match the scenario’s <code>whitelist_countries</code>, and its owner is <code>root:wazuh</code>, with mode <code>0644</code>.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> <code>ossec.conf</code> has <code>&lt;list&gt;</code> entry for <code>whitelist_countries</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: under <code>&lt;ruleset&gt;</code>, there is a <code>&lt;list&gt;...whitelist_countries&lt;/list&gt;</code> entry with the RADAR marker for <code>geoip_detection</code>.</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> Custom <code>0310 SSH</code> decoder deployed</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</li>
+</ul>
+<p><strong>Test case step 2.5:</strong> RADAR rules for <code>geoip_detection</code> exist</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a2-geoip-detection.xml</code> contains a <code>RADAR_RULES: geoip_detection block</code> rules use <code>whitelist_countries</code> to detect non-whitelisted countries.</li>
+</ul>
+<p><strong>Test case step 2.6</strong>: GeoIP non-whitelist rules are bound to active responses</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: GeoIP non-whitelist rule ID(s) reference the correct <code>&lt;active-response&gt;</code>.</li>
+</ul>
+<p><strong>Test case step 2.7</strong>: Active response config files are in place</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The active response directory <code>/var/ossec/active-response/bin/</code> has files <code>ar.yaml</code> and <code>pyflowintel</code>.</li>
+</ul>
+<p><strong>Test case step 2.8:</strong> Agent configurations are in place.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Agent configurations for geoip detection exists.</li>
+</ul>
+<h4>In endpoints running agents</h4>
+<p><strong>Test case step 2.9:</strong> RADAR helper directory and script are installed on the SSH agent host.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</li>
+</ul>
+<p><strong>Test case step 2.10:</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the service is active.</li>
+</ul>
+<h4>Post-test cleanup</h4>
+<p><strong>Test case step 3:</strong> Check the cleanup after successful validations, the command output should be empty:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: command output empty.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-058">TST-058 RADAR: build non-whitelist GeoIP detection with case creation</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-02-03</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>11</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRB-026">2.19 TCER: RADAR non-whitelist GeoIP detection + Flowintel <small>TRB-026</small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: In the Wazuh Dashboard Discovery page, alert with rule ID starting with <code>10090*</code> listed.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: instance observed.</li>
+</ul>
+<p><strong>Test case step 2</strong>: Recipient email address specified in <code>.env</code> receives an email about the alert.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Email received.</li>
+</ul>
+<p><strong>Test case step 3</strong>: The FlowIntel case is created in the <code>Cases</code> menu in FlowIntel defined in <code>FLOWINTEL_BASE_URL</code> address.</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: FlowIntel case created.</li>
+</ul>
+<p><img alt="" src="assets/RADAR-GeoIP-detection-AR-flowintel-masked.png" width="80%" /></p>
+<h3>Defect summary description</h3>
+<p>Successful test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-059">TST-059 Non-whitelist GeoIP detection validation</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-02-03</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless</td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>3</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.7</td>
 </tr>
 <tr>
 <td>verification-method</td>

@@ -1,6 +1,6 @@
 # Guide for IDPS and SIEM integrated deployment
 
-IDPS-ESCAPE, short for Intrusion Detection and Prevention Systems for Evading Supply Chain Attacks and Post-compromise Effects, focuses on developing a sophisticated Security Information and Event Management (SIEM) system tailored for cloud-edge networks. This solution includes agents capable of seamless installation on systems earmarked for monitoring, along with a cutting-edge Intrusion Detection and Prevention System (IDPS) infused with machine learning capabilities. 
+IDPS-ESCAPE, short for Intrusion Detection and Prevention System - Enhanced Security through Cooperative Anomaly Prediction Engine, focuses on developing a sophisticated Security Information and Event Management (SIEM) system tailored for cloud-edge networks. This solution includes agents capable of seamless installation on systems earmarked for monitoring, along with a cutting-edge Intrusion Detection and Prevention System (IDPS) infused with machine learning capabilities. 
 
 This folder explains the integration of Suricata, an open-source Intrusion Detection System (IDS) renowned for its robust network security capabilities, and Wazuh, a cybersecurity platform that integrates SIEM and XDR capabilities, which play a crucial role in enhancing the capabilities of the IDPS-ESCAPE solution and are the  building blocks for the IDPS-ESCAPE prototype.  
 

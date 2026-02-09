@@ -1,0 +1,76 @@
+scenarios:
+  geoip_detection:
+    ad:
+      rule_ids: []
+    signature:
+      rule_ids:
+        - "100900"
+        - "100901"
+    w_ad: 0.0
+    w_sig: 0.6
+    w_cti: 0.4
+    delta_ad_minutes: 10
+    delta_signature_minutes: 1
+    signature_impact: 0.6
+    signature_likelihood: 0.8
+    risk_threshold: 0.51
+    tiers:
+      tier1_max: 0.33
+      tier2_max: 0.66
+    mitigations:
+      - firewall-drop
+    create_case: true
+    allow_mitigation: true
+  
+  suspicious_login:
+    ad:
+      rule_ids:
+        - "100021"
+    signature:
+      rule_ids:
+        - "210012"
+        - "210013"
+        - "210020"
+        - "210021"
+    w_ad: 0.3
+    w_sig: 0.4
+    w_cti: 0.3
+    delta_ad_minutes: 10
+    delta_signature_minutes: 1
+    signature_impact: 0.7
+    signature_likelihood: 
+      - rule_id: [210012, 210013]
+        weight: 0.5
+      - rule_id: [210020, 210021]
+        weight: 0.5
+    risk_threshold: 0.51
+    tiers:
+      tier1_max: 0.33
+      tier2_max: 0.66
+    mitigations:
+      - firewall-drop
+      - lock_user_linux
+    create_case: true
+    allow_mitigation: true
+  
+  log_volume:
+    ad:
+      rule_ids:
+        - "100309"
+    signature:
+      rule_ids: []
+    w_ad: 0.9
+    w_sig: 0.0
+    w_cti: 0.1
+    delta_ad_minutes: 10
+    delta_signature_minutes: 1
+    signature_impact: 0.0
+    signature_likelihood: 0.0
+    risk_threshold: 0.51
+    tiers:
+      tier1_max: 0.33
+      tier2_max: 0.66
+    mitigations:
+      - terminate_service
+    create_case: true
+    allow_mitigation: true

@@ -1,0 +1,112 @@
+---
+- name: Stop RADAR manager containers on remote host
+  hosts: wazuh_manager_ssh
+  become: true
+  gather_facts: false
+  
+  vars:
+    purge_volumes: "{{ purge_volumes | default(false) | bool }}"
+    staging_dir_pattern: "/tmp/radar_mgr_*"
+  
+  tasks:
+    - name: Set purge flag for docker compose
+      set_fact:
+        purge_flag: "{{ '-v' if purge_volumes else '' }}"
+
+    - name: Find the latest radar staging directory
+      shell: |
+        ls -td /tmp/radar_mgr_* 2>/dev/null | head -1 || true
+      args:
+        executable: /bin/bash
+      register: _latest_dir_raw
+      changed_when: false
+
+    - name: Set latest staging directory variable
+      set_fact:
+        latest_staging_dir: "{{ _latest_dir_raw.stdout | trim }}"
+      when: _latest_dir_raw.stdout != ""
+
+    - name: Fail if no staging directory found
+      fail:
+        msg: "No radar staging directories found matching pattern: {{ staging_dir_pattern }}"
+      when: _latest_dir_raw.stdout == ""
+
+    - name: Display latest staging directory
+      debug:
+        msg: "Using latest staging directory: {{ latest_staging_dir }}"
+
+    - name: Check for docker-compose.core.yml
+      stat:
+        path: "{{ latest_staging_dir }}/docker-compose.core.yml"
+      register: _core_compose_stat
+
+    - name: Check for docker-compose.webhook.yml
+      stat:
+        path: "{{ latest_staging_dir }}/docker-compose.webhook.yml"
+      register: _webhook_compose_stat
+
+    - name: Check for volumes.yml
+      stat:
+        path: "{{ latest_staging_dir }}/volumes.yml"
+      register: _volumes_yml_stat
+
+    - name: Display compose files status
+      debug:
+        msg:
+          - "Core compose exists: {{ _core_compose_stat.stat.exists }}"
+          - "Webhook compose exists: {{ _webhook_compose_stat.stat.exists }}"
+          - "Volumes yml exists: {{ _volumes_yml_stat.stat.exists }}"
+
+    - name: Fail if required compose files not found
+      fail:
+        msg: "Required compose files not found in {{ latest_staging_dir }}"
+      when: not _core_compose_stat.stat.exists or not _webhook_compose_stat.stat.exists
+
+    - name: Stop webhook container
+      shell: |
+        echo "Stopping webhook in {{ latest_staging_dir }}"
+        docker compose -f "{{ latest_staging_dir }}/docker-compose.webhook.yml" down {{ purge_flag }}
+      args:
+        executable: /bin/bash
+      register: _webhook_stop
+      failed_when: false
+
+    - name: Display webhook stop output
+      debug:
+        msg: "{{ _webhook_stop.stdout_lines }}"
+      when: _webhook_stop.stdout_lines is defined and _webhook_stop.stdout_lines | length > 0
+
+    - name: Display webhook stop errors (if any)
+      debug:
+        msg: "{{ _webhook_stop.stderr_lines }}"
+      when: 
+        - _webhook_stop.stderr_lines is defined 
+        - _webhook_stop.stderr_lines | length > 0
+
+    - name: Stop core manager container
+      shell: |
+        echo "Stopping core manager in {{ latest_staging_dir }}"
+        
+        # Include volumes.yml if it exists
+        {% if _volumes_yml_stat.stat.exists %}
+        docker compose -f "{{ latest_staging_dir }}/docker-compose.core.yml" \
+          -f "{{ latest_staging_dir }}/volumes.yml" down {{ purge_flag }}
+        {% else %}
+        docker compose -f "{{ latest_staging_dir }}/docker-compose.core.yml" down {{ purge_flag }}
+        {% endif %}
+      args:
+        executable: /bin/bash
+      register: _core_stop
+      failed_when: false
+
+    - name: Display core stop output
+      debug:
+        msg: "{{ _core_stop.stdout_lines }}"
+      when: _core_stop.stdout_lines is defined and _core_stop.stdout_lines | length > 0
+
+    - name: Display core stop errors (if any)
+      debug:
+        msg: "{{ _core_stop.stderr_lines }}"
+      when: 
+        - _core_stop.stderr_lines is defined 
+        - _core_stop.stderr_lines | length > 0

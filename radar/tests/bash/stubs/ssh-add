@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-l" ]]; then
+  exit 1
+fi
+exit 0

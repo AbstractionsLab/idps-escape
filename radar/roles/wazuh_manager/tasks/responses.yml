@@ -1,0 +1,134 @@
+#### active_responses.env ####
+- name: responses | Resolve active_responses.env source path on controller
+  ansible.builtin.set_fact:
+    active_responses_env_src: "{{ active_responses_env_src | default(playbook_dir ~ '/.env') }}"
+
+- name: responses | Stat active_responses.env on controller
+  delegate_to: localhost
+  become: false
+  stat:
+    path: "{{ active_responses_env_src }}"
+  register: _active_responses_env_stat
+  changed_when: false
+
+- name: responses | Copy active_responses.env to host volume (if present)
+  when: _active_responses_env_stat.stat.exists
+  ansible.builtin.copy:
+    src: "{{ active_responses_env_src }}"
+    dest: "{{ _host_active_response_bin }}/active_responses.env"
+  register: _active_env_copied
+
+- name: responses | Stat radar_ar.py on controller
+  delegate_to: localhost
+  become: false
+  stat:
+    path: "{{ radar_ar_src }}"
+  register: _radar_ar_stat
+  changed_when: false
+
+- name: responses | Copy radar_ar.py to host volume (if present)
+  when: _radar_ar_stat.stat.exists
+  copy:
+    src: "{{ radar_ar_src }}"
+    dest: "{{ _host_active_response_bin }}/radar_ar.py"
+  register: _radar_ar_copied
+
+- name: responses | Stat ar.yaml on controller
+  delegate_to: localhost
+  become: false
+  stat:
+    path: "{{ ar_config_src }}"
+  register: _ar_yaml_stat
+  changed_when: false
+
+- name: responses | Copy ar.yaml to host volume (if present)
+  when: _ar_yaml_stat.stat.exists
+  copy:
+    src: "{{ ar_config_src }}"
+    dest: "{{ _host_active_response_bin }}/ar.yaml"
+  register: _ar_yaml_copied
+
+- name: responses | Stat local pyflowintel dir on controller
+  delegate_to: localhost
+  become: false
+  ansible.builtin.stat:
+    path: "pyflowintel/"
+  register: _pyflowintel_dir_stat
+  changed_when: false
+
+- name: responses | Copy pyflowintel into host volume (docker_local)
+  when:
+    - _pyflowintel_dir_stat.stat.exists
+    - _mgr_mode == "docker_local"
+  ansible.builtin.copy:
+    src: "pyflowintel/"
+    dest: "{{ _host_active_response_bin }}/pyflowintel/"
+    remote_src: false
+  register: _pyflowintel_synced_tmp
+
+- name: responses | Sync pyflowintel to temp dir on remote (docker_remote/host_remote)
+  when:
+    - _pyflowintel_dir_stat.stat.exists
+    - _mgr_mode == "docker_remote"
+  ansible.posix.synchronize:
+    src: "pyflowintel/"
+    dest: "/tmp/pyflowintel/"
+    delete: true
+    recursive: true
+    rsync_path: "rsync"
+  register: _pyflowintel_synced_tmp
+
+- name: responses | Install pyflowintel into host volume from temp
+  when:
+    - _pyflowintel_dir_stat.stat.exists
+    - _mgr_mode == "docker_remote"
+  shell: |
+    set -e
+    rm -rf "{{ _host_active_response_bin }}/pyflowintel"
+    mkdir -p "{{ _host_active_response_bin }}/pyflowintel"
+    cp -a /tmp/pyflowintel "{{ _host_active_response_bin }}/pyflowintel/"
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: responses | Ensure pyyaml available
+  shell: |
+    docker exec "{{ _mgr_container }}" bash -lc '
+      set -euo pipefail
+      dnf -y install python3-pyyaml
+    '
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: responses | Ensure python requests available
+  shell: |
+    docker exec "{{ _mgr_container }}" bash -lc '
+      set -euo pipefail
+      dnf -y install python3-requests
+    '
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: responses | Normalize active response files ownership/perm in container
+  when:
+    - (_active_env_copied is defined and _active_env_copied is changed) or
+      (_radar_ar_copied is defined and _radar_ar_copied is changed) or
+      (_ar_yaml_copied is defined and _ar_yaml_copied is changed) or
+      (_pyflowintel_synced_tmp is defined and _pyflowintel_synced_tmp is changed)
+  shell: |
+    docker exec "{{ _mgr_container }}" bash -lc '
+      chown root:wazuh /var/ossec/active-response/bin/active_responses.env 2>/dev/null || true
+      chmod 0660 /var/ossec/active-response/bin/active_responses.env 2>/dev/null || true
+      chown root:wazuh /var/ossec/active-response/bin/radar_ar.py 2>/dev/null || true
+      chmod 0750 /var/ossec/active-response/bin/radar_ar.py 2>/dev/null || true
+      chown root:wazuh /var/ossec/active-response/bin/ar.yaml 2>/dev/null || true
+      chmod 0640 /var/ossec/active-response/bin/ar.yaml 2>/dev/null || true
+      chown -R root:wazuh /var/ossec/active-response/bin/pyflowintel
+      find /var/ossec/active-response/bin/pyflowintel -type d -exec chmod 0750 {} \; 
+      find /var/ossec/active-response/bin/pyflowintel -type f -exec chmod 0640 {} \;
+    '
+  args:
+    executable: /bin/bash
+  changed_when: false

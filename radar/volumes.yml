@@ -1,0 +1,15 @@
+version: "3.7"
+
+services:
+  wazuh.manager:
+    volumes:
+      - /srv/wazuh/manager/api/configuration:/var/ossec/api/configuration
+      - /srv/wazuh/manager/etc:/var/ossec/etc
+      - /srv/wazuh/manager/logs:/var/ossec/logs
+      - /srv/wazuh/manager/queue:/var/ossec/queue
+      - /srv/wazuh/manager/var/multigroups:/var/ossec/var/multigroups
+      - /srv/wazuh/manager/integrations:/var/ossec/integrations
+      - /srv/wazuh/manager/active-response/bin:/var/ossec/active-response/bin
+      - /srv/wazuh/manager/filebeat/etc:/etc/filebeat
+      - /srv/wazuh/manager/filebeat/var:/var/lib/filebeat
+

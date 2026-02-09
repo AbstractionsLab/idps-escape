@@ -29,7 +29,8 @@
 		"vscode": {
             "extensions": [
 				"ms-python.python",
-				"streetsidesoftware.code-spell-checker"
+				"streetsidesoftware.code-spell-checker",
+				"MermaidChart.vscode-mermaid-chart"
 			],
             "settings": {
                 "python.testing.pytestArgs": [
