@@ -68,24 +68,13 @@
 </li>
 <li><a href="#TST-RADAR">3.0 RADAR test case specifications</a><ul>
 <li><a href="#TST-041">3.1 Setup RADAR foundation</a></li>
-<li><a href="#TST-042">3.2 RADAR: build suspicious login</a></li>
-<li><a href="#TST-043">3.3 RADAR: build non-whitelist GeoIP detection</a></li>
-<li><a href="#TST-044">3.4 RADAR: build log volume abnormal growth</a></li>
+<li><a href="#TST-042">3.2 Build suspicious login</a></li>
+<li><a href="#TST-043">3.3 Build non-whitelist GeoIP detection</a></li>
+<li><a href="#TST-044">3.4 Build log volume abnormal growth</a></li>
 <li><a href="#TST-045">3.5 Run RADAR for log volume abnormal growth</a></li>
-<li><a href="#TST-046">3.6 Suspicious login detection validation</a></li>
-<li><a href="#TST-047">3.7 Non-whitelist GeoIP detection validation</a></li>
-<li><a href="#TST-048">3.8 Log volume abnormal growth validation</a></li>
-<li><a href="#TST-049">3.9 Setup RADAR foundation v0.7</a></li>
-<li><a href="#TST-050">3.10 RADAR: build suspicious login</a></li>
-<li><a href="#TST-051">3.11 RADAR: build non-whitelist GeoIP detection</a></li>
-<li><a href="#TST-052">3.12 RADAR: build log volume abnormal growth</a></li>
-<li><a href="#TST-053">3.13 Run RADAR for log volume abnormal growth</a></li>
-<li><a href="#TST-054">3.14 Suspicious login detection validation</a></li>
-<li><a href="#TST-055">3.15 Non-whitelist GeoIP detection validation</a></li>
-<li><a href="#TST-056">3.16 Log volume abnormal growth validation</a></li>
-<li><a href="#TST-057">3.17 RADAR FlowIntel case creation via Active Response</a></li>
-<li><a href="#TST-058">3.17 RADAR: build non-whitelist GeoIP detection with case creation</a></li>
-<li><a href="#TST-059">3.19 Non-whitelist GeoIP detection validation</a></li>
+<li><a href="#TST-046">3.6 DECIPHER-RADAR detection validation for Suspicious login</a></li>
+<li><a href="#TST-047">3.7 Detection validation for GeoIP detection</a></li>
+<li><a href="#TST-048">3.8 Detection validation for Log volume abnormal growth</a></li>
 </ul>
 </li>
 </ul>
@@ -93,7 +82,7 @@
       </div>
       <div class="col-lg-8" id="main">
         <h1 id="TST-ADBox">1.0 ADBox test case specifications</h1>
-<h2 id="TST-001">1.1 Deploy ADBox via Docker and shell scripts <small>TST-001</small></h2>
+<h2 id="TST-001">1.1 Deploy ADBox via Docker and shell scripts <small><a href="TST.html#TST-001">TST-001</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -146,8 +135,8 @@ options:
   -c, --connection      check connection with Wazuh
   -s, --shipping        enable data shipping to Wazuh
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-046">SRS-046 Cross-Platform ADBox Deployment</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-001">TRA-001</a>, <a href="TRB.html#TRB-002">TRB-002 TCER: ADBox deployment</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-046">SRS-046 Cross-platform SONAR deployment</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-001">TRP-001 TCER: Deploy ADBox via Docker and shell scripts</a>, <a href="TRP.html#TRP-023">TRP-023 TCER: ADBox deployment</a></p>
 <table>
 <thead>
 <tr>
@@ -186,7 +175,7 @@ options:
 </tr>
 </tbody>
 </table>
-<h2 id="TST-003">1.3 Install ADBox as dev container <small>TST-003</small></h2>
+<h2 id="TST-003">1.3 Install ADBox as dev container <small><a href="TST.html#TST-003">TST-003</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker engine version 26.1.3</li>
@@ -216,7 +205,7 @@ options:
 Are you sure you wish to run the default ADBox in default mode? (y/n):
 </code></pre>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-044">SRS-044 Platform-Independent Deployment</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-003">TRB-003 TCER: ADBox in dev container</a>, <a href="TRA.html#TRA-003">TRA-003</a>, <a href="TRA.html#TRA-004">TRA-004</a>, <a href="TRA.html#TRA-020">TRA-020</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-003">TRP-003 TCER: Install ADBox as dev container</a>, <a href="TRP.html#TRP-004">TRP-004 TCER: Install ADBox as dev container</a>, <a href="TRP.html#TRP-020">TRP-020 TCER: Install ADBox as dev container</a>, <a href="TRP.html#TRP-024">TRP-024 TCER: ADBox in dev container</a></p>
 <table>
 <thead>
 <tr>
@@ -255,7 +244,7 @@ Are you sure you wish to run the default ADBox in default mode? (y/n):
 </tr>
 </tbody>
 </table>
-<h2 id="TST-004">1.4 Run ADBox console <small>TST-004</small></h2>
+<h2 id="TST-004">1.4 Run ADBox console <small><a href="TST.html#TST-004">TST-004</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -280,7 +269,7 @@ Enter a number and press enter to select an ADBox action to perform:
 Enter a number (1-4):
 </code></pre>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-047">SRS-047 Interactive Use Case Builder</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-004">TRB-004 TCER: ADBox console</a>, <a href="TRA.html#TRA-005">TRA-005</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-005">TRP-005 TCER: Run ADBox console</a>, <a href="TRP.html#TRP-025">TRP-025 TCER: ADBox console</a></p>
 <table>
 <thead>
 <tr>
@@ -319,7 +308,7 @@ Enter a number (1-4):
 </tr>
 </tbody>
 </table>
-<h2 id="TST-005">1.5 Run ADBox in default mode with a Wazuh connection <small>TST-005</small></h2>
+<h2 id="TST-005">1.5 Run ADBox in default mode with a Wazuh connection <small><a href="TST.html#TST-005">TST-005</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -328,7 +317,7 @@ Enter a number (1-4):
 <li>No existing container named <code>siem-mtad-gat-container</code> should be running.</li>
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
-<li>TST-034 and TST-035 should succeed</li>
+<li><a href="TST.html#TST-034">TST-034</a> and <a href="TST.html#TST-035">TST-035</a> should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -355,7 +344,7 @@ Data ingestion.
 <li>Training outputs and artifacts should be available in the following folder: <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code>.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-005">TRB-005 TCER: ADBox in default mode with Wazuh</a>, <a href="TRA.html#TRA-006">TRA-006</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-006">TRP-006 TCER: Run ADBox in default mode with a Wazuh connection</a>, <a href="TRP.html#TRP-026">TRP-026 TCER: ADBox in default mode with Wazuh</a></p>
 <table>
 <thead>
 <tr>
@@ -394,7 +383,7 @@ Data ingestion.
 </tr>
 </tbody>
 </table>
-<h2 id="TST-006">1.6 Run ADBox in default mode without a Wazuh connection <small>TST-006</small></h2>
+<h2 id="TST-006">1.6 Run ADBox in default mode without a Wazuh connection <small><a href="TST.html#TST-006">TST-006</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -437,7 +426,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Training outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-007">TRA-007</a>, <a href="TRA.html#TRA-019">TRA-019</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-007">TRP-007 TCER: Run ADBox in default mode without a Wazuh connection</a>, <a href="TRP.html#TRP-019">TRP-019 TCER: Run ADBox in default mode without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -476,7 +465,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-007">1.7 ADBox use case 1 with a Wazuh connection <small>TST-007</small></h2>
+<h2 id="TST-007">1.7 ADBox use case 1 with a Wazuh connection <small><a href="TST.html#TST-007">TST-007</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -487,7 +476,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li>Wazuh configured to monitor linux resource utilization. (Monitoring Linux resource usage with Wazuh)</li>
 <li><code>2024-07-*</code> index not empty.</li>
-<li>TST-034 and TST-035 should succeed</li>
+<li><a href="TST.html#TST-034">TST-034</a> and <a href="TST.html#TST-035">TST-035</a> should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -505,7 +494,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-008">TRA-008</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-008">TRP-008 TCER: ADBox use case 1 with a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -544,7 +533,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-008">1.8 ADBox use case 1 without a Wazuh connection <small>TST-008</small></h2>
+<h2 id="TST-008">1.8 ADBox use case 1 without a Wazuh connection <small><a href="TST.html#TST-008">TST-008</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -575,7 +564,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>And the application should exit.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-009">TRA-009</a>, <a href="TRA.html#TRA-018">TRA-018</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-009">TRP-009 TCER: ADBox use case 1 without a Wazuh connection</a>, <a href="TRP.html#TRP-018">TRP-018 TCER: ADBox use case 1 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -614,7 +603,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-009">1.9 ADBox use case 2 with a Wazuh connection <small>TST-009</small></h2>
+<h2 id="TST-009">1.9 ADBox use case 2 with a Wazuh connection <small><a href="TST.html#TST-009">TST-009</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -624,7 +613,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li><code>2024-07-*</code> index not empty.</li>
-<li>TST-034 and TST-035 should succeed</li>
+<li><a href="TST.html#TST-034">TST-034</a> and <a href="TST.html#TST-035">TST-035</a> should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -642,7 +631,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-006">TRB-006 TCER: ADBox UC scenario 2 with Wazuh</a>, <a href="TRA.html#TRA-010">TRA-010</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-010">TRP-010 TCER: ADBox use case 2 with a Wazuh connection</a>, <a href="TRP.html#TRP-027">TRP-027 TCER: ADBox UC scenario 2 with Wazuh</a></p>
 <table>
 <thead>
 <tr>
@@ -681,7 +670,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-010">1.10 ADBox use case 2 without a Wazuh connection <small>TST-010</small></h2>
+<h2 id="TST-010">1.10 ADBox use case 2 without a Wazuh connection <small><a href="TST.html#TST-010">TST-010</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -710,7 +699,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-017">TRA-017</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-017">TRP-017 TCER: ADBox use case 2 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -749,7 +738,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-011">1.11 ADBox use case 3 with a Wazuh connection <small>TST-011</small></h2>
+<h2 id="TST-011">1.11 ADBox use case 3 with a Wazuh connection <small><a href="TST.html#TST-011">TST-011</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -759,7 +748,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li><code>2024-07-*</code> index not empty.</li>
-<li>TST-034 and TST-035 should succeed</li>
+<li><a href="TST.html#TST-034">TST-034</a> and <a href="TST.html#TST-035">TST-035</a> should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -778,7 +767,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-007">TRB-007 TCER: ADBox UC scenario 3 with Wazuh</a>, <a href="TRA.html#TRA-011">TRA-011</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-011">TRP-011 TCER: ADBox use case 3 with a Wazuh connection</a>, <a href="TRP.html#TRP-028">TRP-028 TCER: ADBox UC scenario 3 with Wazuh</a></p>
 <table>
 <thead>
 <tr>
@@ -817,7 +806,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-012">1.12 ADBox use case 3 without a Wazuh connection <small>TST-012</small></h2>
+<h2 id="TST-012">1.12 ADBox use case 3 without a Wazuh connection <small><a href="TST.html#TST-012">TST-012</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -850,7 +839,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-016">TRA-016</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-016">TRP-016 TCER: ADBox use case 3 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -889,7 +878,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-013">1.13 ADBox use case 4 with a Wazuh connection <small>TST-013</small></h2>
+<h2 id="TST-013">1.13 ADBox use case 4 with a Wazuh connection <small><a href="TST.html#TST-013">TST-013</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -900,7 +889,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li>Wazuh agent configured to read Suricata logs.</li>
 <li>"2024-03-*" not empty.</li>
-<li>TST-034 and TST-035 should succeed</li>
+<li><a href="TST.html#TST-034">TST-034</a> and <a href="TST.html#TST-035">TST-035</a> should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -919,7 +908,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-012">TRA-012</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-012">TRP-012 TCER: ADBox use case 4 with a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -958,7 +947,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-014">1.14 ADBox use case 4 without a Wazuh connection <small>TST-014</small></h2>
+<h2 id="TST-014">1.14 ADBox use case 4 without a Wazuh connection <small><a href="TST.html#TST-014">TST-014</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -988,7 +977,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-015">TRA-015</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-015">TRP-015 TCER: ADBox use case 4 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -1027,7 +1016,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-015">1.15 ADBox use case 5 with a Wazuh connection <small>TST-015</small></h2>
+<h2 id="TST-015">1.15 ADBox use case 5 with a Wazuh connection <small><a href="TST.html#TST-015">TST-015</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1037,7 +1026,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>An instance of a Wazuh distribution should be running.</li>
 <li>Wazuh indexer RESTful API should be listening on port 9200.</li>
 <li>Wazuh agent configured to read Suricata logs.</li>
-<li>TST-034 and TST-035 should succeed</li>
+<li><a href="TST.html#TST-034">TST-034</a> and <a href="TST.html#TST-035">TST-035</a> should succeed</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -1055,7 +1044,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037 Anomaly-Based NIDS</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-013">TRA-013</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-013">TRP-013 TCER: ADBox use case 5 with a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -1094,7 +1083,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-016">1.16 ADBox use case 5 without a Wazuh connection <small>TST-016</small></h2>
+<h2 id="TST-016">1.16 ADBox use case 5 without a Wazuh connection <small><a href="TST.html#TST-016">TST-016</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1124,7 +1113,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <li>Prediction outputs and artifacts should be available in the <code>/home/root/siem-mtad-gat/siem_mtad_gat/assets/detector_models/{detector_id}/prediction</code> folder.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-037">SRS-037 Anomaly-Based NIDS</a></p>
-<p><em>Child links:</em> <a href="TRA.html#TRA-014">TRA-014</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-014">TRP-014 TCER: ADBox use case 5 without a Wazuh connection</a></p>
 <table>
 <thead>
 <tr>
@@ -1163,7 +1152,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 </tr>
 </tbody>
 </table>
-<h2 id="TST-017">1.17 ADBox shipping install <small>TST-017</small></h2>
+<h2 id="TST-017">1.17 ADBox shipping install <small><a href="TST.html#TST-017">TST-017</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1193,7 +1182,7 @@ Exit shipper installation. Check ADBox templates and policy correct installation
 <li><strong>Indexer Management&gt;Index Management&gt;State management policies</strong> check for presence of the policy <code>adbox_detectors_rollover</code>.</li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-049">SRS-049 Anomaly Shipping to Indexer</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-001">TRB-001 TCER: install ADBox shipping</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-022">TRP-022 TCER: ADBox shipping install</a></p>
 <table>
 <thead>
 <tr>
@@ -1232,7 +1221,7 @@ Exit shipper installation. Check ADBox templates and policy correct installation
 </tr>
 </tbody>
 </table>
-<h2 id="TST-018">1.18 ADBox Create detector data stream <small>TST-018</small></h2>
+<h2 id="TST-018">1.18 ADBox Create detector data stream <small><a href="TST.html#TST-018">TST-018</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1284,7 +1273,7 @@ Prediction ended
 <li><strong>Indexer Management&gt;Index Management&gt;Templates</strong>  check if the  template <code>adbox_detector_mtad_gat_{detector_id}</code> is there;</li>
 <li><strong>Indexer Management&gt;Index Management&gt;Templates&gt; Component templates</strong> check if the templates <code>component_template_{detector_id}</code> is there;</li>
 <li><strong>Indexer Management&gt;Data streams</strong> check if <code>adbox_detector_mtad_gat_{detector_id}</code> is there and contains at least a document.
-      <img alt="Dashboard" src="assets/TST-18-detector-stream.png" width="80%" /></li>
+      <img alt="Dashboard" src="assets/<a href="TST.html#TST-18">TST-18</a>-detector-stream.png" width="80%" /></li>
 </ul>
 <p><em>Parent links:</em> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a></p>
 <table>
@@ -1325,7 +1314,7 @@ Prediction ended
 </tr>
 </tbody>
 </table>
-<h2 id="TST-033">1.19 ADBox Wazuh integration Dashboard <small>TST-033</small></h2>
+<h2 id="TST-033">1.19 ADBox Wazuh integration Dashboard <small><a href="TST.html#TST-033">TST-033</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1386,7 +1375,7 @@ Prediction ended
 </tr>
 </tbody>
 </table>
-<h2 id="TST-034">1.20 ADBox set up indexer host address <small>TST-034</small></h2>
+<h2 id="TST-034">1.20 ADBox set up indexer host address <small><a href="TST.html#TST-034">TST-034</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
@@ -1452,7 +1441,7 @@ Connection with Wazuh established successfully!
 </tr>
 </tbody>
 </table>
-<h2 id="TST-035">1.21 ADBox change indexer credentials <small>TST-035</small></h2>
+<h2 id="TST-035">1.21 ADBox change indexer credentials <small><a href="TST.html#TST-035">TST-035</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>ADBox repository <code>https://github.com/AbstractionsLab/idps-escape.git</code> cloned on the host.</li>
@@ -1514,7 +1503,7 @@ Connection with Wazuh established successfully!
 </tr>
 </tbody>
 </table>
-<h2 id="TST-037">1.22 Open prediction file of training data <small>TST-037</small></h2>
+<h2 id="TST-037">1.22 Open prediction file of training data <small><a href="TST.html#TST-037">TST-037</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>ADBox dev container running.</li>
@@ -1575,7 +1564,7 @@ Connection with Wazuh established successfully!
 </tr>
 </tbody>
 </table>
-<h2 id="TST-038">1.23 Visualize train losses <small>TST-038</small></h2>
+<h2 id="TST-038">1.23 Visualize train losses <small><a href="TST.html#TST-038">TST-038</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Wazuh central component deployed.</li>
@@ -1632,7 +1621,7 @@ Connection with Wazuh established successfully!
 </tr>
 </tbody>
 </table>
-<h2 id="TST-039">1.24 Open prediction raw outcome <small>TST-039</small></h2>
+<h2 id="TST-039">1.24 Open prediction raw outcome <small><a href="TST.html#TST-039">TST-039</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Wazuh central component deployed.</li>
@@ -1709,7 +1698,7 @@ Connection with Wazuh established successfully!
 </tbody>
 </table>
 <h1 id="TST-Foundation">2.0 IDPS-ESCAPE foundation test cases</h1>
-<h2 id="TST-019">2.1 Suricata installation in a containerized environment <small>TST-019</small></h2>
+<h2 id="TST-019">2.1 Suricata installation in a containerized environment <small><a href="TST.html#TST-019">TST-019</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1785,7 +1774,7 @@ be accessed by the following command.
 </tr>
 </tbody>
 </table>
-<h2 id="TST-020">2.2 Wazuh installation in a containerized environment <small>TST-020</small></h2>
+<h2 id="TST-020">2.2 Wazuh installation in a containerized environment <small><a href="TST.html#TST-020">TST-020</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1874,7 +1863,7 @@ the background (with -d option)</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-021">2.3 Wazuh agent installation and enrollment: the local machine <small>TST-021</small></h2>
+<h2 id="TST-021">2.3 Wazuh agent installation and enrollment: the local machine <small><a href="TST.html#TST-021">TST-021</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -1962,7 +1951,7 @@ sudo systemctl status wazuh-agent.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-022">2.4 Wazuh agent installation and enrollment: remote machine <small>TST-022</small></h2>
+<h2 id="TST-022">2.4 Wazuh agent installation and enrollment: remote machine <small><a href="TST.html#TST-022">TST-022</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2048,7 +2037,7 @@ sudo systemctl status wazuh-agent.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-023">2.5 Wazuh agent deletion and uninstallation <small>TST-023</small></h2>
+<h2 id="TST-023">2.5 Wazuh agent deletion and uninstallation <small><a href="TST.html#TST-023">TST-023</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2139,7 +2128,7 @@ work.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-024">2.6 Wazuh agent unenrollment <small>TST-024</small></h2>
+<h2 id="TST-024">2.6 Wazuh agent unenrollment <small><a href="TST.html#TST-024">TST-024</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2217,7 +2206,7 @@ machine, which can be checked by the following command.
 </tr>
 </tbody>
 </table>
-<h2 id="TST-025">2.7 Suricata and Wazuh Integration <small>TST-025</small></h2>
+<h2 id="TST-025">2.7 Suricata and Wazuh Integration <small><a href="TST.html#TST-025">TST-025</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2327,7 +2316,7 @@ the Wazuh Dashboard <strong>Threat Hunting</strong>.
 </tr>
 </tbody>
 </table>
-<h2 id="TST-026">2.8 Port mirroring for remote machines <small>TST-026</small></h2>
+<h2 id="TST-026">2.8 Port mirroring for remote machines <small><a href="TST.html#TST-026">TST-026</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Ubuntu 22.04.4 LTS (Machine 1, central monitoring host)</li>
@@ -2410,7 +2399,7 @@ egress ICMP packets from machine 2, encapsulated within GRE packets</p>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-027">2.9 Traffic monitoring on Wazuh (local) <small>TST-027</small></h2>
+<h2 id="TST-027">2.9 Traffic monitoring on Wazuh (local) <small><a href="TST.html#TST-027">TST-027</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2484,7 +2473,7 @@ the Wazuh Dashboard.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-028">2.10 Traffic monitoring on Wazuh (remote) <small>TST-028</small></h2>
+<h2 id="TST-028">2.10 Traffic monitoring on Wazuh (remote) <small><a href="TST.html#TST-028">TST-028</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2571,7 +2560,7 @@ the Wazuh Dashboard.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-029">2.11 Changing password for Wazuh indexer users <small>TST-029</small></h2>
+<h2 id="TST-029">2.11 Changing password for Wazuh indexer users <small><a href="TST.html#TST-029">TST-029</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2697,7 +2686,7 @@ Please try again." error while trying to login with the old password.
 </tr>
 </tbody>
 </table>
-<h2 id="TST-030">2.12 Changing password for Wazuh API users <small>TST-030</small></h2>
+<h2 id="TST-030">2.12 Changing password for Wazuh API users <small><a href="TST.html#TST-030">TST-030</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2795,7 +2784,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-031">2.13 Wazuh filters using the RESTful API <small>TST-031</small></h2>
+<h2 id="TST-031">2.13 Wazuh filters using the RESTful API <small><a href="TST.html#TST-031">TST-031</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2869,7 +2858,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-032">2.14 Wazuh filters using the Wazuh Dashboard <small>TST-032</small></h2>
+<h2 id="TST-032">2.14 Wazuh filters using the Wazuh Dashboard <small><a href="TST.html#TST-032">TST-032</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Docker version 26.0.0</li>
@@ -2937,7 +2926,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-036">2.15 Map a detected event to MITRE ATT&amp;CKS <small>TST-036</small></h2>
+<h2 id="TST-036">2.15 Map a detected event to MITRE ATT&amp;CKS <small><a href="TST.html#TST-036">TST-036</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>Wazuh central component deployed.</li>
@@ -3016,7 +3005,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-040">2.16 Visualize IDPS-ESCAPE high level architecture <small>TST-040</small></h2>
+<h2 id="TST-040">2.16 Visualize IDPS-ESCAPE high level architecture <small><a href="TST.html#TST-040">TST-040</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>A copy of ADBox project repository</li>
@@ -3069,7 +3058,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </tbody>
 </table>
 <h1 id="TST-RADAR">3.0 RADAR test case specifications</h1>
-<h2 id="TST-041">3.1 Setup RADAR foundation <small>TST-041</small></h2>
+<h2 id="TST-041">3.1 Setup RADAR foundation <small><a href="TST.html#TST-041">TST-041</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
 <li>A test controller host/node is available:<ul>
@@ -3078,950 +3067,7 @@ password with the new one at <code>API_PASSWORD</code> occurrence.</li>
 </ul>
 </li>
 <li>A second test node (accessible via the controller node) is available: GNU/Linux distro e.g. Debian GNU/Linux 13 (trixie)</li>
-<li>Ansible is installed on the controller host:<ul>
-<li>Location: install Ansible only on the controller node.</li>
-<li>Installation reference:<ul>
-<li>if <code>pipx</code> is available, follow the instruction` in <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html#pipx-install">Ansible Installation Documentation using pipx</a>.</li>
-<li>otherwise, follow the <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/installation_distros.html">official instructions for Linux distributions</a>.</li>
-<li>Minimum version: Ansible <code>2.15+</code>.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Targeted Wazuh manager and agent versions: <code>4.12.0</code></li>
-<li>Environment values such as <code>OS_URL</code>, <code>OS_USER</code>, <code>OS_PASS</code>, <code>DASHBOARD_URL</code>, <code>DASHBOARD_USER</code>, <code>DASHBOARD_PASS</code> and SMTP credentials are available to the tester. The tester has network access (SSH) from the test controller node to controlled endpoints.</li>
-<li>If either the Wazuh agent (aka agent) or the Wazuh manager (aka manager) is chosen to be <code>remote</code>:<ul>
-<li>the remote agent/manager needs to have Docker and Docker Compose installed following the official documentations for <a href="https://docs.docker.com/engine/install/">Docker</a> and <a href="https://docs.docker.com/compose/install">Docker Compose</a>.</li>
-<li>an available user in remote agent or manager with sudo access, and tester needs to have SSH access to the user from test controller host.</li>
-</ul>
-</li>
-<li>If the agents are to be deployed on <code>remote</code> nodes, the Wazuh agents must be installed in the monitored endpoints using <a href="https://documentation.wazuh.com/4.12/installation-guide/wazuh-agent/wazuh-agent-package-linux.html">the official documentation</a>.</li>
-<li>The agent must be registered with the Wazuh manager following <a href="https://documentation.wazuh.com/4.12/user-manual/agent/agent-enrollment/enrollment-methods/via-agent-configuration/linux-endpoint.html">the official documentation</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>In the controller host, the working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>Set <code>.env</code> file with required variables:</li>
-</ol>
-<pre><code># =======================
-# OpenSearch Configuration
-# =======================
-OS_URL=https://192.168.5.4:9200
-OS_USER=admin
-OS_PASS=SecretPassword
-OS_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
-
-DASHBOARD_URL=https://192.168.5.4
-DASHBOARD_USER=admin
-DASHBOARD_PASS=SecretPassword
-DASHBOARD_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
-
-WAZUH_API_URL=https://192.168.5.4:55000
-WAZUH_AUTH_USER=wazuh-wui
-WAZUH_AUTH_PASS=MyS3cr37P450r.*-
-
-WAZUH_AGENT_VERSION=4.12.0-1
-WAZUH_MANAGER_ADDRESS=192.168.5.4
-
-WEBHOOK_NAME=&quot;RADAR_Webhook&quot;
-WEBHOOK_URL=http://192.168.5.4:8080/notify
-
-# =======================
-# Logging
-# =======================
-
-AR_LOG_FILE=/var/ossec/logs/active-responses.log
-
-# =======================
-# SMTP
-# =======================
-
-SMTP_HOST=SMTP_HOST # Change accordingly
-SMTP_PORT=SMTP_PORT # Change accordingly
-SMTP_USER=SMTP_USER # Change accordingly
-SMTP_PASS=SMTP_PASS # Change accordingly
-EMAIL_TO=RECEIVER_EMAIL@example.com # Change accordingly
-SMTP_STARTTLS=yes
-</code></pre>
-<ol start="3">
-<li>
-<p>In case either the agent or the manager is remote:</p>
-<p>3.1. Change <code>inventory.yaml</code> based on remote agent/manager data, user credentials and docker container names. Change is needed:</p>
-<ul>
-<li>for remote agents, the endpoint part <code>wazuh_agents_ssh</code> must be configured.</li>
-<li>for a remote manager, the endpoint part <code>wazuh_manager_ssh</code> must be configured.</li>
-<li>in each of the above two, you may need to define a <code>ansible_ssh_private_key_file: &lt;path-to-ssh-key&gt;</code> attribute (to enable access from the control node to the controlled node)</li>
-</ul>
-<p>3.2. Create a vault for each host in <code>inventory.yaml</code> (IMPORTANT: the vault name and host name must match):</p>
-<ul>
-<li>for remote agents: <code>ansible-vault create host_vars/edge.vm.yml</code></li>
-<li>for remote manager: <code>ansible-vault create host_vars/mgr.remote.yml</code></li>
-</ul>
-<p>3.3. Assign a vault password and set sudo password:
-<code>ansible_become_password: &lt;selected-user-sudo-password&gt;</code></p>
-</li>
-<li>
-<p>Existence of Wazuh manager on targeted endpoint (local/remote) (signaled via <code>manager_exists</code> flag used by <code>build-radar.sh</code>):</p>
-<p>4.1. In case the manager does not exist, certificates must be issued matching the <code>MANAGER_IP</code> and <code>INDEXER_IP</code> according to the documentation in <code>config/wazuh_indexer_ssl_certs/README.md</code>; in short, once you have adapted <code>config/certs.yml</code> according to your endpoints (IP address and container name), from within the <code>config</code> folder, run</p>
-<p><code>docker run --rm -it   -v "PWD/certs.yml:/config/certs.yml:ro"−v"PWD/certs.yml:/config/certs.yml:ro"   -v "PWD/certs.yml:/config/certs.yml:ro"−v"PWD/wazuh_indexer_ssl_certs:/certificates"   wazuh/wazuh-certs-generator:0.0.2</code></p>
-<p>4.2. If the manager is already in place, certificates must be copied into <code>config/wazuh_indexer_ssl_certs</code>.</p>
-</li>
-</ol>
-<h2>Expected outcome</h2>
-<ol start="3">
-<li>
-<p>In the controller host, the vaults are created and SSH access is set correctly:</p>
-<ul>
-<li>if the agent is chosen to be remote:</li>
-</ul>
-<p>3.1 The vault is created and exists in <code>host_vars/</code>:
-<code>ansible-vault view host_vars/edge.vm.yml</code></p>
-<p>3.2 Ansible reaches the SSH group:
-<code>ansible -i inventory.yaml wazuh_agents_ssh -m ping --ask-vault-pass</code></p>
-<ul>
-<li>if the manager is chosen to be remote:</li>
-</ul>
-<p>3.1 The vault is created and exists in <code>host_vars/</code>:
-<code>ansible-vault view host_vars/mgr.remote.yml</code></p>
-<p>3.2 Ansible reaches the SSH group:
-<code>ansible -i inventory.yaml wazuh_manager_ssh -m ping --ask-vault-pass</code></p>
-</li>
-<li>
-<p>The certificates are available under <code>config/wazuh_indexer_ssl_certs/</code>:</p>
-</li>
-</ol>
-<pre><code>ls config/wazuh_indexer_ssl_certs/
-</code></pre>
-<p><em>Child links:</em> <a href="TRB.html#TRB-008">TRB-008 TCER: Setup RADAR foundation</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>3</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-042">3.2 RADAR: build suspicious login <small>TST-042</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>In the controller host, the working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>Build RADAR with SCENARIO_NAME suspicious_login:</li>
-</ol>
-<pre><code>./build-radar.sh suspicious_login --agent remote/local --manager remote/local --manager_exists true/false
-</code></pre>
-<p>In this step, please choose options according to your setup:</p>
-<ul>
-<li>
-<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
-</li>
-<li>
-<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
-</li>
-<li>
-<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
-<ul>
-<li>true  : do not bootstrap a manager</li>
-<li>false : bootstrap a manager</li>
-</ul>
-</li>
-<li>
-<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
-                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
-</li>
-</ul>
-<ol start="3">
-<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-046">TST-046</a>:</li>
-</ol>
-<ul>
-<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
-</ul>
-<pre><code>./stop-radar.sh --all
-</code></pre>
-<ul>
-<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the manager endpoint, run these commands to clean up the test environment:</li>
-</ul>
-<pre><code>cd /tmp/radar_mgr_XXXXXXX
-ls docker-compose.core.yml
-./stop-radar.sh --all
-cd /tmp
-rm -rf radar_mgr_*
-</code></pre>
-<p>Each Ansible run creates a staging directory in the endpoint where the manager is bootstrapped. The successful run directory (starts with <code>radar_mgr_</code> ending with a random identifier <code>XXXXXXX</code>) should be checked for the existence of a Docker Compose file and then cleaned.</p>
-<ul>
-<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
-</ul>
-<pre><code>docker compose -f docker-compose.agents.yml down -v
-</code></pre>
-<h2>Expected outcome</h2>
-<h3>2. Check the setup</h3>
-<h4>In Wazuh Manager</h4>
-<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
-<pre><code>docker exec -it wazuh.manager bash
-</code></pre>
-<ul>
-<li><strong>2.1</strong> Custom <code>0310 SSH</code> decoder deployed; verify this by running</li>
-</ul>
-<pre><code>ls -l /var/ossec/etc/decoders/0310-ssh.xml
-</code></pre>
-<p>to ensure that <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</p>
-<ul>
-<li><strong>2.2</strong> Custom <code>0310 SSH</code> decoder should contain the decoders <code>sshd-*-with-radar</code> (e.g., including RADAR fields like <code>ASN</code>, <code>country</code>, <code>geo_velocity</code>)</li>
-</ul>
-<pre><code>tail -n20 /var/ossec/etc/decoders/0310-ssh.xml
-</code></pre>
-<p>to ensure that RADAR enrichment fields will be parsed.</p>
-<ul>
-<li><strong>2.3</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>; verify via</li>
-</ul>
-<pre><code>grep '&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to ensure that a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</p>
-<ul>
-<li><strong>2.4</strong> RADAR rules for suspicious_login are in <code>local_rules.xml</code>; verify via</li>
-</ul>
-<pre><code>grep -n 'RADAR_RULES: suspicious_login' /var/ossec/etc/rules/local_rules.xml
-</code></pre>
-<p>to ensure <code>local_rules.xml</code> contains a <code>&lt;!-- RADAR_RULES: suspicious_login BEGIN/END --&gt;</code> block with rules for suspicious SSH logins.</p>
-<ul>
-<li><strong>2.5</strong> Suspicious login rules are bound to active responses; verify via</li>
-</ul>
-<pre><code>grep -A5 'email_ar' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to ensure that suspicious login rule ID(s) references the intended <code>&lt;group&gt;</code>, <code>&lt;options&gt;</code> or <code>&lt;active-response&gt;</code> that trigger <code>ad_context_*</code> and <code>email_ar.py</code>.</p>
-<ul>
-<li><strong>2.6</strong> Agent is registered with the manager; verify via</li>
-</ul>
-<pre><code>/var/ossec/bin/agent_control -l
-</code></pre>
-<p>to ensure that an entry exists for each agent.</p>
-<ul>
-<li><strong>2.7</strong> Wazuh Manager is running after restart; verify via</li>
-</ul>
-<pre><code>/var/ossec/bin/wazuh-control status
-</code></pre>
-<p>to ensure that status output indicates the manager is <code>running</code> with no error messages.</p>
-<h4>In endpoints running agents</h4>
-<ul>
-<li><strong>2.8</strong> RADAR helper directory and script are installed on the SSH agent host; verify via</li>
-</ul>
-<pre><code>ls -ld /opt/radar
-ls -l /opt/radar/radar-helper.py
-</code></pre>
-<p>to ensure <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
-<ul>
-<li><strong>2.9</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running; verify via</li>
-</ul>
-<pre><code>systemctl status radar-helper.service
-</code></pre>
-<p>to ensure the service is active.</p>
-<ul>
-<li><strong>2.10</strong> Agent <code>ossec.conf</code> on SSH agent includes the suspicious_login RADAR snippet; verify via</li>
-</ul>
-<pre><code>grep -n 'RADAR' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to ensure that <code>/var/ossec/etc/ossec.conf</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code>, and contains a <code>&lt;!-- RADAR: suspicious_login BEGIN/END --&gt;</code> block inserted before <code>&lt;/ossec_config&gt;</code>.</p>
-<ul>
-<li><strong>2.11</strong> Active response scripts for suspicious_login are present on SSH agents; verify via</li>
-</ul>
-<pre><code>ls -l /var/ossec/active-response/bin/
-</code></pre>
-<p>to ensure that files from <code>radar/scenarios/active_responses/*</code> are present under <code>/var/ossec/active-response/bin/</code> with owner <code>root:wazuh</code> and mode <code>0750</code>.</p>
-<ul>
-<li><strong>2.12</strong> Wazuh agent service is running on SSH agents after restart; verify via</li>
-</ul>
-<pre><code>/var/ossec/bin/wazuh-control status
-</code></pre>
-<p>to ensure that the status output indicates the agent is <code>running</code> with no error messages.</p>
-<h4>Post-test cleanup</h4>
-<ul>
-<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
-</ul>
-<pre><code>docker ps
-</code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-009">TRB-009 TCER: RADAR build suspicious login</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>3</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-043">3.3 RADAR: build non-whitelist GeoIP detection <small>TST-043</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>In the controller host, the working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>Build RADAR with SCENARIO_NAME geoip_detection:</li>
-</ol>
-<pre><code>./build-radar.sh geoip_detection --agent remote/local --manager remote/local --manager_exists true/false
-</code></pre>
-<p>In this step, please choose options according to your setup:</p>
-<ul>
-<li>
-<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
-</li>
-<li>
-<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
-</li>
-<li>
-<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
-<ul>
-<li>true  : do not bootstrap a manager</li>
-<li>false : bootstrap a manager</li>
-</ul>
-</li>
-<li>
-<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
-                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
-</li>
-</ul>
-<ol start="3">
-<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-046">TST-046</a>:</li>
-</ol>
-<ul>
-<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
-</ul>
-<pre><code>./stop-radar.sh --all
-</code></pre>
-<ul>
-<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the manager endpoint, run these commands to clean up the test environment:</li>
-</ul>
-<pre><code>cd /tmp/radar_mgr_XXXXXXX
-ls docker-compose.core.yml
-./stop-radar.sh --all
-cd /tmp
-rm -rf radar_mgr_*
-</code></pre>
-<p>Each Ansible run creates a staging directory in the endpoint where the manager is bootstrapped. The successful run directory (starts with <code>radar_mgr_</code> ending with a random identifier <code>XXXXXXX</code>) should be checked for the existence of a Docker Compose file and then cleaned.</p>
-<ul>
-<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
-</ul>
-<pre><code>docker compose -f docker-compose.agents.yml down -v
-</code></pre>
-<h2>Expected outcome</h2>
-<h3>2. Check the setup</h3>
-<h4>In Wazuh Manager</h4>
-<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
-<pre><code>docker exec -it wazuh.manager bash
-</code></pre>
-<ul>
-<li><strong>2.1</strong> Whitelist file exists</li>
-</ul>
-<pre><code>ls -l /var/ossec/etc/lists/whitelist_countries
-</code></pre>
-<p>to ensure that <code>/var/ossec/etc/lists/whitelist_countries</code> exists, its contents match the scenario’s <code>whitelist_countries</code>, and its owner is <code>root:wazuh</code>, with mode <code>0644</code>.</p>
-<ul>
-<li><strong>2.2</strong> <code>ossec.conf</code> has <code>&lt;list&gt;</code> entry for <code>whitelist_countries</code></li>
-</ul>
-<pre><code>grep -n 'whitelist_countries' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to ensure under <code>&lt;ruleset&gt;</code>, there is a <code>&lt;list&gt;...whitelist_countries&lt;/list&gt;</code> entry with the RADAR marker for <code>geoip_detection</code>.</p>
-<ul>
-<li><strong>2.3</strong> Custom <code>0310 SSH</code> decoder deployed; verify this by running</li>
-</ul>
-<pre><code>ls -l /var/ossec/etc/decoders/0310-ssh.xml
-</code></pre>
-<p>to ensure that <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</p>
-<ul>
-<li><strong>2.4</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>; verify via</li>
-</ul>
-<pre><code>grep '&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to ensure that a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</p>
-<ul>
-<li><strong>2.5</strong> RADAR rules for <code>geoip_detection</code> exist</li>
-</ul>
-<pre><code>grep -n 'RADAR_RULES: geoip_detection' /var/ossec/etc/rules/local_rules.xml
-</code></pre>
-<p>to check <code>local_rules.xml</code> contains a <code>RADAR_RULES: geoip_detection block</code> rules use <code>whitelist_countries</code> to detect non-whitelisted countries.</p>
-<ul>
-<li><strong>2.6</strong> GeoIP non-whitelist rules are bound to active responses</li>
-</ul>
-<pre><code>grep -A10 'email_ar' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check GeoIP non-whitelist rule ID(s) reference the correct <code>&lt;active-response&gt;</code>.</p>
-<h4>In endpoints running agents</h4>
-<ul>
-<li><strong>2.7</strong> RADAR helper directory and script are installed on the SSH agent host.</li>
-</ul>
-<pre><code>ls -ld /opt/radar
-ls -l /opt/radar/radar-helper.py
-</code></pre>
-<p>to check <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
-<ul>
-<li><strong>2.8</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</li>
-</ul>
-<pre><code>systemctl status radar-helper.service
-</code></pre>
-<p>to check that the service is active.</p>
-<ul>
-<li><strong>2.9</strong> Agent <code>ossec.conf</code> on SSH agent includes the <code>geoip_detection</code> RADAR snippet.</li>
-</ul>
-<pre><code>grep -n 'RADAR' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check: <code>/var/ossec/etc/ossec.conf</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code>, and contains a <code>&lt;!-- RADAR: geoip_detection BEGIN/END --&gt;</code> block inserted before <code>&lt;/ossec_config&gt;</code>.</p>
-<ul>
-<li><strong>2.10</strong> Wazuh agent service is running on SSH agents after restart.</li>
-</ul>
-<pre><code>/var/ossec/bin/wazuh-control status
-</code></pre>
-<p>to ensure status output indicates the agent is <code>running</code> with no error messages.</p>
-<h4>Post-test cleanup</h4>
-<ul>
-<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
-</ul>
-<pre><code>docker ps
-</code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-055">SRS-055 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-010">TRB-010 TCER: RADAR build non-whitelist GeoIP</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>3</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-044">3.4 RADAR: build log volume abnormal growth <small>TST-044</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>The working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>Build RADAR with SCENARIO_NAME log_volume:</li>
-</ol>
-<pre><code>./build-radar.sh log_volume --agent remote/local --manager remote/local --manager_exists true/false
-</code></pre>
-<p>In this step, please choose options according to your setup:</p>
-<ul>
-<li>
-<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
-</li>
-<li>
-<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
-</li>
-<li>
-<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
-<ul>
-<li>true  : do not bootstrap a manager</li>
-<li>false : bootstrap a manager</li>
-</ul>
-</li>
-<li>
-<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
-                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
-</li>
-</ul>
-<ol start="3">
-<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-046">TST-046</a>:</li>
-</ol>
-<ul>
-<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
-</ul>
-<pre><code>./stop-radar.sh --all
-docker compose -f docker-compose.webhook.yml down -v
-</code></pre>
-<ul>
-<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the manager endpoint, run these commands to clean up the test environment:</li>
-</ul>
-<pre><code>cd /tmp/radar_mgr_XXXXXXX
-ls docker-compose.core.yml
-./stop-radar.sh --all
-docker compose -f docker-compose.webhook.yml down -v
-cd /tmp
-rm -rf radar_mgr_*
-</code></pre>
-<p>Each Ansible run creates a staging directory in the endpoint where the manager is bootstrapped. The successful run directory (starts with <code>radar_mgr_</code> ending with a random identifier <code>XXXXXXX</code>) should be checked for the existence of a Docker Compose file and then cleaned.</p>
-<ul>
-<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
-</ul>
-<pre><code>docker compose -f docker-compose.agents.yml down -v
-</code></pre>
-<h2>Expected outcome</h2>
-<ol start="2">
-<li>Check the setup:</li>
-</ol>
-<h3>2. Check the setup</h3>
-<h4>In Wazuh Manager</h4>
-<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
-<pre><code>docker exec -it wazuh.manager bash
-</code></pre>
-<ul>
-<li><strong>2.1</strong> RADAR snippet for log_volume is present in ossec.conf</li>
-</ul>
-<pre><code>grep -n 'RADAR: log_volume' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check ossec.conf contains a <code>RADAR: log_volume BEGIN/END</code> block with the log_volume-related settings.</p>
-<ul>
-<li><strong>2.2</strong> RADAR decoders for log_volume exist</li>
-</ul>
-<pre><code>grep -n 'RADAR_DECODERS: log_volume' /var/ossec/etc/decoders/local_decoder.xml
-</code></pre>
-<p>to check local_decoder.xml contains a <code>RADAR_DECODERS: log_volume</code> block defining decoders that produce a <code>log_bytes</code> field.</p>
-<ul>
-<li><strong>2.3</strong> RADAR rules for log_volume exist</li>
-</ul>
-<pre><code>grep -n 'RADAR_RULES: log_volume' /var/ossec/etc/rules/local_rules.xml
-</code></pre>
-<p>too check local_rules.xml contains a <code>RADAR_RULES: log_volume</code> block with rules using <code>log_bytes</code> for anomaly detection.</p>
-<ul>
-<li><strong>2.4</strong> OpenSearch template radar-log-volume is present</li>
-</ul>
-<pre><code>curl -u &quot;$OS_USER:$OS_PASS&quot; -k &quot;$OS_URL/_index_template/radar-log-volume?pretty&quot;
-</code></pre>
-<p>to ensure HTTP status is 200 and the template JSON exists with mappings for <code>log_bytes</code> as a numeric type.</p>
-<ul>
-<li><strong>2.5</strong> log_volume rules are bound to active responses</li>
-</ul>
-<pre><code>grep -A5 'email_ar' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check Log volume anomaly rule ID(s) reference <code>email_ar.py</code> as intended.</p>
-<h4>In endpoints running agents</h4>
-<ul>
-<li><strong>2.6</strong> RADAR helper directory and script are installed on the SSH agent host.</li>
-</ul>
-<pre><code>ls -ld /opt/radar
-ls -l /opt/radar/radar-helper.py
-</code></pre>
-<p>to check <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
-<ul>
-<li><strong>2.7</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</li>
-</ul>
-<pre><code>systemctl status radar-helper.service
-</code></pre>
-<p>to check that the service is active.</p>
-<ul>
-<li><strong>2.8</strong> Agent <code>ossec.conf</code> on agent includes the <code>log_volume</code> RADAR snippet.</li>
-</ul>
-<pre><code>grep -n 'RADAR' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check <code>/var/ossec/etc/ossec.conf</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code>, and contains a <code>RADAR: log_volume BEGIN/END</code> block inserted before <code>&lt;/ossec_config&gt;</code>.</p>
-<ul>
-<li><strong>2.9</strong> Wazuh agent service is running on SSH agents after restart.</li>
-</ul>
-<pre><code>/var/ossec/bin/wazuh-control status
-</code></pre>
-<p>to check status output indicates the agent is <code>running</code> with no error messages.</p>
-<h4>Post-test cleanup</h4>
-<ul>
-<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
-</ul>
-<pre><code>docker ps
-</code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-011">TRB-011 TCER: RADAR build log volume growth</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-045">3.5 Run RADAR for log volume abnormal growth <small>TST-045</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-044">TST-044</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>The working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>After building the scenario, wait about 3 minutes for index creation and correct mapping. Then, run RADAR with SCENARIO_NAME log_volume</li>
-</ol>
-<pre><code>./run-radar.sh log_volume
-</code></pre>
-<h2>Expected outcome</h2>
-<ol start="2">
-<li>
-<p>In Wazuh Dashboard:</p>
-<p>2.1. The detector <code>LOG_VOLUME_DETECTOR</code> is created in Wazuh Dashboard with the correct configurations. In Anomaly Detection menu the created detector should be visible. The correct configurations can be found in <a href="/radar/config.yaml"><code>config.yaml</code></a> under <code>log_volume</code> key.</p>
-<p>2.2. The monitor is created in Wazuh Dashboard with the trigger to the webhook. In Alerting menu created Monitor should be listed under Monitors tab.</p>
-</li>
-</ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-012">TRB-012 TCER: Add log volume growth anomaly detector</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>3</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-046">3.6 Suspicious login detection validation <small>TST-046</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-042">TST-042</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Paste these logs into <code>/var/log/auth.log</code>, adjusting the timestamps on the agent so that all entries fall within a one-minute interval:</li>
-</ol>
-<pre><code>2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 8.8.8.8 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 1.0.136.99 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 89.31.143.90 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 47.91.170.222 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 150.95.255.38 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 84.32.84.32 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Accepted publickey for test01 from 8.8.8.8 port 60850 ssh2: ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-</code></pre>
-<p>For example, the first log line should start <code>2025-12-06T15:10:20.227122+01:00</code> and the last line should end with <code>2025-12-06T15:11:20.227122+01:00</code>, so that the entire sequence remains within a one-minute window.</p>
-<h2>Expected outcome</h2>
-<ol>
-<li>In Wazuh Dashboard Discovery page, the rule ID starting with <code>210***</code> should be triggered.</li>
-<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-041">TST-041</a>) specified receives an email about the alert.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRB.html#TRB-013">TRB-013 TCER: RADAR suspicious login detection</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-047">3.7 Non-whitelist GeoIP detection validation <small>TST-047</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-043">TST-043</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Paste these logs into <code>/var/log/auth.log</code> with modification of the date in the agent:</li>
-</ol>
-<pre><code>2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Accepted publickey for test01 from 8.8.8.8 port 60850 ssh2: ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-</code></pre>
-<p>For example, a single log line starting with <code>2025-12-06T15:10:20.227122+01:00 edge.vm ...</code></p>
-<h2>Expected outcome</h2>
-<ol>
-<li>In the Wazuh Dashboard Discovery page, the rule ID starting with <code>10090*</code> should be triggered.</li>
-<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-041">TST-041</a>) specified receives an email about the alert.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRB.html#TRB-014">TRB-014 TCER: RADAR non-whitelist GeoIP detection</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-048">3.8 Log volume abnormal growth validation <small>TST-048</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-045">TST-045</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>After starting detector, 30 minutes should be passed for normalizing the training to insert a spike. To insert a spike, in Wazuh Dashboard -&gt; Indexer Management -&gt; Dev Tools, run this query with adapting the timestamp:</li>
-</ol>
-<pre><code>POST wazuh-ad-log-volume-XXXX.XX.XX/_doc
-{
-  &quot;@timestamp&quot;: &quot;XXXX-XX-XXTXX:XX:00.000Z&quot;,
-  &quot;data&quot;: {
-    &quot;log_path&quot;: &quot;/var/log&quot;,
-    &quot;log_bytes&quot;: 63210547182
-  },
-  &quot;agent&quot;: { &quot;name&quot;: &quot;edge.vm&quot; },
-  &quot;manager&quot;: { &quot;name&quot;: &quot;wazuh.manager&quot; },
-  &quot;predecoder&quot;: {&quot;program_name&quot;: &quot;log_volume_metric&quot;}
-}
-</code></pre>
-<h2>Expected outcome</h2>
-<ol>
-<li>In the Wazuh Dashboard Discovery page, the rule ID starting with <code>100309</code> should be triggered.</li>
-<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-041">TST-041</a>) specified receives an email about the alert.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRB.html#TRB-015">TRB-015 TCER: RADAR log volume growth anomaly detector</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.5</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-049">3.9 Setup RADAR foundation v0.7 <small>TST-049</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>A test controller host/node is available:<ul>
-<li>A Linux machine/VM (the Ansible control node) is available to the tester.</li>
-<li>OS: recent GNU/Linux distribution, preferably an Ubuntu distribution (22.04+).</li>
-</ul>
-</li>
-<li>A second test node (accessible via the controller node) is available: GNU/Linux distro e.g. Debian GNU/Linux 13 (trixie)</li>
-<li>Ansible is installed on the controller host:<ul>
+<li>Ansible is installed on the controller host under the root account:<ul>
 <li>Location: install Ansible only on the controller node.</li>
 <li>Installation reference:<ul>
 <li>if <code>pipx</code> is available, follow the instruction` in <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html#pipx-install">Ansible Installation Documentation using pipx</a>.</li>
@@ -4040,6 +3086,7 @@ ls -l /opt/radar/radar-helper.py
 </li>
 <li>If the agents are to be deployed on <code>remote</code> nodes, the Wazuh agents must be installed in the monitored endpoints using <a href="https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-linux.html">the official documentation</a>.</li>
 <li>The agent must be registered with the Wazuh manager following <a href="https://documentation.wazuh.com/current/user-manual/agent/agent-enrollment/enrollment-methods/via-agent-configuration/linux-endpoint.html">the official documentation</a>.</li>
+<li>The DECIPHER Stack (DECIPHER, FlowIntel and MISP) is deployed and reachable from the Wazuh manager. The validated version is available in the <a href="https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher">DECIPHER folder of the SATRAP-DL repository</a>, tested against <code>v0.4</code> of SATRAP-DL. Once deployed, configure the <code>DECIPHER_BASE_URL</code> variable in <code>.env</code> to point to the running DECIPHER instance.</li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -4078,6 +3125,7 @@ WEBHOOK_URL=http://192.168.5.4:8080/notify  # Change accordingly
 # =======================
 
 AR_LOG_FILE=/var/ossec/logs/active-responses.log
+AR_RISK_CONFIG=/var/ossec/active-response/bin/ar.yaml
 
 # =======================
 # SMTP
@@ -4089,6 +3137,15 @@ SMTP_USER=SMTP_USER # Change accordingly
 SMTP_PASS=SMTP_PASS # Change accordingly
 EMAIL_TO=RECEIVER_EMAIL@example.com # Change accordingly
 SMTP_STARTTLS=yes
+
+# =======================
+# DECIPHER
+# =======================
+
+DECIPHER_BASE_URL=http://localhost:8000  # Change IP accordingly
+DECIPHER_VERIFY_SSL=VERIFY_SSL           # Change IP accordingly
+DECIPHER_TIMEOUT_SEC=30                  # Change IP accordingly
+
 </code></pre>
 <ol start="3">
 <li>
@@ -4139,7 +3196,7 @@ SMTP_STARTTLS=yes
 </ol>
 <pre><code>ls config/wazuh_indexer_ssl_certs/
 </code></pre>
-<p><em>Child links:</em> <a href="TRB.html#TRB-016">TRB-016 TCER: Setup RADAR foundation</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-030">TRP-030 TCER: Setup RADAR foundation</a></p>
 <table>
 <thead>
 <tr>
@@ -4174,14 +3231,14 @@ SMTP_STARTTLS=yes
 </tr>
 <tr>
 <td>version</td>
-<td>0.7</td>
+<td>0.8</td>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-050">3.10 RADAR: build suspicious login <small>TST-050</small></h2>
+<h2 id="TST-042">3.2 Build suspicious login <small><a href="TST.html#TST-042">TST-042</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
-<li>RADAR is setup according to <a href="./TST.html#TST-049">TST-049</a></li>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -4215,7 +3272,7 @@ SMTP_STARTTLS=yes
 </li>
 </ul>
 <ol start="3">
-<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-054">TST-054</a>:</li>
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-046">TST-046</a>:</li>
 </ol>
 <ul>
 <li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
@@ -4311,8 +3368,8 @@ ls -l /opt/radar/radar-helper.py
 </ul>
 <pre><code>docker ps
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-017">TRB-017 TCER: RADAR build suspicious login</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a>, <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-031">TRP-031 TCER: Build suspicious login</a></p>
 <table>
 <thead>
 <tr>
@@ -4347,769 +3404,14 @@ ls -l /opt/radar/radar-helper.py
 </tr>
 <tr>
 <td>version</td>
-<td>0.7</td>
+<td>0.8</td>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-051">3.11 RADAR: build non-whitelist GeoIP detection <small>TST-051</small></h2>
+<h2 id="TST-043">3.3 Build non-whitelist GeoIP detection <small><a href="TST.html#TST-043">TST-043</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
-<li>RADAR is setup according to <a href="./TST.html#TST-049">TST-049</a></li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>In the controller host, the working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>Build RADAR with SCENARIO_NAME geoip_detection, if <code>manager</code> is <code>local</code> then the command should be run with <code>sudo</code>:</li>
-</ol>
-<pre><code>./build-radar.sh geoip_detection --agent remote/local --manager remote/local --manager_exists true/false
-</code></pre>
-<p>In this step, please choose options according to your setup:</p>
-<ul>
-<li>
-<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
-</li>
-<li>
-<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
-</li>
-<li>
-<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
-<ul>
-<li>true  : do not bootstrap a manager</li>
-<li>false : bootstrap a manager</li>
-</ul>
-</li>
-<li>
-<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
-                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
-</li>
-</ul>
-<ol start="3">
-<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-055">TST-055</a>:</li>
-</ol>
-<ul>
-<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
-</ul>
-<pre><code>./stop-radar.sh --manager local
-</code></pre>
-<ul>
-<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the controller node/host, run these commands:</li>
-</ul>
-<pre><code>./stop-radar.sh --manager remote
-</code></pre>
-<ul>
-<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
-</ul>
-<pre><code>./stop-radar.sh --agent local
-</code></pre>
-<ul>
-<li>In case the agent is chosen to be <code>remote</code>, in the controller node/host, run this command:</li>
-</ul>
-<pre><code>./stop-radar.sh --agent remote
-</code></pre>
-<h2>Expected outcome</h2>
-<h3>2. Check the setup</h3>
-<h4>In Wazuh Manager</h4>
-<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
-<pre><code>docker exec -it wazuh.manager bash
-</code></pre>
-<ul>
-<li><strong>2.1</strong> Whitelist file exists</li>
-</ul>
-<pre><code>ls -l /var/ossec/etc/lists/whitelist_countries
-</code></pre>
-<p>to ensure that <code>/var/ossec/etc/lists/whitelist_countries</code> exists, its contents match the scenario’s <code>whitelist_countries</code>, and its owner is <code>root:wazuh</code>, with mode <code>0664</code>.</p>
-<ul>
-<li><strong>2.2</strong> <code>ossec.conf</code> has <code>&lt;list&gt;</code> entry for <code>whitelist_countries</code></li>
-</ul>
-<pre><code>grep -n 'whitelist_countries' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to ensure under <code>&lt;ruleset&gt;</code>, there is a <code>&lt;list&gt;...whitelist_countries&lt;/list&gt;</code> entry with the RADAR marker for <code>geoip_detection</code>.</p>
-<ul>
-<li><strong>2.3</strong> Custom <code>0310 SSH</code> decoder deployed; verify this by running</li>
-</ul>
-<pre><code>ls -l /var/ossec/etc/decoders/0310-ssh.xml
-</code></pre>
-<p>to ensure that <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</p>
-<ul>
-<li><strong>2.4</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code>; verify via</li>
-</ul>
-<pre><code>grep '&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to ensure that a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</p>
-<ul>
-<li><strong>2.5</strong> RADAR rules for <code>geoip_detection</code> exist</li>
-</ul>
-<pre><code>ls -al /var/ossec/etc/rules/ | grep &quot;geoip-detection&quot;
-</code></pre>
-<p>to ensure rules for geoip detection exists.</p>
-<ul>
-<li><strong>2.6</strong> GeoIP non-whitelist rules are bound to active responses</li>
-</ul>
-<pre><code>grep -A10 'radar_ar' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check GeoIP non-whitelist rule ID(s) reference the correct <code>&lt;active-response&gt;</code>.</p>
-<ul>
-<li><strong>2.7</strong> Agent configurations are in place; verify via</li>
-</ul>
-<pre><code>cat /var/ossec/etc/shared/default/agent.conf | grep &quot;suspicious_login&quot;
-</code></pre>
-<p>to ensure that agent configurations for geoip detection exists.</p>
-<h4>In endpoints running agents</h4>
-<ul>
-<li><strong>2.8</strong> RADAR helper directory and script are installed on the SSH agent host.</li>
-</ul>
-<pre><code>ls -ld /opt/radar
-ls -l /opt/radar/radar-helper.py
-</code></pre>
-<p>to check <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
-<ul>
-<li><strong>2.9</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</li>
-</ul>
-<pre><code>systemctl status radar-helper.service
-</code></pre>
-<p>to check that the service is active.</p>
-<h4>Post-test cleanup</h4>
-<ul>
-<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
-</ul>
-<pre><code>docker ps
-</code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-055">SRS-055 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-018">TRB-018 TCER: RADAR build non-whitelist GeoIP</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>3</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.7</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-052">3.12 RADAR: build log volume abnormal growth <small>TST-052</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is setup according to <a href="./TST.html#TST-049">TST-049</a></li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>The working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>Build RADAR with SCENARIO_NAME log_volume, if <code>manager</code> is <code>local</code> then the command should be run with <code>sudo</code>:</li>
-</ol>
-<pre><code>./build-radar.sh log_volume --agent remote/local --manager remote/local --manager_exists true/false
-</code></pre>
-<p>In this step, please choose options according to your setup:</p>
-<ul>
-<li>
-<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
-</li>
-<li>
-<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
-</li>
-<li>
-<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
-<ul>
-<li>true  : do not bootstrap a manager</li>
-<li>false : bootstrap a manager</li>
-</ul>
-</li>
-<li>
-<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
-                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
-</li>
-</ul>
-<ol start="3">
-<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-056">TST-056</a>:</li>
-</ol>
-<ul>
-<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
-</ul>
-<pre><code>./stop-radar.sh --manager local
-</code></pre>
-<ul>
-<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the controller node/host, run these commands:</li>
-</ul>
-<pre><code>./stop-radar.sh --manager remote
-</code></pre>
-<ul>
-<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
-</ul>
-<pre><code>./stop-radar.sh --agent local
-</code></pre>
-<ul>
-<li>In case the agent is chosen to be <code>remote</code>, in the controller node/host, run this command:</li>
-</ul>
-<pre><code>./stop-radar.sh --agent remote
-</code></pre>
-<h2>Expected outcome</h2>
-<ol start="2">
-<li>Check the setup:</li>
-</ol>
-<h3>2. Check the setup</h3>
-<h4>In Wazuh Manager</h4>
-<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
-<pre><code>docker exec -it wazuh.manager bash
-</code></pre>
-<ul>
-<li><strong>2.1</strong> RADAR snippet for log_volume is present in ossec.conf</li>
-</ul>
-<pre><code>grep -n 'RADAR: log_volume' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check ossec.conf contains a <code>RADAR: log_volume BEGIN/END</code> block with the log_volume-related settings.</p>
-<ul>
-<li><strong>2.2</strong> RADAR decoders for log_volume exist</li>
-</ul>
-<pre><code>ls -al /var/ossec/etc/decoders/ | grep &quot;log-volume&quot;
-</code></pre>
-<p>to check decoders for log volume are in place.</p>
-<ul>
-<li><strong>2.3</strong> RADAR rules for log_volume exist</li>
-</ul>
-<pre><code>ls -al /var/ossec/etc/rules/ | grep &quot;log-volume&quot;
-</code></pre>
-<p>to check rules for log volume are in place.</p>
-<ul>
-<li><strong>2.4</strong> OpenSearch template radar-log-volume is present</li>
-</ul>
-<pre><code>curl -u &quot;$OS_USER:$OS_PASS&quot; -k &quot;$OS_URL/_index_template/radar-log-volume?pretty&quot;
-</code></pre>
-<p>to ensure HTTP status is 200 and the template JSON exists with mappings for <code>log_bytes</code> as a numeric type.</p>
-<ul>
-<li><strong>2.5</strong> log_volume rules are bound to active responses</li>
-</ul>
-<pre><code>grep -A5 'radar_ar' /var/ossec/etc/ossec.conf
-</code></pre>
-<p>to check Log volume anomaly rule ID(s) reference <code>radar_ar.py</code> as intended.</p>
-<ul>
-<li><strong>2.6</strong> Agent configurations are in place; verify via</li>
-</ul>
-<pre><code>cat /var/ossec/etc/shared/default/agent.conf | grep &quot;log_volume_metric&quot;
-</code></pre>
-<p>to ensure that agent configurations for log volume exists.</p>
-<h4>In endpoints running agents</h4>
-<ul>
-<li><strong>2.7</strong> RADAR helper directory and script are installed on the SSH agent host.</li>
-</ul>
-<pre><code>ls -ld /opt/radar
-ls -l /opt/radar/radar-helper.py
-</code></pre>
-<p>to check <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
-<ul>
-<li><strong>2.8</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</li>
-</ul>
-<pre><code>systemctl status radar-helper.service
-</code></pre>
-<p>to check that the service is active.</p>
-<h4>Post-test cleanup</h4>
-<ul>
-<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
-</ul>
-<pre><code>docker ps
-</code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-019">TRB-019 TCER: RADAR build log volume growth</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.7</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-053">3.13 Run RADAR for log volume abnormal growth <small>TST-053</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-052">TST-052</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>The working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>After building the scenario, wait about 3 minutes for index creation and correct mapping. Then, run RADAR with SCENARIO_NAME log_volume</li>
-</ol>
-<pre><code>./run-radar.sh log_volume
-</code></pre>
-<h2>Expected outcome</h2>
-<ol start="2">
-<li>
-<p>In Wazuh Dashboard:</p>
-<p>2.1. The detector <code>LOG_VOLUME_DETECTOR</code> is created in Wazuh Dashboard with the correct configurations. In Anomaly Detection menu the created detector should be visible. The correct configurations can be found in <a href="/radar/config.yaml"><code>config.yaml</code></a> under <code>log_volume</code> key.</p>
-<p>2.2. The monitor is created in Wazuh Dashboard with the trigger to the webhook. In Alerting menu created Monitor should be listed under Monitors tab.</p>
-</li>
-</ol>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-020">TRB-020 TCER: Add log volume growth anomaly detector</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>3</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.7</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-054">3.14 Suspicious login detection validation <small>TST-054</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-050">TST-050</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Paste these logs into <code>/var/log/auth.log</code>, adjusting the timestamps on the agent so that all entries fall within a one-minute interval:</li>
-</ol>
-<pre><code>2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 8.8.8.8 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 1.0.136.99 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 89.31.143.90 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 47.91.170.222 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 150.95.255.38 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Failed password for test01 from 84.32.84.32 port 1045 ssh2: ED25519 SHA256:A.
-2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Accepted publickey for test01 from 8.8.8.8 port 60850 ssh2: ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-</code></pre>
-<p>For example, the first log line should start <code>2025-12-06T15:10:20.227122+01:00</code> and the last line should end with <code>2025-12-06T15:11:20.227122+01:00</code>, so that the entire sequence remains within a one-minute window.</p>
-<h2>Expected outcome</h2>
-<ol>
-<li>In Wazuh Dashboard Discovery page, the rule ID starting with <code>210***</code> should be triggered.</li>
-<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-049">TST-049</a>) specified receives an email about the alert.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRB.html#TRB-021">TRB-021 TCER: RADAR suspicious login detection</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.7</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-055">3.15 Non-whitelist GeoIP detection validation <small>TST-055</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-051">TST-051</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>Paste these logs into <code>/var/log/auth.log</code> with modification of the date in the agent:</li>
-</ol>
-<pre><code>2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Accepted publickey for test01 from 8.8.8.8 port 60850 ssh2: ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-</code></pre>
-<p>For example, a single log line starting with <code>2025-12-06T15:10:20.227122+01:00 edge.vm ...</code></p>
-<h2>Expected outcome</h2>
-<ol>
-<li>In the Wazuh Dashboard Discovery page, the rule ID starting with <code>10090*</code> should be triggered.</li>
-<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-049">TST-049</a>) specified receives an email about the alert.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRB.html#TRB-022">TRB-022 TCER: RADAR non-whitelist GeoIP detection</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.7</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-056">3.16 Log volume abnormal growth validation <small>TST-056</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-053">TST-053</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>After starting detector, 30 minutes should be passed for normalizing the training to insert a spike. To insert a spike, in Wazuh Dashboard -&gt; Indexer Management -&gt; Dev Tools, run this query with adapting the timestamp:</li>
-</ol>
-<pre><code>POST wazuh-ad-log-volume-XXXX.XX.XX/_doc
-{
-  &quot;@timestamp&quot;: &quot;XXXX-XX-XXTXX:XX:00.000Z&quot;,
-  &quot;data&quot;: {
-    &quot;log_path&quot;: &quot;/var/log&quot;,
-    &quot;log_bytes&quot;: 63210547182
-  },
-  &quot;agent&quot;: { &quot;name&quot;: &quot;edge.vm&quot; },
-  &quot;manager&quot;: { &quot;name&quot;: &quot;wazuh.manager&quot; },
-  &quot;predecoder&quot;: {&quot;program_name&quot;: &quot;log_volume_metric&quot;}
-}
-</code></pre>
-<h2>Expected outcome</h2>
-<ol>
-<li>In the Wazuh Dashboard Discovery page, the rule ID starting with <code>100309</code> should be triggered.</li>
-<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-049">TST-049</a>) specified receives an email about the alert.</li>
-</ol>
-<p><em>Child links:</em> <a href="TRB.html#TRB-023">TRB-023 TCER: RADAR log volume growth anomaly detector</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>2</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.7</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-057">3.17 RADAR FlowIntel case creation via Active Response <small>TST-057</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>A test controller host/node is available:<ul>
-<li>A Linux machine/VM (the Ansible control node) is available to the tester.</li>
-<li>OS: recent GNU/Linux distribution, preferably an Ubuntu distribution (22.04+).</li>
-</ul>
-</li>
-<li>A second test node (accessible via the controller node) is available: GNU/Linux distro e.g. Debian GNU/Linux 13 (trixie)</li>
-<li>Ansible is installed on the controller host:<ul>
-<li>Location: install Ansible only on the controller node.</li>
-<li>Installation reference:<ul>
-<li>if <code>pipx</code> is available, follow the instruction` in <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html#pipx-install">Ansible Installation Documentation using pipx</a>.</li>
-<li>otherwise, follow the <a href="https://docs.ansible.com/projects/ansible/latest/installation_guide/installation_distros.html">official instructions for Linux distributions</a>.</li>
-<li>Minimum version: Ansible <code>2.15+</code>.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Targeted Wazuh manager and agent versions: <code>4.14.1</code></li>
-<li>A Flowintel instance is running and there is a connection between Flowintel and the Wazuh Manager. To bring up the supporting services for the Flowintel integration, follow the <a href="https://github.com/AbstractionsLab/satrap-dl/tree/main/deployment"><strong>DECIPHER deployment guide to bring up Flowintel:</strong></a>. To enable the connection, configure the <code>FLOWINTEL_*</code> variables in <code>.env</code>.</li>
-<li>Environment values such as <code>OS_URL</code>, <code>OS_USER</code>, <code>OS_PASS</code>, <code>DASHBOARD_URL</code>, <code>DASHBOARD_USER</code>, <code>DASHBOARD_PASS</code> and SMTP credentials are available to the tester. The tester has network access (SSH) from the test controller node to controlled endpoints.</li>
-<li>If either the Wazuh agent (aka agent) or the Wazuh manager (aka manager) is chosen to be <code>remote</code>:<ul>
-<li>the remote agent/manager needs to have Docker and Docker Compose installed following the official documentations for <a href="https://docs.docker.com/engine/install/">Docker</a> and <a href="https://docs.docker.com/compose/install">Docker Compose</a>.</li>
-<li>an available user in remote agent or manager with sudo access, and tester needs to have SSH access to the user from test controller host.</li>
-</ul>
-</li>
-<li>If the agents are to be deployed on <code>remote</code> nodes, the Wazuh agents must be installed in the monitored endpoints using <a href="https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-linux.html">the official documentation</a>.</li>
-<li>The agent must be registered with the Wazuh manager following <a href="https://documentation.wazuh.com/current/user-manual/agent/agent-enrollment/enrollment-methods/via-agent-configuration/linux-endpoint.html">the official documentation</a>.</li>
-</ul>
-<h2>Test steps</h2>
-<ol>
-<li>In the controller host, the working directory is required to be <code>radar</code>:</li>
-</ol>
-<pre><code>cd radar
-</code></pre>
-<ol start="2">
-<li>Set <code>.env</code> file with required variables:</li>
-</ol>
-<pre><code># =======================
-# OpenSearch Configuration
-# =======================
-OS_URL=https://192.168.5.4:9200  # Change accordingly
-OS_USER=admin
-OS_PASS=SecretPassword
-OS_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
-
-DASHBOARD_URL=https://192.168.5.4  # Change accordingly
-DASHBOARD_USER=admin
-DASHBOARD_PASS=SecretPassword
-DASHBOARD_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
-
-WAZUH_API_URL=https://192.168.5.4:55000  # Change accordingly
-WAZUH_AUTH_USER=wazuh-wui
-WAZUH_AUTH_PASS=MyS3cr37P450r.*-
-
-WAZUH_AGENT_VERSION=4.14.1-1
-WAZUH_MANAGER_ADDRESS=192.168.5.4  # Change accordingly
-
-WEBHOOK_NAME=&quot;RADAR_Webhook&quot;
-WEBHOOK_URL=http://192.168.5.4:8080/notify  # Change accordingly
-
-# =======================
-# Logging
-# =======================
-
-AR_LOG_FILE=/var/ossec/logs/active-responses.log
-AR_RISK_CONFIG=/var/ossec/active-response/bin/ar.yaml
-
-# =======================
-# SMTP
-# =======================
-
-SMTP_HOST=SMTP_HOST # Change accordingly
-SMTP_PORT=SMTP_PORT # Change accordingly
-SMTP_USER=SMTP_USER # Change accordingly
-SMTP_PASS=SMTP_PASS # Change accordingly
-EMAIL_TO=RECEIVER_EMAIL@example.com # Change accordingly
-SMTP_STARTTLS=yes
-
-# =======================
-# FLOWINTEL
-# =======================
-
-FLOWINTEL_BASE_URL=http://192.168.0.28:7006/api  # Change IP accordingly
-FLOWINTEL_API_KEY=API_KEY                        # Change accordingly
-FLOWINTEL_VERIFY_SSL=VERIFY_SSL                  # Change accordingly
-PYFLOWINTEL_PATH=/var/ossec/active-response/bin/pyflowintel
-</code></pre>
-<ol start="3">
-<li>
-<p>In case either the agent or the manager is remote:</p>
-<p>3.1. Change <code>inventory.yaml</code> based on remote agent/manager data, user credentials and docker container names. Change is needed:</p>
-<ul>
-<li>for remote agents, the endpoint part <code>wazuh_agents_ssh</code> must be configured.</li>
-<li>for a remote manager, the endpoint part <code>wazuh_manager_ssh</code> must be configured.</li>
-<li>in each of the above two, you may need to define a <code>ansible_ssh_private_key_file: &lt;path-to-ssh-key&gt;</code> attribute (to enable access from the control node to the controlled node)</li>
-</ul>
-<p>3.2. Create a vault for each host in <code>inventory.yaml</code> (IMPORTANT: the vault name and host name must match):</p>
-<ul>
-<li>for remote agents: <code>ansible-vault create host_vars/edge.vm.yml</code></li>
-<li>for remote manager: <code>ansible-vault create host_vars/mgr.remote.yml</code></li>
-</ul>
-<p>3.3. Assign a vault password and set sudo password:
-<code>ansible_become_password: &lt;selected-user-sudo-password&gt;</code></p>
-</li>
-<li>
-<p>Existence of Wazuh manager on targeted endpoint (local/remote) (signaled via <code>manager_exists</code> flag used by <code>build-radar.sh</code>):</p>
-<p>4.1. In case the manager does not exist, certificates must be issued matching the <code>MANAGER_IP</code> and <code>INDEXER_IP</code> according to the documentation in <code>config/wazuh_indexer_ssl_certs/README.md</code>; in short, once you have adapted <code>config/certs.yml</code> according to your endpoints (IP address and container name), from within the <code>config</code> folder, run</p>
-<p><code>docker run --rm -it   -v "PWD/certs.yml:/config/certs.yml:ro"−v"PWD/certs.yml:/config/certs.yml:ro"   -v "PWD/certs.yml:/config/certs.yml:ro"−v"PWD/wazuh_indexer_ssl_certs:/certificates"   wazuh/wazuh-certs-generator:0.0.2</code></p>
-<p>4.2. If the manager is already in place, certificates must be copied into <code>config/wazuh_indexer_ssl_certs</code>.</p>
-</li>
-</ol>
-<h2>Expected outcome</h2>
-<ol start="3">
-<li>
-<p>In the controller host, the vaults are created and SSH access is set correctly:</p>
-<ul>
-<li>if the agent is chosen to be remote:</li>
-</ul>
-<p>3.1 The vault is created and exists in <code>host_vars/</code>:
-<code>ansible-vault view host_vars/edge.vm.yml</code></p>
-<p>3.2 Ansible reaches the SSH group:
-<code>ansible -i inventory.yaml wazuh_agents_ssh -m ping --ask-vault-pass</code></p>
-<ul>
-<li>if the manager is chosen to be remote:</li>
-</ul>
-<p>3.1 The vault is created and exists in <code>host_vars/</code>:
-<code>ansible-vault view host_vars/mgr.remote.yml</code></p>
-<p>3.2 Ansible reaches the SSH group:
-<code>ansible -i inventory.yaml wazuh_manager_ssh -m ping --ask-vault-pass</code></p>
-</li>
-<li>
-<p>The certificates are available under <code>config/wazuh_indexer_ssl_certs/</code>:</p>
-</li>
-</ol>
-<pre><code>ls config/wazuh_indexer_ssl_certs/
-</code></pre>
-<p><em>Child links:</em> <a href="TRB.html#TRB-024">TRB-024 TCER: RADAR Flowintel case creation via Active Response</a></p>
-<table>
-<thead>
-<tr>
-<th>Attribute</th>
-<th>Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>platform</td>
-<td>GNU/Linux (Ubuntu+Debian)</td>
-</tr>
-<tr>
-<td>execution_type</td>
-<td>Manual</td>
-</tr>
-<tr>
-<td>verification_method</td>
-<td>T</td>
-</tr>
-<tr>
-<td>release</td>
-<td>alpha</td>
-</tr>
-<tr>
-<td>complexity</td>
-<td>3</td>
-</tr>
-<tr>
-<td>test_data</td>
-<td>see referenced files</td>
-</tr>
-<tr>
-<td>version</td>
-<td>0.7</td>
-</tr>
-</tbody>
-</table>
-<h2 id="TST-058">3.17 RADAR: build non-whitelist GeoIP detection with case creation <small>TST-058</small></h2>
-<h2>Preconditions and setup actions</h2>
-<ul>
-<li>RADAR is setup according to <a href="./TST.html#TST-057">TST-057</a></li>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
 </ul>
 <h2>Test steps</h2>
 <ol>
@@ -5143,7 +3445,7 @@ PYFLOWINTEL_PATH=/var/ossec/active-response/bin/pyflowintel
 </li>
 </ul>
 <ol start="3">
-<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-059">TST-059</a>:</li>
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-047">TST-047</a>:</li>
 </ol>
 <ul>
 <li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
@@ -5240,8 +3542,8 @@ ls -l /opt/radar/radar-helper.py
 </ul>
 <pre><code>docker ps
 </code></pre>
-<p><em>Parent links:</em> <a href="SRS.html#SRS-055">SRS-055 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a></p>
-<p><em>Child links:</em> <a href="TRB.html#TRB-025">TRB-025 TCER: RADAR build non-whitelist GeoIP detection with case creation</a></p>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a>, <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-032">TRP-032 TCER: Build non-whitelist GeoIP detection</a></p>
 <table>
 <thead>
 <tr>
@@ -5276,29 +3578,136 @@ ls -l /opt/radar/radar-helper.py
 </tr>
 <tr>
 <td>version</td>
-<td>0.7</td>
+<td>0.8</td>
 </tr>
 </tbody>
 </table>
-<h2 id="TST-059">3.19 Non-whitelist GeoIP detection validation <small>TST-059</small></h2>
+<h2 id="TST-044">3.4 Build log volume abnormal growth <small><a href="TST.html#TST-044">TST-044</a></small></h2>
 <h2>Preconditions and setup actions</h2>
 <ul>
-<li>RADAR is built according to the scenario <a href="./TST.html#TST-058">TST-058</a>.</li>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
 </ul>
 <h2>Test steps</h2>
 <ol>
-<li>Paste these logs into <code>/var/log/auth.log</code> with modification of the date in the agent:</li>
+<li>The working directory is required to be <code>radar</code>:</li>
 </ol>
-<pre><code>2025-XX-XXTXX:XX:XX.227122+01:00 edge.vm sshd[1169457]: Accepted publickey for test01 from 8.8.8.8 port 60850 ssh2: ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+<pre><code>cd radar
 </code></pre>
-<p>For example, a single log line starting with <code>2025-12-06T15:10:20.227122+01:00 edge.vm ...</code></p>
-<h2>Expected outcome</h2>
-<ol>
-<li>In the Wazuh Dashboard Discovery page, the rule ID starting with <code>10090*</code> should be triggered.</li>
-<li>The email (<code>EMAIL_TO</code> from <code>.env</code> of <a href="./TST.html#TST-057">TST-057</a>) specified receives an email about the alert.</li>
-<li>The FlowIntel case is created in the <code>Cases</code> menu in FlowIntel defined in <code>FLOWINTEL_BASE_URL</code> address.</li>
+<ol start="2">
+<li>Build RADAR with SCENARIO_NAME log_volume, if <code>manager</code> is <code>local</code> then the command should be run with <code>sudo</code>:</li>
 </ol>
-<p><em>Child links:</em> <a href="TRB.html#TRB-026">TRB-026 TCER: RADAR non-whitelist GeoIP detection + Flowintel</a></p>
+<pre><code>./build-radar.sh log_volume --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<p>In this step, please choose options according to your setup:</p>
+<ul>
+<li>
+<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
+</li>
+<li>
+<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
+</li>
+<li>
+<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
+<ul>
+<li>true  : do not bootstrap a manager</li>
+<li>false : bootstrap a manager</li>
+</ul>
+</li>
+<li>
+<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
+</li>
+</ul>
+<ol start="3">
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-048">TST-048</a>:</li>
+</ol>
+<ul>
+<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --manager local
+</code></pre>
+<ul>
+<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the controller node/host, run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --manager remote
+</code></pre>
+<ul>
+<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>./stop-radar.sh --agent local
+</code></pre>
+<ul>
+<li>In case the agent is chosen to be <code>remote</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>./stop-radar.sh --agent remote
+</code></pre>
+<h2>Expected outcome</h2>
+<ol start="2">
+<li>Check the setup:</li>
+</ol>
+<h3>2. Check the setup</h3>
+<h4>In Wazuh Manager</h4>
+<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
+<pre><code>docker exec -it wazuh.manager bash
+</code></pre>
+<ul>
+<li><strong>2.1</strong> RADAR snippet for log_volume is present in ossec.conf</li>
+</ul>
+<pre><code>grep -n 'RADAR: log_volume' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to check ossec.conf contains a <code>RADAR: log_volume BEGIN/END</code> block with the log_volume-related settings.</p>
+<ul>
+<li><strong>2.2</strong> RADAR decoders for log_volume exist</li>
+</ul>
+<pre><code>ls -al /var/ossec/etc/decoders/ | grep &quot;log-volume&quot;
+</code></pre>
+<p>to check decoders for log volume are in place.</p>
+<ul>
+<li><strong>2.3</strong> RADAR rules for log_volume exist</li>
+</ul>
+<pre><code>ls -al /var/ossec/etc/rules/ | grep &quot;log-volume&quot;
+</code></pre>
+<p>to check rules for log volume are in place.</p>
+<ul>
+<li><strong>2.4</strong> OpenSearch template radar-log-volume is present</li>
+</ul>
+<pre><code>curl -u &quot;$OS_USER:$OS_PASS&quot; -k &quot;$OS_URL/_index_template/radar-log-volume?pretty&quot;
+</code></pre>
+<p>to ensure HTTP status is 200 and the template JSON exists with mappings for <code>log_bytes</code> as a numeric type.</p>
+<ul>
+<li><strong>2.5</strong> log_volume rules are bound to active responses</li>
+</ul>
+<pre><code>grep -A5 'radar_ar' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to check Log volume anomaly rule ID(s) reference <code>radar_ar.py</code> as intended.</p>
+<ul>
+<li><strong>2.6</strong> Agent configurations are in place; verify via</li>
+</ul>
+<pre><code>cat /var/ossec/etc/shared/default/agent.conf | grep &quot;log_volume_metric&quot;
+</code></pre>
+<p>to ensure that agent configurations for log volume exists.</p>
+<h4>In endpoints running agents</h4>
+<ul>
+<li><strong>2.7</strong> RADAR helper directory and script are installed on the SSH agent host.</li>
+</ul>
+<pre><code>ls -ld /opt/radar
+ls -l /opt/radar/radar-helper.py
+</code></pre>
+<p>to check <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</p>
+<ul>
+<li><strong>2.8</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running.</li>
+</ul>
+<pre><code>systemctl status radar-helper.service
+</code></pre>
+<p>to check that the service is active.</p>
+<h4>Post-test cleanup</h4>
+<ul>
+<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
+</ul>
+<pre><code>docker ps
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a>, <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-033">TRP-033 TCER: Build log volume abnormal growth</a></p>
 <table>
 <thead>
 <tr>
@@ -5333,7 +3742,356 @@ ls -l /opt/radar/radar-helper.py
 </tr>
 <tr>
 <td>version</td>
-<td>0.7</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-045">3.5 Run RADAR for log volume abnormal growth <small><a href="TST.html#TST-045">TST-045</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is built according to the scenario <a href="./TST.html#TST-044">TST-044</a>.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>The working directory is required to be <code>radar</code>:</li>
+</ol>
+<pre><code>cd radar
+</code></pre>
+<ol start="2">
+<li>After building the scenario, wait about 3 minutes for index creation and correct mapping. Then, run RADAR with SCENARIO_NAME log_volume</li>
+</ol>
+<pre><code>./run-radar.sh log_volume
+</code></pre>
+<h2>Expected outcome</h2>
+<ol start="2">
+<li>
+<p>In Wazuh Dashboard:</p>
+<p>2.1. The detector <code>LOG_VOLUME_DETECTOR</code> is created in Wazuh Dashboard with the correct configurations. In Anomaly Detection menu the created detector should be visible. The correct configurations can be found in <a href="/radar/config.yaml"><code>config.yaml</code></a> under <code>log_volume</code> key.</p>
+<p>2.2. The monitor is created in Wazuh Dashboard with the trigger to the webhook. In Alerting menu created Monitor should be listed under Monitors tab.</p>
+</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a>, <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-034">TRP-034 TCER: Run RADAR for log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-046">3.6 DECIPHER-RADAR detection validation for Suspicious login <small><a href="TST.html#TST-046">TST-046</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-042">TST-042</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Configure <code>common</code> and <code>suspicious_login</code> parts in <code>/radar/radar-test-framework/simulate/scenarios/config.yaml</code>.</li>
+<li>From the <code>radar/</code>, run:
+   <code>bash
+   ./simulate-radar.sh suspicious_login --agent remote</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<p>2.1. The ansible playbook executes successfully.</p>
+<p>2.2. In the Wazuh Dashboard Discovery page, at least one of rule IDs <code>210012</code>, <code>210013</code>, <code>210020</code>, or <code>210021</code> is triggered for the remote agent.</p>
+<p>2.3. In Wazuh manager check alert tier:</p>
+<pre><code class="language-bash">grep &quot;Risk computed&quot; /var/ossec/logs/active-responses.log | tail -1
+</code></pre>
+<ul>
+<li>Expected <code>risk_score</code> range is between 0.0 and 1.0.</li>
+<li>If tier is:<ul>
+<li>Tier 0:<ul>
+<li>No email is received at <code>EMAIL_TO</code>.</li>
+<li>No FlowIntel case is created.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 1:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier, and FlowIntel case URL.</li>
+<li>A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</li>
+<li>The FlowIntel case contains relevant information about the suspicious login event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</li>
+<li>Open the FlowIntel case at the URL in the email. Verify that <code>misp_available: true</code> appears in the case description, confirming that DECIPHER's analysis was enriched with MISP data.</li>
+<li>The Flowintel case is tagged with low priority.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 2:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier, and FlowIntel case URL.</li>
+<li>A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</li>
+<li>The FlowIntel case contains relevant information about the suspicious login event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</li>
+<li>Open the FlowIntel case at the URL in the email. Verify that <code>misp_available: true</code> appears in the case description, confirming that DECIPHER's analysis was enriched with MISP data.</li>
+<li>The Flowintel case is tagged with medium priority.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier2</code> for <code>suspicious_login</code>).</li>
+</ul>
+</li>
+<li>Tier 3:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier, and FlowIntel case URL.</li>
+<li>A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</li>
+<li>The FlowIntel case contains relevant information about the suspicious login event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</li>
+<li>Open the FlowIntel case at the URL in the email. Verify that <code>misp_available: true</code> appears in the case description, confirming that DECIPHER's analysis was enriched with MISP data.</li>
+<li>The FlowIntel case is tagged with high priority.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier3</code> for <code>suspicious_login</code>). Considering the mitigation check:<ul>
+<li><code>firewall-drop</code>: check the IP addresses are blocked in the agent</li>
+<li><code>lock_user_linux.sh</code>: check the user is locked in the agent</li>
+<li><code>terminate_service.sh</code>: check the service is terminated in the agent</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-059">SRS-059 RADAR Scenario Simulation Framework</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-035">TRP-035 TCER: DECIPHER-RADAR detection validation for suspicious login</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-047">3.7 Detection validation for GeoIP detection <small><a href="TST.html#TST-047">TST-047</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-043">TST-043</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Configure <code>common</code> and <code>geoip_detection</code> parts in <code>/radar/radar-test-framework/simulate/scenarios/config.yaml</code>.</li>
+<li>From the <code>radar/</code>, run:
+   <code>bash
+   ./simulate-radar.sh geoip_detection --agent remote</code></li>
+</ol>
+<h2>Expected outcome</h2>
+<p>2.1. The ansible playbook executes successfully.</p>
+<p>2.2. In the Wazuh Dashboard Discovery page, a rule with ID matching
+   <code>10090*</code> is triggered for the remote agent.</p>
+<p>2.3. In Wazuh manager check alert tier:</p>
+<pre><code class="language-bash">grep &quot;Risk computed&quot; /var/ossec/logs/active-responses.log | tail -1
+</code></pre>
+<ul>
+<li>Expected <code>risk_score</code> range is between 0.0 and 1.0.</li>
+<li>If tier is:<ul>
+<li>Tier 0:<ul>
+<li>No email is received at <code>EMAIL_TO</code>.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 1:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 2:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier2</code> for <code>geoip_detection</code>).</li>
+</ul>
+</li>
+<li>Tier 3:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier3</code> for <code>geoip_detection</code>). Considering the mitigation check:<ul>
+<li><code>firewall-drop</code>: check the IP addresses are blocked in the agent</li>
+<li><code>lock_user_linux.sh</code>: check the user is locked in the agent</li>
+<li><code>terminate_service.sh</code>: check the service is terminated in the agent</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-059">SRS-059 RADAR Scenario Simulation Framework</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-036">TRP-036 TCER: Detection validation for GeoIP detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-048">3.8 Detection validation for Log volume abnormal growth <small><a href="TST.html#TST-048">TST-048</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-045">TST-045</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Configure <code>common</code> and <code>log_volume</code> parts in <code>/radar/radar-test-framework/simulate/scenarios/config.yaml</code>. The values for abnormal growth should be adapted to detector configurations, if the suppression rules are 10%, the values should be calculated to pass the rules.</li>
+<li>From the <code>radar/</code>, run:</li>
+</ol>
+<pre><code class="language-bash">./simulate-radar.sh log_volume --agent remote
+</code></pre>
+<h2>Expected outcome</h2>
+<p>2.1. The ansible playbook executes successfully.</p>
+<p>2.2. In the Wazuh Dashboard Discovery page, rule ID <code>100309</code> is triggered for the remote agent.</p>
+<p>2.3. Verify that spike has happened in the agent:</p>
+<pre><code>echo /var/log $(du -sb /var/log 2&gt;/dev/null | awk '{print $1}')
+</code></pre>
+<p>2.4. In Wazuh manager check alert tier:</p>
+<pre><code class="language-bash">grep &quot;Risk computed&quot; /var/ossec/logs/active-responses.log | tail -1
+</code></pre>
+<ul>
+<li>Expected <code>risk_score</code> range is between 0.0 and 1.0.</li>
+<li>If tier is:<ul>
+<li>Tier 0:<ul>
+<li>No email is received at <code>EMAIL_TO</code>.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 1:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 2:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier2</code> for <code>log_volume</code>).</li>
+</ul>
+</li>
+<li>Tier 3:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier3</code> for <code>log_volume</code>). Considering the mitigation check:<ul>
+<li><code>firewall-drop</code>: check the IP addresses are blocked in the agent</li>
+<li><code>lock_user_linux.sh</code>: check the user is locked in the agent</li>
+<li><code>terminate_service.sh</code>: check the service is terminated in the agent
+2.5. Verify that the spike file  (<code>log_volume.target_dir / log_volume.spike_filename</code>) is removed after <code>cleanup_minutes</code> have elapsed (if <code>cleanup_minutes &gt; 0</code>), or remove it manually if <code>cleanup_minutes</code> is set to 0.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-059">SRS-059 RADAR Scenario Simulation Framework</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-037">TRP-037 TCER: Detection validation for log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>1</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8</td>
 </tr>
 </tbody>
 </table>

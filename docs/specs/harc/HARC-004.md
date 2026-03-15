@@ -1,13 +1,13 @@
 ---
 active: true
 derived: false
-level: 4.0
+level: 2.1
 links:
 - MRS-007: hXM-PkC-g29wtz-Qe3MbM2viHIYzarGh2jFtSD-7N18=
 - MRS-012: JTNuTLP6JJZdPo_d_XYH5pxtJBAYucascA5JbOTcAVg=
 normative: true
 ref: ''
-reviewed: bf-FfeSrcNu9eD4UTde1vRs8QKYNfM1rpl9HBKNKN3U=
+reviewed: 5020kdM0xzQpjqlZfWEJsHfHXbu-23JzB5uoUsgRomo=
 ---
 
 # RADAR architecture

@@ -1,7 +1,7 @@
 ---
 active: true
 derived: false
-level: 17
+level: 2.3
 links:
 - HARC-004: 1lEN0jcfa_5LbomctwjmrLB8JczDcV05qzCY4yueM7w=
 - HARC-005: 2npgNyp-pzUIVhwyqh8PUf_khCbtveyL8U5Brc5XvPI=
@@ -13,7 +13,7 @@ links:
 normative: true
 ref: ''
 release: Alpha
-reviewed: j7wdbLKaD_dxOcZvmET4Qbu9dFXns_poKjaFa7qjl2A=
+reviewed: brw2wm3hT2nMSz2UmTVrjeXqWSL2r8ez1IfQuu_kI4c=
 version: '0.4'
 ---
 

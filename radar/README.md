@@ -20,6 +20,7 @@ We leverage [OpenSearch's latest advances](https://opensearch.org/anomaly-detect
 | [Scenarios overview and configuration](/radar/scenarios/README.md) | Detailed documentation of the scenarios folder artifacts |
 | [Webhook](/radar/webhook/README.md) | Webhook service deployment and configuration |
 | [Active Response](/docs/manual/radar_docs/radar-active-response.md) | Active Response logic flow |
+| [Health check](/docs/manual/radar_docs/radar-health-check.md) | Detailed documentation of RADAR health check |
 
 ## RADAR scenarios
 
@@ -37,19 +38,26 @@ Currently, anomaly detection coupled with automated response is implemented for 
 
 > **Important:** Demo scenarios are not production-ready. Deployment requires adaptation of indices/aliases, field mappings, time/category fields, decoders/ingest pipelines, TLS/hostnames, and detector/monitor parameters to align with your organization's log schema and infrastructure.
 
+> **CTI enrichment and incident case creation via DECIPHER** are currently supported for the **Suspicious Login** scenario. When DECIPHER is reachable, RADAR queries the DECIPHER analyze endpoint to obtain a CTI score used in risk computation, and creates a FlowIntel incident case for all Tier 1 and above responses. See the [**DECIPHER deployment guide**](https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher) for setup instructions.
+
 ---
 
 ## RADAR outcome
 
-Here we provide a screenshot of a successful run of the Geo IP detection RADAR scenario:
+Here we provide a screenshot of a successful run of the Suspicious Login detection RADAR scenario:
 
-![Wazuh Dashboard Discover RADAR geo IP detection](/docs/manual/_figures/RADAR-GeoIP-detection-Wazuh-Dashboard-result.png "Wazuh Dashboard Discover RADAR Geo IP detection")
+![Wazuh Dashboard Discover RADAR geo IP detection](/docs/manual/_figures/RADAR-v0.8-wazuh-dashboard.png "Wazuh Dashboard Discover RADAR Geo IP detection")
 
 The currently implemented active response sends an email to a designated recipient.
-![](/docs/manual/_figures/RADAR-GeoIP-detection-Automated-Response-email.png)
+![](/docs/manual/_figures/RADAR-v0.8-email-suspicious-login.png)
 
-Additionally, if FlowIntel is configured the active response creates a case in FlowIntel on high risk alerts.
-![](/docs/manual/_figures/RADAR-GeoIP-detection-Automated-Response-flowintel.png)
+Additionally, the active response component creates a case in FlowIntel on high risk alerts via the DECIPHER service.
+
+To compute the threat context for that response, RADAR calls DECIPHER's dedicated analysis endpoint — a distinct API endpoint separate from ordinary RADAR flows. It passes an information bundle assembled from the detection of the given scenario: alert metadata, source IP, relevant event fields, and scenario-specific context. DECIPHER processes this bundle and returns a CTI score together with enriched threat intelligence results to RADAR, which feeds the score directly into its risk computation. As part of scoring, DECIPHER performs a series of indicator lookups in MISP via `pymisp` — for example, checking whether a source IP appears as a known malicious attribute on any MISP event — and factors those findings into the final CTI score. The screenshot below shows an example MISP event consulted during this process, recording a malicious `ip-src` indicator that DECIPHER would match against the bundle supplied by RADAR:
+
+![RADAR DECIPHER MISP lookup — ip-src event in MISP](/docs/manual/_figures/RADAR-DECIPHER-MISP-lookup.png "MISP event consulted by DECIPHER during CTI scoring for a RADAR scenario")
+
+![FlowIntel case created by RADAR via DECIPHER](/docs/manual/_figures/RADAR-v0.8-FlowIntel-case.png)
 
 ---
 
@@ -62,12 +70,7 @@ computation of statistical measures, which are then reported to the user.
 
 See [RADAR test framework](/radar/radar-test-framework/README.md) for more details.
 
-## Active response modules and SOAR playbooks for Wazuh
-
-The active response modules stored in the respective RADAR scenario implementation folders, i.e., `radar/<RADAR-scenario>/active_responses`, provide 
-automated responses and contextual enrichments based on anomalies. 
-These reduce manual work for analysts via automation and also benefit from our [CTI integration](/integrations/README.md) support, e.g., [insider threat active responses](/radar/archives/insider_threat/active_responses/).
-
+---
 
 ## Best practices for robust AD with resilience to adversarial interference
 

@@ -1,0 +1,49 @@
+---
+- name: health | init
+  set_fact:
+    _mgr_mode:      "{{ manager_mode | default('docker_local') }}"
+    _mgr_container: "{{ manager_container_name | default('wazuh.manager') }}"
+    _exec: >-
+      {{ 'docker exec ' + (manager_container_name | default('wazuh.manager'))
+         if (manager_mode | default('docker_local')) in ['docker_local', 'docker_remote']
+         else '' }}
+    _scenario:      "{{ scenario_filter | default('all') }}"
+    _health_report: []
+
+- name: health | resolve target scenarios
+  set_fact:
+    _target_scenarios: >-
+      {{
+        [_scenario]
+        if _scenario != 'all'
+        else ['suspicious_login', 'geoip_detection', 'log_volume']
+      }}
+
+- import_tasks: check_manager.yml
+
+- name: health | compute summary counts
+  set_fact:
+    _sf: "{{ _health_report | select('match', '^FAIL') | list }}"
+    _sw: "{{ _health_report | select('match', '^WARN') | list }}"
+    _so: "{{ _health_report | select('match', '^OK')   | list | length }}"
+
+- name: health | write manager summary
+  vars:
+    _problems: "{{ _sf + _sw }}"
+  copy:
+    dest: "{{ summary_file | default('/tmp/radar_health_summary.txt') }}"
+    content: |
+      ╔══════════════════════════════════════════════════════════════════╗
+      ║  MANAGER ({{ inventory_hostname }})  scenario: {{ _scenario }}
+      ╠══════════════════════════════════════════════════════════════════╣
+      {% if _problems | length == 0 %}
+      ║  All checks passed.
+      {% else %}
+      {% for line in _problems %}
+      ║  {{ line[:62] }}
+      {% endfor %}
+      {% endif %}
+      ╠══════════════════════════════════════════════════════════════════╣
+      ║  FAIL : {{ _sf | length }}   WARN : {{ _sw | length }}   OK : {{ _so }}
+      ╚══════════════════════════════════════════════════════════════════╝
+  delegate_to: localhost

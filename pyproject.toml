@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "idps-escape"
-version = "0.7"
+version = "0.8"
 description = "IDPS-ESCAPE suite of tools and its subsystems SONAR and RADAR, all part of project CyFORT."
 authors = ["Arash Atashpendar <arash@abstractionslab.lu>", "Agnese Gini <agnese@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>", "Gulsezim Duisen <duisen@itrust.lu>", "Itzel Vazquez Sandoval <itzel@abstractionslab.lu>"]
 readme = "README.md"
@@ -72,6 +72,8 @@ extend-exclude = "protobuf"
 
 [tool.poetry.group.docs.dependencies]
 doorstop = "3.0b10"
+rich = ">=13.0"
+pyyaml = "6.0.2"
 
 
 [tool.poetry.group.plot]

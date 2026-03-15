@@ -1,0 +1,12 @@
+---
+- name: RADAR Health Check - Manager
+  hosts: "wazuh_manager_local,wazuh_manager_ssh"
+  gather_facts: true
+  tasks:
+    - import_tasks: tasks/main.yml
+
+- name: RADAR Health Check - Agents
+  hosts: "wazuh_agents_container,wazuh_agents_ssh"
+  gather_facts: false
+  tasks:
+    - import_tasks: tasks/check_agents.yml

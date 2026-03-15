@@ -14,6 +14,10 @@ EOF
 [[ $# -ge 1 ]] || usage
 SCENARIO_NAME="$1"
 
+if [[ -f Dockerfile.radar-cli ]]; then
+  echo ">>> Building radar-cli image..."
+  docker build -f Dockerfile.radar-cli -t radar-cli:latest .
+fi
 
 docker run --rm \
   -v "$PWD/${SCENARIO_NAME}/dataset:/app/${SCENARIO_NAME}/dataset" \

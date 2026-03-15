@@ -48,7 +48,8 @@ Each supported scenario has its own:
 
 ### Container execution
 
-- Data injection, detector and monitor setup are run in the image `radar-cli:latest` , the image is built during `build-radar.sh`
+- The image `radar-cli:latest` is built as an environment for scripts
+- Data injection, detector and monitor setup are run in the image `radar-cli:latest`
 - Python scripts executed in isolated containers
 - Output IDs captured via stdout for pipeline chaining
 
@@ -124,7 +125,8 @@ Creates or retrieves ID of an OpenSearch Anomaly Detection detector configured f
     - Detection interval
     - Window delay
     - Category field
-    - Result index
+    - Result index and its TTL
+    - Rules (suppression below and over certain values)
 4. Starts detector (begins analysis)
 5. Returns detector ID to stdout
 
@@ -150,6 +152,19 @@ log_volume:
           log_volume_max:
             max:
               field: data.log_bytes
+    rules:
+      - action: "IGNORE_ANOMALY"
+        conditions:
+          - feature_name: "log_volume_max"
+            threshold_type: "ACTUAL_OVER_EXPECTED_RATIO"
+            operator: "LTE"
+            value: 0.0001
+      - action: "IGNORE_ANOMALY"
+        conditions:
+          - feature_name: "log_volume_max"
+            threshold_type: "EXPECTED_OVER_ACTUAL_RATIO"
+            operator: "LTE"
+            value: 0.0001
 
 ```
 

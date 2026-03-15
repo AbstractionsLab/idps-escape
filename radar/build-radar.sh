@@ -154,10 +154,10 @@ else
 fi
 
 
-if [[ -f Dockerfile.radar-cli ]]; then
-  echo ">>> Building radar-cli image..."
-  docker build -f Dockerfile.radar-cli -t radar-cli:latest .
-fi
+# if [[ -f Dockerfile.radar-cli ]]; then
+#   echo ">>> Building radar-cli image..."
+#   docker build -f Dockerfile.radar-cli -t radar-cli:latest .
+# fi
 
 export $(grep -v '^#' .env | grep -v '^$' | sed 's/#.*$//' | xargs)
 

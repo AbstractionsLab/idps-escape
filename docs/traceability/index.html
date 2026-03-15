@@ -5,6 +5,17 @@
                         <link rel="stylesheet" href="assets/doorstop/general.css" />
                         </head>
 <body>
+<hr>
+<h3>C5-DEC CAD traceability tooling reports:</h3>
+<p>
+<ul>
+<li> <a href="items_browser.html">Specification browser</a> </li>
+<li> <a href="traceability_stats.html">Traceability statistics</a> </li>
+<li> <a href="specs-graph.html">Traceability graph</a> </li>
+</ul>
+</p>
+<hr>
+
 
 <h3>Tree Structure:</h3>
 <pre><code>MRS
@@ -15,9 +26,7 @@
     │   
     ├── TST
     │   │   
-    │   ├── TRA
-    │   │   
-    │   └── TRB
+    │   └── TRP
     │   
     └── LARC
         │   
@@ -33,8 +42,7 @@
 <li> <a href="MRS.html">MRS</a> </li>
 <li> <a href="SRS.html">SRS</a> </li>
 <li> <a href="SWD.html">SWD</a> </li>
-<li> <a href="TRA.html">TRA</a> </li>
-<li> <a href="TRB.html">TRB</a> </li>
+<li> <a href="TRP.html">TRP</a> </li>
 <li> <a href="TST.html">TST</a> </li>
 </ul>
 </p>
@@ -51,20 +59,17 @@
 <col width="100">
 <col width="100">
 <col width="100">
-<col width="100">
 <tr>
   <th height="25" align="center"> <a href="MRS.html">MRS</a> </th>
   <th height="25" align="center"> <a href="HARC.html">HARC</a> </th>
   <th height="25" align="center"> <a href="SRS.html">SRS</a> </th>
   <th height="25" align="center"> <a href="TST.html">TST</a> </th>
-  <th height="25" align="center"> <a href="TRA.html">TRA</a> </th>
-  <th height="25" align="center"> <a href="TRB.html">TRB</a> </th>
+  <th height="25" align="center"> <a href="TRP.html">TRP</a> </th>
   <th height="25" align="center"> <a href="LARC.html">LARC</a> </th>
   <th height="25" align="center"> <a href="SWD.html">SWD</a> </th>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-001">MRS-001 Open-Source Release</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -80,12 +85,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-002">MRS-002 Command & Control</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -100,7 +103,6 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-002">MRS-002 Command & Control</a> </td>
@@ -110,12 +112,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-003">MRS-003 Agent Data Centralization</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -130,7 +130,6 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a> </td>
@@ -140,12 +139,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -157,8 +154,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-037">SRS-037 Anomaly-Based NIDS</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-015">TST-015 ADBox use case 5 with a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-013">TRA-013</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-013">TRP-013 TCER: ADBox use case 5 with a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -167,8 +163,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-037">SRS-037 Anomaly-Based NIDS</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-016">TST-016 ADBox use case 5 without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-014">TRA-014</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-014">TRP-014 TCER: ADBox use case 5 without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -176,7 +171,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-004">MRS-004 Multivariate Anomaly Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-040">SRS-040 Data Management Subpackage</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-010">LARC-010 ADBox data manager</a> </td>
@@ -188,14 +182,12 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-041">SRS-041 Time Management Package</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-011">LARC-011 ADBox TimeManager</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-012">SWD-012 ADBox TimeManager</a> </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-005">MRS-005 Host-based Intrusion Detection</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -210,14 +202,12 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-005">MRS-005 Host-based Intrusion Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-004">SRS-004 HIDS Agent Management</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-023">TST-023 Wazuh agent deletion and uninstallation</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -230,12 +220,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-006">MRS-006 NIDS Support</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -250,7 +238,6 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
@@ -260,12 +247,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-004">HARC-004 RADAR architecture</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -280,12 +265,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-006">HARC-006 RADAR deployment: Remote Agent and Remote Manager mode</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -300,12 +283,46 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-008">HARC-008 RADAR deployment: Local Agent and Local Manager mode</a> </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center"> <a href="HARC.html#HARC-012">HARC-012 RADAR risk engine architecture</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center"> <a href="HARC.html#HARC-013">HARC-013 RADAR Ansible automation architecture</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center"> <a href="HARC.html#HARC-014">HARC-014 RADAR helper architecture</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center"> <a href="HARC.html#HARC-015">HARC-015 RADAR adversarial ML defense architecture</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -320,13 +337,11 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
@@ -335,8 +350,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
@@ -345,8 +359,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -355,8 +368,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -365,8 +377,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -375,8 +386,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a> </td>
@@ -385,8 +395,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 Insider Threat Detection and Prevention: Data exfiltration</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a> </td>
@@ -395,28 +404,277 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-042">TST-042 RADAR: build suspicious login</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-009">TRB-009 TCER: RADAR build suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-028">SWD-028 RADAR detector module design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-029">SWD-029 RADAR monitor and webhook module design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-035">SWD-035 RADAR webhook service design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-033">SWD-033 RADAR data ingestion module design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-050">SRS-050 RADAR scenario: DLP1 - insider data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-042">TST-042 Build suspicious login</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-031">TRP-031 TCER: Build suspicious login</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-050">TST-050 RADAR: build suspicious login</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-017">TRB-017 TCER: RADAR build suspicious login</a> </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-018">SWD-018 RATF: ingestion phase</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-019">SWD-019 RATF: setup phase</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-019">SWD-019 RATF: setup phase</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-020">SWD-020 RATF: simulation phase</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-021">SWD-021 RATF: evaluation phase</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a> </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a> </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-028">SWD-028 RADAR detector module design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-029">SWD-029 RADAR monitor and webhook module design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-035">SWD-035 RADAR webhook service design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-030">SWD-030 RADAR helper module class design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-032">SWD-032 RADAR configuration management design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-033">SWD-033 RADAR data ingestion module design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
@@ -425,8 +683,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
@@ -435,8 +692,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -445,8 +701,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -455,8 +710,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -465,8 +719,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a> </td>
@@ -475,8 +728,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-051">SRS-051 Suspicious login Detection and Prevention: Impossible travel and Failed-login bursts</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a> </td>
@@ -485,8 +737,97 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-028">SWD-028 RADAR detector module design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-029">SWD-029 RADAR monitor and webhook module design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-035">SWD-035 RADAR webhook service design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-033">SWD-033 RADAR data ingestion module design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 RADAR scenario: DDoS detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
@@ -495,8 +836,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
@@ -505,8 +845,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -515,8 +854,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -525,8 +863,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
@@ -535,8 +872,7 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a> </td>
@@ -545,8 +881,7 @@
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-052">SRS-052 DDoS Detection and Prevention: SYN-flood</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a> </td>
@@ -555,167 +890,492 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-018">SWD-018 RATF: ingestion phase</a> </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-019">SWD-019 RATF: setup phase</a> </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-019">SWD-019 RATF: setup phase</a> </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-020">SWD-020 RATF: simulation phase</a> </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-021">SWD-021 RATF: evaluation phase</a> </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 RADAR scenario: malware C2 beaconing</a> </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-028">LARC-028 RADAR GeoIP detection scenario flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-034">SWD-034 RADAR custom rule and decoder patterns</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a> </td>
   <td height="25" align="center">  </td>
 </tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-053">SRS-053 Malware Communication Detection and Prevention: Beaconing</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-029">LARC-029 RADAR log volume detection scenario flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-034">SWD-034 RADAR custom rule and decoder patterns</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR automated test framework</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-029">LARC-029 RADAR log volume detection scenario flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-035">SWD-035 RADAR webhook service design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-043">TST-043 Build non-whitelist GeoIP detection</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-032">TRP-032 TCER: Build non-whitelist GeoIP detection</a> </td>
+  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-054">SRS-054 RADAR Automated Test Framework</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-043">TST-043 RADAR: build non-whitelist GeoIP detection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-010">TRB-010 TCER: RADAR build non-whitelist GeoIP</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-030">SWD-030 RADAR helper module class design</a> </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-051">TST-051 RADAR: build non-whitelist GeoIP detection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-018">TRB-018 TCER: RADAR build non-whitelist GeoIP</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-032">SWD-032 RADAR configuration management design</a> </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 Geo-based Access Control: Non-whitelisted Country Login Detection and Prevention</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-058">TST-058 RADAR: build non-whitelist GeoIP detection with case creation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-025">TRB-025 TCER: RADAR build non-whitelist GeoIP detection with case creation</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-044">TST-044 RADAR: build log volume abnormal growth</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-011">TRB-011 TCER: RADAR build log volume growth</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-028">LARC-028 RADAR GeoIP detection scenario flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-034">SWD-034 RADAR custom rule and decoder patterns</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-044">TST-044 Build log volume abnormal growth</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-033">TRP-033 TCER: Build log volume abnormal growth</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-012">TRB-012 TCER: Add log volume growth anomaly detector</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-034">TRP-034 TCER: Run RADAR for log volume abnormal growth</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-052">TST-052 RADAR: build log volume abnormal growth</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-019">TRB-019 TCER: RADAR build log volume growth</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-028">SWD-028 RADAR detector module design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-029">SWD-029 RADAR monitor and webhook module design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-035">SWD-035 RADAR webhook service design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-033">SWD-033 RADAR data ingestion module design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-029">LARC-029 RADAR log volume detection scenario flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-034">SWD-034 RADAR custom rule and decoder patterns</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-029">LARC-029 RADAR log volume detection scenario flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-035">SWD-035 RADAR webhook service design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-057">SRS-057 RADAR scenario: ransomware</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-057">SRS-057 RADAR scenario: ransomware</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-057">SRS-057 RADAR scenario: ransomware</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-057">SRS-057 RADAR scenario: ransomware</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-057">SRS-057 RADAR scenario: ransomware</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-058">SRS-058 RADAR scenario: DLP2 - network data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-058">SRS-058 RADAR scenario: DLP2 - network data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-026">SWD-026 RADAR risk engine implementation design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-058">SRS-058 RADAR scenario: DLP2 - network data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-027">SWD-027 RADAR active response script design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-058">SRS-058 RADAR scenario: DLP2 - network data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-037">SWD-037 RADAR-SONAR integration design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-058">SRS-058 RADAR scenario: DLP2 - network data exfiltration</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-038">SWD-038 RADAR-DECIPHER FlowIntel integration design</a> </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-059">SRS-059 RADAR Scenario Simulation Framework</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-046">TST-046 DECIPHER-RADAR detection validation for Suspicious login</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-035">TRP-035 TCER: DECIPHER-RADAR detection validation for suspicious login</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-056">SRS-056 Log volume spike detection per endpoint</a> </td>
-  <td height="25" align="center"> <a href="TST.html#TST-053">TST-053 Run RADAR for log volume abnormal growth</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-020">TRB-020 TCER: Add log volume growth anomaly detector</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-059">SRS-059 RADAR Scenario Simulation Framework</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-047">TST-047 Detection validation for GeoIP detection</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-036">TRP-036 TCER: Detection validation for GeoIP detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-057">SRS-057 Ransomware attack detection and response</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-059">SRS-059 RADAR Scenario Simulation Framework</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-048">TST-048 Detection validation for Log volume abnormal growth</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-037">TRP-037 TCER: Detection validation for log volume abnormal growth</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-042">TST-042 Build suspicious login</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-031">TRP-031 TCER: Build suspicious login</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-043">TST-043 Build non-whitelist GeoIP detection</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-032">TRP-032 TCER: Build non-whitelist GeoIP detection</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-044">TST-044 Build log volume abnormal growth</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-033">TRP-033 TCER: Build log volume abnormal growth</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a> </td>
+  <td height="25" align="center"> <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-034">TRP-034 TCER: Run RADAR for log volume abnormal growth</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-008">MRS-008 Network Capture Forwarding</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -730,7 +1390,6 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-009">MRS-009 Docker Deployment Option</a> </td>
@@ -740,12 +1399,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-011">MRS-011 Signature-based Host IDS</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -760,12 +1417,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-012">MRS-012 XDR & SIEM Integration</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -780,9 +1435,17 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
+  <td height="25" align="center"> <a href="MRS.html#MRS-012">MRS-012 XDR & SIEM Integration</a> </td>
+  <td height="25" align="center"> <a href="HARC.html#HARC-013">HARC-013 RADAR Ansible automation architecture</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-012">MRS-012 XDR & SIEM Integration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-010">SRS-010 Centralized Threat Management</a> </td>
@@ -790,9 +1453,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
   <td height="25" align="center">  </td>
@@ -800,9 +1462,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-011">SRS-011 Network Event Visualization</a> </td>
@@ -810,9 +1471,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-011">SRS-011 Network Event Visualization</a> </td>
@@ -820,9 +1480,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-011">SRS-011 Network Event Visualization</a> </td>
@@ -830,9 +1489,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-012">SRS-012 Host Event Visualization</a> </td>
@@ -840,9 +1498,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-013">MRS-013 Visual Dashboard</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-013">SRS-013 HIDS Agent Status Panel</a> </td>
@@ -850,9 +1507,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-014">MRS-014 Data Extraction API</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-014">SRS-014 Event Decoding & Transformation</a> </td>
@@ -860,9 +1516,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-014">MRS-014 Data Extraction API</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-015">SRS-015 Custom Rule Support</a> </td>
@@ -870,9 +1525,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-016">SRS-016 Indexer Credential Management</a> </td>
@@ -880,9 +1534,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-016">SRS-016 Indexer Credential Management</a> </td>
@@ -890,9 +1543,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-017">SRS-017 Custom Data Source</a> </td>
@@ -900,19 +1552,17 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-018">SRS-018 ML Hyperparameter Tuning</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-012">LARC-012 ADBox ConfigManager</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-014">SWD-014 ADBox config managersactive: true</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-014">SWD-014 ADBox config managers</a> </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-019">SRS-019 Datatype Transformation Map</a> </td>
@@ -920,9 +1570,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-020">SRS-020 Ingestion Field Update</a> </td>
@@ -930,19 +1579,17 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-021">SRS-021 Default Use Case Update</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-012">LARC-012 ADBox ConfigManager</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-014">SWD-014 ADBox config managersactive: true</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-014">SWD-014 ADBox config managers</a> </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-015">MRS-015 Software Configuration Management</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-022">SRS-022 Indexer Credentials Update</a> </td>
@@ -950,9 +1597,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-016">MRS-016 Agent (De)Registration</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-023">SRS-023 Agent Registration Process</a> </td>
@@ -960,9 +1606,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-017">MRS-017 Monitoring Frontend</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
   <td height="25" align="center">  </td>
@@ -970,9 +1615,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-017">MRS-017 Monitoring Frontend</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-043">SRS-043 AD Data Visualization</a> </td>
@@ -980,9 +1624,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
   <td height="25" align="center">  </td>
@@ -990,9 +1633,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-024">SRS-024 Event Querying Capability</a> </td>
@@ -1000,9 +1642,8 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
@@ -1010,89 +1651,80 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-013">LARC-013 ADBox RequestResponseHandler</a> </td>
   <td height="25" align="center">  </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-015">SWD-015 ADBox Shipper and Template Handler</a> </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-016">SWD-016 ADBox shipping of prediction data</a> </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-014">LARC-014 ADBox Shipper</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-017">SWD-017 ADBox creation of a detector stream</a> </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-022">SWD-022 SONAR class structure and relationships</a> </td>
 </tr>
-<tr>
+<tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-023">SWD-023 SONAR feature engineering design</a> </td>
 </tr>
-<tr class="alt">
-  <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
-  <td height="25" align="center"> <a href="SWD.html#SWD-024">SWD-024 SONAR data shipping design</a> </td>
-</tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
+  <td height="25" align="center"> <a href="SWD.html#SWD-024">SWD-024 SONAR data shipping design</a> </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-018">MRS-018 Data Management Subsystem</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-042">SRS-042 Prediction Shipping Feature</a> </td>
+  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-025">SWD-025 SONAR debug mode design</a> </td>
 </tr>
-<tr class="alt">
+<tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-019">MRS-019 3rd-Party Open-source Signature-based NIDS</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
   <td height="25" align="center">  </td>
@@ -1100,6 +1732,14 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
+</tr>
+<tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-019">MRS-019 3rd-Party Open-source Signature-based NIDS</a> </td>
+  <td height="25" align="center"> <a href="HARC.html#HARC-015">HARC-015 RADAR adversarial ML defense architecture</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
@@ -1110,15 +1750,13 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-020">MRS-020 Platform Independence</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-044">SRS-044 Platform-Independent Deployment</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-003">TRA-003</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-003">TRP-003 TCER: Install ADBox as dev container</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1127,8 +1765,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-044">SRS-044 Platform-Independent Deployment</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-004">TRA-004</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-004">TRP-004 TCER: Install ADBox as dev container</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1137,8 +1774,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-044">SRS-044 Platform-Independent Deployment</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-020">TRA-020</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-020">TRP-020 TCER: Install ADBox as dev container</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1147,28 +1783,25 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-044">SRS-044 Platform-Independent Deployment</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-003">TRB-003 TCER: ADBox in dev container</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-024">TRP-024 TCER: ADBox in dev container</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-020">MRS-020 Platform Independence</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-046">SRS-046 Cross-Platform ADBox Deployment</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-046">SRS-046 Cross-platform SONAR deployment</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-001">TST-001 Deploy ADBox via Docker and shell scripts</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-001">TRA-001</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-001">TRP-001 TCER: Deploy ADBox via Docker and shell scripts</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-020">MRS-020 Platform Independence</a> </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="SRS.html#SRS-046">SRS-046 Cross-Platform ADBox Deployment</a> </td>
+  <td height="25" align="center"> <a href="SRS.html#SRS-046">SRS-046 Cross-platform SONAR deployment</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-001">TST-001 Deploy ADBox via Docker and shell scripts</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-002">TRB-002 TCER: ADBox deployment</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-023">TRP-023 TCER: ADBox deployment</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1177,15 +1810,13 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-049">SRS-049 Anomaly Shipping to Indexer</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-017">TST-017 ADBox shipping install</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-001">TRB-001 TCER: install ADBox shipping</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-022">TRP-022 TCER: ADBox shipping install</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-022">MRS-022 Network Endpoint Monitoring</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1200,11 +1831,9 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-024">MRS-024 TIP API Integration</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1220,7 +1849,6 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-026">MRS-026 C5-DEC Development Model</a> </td>
@@ -1230,11 +1858,9 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-027">MRS-027 Secure Inter-Component Communication</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1250,11 +1876,9 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-029">MRS-029 Data Collection Scalability</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1267,8 +1891,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-007">TST-007 ADBox use case 1 with a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-008">TRA-008</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-008">TRP-008 TCER: ADBox use case 1 with a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1277,8 +1900,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-009">TRA-009</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-009">TRP-009 TCER: ADBox use case 1 without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1287,8 +1909,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-018">TRA-018</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-018">TRP-018 TCER: ADBox use case 1 without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1297,8 +1918,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-011">TRA-011</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-011">TRP-011 TCER: ADBox use case 3 with a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1307,8 +1927,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-007">TRB-007 TCER: ADBox UC scenario 3 with Wazuh</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-028">TRP-028 TCER: ADBox UC scenario 3 with Wazuh</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1317,8 +1936,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-012">TST-012 ADBox use case 3 without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-016">TRA-016</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-016">TRP-016 TCER: ADBox use case 3 without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1326,7 +1944,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a> </td>
@@ -1338,7 +1955,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-008">LARC-008 ADBox batch and real-time prediction flow</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-013">SWD-013 ADBox Prediction pipeline's inner body</a> </td>
 </tr>
@@ -1346,7 +1962,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
@@ -1358,7 +1973,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-023">SWD-023 SONAR feature engineering design</a> </td>
 </tr>
@@ -1366,7 +1980,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
@@ -1378,7 +1991,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-027">SRS-027 ML-Based Anomaly Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-025">SWD-025 SONAR debug mode design</a> </td>
 </tr>
@@ -1387,8 +1999,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-013">TST-013 ADBox use case 4 with a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-012">TRA-012</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-012">TRP-012 TCER: ADBox use case 4 with a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1397,8 +2008,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-014">TST-014 ADBox use case 4 without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-015">TRA-015</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-015">TRP-015 TCER: ADBox use case 4 without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1406,7 +2016,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-001">LARC-001 ADBox training pipeline flow</a> </td>
@@ -1418,7 +2027,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-022">SWD-022 SONAR class structure and relationships</a> </td>
 </tr>
@@ -1426,7 +2034,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
@@ -1438,7 +2045,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-024">SWD-024 SONAR data shipping design</a> </td>
 </tr>
@@ -1446,7 +2052,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-038">SRS-038 Joint Host-Network Training</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
@@ -1457,8 +2062,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-047">SRS-047 Interactive Use Case Builder</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-004">TST-004 Run ADBox console</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-005">TRA-005</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-005">TRP-005 TCER: Run ADBox console</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1467,8 +2071,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-047">SRS-047 Interactive Use Case Builder</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-004">TST-004 Run ADBox console</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-004">TRB-004 TCER: ADBox console</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-025">TRP-025 TCER: ADBox console</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1477,8 +2080,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-006">TRA-006</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-006">TRP-006 TCER: Run ADBox in default mode with a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1487,8 +2089,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-005">TRB-005 TCER: ADBox in default mode with Wazuh</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-026">TRP-026 TCER: ADBox in default mode with Wazuh</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1497,8 +2098,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-007">TRA-007</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-007">TRP-007 TCER: Run ADBox in default mode without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1507,8 +2107,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-019">TRA-019</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-019">TRP-019 TCER: Run ADBox in default mode without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1516,7 +2115,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
@@ -1528,7 +2126,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-023">SWD-023 SONAR feature engineering design</a> </td>
 </tr>
@@ -1538,7 +2135,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-024">SWD-024 SONAR data shipping design</a> </td>
 </tr>
@@ -1546,7 +2142,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a> </td>
@@ -1555,7 +2150,6 @@
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-031">MRS-031 Multiple ML Techniques</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-002">HARC-002 ADBox architecture</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1570,13 +2164,11 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-031">MRS-031 Multiple ML Techniques</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-039">SRS-039 Algorithm Selection Option</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a> </td>
@@ -1588,7 +2180,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-039">SRS-039 Algorithm Selection Option</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-004">SWD-004 MTAD-GAT prediction</a> </td>
 </tr>
@@ -1596,7 +2187,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-031">MRS-031 Multiple ML Techniques</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-039">SRS-039 Algorithm Selection Option</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a> </td>
@@ -1608,7 +2198,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-039">SRS-039 Algorithm Selection Option</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-006">SWD-006 ADBox Predictor score computation</a> </td>
 </tr>
@@ -1616,7 +2205,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-031">MRS-031 Multiple ML Techniques</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-039">SRS-039 Algorithm Selection Option</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a> </td>
@@ -1628,14 +2216,12 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-039">SRS-039 Algorithm Selection Option</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-009">LARC-009 ADBox machine learning package</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-008">SWD-008 ADBox MTAD-GAT Predictor</a> </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-001">HARC-001 ADBox subsystem</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1650,12 +2236,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1670,12 +2254,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-010">HARC-010 SONAR component architecture</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1690,13 +2272,11 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-032">MRS-032 Host and Network Ingestion</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-029">SRS-029 Host & Network Ingestion</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-003">LARC-003 ADBox preprocessing flow</a> </td>
@@ -1708,14 +2288,12 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-029">SRS-029 Host & Network Ingestion</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-003">LARC-003 ADBox preprocessing flow</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-011">SWD-011 ADBox preprocessing</a> </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-033">MRS-033 API Data Retrieval</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-001">HARC-001 ADBox subsystem</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1730,12 +2308,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-033">MRS-033 API Data Retrieval</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1750,14 +2326,12 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-034">MRS-034 Standardized AD Output</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-031">SRS-031 Training Loss Visualization</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-038">TST-038 Visualize train losses</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1770,11 +2344,9 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-035">MRS-035 Secure Log Storage</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1790,12 +2362,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-037">MRS-037 Multiple Deployment Models</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1806,7 +2376,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-037">MRS-037 Multiple Deployment Models</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-033">SRS-033 Remote Endpoint Deployment</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-004">LARC-004 IDPS-ESCAPE end-point integrated arch.</a> </td>
@@ -1818,7 +2387,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-033">SRS-033 Remote Endpoint Deployment</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-005">LARC-005 IDPS-ESCAPE end-point hybrid arch.</a> </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1826,7 +2394,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-037">MRS-037 Multiple Deployment Models</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-033">SRS-033 Remote Endpoint Deployment</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-006">LARC-006 IDPS-ESCAPE end-point host-only IDS arch.</a> </td>
@@ -1838,13 +2405,11 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-033">SRS-033 Remote Endpoint Deployment</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-007">LARC-007 IDPS-ESCAPE end-point capture-only arch.</a> </td>
   <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-038">MRS-038 pcap Support</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1860,7 +2425,6 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a> </td>
@@ -1870,12 +2434,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1890,12 +2452,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-010">HARC-010 SONAR component architecture</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -1910,15 +2470,13 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
   <td height="25" align="center"> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-010">TRA-010</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-010">TRP-010 TCER: ADBox use case 2 with a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1927,8 +2485,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-006">TRB-006 TCER: ADBox UC scenario 2 with Wazuh</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-027">TRP-027 TCER: ADBox UC scenario 2 with Wazuh</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1937,8 +2494,7 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
   <td height="25" align="center"> <a href="TST.html#TST-010">TST-010 ADBox use case 2 without a Wazuh connection</a> </td>
-  <td height="25" align="center"> <a href="TRA.html#TRA-017">TRA-017</a> </td>
-  <td height="25" align="center">  </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-017">TRP-017 TCER: ADBox use case 2 without a Wazuh connection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>
@@ -1946,7 +2502,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a> </td>
@@ -1958,7 +2513,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-002">LARC-002 ADBox historical data prediction pipeline flow</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-013">SWD-013 ADBox Prediction pipeline's inner body</a> </td>
 </tr>
@@ -1966,7 +2520,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
@@ -1978,7 +2531,6 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-023">SWD-023 SONAR feature engineering design</a> </td>
 </tr>
@@ -1986,7 +2538,6 @@
   <td height="25" align="center"> <a href="MRS.html#MRS-039">MRS-039 Offline AD</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
@@ -1998,14 +2549,12 @@
   <td height="25" align="center"> <a href="SRS.html#SRS-035">SRS-035 Offline Anomaly Detection</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="LARC.html#LARC-020">LARC-020 SONAR detection pipeline sequence</a> </td>
   <td height="25" align="center"> <a href="SWD.html#SWD-025">SWD-025 SONAR debug mode design</a> </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-040">MRS-040 Signature-Based NIDS</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-003">HARC-003 IDPS-ESCAPE context</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -2020,12 +2569,10 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-041">MRS-041 Standalone AD Subsystem</a> </td>
   <td height="25" align="center"> <a href="HARC.html#HARC-001">HARC-001 ADBox subsystem</a> </td>
-  <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
@@ -2040,7 +2587,6 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr>
   <td height="25" align="center"> <a href="MRS.html#MRS-041">MRS-041 Standalone AD Subsystem</a> </td>
@@ -2050,105 +2596,22 @@
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
 </tr>
 <tr class="alt">
+  <td height="25" align="center"> <a href="MRS.html#MRS-042">MRS-042 SONAR Production Anomaly Detection System</a> </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+  <td height="25" align="center">  </td>
+</tr>
+<tr>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center"> <a href="TST.html#TST-041">TST-041 Setup RADAR foundation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-008">TRB-008 TCER: Setup RADAR foundation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-046">TST-046 Suspicious login detection validation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-013">TRB-013 TCER: RADAR suspicious login detection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr class="alt">
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-047">TST-047 Non-whitelist GeoIP detection validation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-014">TRB-014 TCER: RADAR non-whitelist GeoIP detection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-048">TST-048 Log volume abnormal growth validation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-015">TRB-015 TCER: RADAR log volume growth anomaly detector</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr class="alt">
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-049">TST-049 Setup RADAR foundation v0.7</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-016">TRB-016 TCER: Setup RADAR foundation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-054">TST-054 Suspicious login detection validation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-021">TRB-021 TCER: RADAR suspicious login detection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr class="alt">
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-055">TST-055 Non-whitelist GeoIP detection validation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-022">TRB-022 TCER: RADAR non-whitelist GeoIP detection</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-056">TST-056 Log volume abnormal growth validation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-023">TRB-023 TCER: RADAR log volume growth anomaly detector</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr class="alt">
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-057">TST-057 RADAR FlowIntel case creation via Active Response</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-024">TRB-024 TCER: RADAR Flowintel case creation via Active Response</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-</tr>
-<tr>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TST.html#TST-059">TST-059 Non-whitelist GeoIP detection validation</a> </td>
-  <td height="25" align="center">  </td>
-  <td height="25" align="center"> <a href="TRB.html#TRB-026">TRB-026 TCER: RADAR non-whitelist GeoIP detection + Flowintel</a> </td>
+  <td height="25" align="center"> <a href="TRP.html#TRP-030">TRP-030 TCER: Setup RADAR foundation</a> </td>
   <td height="25" align="center">  </td>
   <td height="25" align="center">  </td>
 </tr>

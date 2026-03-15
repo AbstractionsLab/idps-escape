@@ -10,9 +10,6 @@ links: []
 normative: false
 platform: GNU/Linux (Dockerized C5-DEC deployment environment)
 ref: ''
-references:
-- path: docs/specs/tst/assets
-  type: file
 release: alpha
 reviewed: R6EFBQHsp9CR9dkNoDOlTzlNDA3yp-l6HZb_xXI6yT4=
 test_data: see referenced files

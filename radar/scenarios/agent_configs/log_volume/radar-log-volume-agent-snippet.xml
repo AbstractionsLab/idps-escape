@@ -6,9 +6,4 @@
     <out_format>$(timestamp) $(hostname) log_volume_metric: $(log)</out_format>
     <frequency>30</frequency>
 </localfile>
-<command>
-    <name>terminate_service</name>
-    <executable>terminate_service.sh</executable>
-    <timeout_allowed>yes</timeout_allowed>
-</command>
 </agent_config>

@@ -3,9 +3,4 @@
     <location>/var/log/suspicious_login.log</location>
     <log_format>syslog</log_format>
 </localfile>
-<command>
-    <name>firewall-drop</name>
-    <executable>firewall-drop</executable>
-    <timeout_allowed>yes</timeout_allowed>
-</command>
 </agent_config>

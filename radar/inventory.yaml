@@ -36,15 +36,22 @@ all:
         agent.suspicious:
           agent_mode: container
           container_name: agent.suspicious
-        agent.insider:
+        agent.geoip:
           agent_mode: container
-          container_name: agent.insider
-        agent.ddos:
+          container_name: agent.geoip
+        agent.logvolume:
           agent_mode: container
-          container_name: agent.ddos
-        agent.malcom:
-          agent_mode: container
-          container_name: agent.malcom
+          container_name: agent.logvolume
+
+        # agent.insider:
+        #   agent_mode: container
+        #   container_name: agent.insider
+        # agent.ddos:
+        #   agent_mode: container
+        #   container_name: agent.ddos
+        # agent.malcom:
+        #   agent_mode: container
+        #   container_name: agent.malcom
 
     # SSH endpoints
     wazuh_agents_ssh:

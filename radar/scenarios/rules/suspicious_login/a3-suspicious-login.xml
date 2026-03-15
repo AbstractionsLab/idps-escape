@@ -18,16 +18,23 @@
   <!-- 2) Rule for impossible travel -->
   <rule id="210020" level="10">
     <if_group>authentication_failed</if_group>
-    <field name="radar_country_change_i">^1$</field>
     <field name="radar_geo_velocity_kmh" type="pcre2">^(?:9(?:0[1-9]|[1-9]\d)|[1-9]\d{3,})(?:\.\d+)?$</field>
     <description>RADAR SuspiciousLogin: impossible travel with failure (≥900 km/h + country change)</description>
     <group>authentication_success,impossible_travel,geo</group>
   </rule>
   <rule id="210021" level="10">
     <if_group>authentication_success</if_group>
-    <field name="radar_country_change_i">^1$</field>
     <field name="radar_geo_velocity_kmh" type="pcre2">^(?:9(?:0[1-9]|[1-9]\d)|[1-9]\d{3,})(?:\.\d+)?$</field>
     <description>RADAR SuspiciousLogin: impossible travel (≥900 km/h + country change)</description>
     <group>authentication_success,impossible_travel,geo</group>
+  </rule>
+
+  <!-- 3) Composite correlation rule: failed burst followed by impossible travel -->
+  <rule id="210022" level="12" timeframe="300">
+    <if_matched_sid>210021</if_matched_sid>
+    <if_matched_sid>210012</if_matched_sid>
+    <same_user />
+    <description>RADAR SuspiciousLogin: credential compromise (failed-burst + impossible-travel within 5min)</description>
+    <group>authentication_success,impossible_travel,brute_force,credential_compromise</group>
   </rule>
 </group>

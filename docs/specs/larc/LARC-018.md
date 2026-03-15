@@ -1,7 +1,7 @@
 ---
 active: true
 derived: false
-level: 18
+level: 2.4
 links:
 - HARC-004: 1lEN0jcfa_5LbomctwjmrLB8JczDcV05qzCY4yueM7w=
 - SRS-050: ep7od-3KSyb4MMe-mYrfw3HpDzovq0IY-lYoSDrODrk=

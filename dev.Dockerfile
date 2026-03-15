@@ -19,6 +19,16 @@ ENV SOAR_FOLDER=soar
 RUN apt update --fix-missing
 RUN apt-get install -y git python3-pip graphviz
 
+# Install Node.js 20.x (required by Mermaid CLI / mmdc)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# Install Chromium (headless browser backend for Mermaid CLI)
+RUN apt-get install -y chromium || apt-get install -y chromium-browser || true
+
+# Install Mermaid CLI for rendering Mermaid diagrams in specs
+RUN npm install -g @mermaid-js/mermaid-cli
+
 # Install pipx
 RUN python3 -m pip install pipx
 RUN python3 -m pipx ensurepath

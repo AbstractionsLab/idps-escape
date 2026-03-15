@@ -3,6 +3,12 @@
     <executable>radar_ar.py</executable>
 </command>
 
+<command>
+    <name>terminate_service.sh</name>
+    <executable>terminate_service.sh</executable>
+    <timeout_allowed>yes</timeout_allowed>
+</command>
+
 <active-response>
     <disabled>no</disabled>
     <command>radar_ar_log_volume</command>

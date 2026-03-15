@@ -159,13 +159,14 @@ scenarios:
               field: id.resp_p.keyword
 
   log_volume:
+    container_name: agent.logvolume
     index_prefix: wazuh-ad-log-volume-*
     result_index: opensearch-ad-plugin-result-log-volume
     log_index_pattern: wazuh-ad-log-volume-*
     time_field: "@timestamp"
     shingle_size: 8
     categorical_field: "agent.name"
-    detector_interval: 5
+    detector_interval: 1
     delay_minutes: 1
     monitor_name: "LogVolume-Monitor"
     trigger_name: "LogVolume-Growth-Detected"
@@ -178,8 +179,22 @@ scenarios:
           log_volume_max:
             max:
               field: data.log_bytes
+    rules:
+      - action: "IGNORE_ANOMALY"
+        conditions:
+          - feature_name: "log_volume_max"
+            threshold_type: "ACTUAL_OVER_EXPECTED_RATIO"
+            operator: "LTE"
+            value: 0.001
+      - action: "IGNORE_ANOMALY"
+        conditions:
+          - feature_name: "log_volume_max"
+            threshold_type: "EXPECTED_OVER_ACTUAL_RATIO"
+            operator: "LTE"
+            value: 0.001
 
   log_volume_general:
+    container_name: agent.logvolume
     index_prefix: wazuh-ad-log-volume-*
     result_index: opensearch-ad-plugin-result-log-volume
     log_index_pattern: wazuh-ad-log-volume-*
@@ -241,3 +256,6 @@ scenarios:
 #          login_hour_avg:
 #            avg:
 #              field: event_hour
+
+  geoip_detection:
+    container_name: agent.geoip

@@ -55,7 +55,7 @@ ansible --version    # Should be 2.15+
         - otherwise, follow the [official instructions for Linux distributions](https://docs.ansible.com/projects/ansible/latest/installation_guide/installation_distros.html).
         - Minimum version: Ansible `2.15+`.
 - Targeted Wazuh manager and agent versions: `4.14.1` (automatically handled by our deployment artifacts)
-- **Optional**: If automatic incident case creation is desired, a Flowintel instance must be running, with a connection between Flowintel and the Wazuh Manager. To bring up the supporting services for the Flowintel integration, follow the [**DECIPHER deployment guide to bring up Flowintel:**](https://github.com/AbstractionsLab/satrap-dl/tree/main/deployment). To enable the connection, configure the `FLOWINTEL_*` variables in `.env`.
+- **Optional**: If automatic CTI enrichment and incident case creation are desired, a DECIPHER instance must be running, with a connection between DECIPHER and the Wazuh Manager. To bring up the supporting services for DECIPHER, MISP and FlowIntel integration, follow the [**DECIPHER deployment guide**](https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher). To enable the connection, configure the `DECIPHER_*` variables in `.env`.
 - Environment values such as `OS_URL`, `OS_USER`, `OS_PASS`, `DASHBOARD_URL`, `DASHBOARD_USER`, `DASHBOARD_PASS` and SMTP credentials are available to the tester. The tester has network access (SSH) from the test controller node to controlled endpoints.
 - If either the Wazuh agent (aka agent) or the Wazuh manager (aka manager) is chosen to be `remote`:
     - the remote agent/manager needs to have Docker and Docker Compose installed following the official documentations for [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install).
@@ -95,14 +95,14 @@ SMTP_USER=user@example.com
 SMTP_PASS=password
 EMAIL_TO=recipient@example.com
 
-FLOWINTEL_BASE_URL=http://192.168.0.28:7006/api  # Change IP accordingly
-FLOWINTEL_API_KEY=API_KEY                        # Change accordingly
-FLOWINTEL_VERIFY_SSL=VERIFY_SSL                  # Change accordingly
-PYFLOWINTEL_PATH=/var/ossec/active-response/bin/pyflowintel
+# DEIPHER (for CTI enrichment and incident case creation)
+DECIPHER_BASE_URL=http://localhost:8000  # Change accordingly
+DECIPHER_VERIFY_SSL=VERIFY_SSL           # Change accordingly
+DECIPHER_TIMEOUT_SEC=30                  # Change accordingly
 
 ```
 
-See the [complete .env template](/radar/env.example) for all available configuration options including logging, FLOWINTEL, and advanced settings.
+See the [complete .env template](/radar/env.example) for all available configuration options including logging, DECIPHER, and advanced settings.
 
 ### 2. Configure users in remote endpoints
 
@@ -230,12 +230,12 @@ The **`scenarios/active_responses/ar.yaml`** file configures the risk-aware acti
 | `delta_signature_minutes` | Time window for signature alerts correlation (minutes) | `1` |
 | `signature_impact` | Impact score for signature detections (0.0-1.0) | `0.7` |
 | `signature_likelihood` | Likelihood score for signature detections (0.0-1.0) or weighted rules | `0.8` or rule-specific weights |
-| `risk_threshold` | Minimum risk score to trigger response (0.0-1.0) | `0.51` |
-| `tiers.tier1_max` | Maximum risk score for Tier 1 (low risk) | `0.33` |
-| `tiers.tier2_max` | Maximum risk score for Tier 2 (medium risk) | `0.66` |
-| `mitigations` | List of active response actions to execute | `["firewall-drop", "lock_user_linux"]` |
-| `create_case` | Whether to create a case in FlowIntel | `true` or `false` |
-| `allow_mitigation` | Whether to execute automated mitigations | `true` or `false` |
+| `tiers.tier1_min` | Minimum risk score to enter Tier 1; scores below fall into Tier 0 (0.0-1.0) | `0.0` |
+| `tiers.tier1_max` | Maximum risk score for Tier 1 (0.0-1.0) | `0.33` |
+| `tiers.tier2_max` | Maximum risk score for Tier 2 (0.0-1.0) | `0.66` |
+| `mitigations_tier2` | List of mild/reversible active response actions executed at Tier 2 | `["firewall-drop"]` |
+| `mitigations_tier3` | List of harsh/permanent active response actions executed at Tier 3 | `["firewall-drop", "lock_user_linux.sh"]` |
+| `allow_mitigation` | Whether to execute automated mitigations at Tier 2 and Tier 3 | `true` or `false` |
 
 **Tuning recommendations:**
 
@@ -246,11 +246,10 @@ The **`scenarios/active_responses/ar.yaml`** file configures the risk-aware acti
 - **Use rule-specific likelihood weights** when different signature rules have varying confidence levels
 
 
-### 6. Configure FlowIntel
+### 6. Configure DECIPHER
 
-RADAR can optionally create cases/tasks and push investigation context to a FlowIntel instance. To enable this, we must have **Flowintel running and reachable** from the Wazuh manager / active response context, and we must configure the `FLOWINTEL_*` variables in `.env`. 
+RADAR can optionally create cases/tasks and push investigation context to a FlowIntel instance. To enable this, we must have **DECIPHER running and reachable** from the Wazuh manager / active response context, and we must configure the `DECIPHER_*` variables in `.env`. DECIPHER is a subsystem of SATRAP-DL responsible of supporting automated workflows for handling diverse types of incidents, informed by CTI and relying on open-source tools. Further details can be found in [DECIPHER page](https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher).
 
-> Future integration: [SATRAP](https://github.com/AbstractionsLab/satrap-dl) integration is planned for future releases to enhance threat intelligence correlation and automated investigation workflows.
 
 # Usage
 

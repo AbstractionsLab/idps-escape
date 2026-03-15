@@ -1,7 +1,7 @@
 ---
 active: true
 derived: false
-level: 20
+level: 1.2
 links:
 - SRS-027: qV_tYdjjxxvj9gBHqO5x5MwZ6kV9KPxPo3_-GYHq8FU=
 - SRS-035: 81VhxH8mkXdcWevkkr-cbGE0_B3foxgnm2HWa3LRCE4=
@@ -9,7 +9,7 @@ links:
 normative: true
 ref: ''
 release: Alpha
-reviewed: r6bN6ESJsBvfV4PszH1P8fpYNqX5ZU0CjUfwxEEpXAc=
+reviewed: JgEQkN1NxqNktbCrdyYILI9YA9KGQHaWtlOuSFBjQWw=
 version: '0.1'
 ---
 

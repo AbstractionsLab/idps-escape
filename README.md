@@ -13,9 +13,13 @@ IDPS-ESCAPE (Intrusion Detection and Prevention System - Enhanced Security throu
 
 We adopt a **hybrid detection approach** for defense-in-depth against known and emerging threats, combining signature-based engines (Wazuh, Suricata) and machine learning (ML) algorithms for ML-based anomaly detection (AD) through SONAR and RADAR relying on [MTAD-GAT](https://arxiv.org/pdf/2009.02040) (attention mechanism and deep learning) and [RRCF](https://proceedings.mlr.press/v48/guha16.pdf) (random forest) for streaming data, respectively.
 
-This repository contains complete [documentation](./docs/manual/README.md), user manual, technical specifications, and validation test reports based on the [C5-DEC](https://github.com/AbstractionsLab/c5dec) method. See our [traceability website](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) for interlinked specifications and the [TRB page](https://abstractionslab.github.io/idps-escape/docs/traceability/TRB.html) providing our beta phase validation test execution report.
+This repository contains complete [documentation](./docs/manual/README.md), user manual, technical specifications, and validation test reports based on the [C5-DEC](https://github.com/AbstractionsLab/c5dec) method. See our **[traceability website](https://abstractionslab.github.io/idps-escape/traceability/index.html)** for interlinked specifications.
 
-**Table of contents**
+For a visual stakeholder-oriented tour of IDPS-ESCAPE, visit the **[product presentation page](https://abstractionslab.github.io/idps-escape/website/product-presentation.html)**.
+
+<img src="./docs/manual/_figures/IDPS-ESCAPE-product-website.png" alt="idps-escape-website" width="500"/>
+
+## Table of contents
 
 - [IDPS-ESCAPE suite](#idps-escape-suite)
 - [Quick start](#quick-start)
@@ -48,7 +52,7 @@ This repository contains complete [documentation](./docs/manual/README.md), user
 | Local | Remote | Central manager with distributed endpoints |
 | Remote | Remote | Fully distributed production |
 
-See [RADAR README](/docs/manual/sonar_docs/README.md), [scenarios](/radar/scenarios/README.md), [adversarial ML guidance](/docs/manual/radar_docs/adversarial-ml-guidance.md) and [developer README](/radar/README.md).
+See [RADAR README](/docs/manual/radar_docs/README.md), [scenarios](/radar/scenarios/README.md), [adversarial ML guidance](/docs/manual/radar_docs/adversarial-ml-guidance.md) and [developer README](/radar/README.md).
 
 ### SONAR - SIEM-Oriented Neural Anomaly Recognition via multivariate AD
 
@@ -80,7 +84,7 @@ The automated setup includes:
 
 ## Documentation
 
-See our [user manual](./docs/manual/README.md) for comprehensive documentation on [RADAR](/radar/README.md), [SONAR](/sonar/README.md), and [ADBox](/docs/manual/adbox_docs/adbox.md). Visit our [traceability page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) for interlinked requirements, technical specifications such as architecture diagrams, and test reports ([TRB](https://abstractionslab.github.io/idps-escape/docs/traceability/TRB.html)).
+See our [user manual](./docs/manual/README.md) for comprehensive documentation on [RADAR](/radar/README.md), [SONAR](/sonar/README.md), and [ADBox](/docs/manual/adbox_docs/adbox.md). Visit our [traceability page](https://abstractionslab.github.io/idps-escape/traceability/index.html) for interlinked requirements, technical specifications such as architecture diagrams, and test reports ([TRP](https://abstractionslab.github.io/idps-escape/docs/traceability/TRP.html)).
 
 ## Quick start
 
@@ -118,13 +122,20 @@ See the [RADAR getting started](/docs/manual/radar_docs/radar-getting-started.md
 - Webhook service for alert routing
 - Complete automation pipeline for the chosen scenario
 
-Here we provide a screenshot of a successful run of the Geo IP detection RADAR scenario:
+Here we provide screenshots of a successful run of the Suspicious Login detection RADAR scenario:
 
-The currently implemented active response sends an email to a designated recipient.
-![](/docs/manual/_figures/RADAR-GeoIP-detection-Automated-Response-email.png)
+![Wazuh Dashboard RADAR Suspicious Login detection](/docs/manual/_figures/RADAR-v0.8-wazuh-dashboard.png)
 
-Additionally, if Flowintel is configured, the RADAR active response module creates a case in Flowintel for medium and high risk scenarios.
-![](/docs/manual/_figures/RADAR-GeoIP-detection-Automated-Response-flowintel.png)
+The active response sends an email to a designated recipient.
+![](/docs/manual/_figures/RADAR-v0.8-email-suspicious-login.png)
+
+Additionally, the active response creates a case in FlowIntel for high risk alerts via the DECIPHER service.
+
+To compute the threat context for that response, RADAR calls DECIPHER's dedicated analysis endpoint — a distinct API endpoint separate from ordinary RADAR flows. It passes an information bundle assembled from the detection of the given scenario: alert metadata, source IP, relevant event fields, and scenario-specific context. DECIPHER processes this bundle and returns a CTI score together with enriched threat intelligence results to RADAR, which feeds the score directly into its risk computation. As part of scoring, DECIPHER performs a series of indicator lookups in MISP via `pymisp` — for example, checking whether a source IP appears as a known malicious attribute on any MISP event — and factors those findings into the final CTI score. The screenshot below shows an example MISP event consulted during this process, recording a malicious `ip-src` indicator that DECIPHER would match against the bundle supplied by RADAR:
+
+![RADAR DECIPHER MISP lookup — ip-src event in MISP](/docs/manual/_figures/RADAR-DECIPHER-MISP-lookup.png "MISP event consulted by DECIPHER during CTI scoring for a RADAR scenario")
+
+![FlowIntel case created by RADAR via DECIPHER](/docs/manual/_figures/RADAR-v0.8-FlowIntel-case.png)
 
 See [RADAR getting started](/docs/manual/radar_docs/radar-getting-started.md) for deployment modes and configuration.
 
@@ -262,7 +273,7 @@ See [SONAR README](/sonar/README.md) and [RADAR README](/radar/README.md) for co
 
 ## Testing
 
-See our [traceability page](https://abstractionslab.github.io/idps-escape/docs/traceability/index.html) for test reports ([TRB](https://abstractionslab.github.io/idps-escape/docs/traceability/TRB.html)) and [RADAR test framework](/radar/radar-test-framework/README.md) for automated experimentation.
+See our [traceability page](https://abstractionslab.github.io/idps-escape/traceability/index.html) for test reports ([TRP](https://abstractionslab.github.io/idps-escape/docs/traceability/TRP.html)) and [RADAR test framework](/radar/radar-test-framework/README.md) for automated experimentation.
 
 ## Roadmap
 

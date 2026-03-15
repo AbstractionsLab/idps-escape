@@ -214,12 +214,12 @@ The orchestration layer automates deployment, configuration, and lifecycle manag
   - Deploy Wazuh core stack (manager, indexer, dashboard)
   - Deploy Wazuh agents (local containers optionally)
   - Run Ansible playbooks for scenario configuration
-  - Build `radar-cli` Docker container
 - **Usage**: `./build-radar.sh <scenario> --agent <local|remote> --manager <local|remote> --manager_exists <true|false>`
 
 **run-radar.sh**
 - **Purpose**: Anomaly Detector creation and operational readiness
 - **Functions**:
+  - Build `radar-cli` Docker container
   - Ingest scenario dataset/events to Opensearch
   - Create/start anomaly detector
   - Configure and enable monitor with webhook
@@ -231,6 +231,19 @@ The orchestration layer automates deployment, configuration, and lifecycle manag
   - Stop containers and `radar-helper` service
   - Purge data (optional)
 - **Usage**: `./stop-radar.sh --manager <local|remote> --agent <local|remote> [--purge] [--disable-wazuh-agent]`
+
+**simulate-radar.sh**
+- **Purpose**: Simulate RADAR scenarios
+- **Functions**:
+  - simulates threat scenario attack behavior
+- **Usage**: `./simulate-radar.sh  <scenario> --agent <local|remote>`
+
+**health-radar.sh**
+- **Purpose**: Checks for the RADAR element health.
+- **Functions**: 
+  - Checks manager and agents for functionality, existence and permissions.
+  - Outputs a summary report.
+- **Usage**: `./health-radar.sh --manager <local|remote> --agent <local|remote> [--scenario <name|all>] [--ssh-key <path>]`
 
 #### Core components
 
@@ -353,7 +366,7 @@ A multi-threaded Python daemon that processes authentication logs in real-time.
 - Webhook endpoint URL
 - SSL certificate paths
 - SMTP configuration for notifications
-- FlowIntel/SATRAP integration settings (FLOWINTEL_BASE_URL, FLOWINTEL_API_KEY, etc.)
+- DECIPHER integration settings (`DECIPHER_BASE_URL`, `DECIPHER_VERIFY_SSL`, `DECIPHER_TIMEOUT_SEC`)
 - Active response configuration path (AR_RISK_CONFIG, AR_LOG_FILE)
 
 **volumes.yml**
@@ -440,9 +453,10 @@ Defines the `radar-cli` container used by `run-radar.sh`:
 - Idempotent playbook execution
 - Encrypted credential storage (Ansible Vault)
 
-**Flowintel**
-- RADAR can create cases/tasks and push investigation context via `pyflowintel` client
-- Configuration via `FLOWINTEL_*` environment variables in `.env`
+**DECIPHER**
+- RADAR estimates CTI score via DECIPHER analyze endpoint
+- RADAR creates FlowIntel cases via the DECIPHER incident endpoint
+- Configuration via `DECIPHER_*` environment variables in `.env`
 - Deployment guide - [DECIPHER deployment (Flowintel setup)](https://github.com/AbstractionsLab/satrap-dl/tree/main/deployment)
 
 
@@ -620,12 +634,12 @@ The `ar.yaml` file configures the risk-based active response system for each sce
 | `delta_signature_minutes` | Time window for signature alerts correlation (minutes) | `1` |
 | `signature_impact` | Impact score for signature detections (0.0-1.0) | `0.7` |
 | `signature_likelihood` | Likelihood score for signature detections (0.0-1.0) or weighted rules | `0.8` or rule-specific weights |
-| `risk_threshold` | Minimum risk score to trigger response (0.0-1.0) | `0.51` |
-| `tiers.tier1_max` | Maximum risk score for Tier 1 (low risk) | `0.33` |
-| `tiers.tier2_max` | Maximum risk score for Tier 2 (medium risk) | `0.66` |
-| `mitigations` | List of active response actions to execute | `["firewall-drop", "lock_user_linux"]` |
-| `create_case` | Whether to create a case in FlowIntel | `true` or `false` |
-| `allow_mitigation` | Whether to execute automated mitigations | `true` or `false` |
+| `tiers.tier1_min` | Minimum risk score to enter Tier 1; scores below fall into Tier 0 (0.0-1.0) | `0.0` |
+| `tiers.tier1_max` | Maximum risk score for Tier 1 (0.0-1.0) | `0.33` |
+| `tiers.tier2_max` | Maximum risk score for Tier 2 (0.0-1.0) | `0.66` |
+| `mitigations_tier2` | List of mild/reversible active response actions executed at Tier 2 | `["firewall-drop"]` |
+| `mitigations_tier3` | List of harsh/permanent active response actions executed at Tier 3 | `["firewall-drop", "lock_user_linux.sh"]` |
+| `allow_mitigation` | Whether to execute automated mitigations at Tier 2 and Tier 3 | `true` or `false` |
 
 
 ### Environment Variables (.env)
@@ -638,11 +652,17 @@ OS_USER=admin
 OS_PASS=SecretPassword
 WAZUH_API_URL=https://WAZUH_IP:55000
 WAZUH_AGENT_VERSION=4.14.1-1
+DASHBOARD_URL=https://DASHBOARD_IP 
 WEBHOOK_URL=http://WEBHOOK_IP:8080/notify
 AR_RISK_CONFIG=/var/ossec/active-response/bin/ar.yaml
 AR_LOG_FILE=/var/ossec/logs/active-responses.log
-FLOWINTEL_BASE_URL=http://FLOWINTEL_IP:7006/api
-FLOWINTEL_API_KEY=API_KEY
+DECIPHER_BASE_URL=http://DECIPHER_IP:8000
+DECIPHER_VERIFY_SSL=false
+DECIPHER_TIMEOUT_SEC=30
+SMTP_HOST=SMTP_HOST
+SMTP_PORT=SMTP_PORT
+SMTP_USER=SMTP_USER
+SMTP_PASS=SMTP_PASS
 ```
 
 ### Ansible Inventory (inventory.yaml)

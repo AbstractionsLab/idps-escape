@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IDPS-ESCAPE | Product presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef1f5;
+      --surface: #ffffff;
+      --surface-alt: #f0fafa;
+      --ink: #17212f;
+      --muted: #3d6363;
+      --line: #bfe0e2;
+      --brand: #0d8b94;
+      --brand-strong: #065d65;
+      --accent: #e12f56;
+      --ok: #13874f;
+      --shadow: 0 12px 40px rgba(6, 50, 55, 0.15);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at 10% -10%, #c8f0f2 0, transparent 40%),
+        radial-gradient(circle at 90% 0, #d1f0e8 0, transparent 35%),
+        var(--bg);
+      color: var(--ink);
+      font-family: Manrope, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      scroll-behavior: smooth;
+    }
+
+    .container {
+      width: min(1200px, calc(100vw - 2.4rem));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(8px);
+      background: rgba(238, 241, 245, 0.82);
+      border-bottom: 1px solid rgba(213, 223, 236, 0.8);
+      z-index: 20;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.8rem 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.62rem;
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: 0.02em;
+      font-weight: 700;
+      color: var(--brand-strong);
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 14px rgba(6, 93, 101, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: #fff;
+    }
+
+    .brand-text {
+      display: inline-block;
+      line-height: 1;
+    }
+
+    .topnav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .topnav a {
+      text-decoration: none;
+      color: var(--brand-strong);
+      border: 1px solid transparent;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .topnav a:hover {
+      border-color: var(--line);
+      background: var(--surface);
+    }
+
+    .hero {
+      padding: 4.2rem 0 2.5rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      background: var(--surface);
+      color: var(--brand-strong);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin-bottom: 1.1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      margin-top: 1rem;
+      color: var(--muted);
+      max-width: 62ch;
+      font-size: 1.02rem;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1.4rem;
+    }
+
+    .btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 10px;
+      font-weight: 700;
+      padding: 0.7rem 1rem;
+      border: 1px solid transparent;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(115deg, var(--brand), var(--brand-strong));
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(6, 93, 101, 0.28);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--brand-strong);
+      border-color: var(--line);
+    }
+
+    .hero-visual {
+      background: linear-gradient(145deg, #063b3f, #0d6b73);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    .hero-visual::before {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      right: -70px;
+      top: -70px;
+      background: radial-gradient(circle, rgba(13, 139, 148, 0.5), rgba(13, 139, 148, 0));
+      z-index: -1;
+    }
+
+    .hero-visual img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      display: block;
+    }
+
+    .metrics {
+      display: grid;
+      gap: 0.8rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 1.2rem;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.05rem;
+      color: var(--brand-strong);
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    section {
+      padding: 2.1rem 0;
+    }
+
+    .section-head {
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    h2 {
+      margin: 0;
+      letter-spacing: -0.01em;
+      font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+    }
+
+    .section-kicker {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      box-shadow: 0 6px 24px rgba(6, 50, 55, 0.08);
+    }
+
+    .feature h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--brand-strong);
+    }
+
+    .feature p {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .stack {
+      margin-top: 0.65rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--surface-alt);
+      color: var(--brand-strong);
+      padding: 0.17rem 0.55rem;
+      font-size: 0.77rem;
+      font-weight: 700;
+    }
+
+    .showcase {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .shot {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 26px rgba(6, 50, 55, 0.08);
+      overflow: hidden;
+      transform: translateY(10px);
+      opacity: 0;
+      animation: fade-up 0.55s ease forwards;
+    }
+
+    .shot:nth-child(2) { animation-delay: 0.06s; }
+    .shot:nth-child(3) { animation-delay: 0.12s; }
+    .shot:nth-child(4) { animation-delay: 0.18s; }
+    .shot:nth-child(5) { animation-delay: 0.24s; }
+    .shot:nth-child(6) { animation-delay: 0.3s; }
+
+    @keyframes fade-up {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .shot button {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      cursor: zoom-in;
+    }
+
+    .shot img {
+      width: 100%;
+      display: block;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .shot figcaption {
+      padding: 0.85rem 0.95rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      min-height: 4.4rem;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem;
+      position: relative;
+      min-height: 140px;
+    }
+
+    .step::after {
+      content: "";
+      position: absolute;
+      right: -0.45rem;
+      top: calc(50% - 0.45rem);
+      width: 0.9rem;
+      height: 0.9rem;
+      background: var(--brand);
+      border-radius: 999px;
+      border: 2px solid var(--bg);
+    }
+
+    .step:last-child::after {
+      display: none;
+    }
+
+    .step strong {
+      color: var(--brand-strong);
+      font-size: 0.85rem;
+      font-family: "Space Grotesk", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .step p {
+      margin: 0.45rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      padding: 1.6rem 0 2.2rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .footer a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 18, 34, 0.86);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 40;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox figure {
+      max-width: min(1280px, 96vw);
+      margin: 0;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.45);
+    }
+
+    .lightbox img {
+      display: block;
+      width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .lightbox figcaption {
+      padding: 0.7rem 0.85rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      background: #fff;
+    }
+
+    .lightbox .close {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #fff;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 999px;
+      width: 42px;
+      height: 42px;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .showcase {
+        grid-template-columns: 1fr;
+      }
+
+      .workflow {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .workflow {
+        grid-template-columns: 1fr;
+      }
+
+      .step::after {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 2.7rem;
+      }
+
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .brand-logo {
+        width: 30px;
+        height: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="https://github.com/AbstractionsLab/idps-escape">
+        <img class="brand-logo" src="assets/1D1B2_LOG_IDPS-ESCAPE-400x400.png" alt="IDPS-ESCAPE logo">
+        <span class="brand-text">IDPS-ESCAPE</span>
+      </a>
+      <nav class="topnav" aria-label="Page sections">
+        <a href="#value">Value</a>
+        <a href="#features">Features</a>
+        <a href="#gallery">Screens</a>
+        <a href="#workflow">Workflow</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="value">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">Product presentation</div>
+          <h1>IDPS-ESCAPE: AI-driven intrusion detection and automated security response</h1>
+          <p class="lead">
+            IDPS-ESCAPE turns detection into action. It combines signature-based engines (Wazuh, Suricata)
+            with machine learning anomaly detection to catch both known and emerging threats — then
+            automatically fires risk-scaled responses, from alert emails to host isolation, enriched with
+            live cyber threat intelligence. Incident cases are created automatically, closing the loop from
+            detection to remediation. Built for SMEs, SOC teams, and CERT/CSIRT entities under the CyFORT project.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/AbstractionsLab/idps-escape/blob/main/radar/README.md">Open quick start</a>
+            <a class="btn btn-secondary" href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/README.md">Browse user manual</a>
+          </div>
+          <div class="metrics" aria-label="Product metrics">
+            <div class="metric">
+              <strong>Hybrid detection</strong>
+              <span>Signature + AI-based anomaly detection</span>
+            </div>
+            <div class="metric">
+              <strong>3-tier response</strong>
+              <span>Low, Medium, and High risk</span>
+            </div>
+            <div class="metric">
+              <strong>CTI integration</strong>
+              <span>Live threat intelligence via <a href="https://abstractionslab.github.io/satrap-dl/website/product-presentation.html">SATRAP-DL</a></span>
+            </div>
+            <div class="metric">
+              <strong>Full traceability</strong>
+              <span><a href="https://abstractionslab.github.io/idps-escape/traceability/index.html">Interlinked specs</a> via <a href="https://abstractionslab.github.io/c5dec/website/product-presentation.html">C5-DEC method</a></span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <img src="assets/SONAR-Dashboard.png" alt="SONAR anomaly detection dashboard">
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="container">
+        <div class="section-head">
+          <h2>Core capabilities</h2>
+          <div class="section-kicker">From detection to response</div>
+        </div>
+        <div class="features">
+          <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/sonar_docs/README.md">SONAR</a> — multivariate anomaly detection</h3>
+            <p>Microsoft MTAD-GAT multivariate time-series anomaly detection on Wazuh alerts. Scenario-driven YAML configuration, offline debug mode, and direct RADAR data shipping in Wazuh.</p>
+            <div class="stack">
+              <span class="chip">Microsoft MTAD-GAT</span>
+              <span class="chip">YAML scenarios</span>
+              <span class="chip">Debug mode</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/README.md">RADAR</a> — risk-aware automated response</h3>
+            <p>RRCF-based behavioral and signature detection with Ansible Infrastructure-as-Code deployment. Tiered active responses scale automatically to computed risk level.</p>
+            <div class="stack">
+              <span class="chip">RRCF</span>
+              <span class="chip">Ansible IaC</span>
+              <span class="chip">Active response</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3>Hybrid detection engine</h3>
+            <p>Three-layer defense in depth: Wazuh/Suricata signature rules catch known patterns, RADAR (RRCF) detects behavioral anomalies, and SONAR (MTAD-GAT) identifies multivariate ML anomalies.</p>
+            <div class="stack">
+              <span class="chip">Wazuh</span>
+              <span class="chip">Suricata</span>
+              <span class="chip">Defense-in-depth</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3>CTI enrichment via DECIPHER</h3>
+            <p>SATRAP-DL's DECIPHER subsystem queries MISP IOC feeds for blacklisted IPs, malicious domains, and hash indicators. The resulting CTI score T is fused into the normalized risk score R.</p>
+            <div class="stack">
+              <span class="chip">DECIPHER</span>
+              <span class="chip">SATRAP-DL</span>
+              <span class="chip">MISP</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3>Flowintel case management</h3>
+            <p>Incident cases are created automatically by DECIPHER in Flowintel when risk thresholds are crossed. Alert emails include the case URL, risk score breakdown, and full IOC context.</p>
+            <div class="stack">
+              <span class="chip">Flowintel</span>
+              <span class="chip">Case creation</span>
+              <span class="chip">Tiered alerts</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3>Ansible IaC deployment</h3>
+            <p>Zero-touch deployment of Wazuh manager and agents, OpenSearch AD detectors, monitors, webhooks, and active response scripts via reproducible Ansible playbooks.</p>
+            <div class="stack">
+              <span class="chip">Ansible</span>
+              <span class="chip">Docker</span>
+              <span class="chip">Reproducible</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery">
+      <div class="container">
+        <div class="section-head">
+          <h2>Product screenshot gallery</h2>
+          <div class="section-kicker">Click any screenshot to zoom</div>
+        </div>
+        <div class="showcase">
+          <figure class="shot">
+            <button data-full="assets/SONAR-detection.png" data-caption="SONAR anomaly score chart">
+              <img src="assets/SONAR-detection.png" alt="SONAR anomaly scores and prediction over time">
+            </button>
+            <figcaption>SONAR MTAD-GAT model detecting an intrusion spike: anomaly score rises above the learned threshold, highlighting the anomalous window in red.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR-suspicious-login-detection-email.png" data-caption="Suspicious login risk alert email">
+              <img src="assets/RADAR-suspicious-login-detection-email.png" alt="RADAR email notification for impossible-travel detection">
+            </button>
+            <figcaption>RADAR alert email for impossible-travel (≥900 km/h + country change): risk score, CTI component breakdown, IOC summary, and Flowintel case link.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR-DECIPHER-Flowintel-integration.png" data-caption="Flowintel incident case list">
+              <img src="assets/RADAR-DECIPHER-Flowintel-integration.png" alt="Automatically created incident cases in Flowintel">
+            </button>
+            <figcaption>Flowintel case list creation by DECIPHER with auto-compiled RADAR incidents: scenario, detection type, risk tier, CTI component breakdown, IOC context, and unique decision IDs.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR-DECIPHER-MISP-lookup.png" data-caption="DECIPHER case with MISP analysis">
+              <img src="assets/RADAR-DECIPHER-MISP-lookup.png" alt="DECIPHER suspicious login case with MISP severity score">
+            </button>
+            <figcaption><a href="https://abstractionslab.github.io/satrap-dl/website/product-presentation.html">SATRAP-DL</a>'s DECIPHER CTI analysis uses MISP lookup (e.g. sightings) to compute a CTI score involving severity confidence, admiralty scale ratings, event threat level, and MITRE ATT&CK tag relevance, evidence attributes, and MISP event correlation hits.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/IDPS-ESCAPE-automation.png" data-caption="IDPS-ESCAPE stack automated and scalable deployment">
+              <img src="assets/IDPS-ESCAPE-automation.png" alt="IDPS-ESCAPE stack automated and scalable deployment">
+            </button>
+            <figcaption>IDPS-ESCAPE stack automated and scalable deployment powered by Ansible and Docker.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/IDPS-ESCAPE-context-diagram.png" data-caption="IDPS-ESCAPE system architecture overview">
+              <img src="assets/IDPS-ESCAPE-context-diagram.png" alt="IDPS-ESCAPE full system context diagram">
+            </button>
+            <figcaption>Full system context diagram: SONAR, RADAR, DECIPHER/SATRAP-DL, MISP, Flowintel, Wazuh SIEM&amp;XDR, NIDS capture points, and external CTI tools.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="container">
+        <div class="section-head">
+          <h2>MAPE-K automated response cycle</h2>
+          <div class="section-kicker">Monitor to response, continuously</div>
+        </div>
+        <div class="workflow" aria-label="MAPE-K workflow steps">
+          <article class="step">
+            <strong>1. Monitor</strong>
+            <p>Wazuh agents and Suricata sensors collect logs, network events, and endpoint telemetry, feeding the OpenSearch indexer in real time.</p>
+          </article>
+          <article class="step">
+            <strong>2. Analyze</strong>
+            <p>SONAR (MTAD-GAT multivariate ML) and RADAR (RRCF behavioral) detect anomalies. Wazuh rules simultaneously match known signature attack patterns.</p>
+          </article>
+          <article class="step">
+            <strong>3. Plan</strong>
+            <p>The RADAR risk engine fuses anomaly intensity A, signature risk S, and DECIPHER CTI score T into a weighted R = w&#x2090;&#xB7;A + w&#x209B;&#xB7;S + w&#x209C;&#xB7;T, assigning a Low, Medium, or High response tier.</p>
+          </article>
+          <article class="step">
+            <strong>4. Execute</strong>
+            <p>Active responses fire automatically: email alerts, Flowintel incident case creation, and strong actions (IP block, host isolation, credential disable) scaled to the risk tier.</p>
+          </article>
+          <article class="step">
+            <strong>5. Knowledge</strong>
+            <p>DECIPHER queries MISP IOC feeds to keep threat intelligence current. Flowintel accumulates case history and SONAR models are retrained with fresh alert evidence.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      IDPS-ESCAPE product presentation page. Continue with the
+      <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/README.md">user manual</a> or start at the
+      <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/README.md">quick start guide</a>.
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Screenshot preview" aria-modal="true">
+    <button class="close" aria-label="Close preview">&times;</button>
+    <figure>
+      <img src="" alt="">
+      <figcaption></figcaption>
+    </figure>
+  </div>
+
+  <script>
+    (function () {
+      var lightbox = document.getElementById("lightbox");
+      var lightboxImage = lightbox.querySelector("img");
+      var lightboxCaption = lightbox.querySelector("figcaption");
+      var closeButton = lightbox.querySelector(".close");
+      var triggers = document.querySelectorAll(".shot button");
+
+      function closeLightbox() {
+        lightbox.classList.remove("open");
+        lightboxImage.src = "";
+        lightboxImage.alt = "";
+      }
+
+      triggers.forEach(function (button) {
+        button.addEventListener("click", function () {
+          var full = button.getAttribute("data-full");
+          var caption = button.getAttribute("data-caption") || "Screenshot";
+          lightboxImage.src = full;
+          lightboxImage.alt = caption;
+          lightboxCaption.textContent = caption;
+          lightbox.classList.add("open");
+        });
+      });
+
+      closeButton.addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", function (event) {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && lightbox.classList.contains("open")) {
+          closeLightbox();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

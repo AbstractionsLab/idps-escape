@@ -1,0 +1,138 @@
+# c5browser_config.yaml — user-facing configuration for c5browser.py
+# Edit this file to customise the browser without touching source code.
+# All sections are optional; built-in defaults are used for any section that
+# is absent or empty.
+
+# ---------------------------------------------------------------------------
+# Fields rendered as numeric (coloured pip instead of plain text).
+# ---------------------------------------------------------------------------
+numeric_fields:
+  - urgency
+  - importance
+  - difficulty
+  - risk
+  - complexity
+  - passed-steps
+  - failed-steps
+  - not-executed-steps
+  - passed_steps
+  - failed_steps
+  - not_executed_steps
+
+# ---------------------------------------------------------------------------
+# Defect keyword → Bootstrap badge CSS class
+# ---------------------------------------------------------------------------
+defect_badge_css:
+  "?c5-defect-0": "bg-success"
+  "?c5-defect-1": "bg-success"
+  "?c5-defect-2": "bg-warning text-dark"
+  "?c5-defect-3": "bg-danger"
+  "?c5-defect-4": "bg-danger"
+
+# ---------------------------------------------------------------------------
+# Defect keyword → human-readable label shown in the badge
+# ---------------------------------------------------------------------------
+defect_labels:
+  "?c5-defect-0": "0 — flawless"
+  "?c5-defect-1": "1 — insignificant"
+  "?c5-defect-2": "2 — minor"
+  "?c5-defect-3": "3 — major"
+  "?c5-defect-4": "4 — critical"
+
+# ---------------------------------------------------------------------------
+# Static document-type definitions.
+# Used as a fallback when .doorstop.yml auto-discovery produces no results.
+#
+# Each entry:
+#   prefix  — document prefix, e.g. MRS
+#   subdir  — subdirectory name under specs-dir, e.g. mrs
+#   columns — ordered list of {key, label, type}
+#               key   : field name in the Doorstop item (use _parents for parent links)
+#               label : column header displayed in the browser
+#               type  : "str" (default) or "num" (numeric sort + coloured pip)
+# ---------------------------------------------------------------------------
+doc_types:
+  - prefix: MRS
+    subdir: mrs
+    columns:
+      - {key: uid,        label: UID,          type: str}
+      - {key: title,      label: Title,        type: str}
+      - {key: type,       label: Type,         type: str}
+      - {key: urgency,    label: Urgency,      type: num}
+      - {key: importance, label: Importance,   type: num}
+      - {key: release,    label: Release,      type: str}
+      - {key: vm,         label: VM,           type: str}
+      - {key: active,     label: Active,       type: str}
+      - {key: _parents,   label: Parent links, type: str}
+
+  - prefix: HARC
+    subdir: harc
+    columns:
+      - {key: uid,      label: UID,          type: str}
+      - {key: title,    label: Title,        type: str}
+      - {key: active,   label: Active,       type: str}
+      - {key: _parents, label: Parent links, type: str}
+
+  - prefix: SRS
+    subdir: srs
+    columns:
+      - {key: uid,        label: UID,          type: str}
+      - {key: title,      label: Title,        type: str}
+      - {key: urgency,    label: Urgency,      type: num}
+      - {key: importance, label: Importance,   type: num}
+      - {key: difficulty, label: Difficulty,   type: num}
+      - {key: risk,       label: Risk,         type: num}
+      - {key: status,     label: Status,       type: str}
+      - {key: release,    label: Release,      type: str}
+      - {key: version,    label: Version,      type: str}
+      - {key: active,     label: Active,       type: str}
+      - {key: _parents,   label: Parent links, type: str}
+
+  - prefix: LARC
+    subdir: larc
+    columns:
+      - {key: uid,      label: UID,          type: str}
+      - {key: title,    label: Title,        type: str}
+      - {key: release,  label: Release,      type: str}
+      - {key: version,  label: Version,      type: str}
+      - {key: active,   label: Active,       type: str}
+      - {key: _parents, label: Parent links, type: str}
+
+  - prefix: SWD
+    subdir: swd
+    columns:
+      - {key: uid,      label: UID,          type: str}
+      - {key: title,    label: Title,        type: str}
+      - {key: version,  label: Version,      type: str}
+      - {key: active,   label: Active,       type: str}
+      - {key: _parents, label: Parent links, type: str}
+
+  - prefix: TST
+    subdir: tst
+    columns:
+      - {key: uid,                 label: UID,            type: str}
+      - {key: title,               label: Title,          type: str}
+      - {key: complexity,          label: Complexity,     type: num}
+      - {key: execution_type,      label: Exec type,      type: str}
+      - {key: verification_method, label: Verif. method,  type: str}
+      - {key: authors,             label: Authors,        type: str}
+      - {key: platform,            label: Platform,       type: str}
+      - {key: release,             label: Release,        type: str}
+      - {key: version,             label: Version,        type: str}
+      - {key: active,              label: Active,         type: str}
+      - {key: _parents,            label: Parent links,   type: str}
+  
+  - prefix: TRP
+    subdir: trp
+    columns:
+      - {key: uid,                  label: UID,          type: str}
+      - {key: title,                label: Title,        type: str}
+      - {key: defect-category,      label: Defect,       type: str}
+      - {key: passed-steps,         label: Passed,       type: num}
+      - {key: failed-steps,         label: Failed,       type: num}
+      - {key: not-executed-steps,   label: Not exec.,    type: num}
+      - {key: tester,               label: Tester,       type: str}
+      - {key: test-date,            label: Test date,    type: str}
+      - {key: release-version,      label: Release,      type: str}
+      - {key: active,               label: Active,       type: str}
+      - {key: _parents,             label: Parent links, type: str}

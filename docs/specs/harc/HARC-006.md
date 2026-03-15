@@ -1,12 +1,12 @@
 ---
 active: true
 derived: false
-level: 6.0
+level: 2.3
 links:
 - MRS-007: hXM-PkC-g29wtz-Qe3MbM2viHIYzarGh2jFtSD-7N18=
 normative: true
 ref: ''
-reviewed: coWu5wrJp6XUh2ezdbO1bZHiGCOG8tCdL8PUEYv7sAo=
+reviewed: nBgnsRf9FyZS8ZSKI8sAO_S5C1hPGrevKQoMbvtwt2c=
 ---
 
 # RADAR deployment: Remote Agent and Remote Manager mode

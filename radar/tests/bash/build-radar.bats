@@ -80,10 +80,6 @@ teardown() {
     || grep -Fq -- '--limit "wazuh_manager_local:wazuh_agents_container"' "$LOG_DIR/calls.log" \
     || { echo 'Missing --limit for local manager + container agents'; print_log; false; }
 
-  # final docker build
-  if [[ -f Dockerfile.radar-cli ]]; then
-    assert_in_log "docker build -f Dockerfile.radar-cli -t radar-cli:latest ."
-  fi
 }
 
 @test "ssh mode switches limit and adds --ask-vault-pass" {

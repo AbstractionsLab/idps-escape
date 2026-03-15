@@ -1,3 +1,56 @@
+# 0.8 (2026-03-15)
+
+## Added
+
+- **SATRAP-DL DECIPHER integration**: Replaced `SatrapClientMock` with a fully operational `DecipherClient` for real-time CTI analysis and incident case creation via the DECIPHER REST API (`analyze` and `create_incident` endpoints)
+- **RADAR Health Check**: manager and agent side health checks using ansible tasks for RADAR elements via an entrypoint `health-radar.sh`
+- **RADAR simulation**: attack simulation for 3 RADAR scenarios `simulate-radar.sh` orchestration script: Python simulation modules for GeoIP, log volume, and suspicious login
+- **Software design specifications**: New HARC, LARC and SWD items for technical specs completeness
+  - Explicit implementation reference sections linking to actual source files
+  - Structured behavioral specifications
+- **Tech specs README**: New `docs/specs/README.md` documenting the specification structure and publishing workflow based on C5-DEC
+- **SpecEngine C5DEC v1.2 upgrade**: All SpecEngine scripts consolidated under `docs/specs/SpecEngine/`; new tools added: `c5graph.py` (interactive spec graph), `c5mermaid.py` (Mermaid diagram rendering), `doorstop_yml_to_md.py` (item migration helper), `prune_bad_links.py` (link hygiene); `dev.Dockerfile` extended with Node.js 20, Chromium and Mermaid CLI for diagram rendering
+- **C5DEC traceability statistics script** (`docs/specs/SpecEngine/c5traceability.py`): generates traceability matrix coverage metrics including SRS test coverage, SRS design coverage, MRS specification coverage, HARC implementation coverage, TST execution coverage, defect severity summary, and overall health score; produces console output and HTML report (`docs/traceability/traceability_stats.html`)
+- **C5-DEC interactive items browser** (`docs/specs/SpecEngine/c5browser.py`): generates a standalone Bootstrap + DataTables HTML page (`docs/traceability/items_browser.html`) with sortable and filterable tables for all Doorstop document types
+- **C5-DEC specifications graph viewer**: visual interactive graph for browsing the interlinked specification and design artifacts
+- **RADAR simulation ansible**: Ansible playbook for remote agent simulation support with SSH key authentication
+- **RADAR simulation specs**: Technical specifications (SWD, SRS and TST) for RADAR simulation
+- **RADAR Health Check specs**: Technical specifications (manual, SWD and SRS) for RADAR Health check
+- **TRP document type**: TRA and TRB Doorstop document types merged into a single TRP (Test Case Execution Report) document type; v0.8 test campaign results captured in TRP-030 through TRP-037
+- **SRS-061**: New system requirement specifying the tiered active response logic with DECIPHER risk-based decision making
+- **Product website**: New IDPS-ESCAPE product presentation page (`docs/website/product-presentation.html`)
+
+## Modified
+
+- **Software design specifications**: Refactored HARC, LARC and SWD items for improved clarity and maintainability
+  - Removed verbose pseudocode in favor of concise algorithmic descriptions
+  - Improved formatting consistency with formulas, tables, and diagrams
+  - Decoupled specification documents from implementation details
+  - Enhanced traceability between design specs and source code
+- **RADAR scenario**: new suspicious login correlation rule
+- **RADAR scenario SRS items**: Refined and condensed SRS-050 through SRS-058 for improved clarity and conciseness; removed legacy `srs.xlsx` binary artifact
+- **GeoIP SRS items**: Fixed content and formatting of SRS items related to GeoIP detection scenario; rebuilt traceability HTML pages
+- **Tech specs publish script** (`docs/specs/publish.sh`): Updated to invoke scripts from `docs/specs/SpecEngine/`; integrated calls to `c5traceability.py` and `c5browser.py` for automatic report generation on publish
+- **`pyproject.toml`**: Added `rich` (>=13.0) and `pyyaml` to the `docs` dependency group
+- **Active Response mitigations**: Updated the command invocation syntax, extended `terminate_service.sh` to support `.service` units; updated LARC to document service support, and corrected the log format.
+- **RADAR helper**: Removed the velocity cap; updated the calculation to use the timestamp from the log instead of the processing time; introduced a constant `dt_eps` to prevent division by zero when events share the same timestamp.
+- **RADAR helper unit tests**: unit tests for RADAR helper `/radar/tests/py/test_radar_helper.py` reflect the new changes; additionally, two new tests were added to verify that country-change and ASN novelty tracking are maintained independently per user
+- **RADAR helper specifications**: HARC, LARC and SWD items for RADAR helper were updated according to the updates made
+- **Detector parameterization support**: included parameterization via `config.yaml` such as `rules`, `result_index_min_age`, `result_index_min_size`, `result_index_ttl` and `flatten_custom_result_index`
+- **Tiered AR configuration**: Introduced `tier1_min` (Tier 0 boundary) to handle low-risk events without escalation; split `mitigations` into per-tier `mitigations_tier2` and `mitigations_tier3`; removed the now-redundant `risk_threshold` and `create_case` config keys
+- **IOCExtractor**: Added country, ASN, and agent fields to the extracted IOC set; domain extraction now filters out file-extension-like TLDs via a blocklist
+- **RADAR active response unit tests** (`radar/tests/py/test_radar_ar.py`): Extended for `DecipherClient` and incident endpoint coverage
+- **DECIPHER environment configuration**: FLOWINTEL env vars replaced by `DECIPHER_BASE_URL`, `DECIPHER_VERIFY_SSL`, `DECIPHER_TIMEOUT_SEC` in `env.example` and `health-radar.sh`
+- **RADAR documentation**: Updated `radar-architecture.md` and `radar-active-response.md` for the tiered DECIPHER logic; updated `radar-getting-started.md`
+- **RADAR README**: Added MISP integration explanation and screenshots
+- **Context diagram**: Removed direct CTI arrow from IDPS-ESCAPE context diagram
+
+## Fixed
+
+- **Numerical table sorting in `c5browser.py`**: Fixed incorrect alphanumeric sorting of requirement ID columns; columns with numeric suffixes (e.g. SRS-001, SRS-010) now sort numerically rather than lexicographically
+- **`stop-radar.sh`**: Removed hardcoded `PROJECT=soar-radar` variable that caused Docker Compose project naming conflicts
+- **`simulate-radar.sh`**: Fixed container name lookup to use the correct nested `scenarios` key in the YAML config
+
 # 0.7 (2026-02-09)
 
 ## Added

@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html>
+<head><title>Doorstop</title>
+  <meta charset="utf-8" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="assets/doorstop/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/doorstop/general.css" />
+  <link type="text/css" rel="stylesheet" href="assets/doorstop/sidebar.css" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" ></script>
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+  });
+  </script>
+</head>
+<body>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-2 hidden-sm hidden-xs">
+          <nav id="TOC" class="nav nav-stacked fixed sidebar">
+              <h3>Table of Contents</h3>
+<ul>
+<li><a href="#TRP-021">1.0 ADBox test execution results</a><ul>
+<li><a href="#TRP-001">1.1 TCER: Deploy ADBox via Docker and shell scripts</a></li>
+<li><a href="#TRP-003">1.3 TCER: Install ADBox as dev container</a></li>
+<li><a href="#TRP-004">1.4 TCER: Install ADBox as dev container</a></li>
+<li><a href="#TRP-005">1.5 TCER: Run ADBox console</a></li>
+<li><a href="#TRP-006">1.6 TCER: Run ADBox in default mode with a Wazuh connection</a></li>
+<li><a href="#TRP-007">1.7 TCER: Run ADBox in default mode without a Wazuh connection</a></li>
+<li><a href="#TRP-008">1.8 TCER: ADBox use case 1 with a Wazuh connection</a></li>
+<li><a href="#TRP-009">1.9 TCER: ADBox use case 1 without a Wazuh connection</a></li>
+<li><a href="#TRP-010">1.10 TCER: ADBox use case 2 with a Wazuh connection</a></li>
+<li><a href="#TRP-011">1.11 TCER: ADBox use case 3 with a Wazuh connection</a></li>
+<li><a href="#TRP-012">1.12 TCER: ADBox use case 4 with a Wazuh connection</a></li>
+<li><a href="#TRP-013">1.13 TCER: ADBox use case 5 with a Wazuh connection</a></li>
+<li><a href="#TRP-014">1.14 TCER: ADBox use case 5 without a Wazuh connection</a></li>
+<li><a href="#TRP-015">1.15 TCER: ADBox use case 4 without a Wazuh connection</a></li>
+<li><a href="#TRP-016">1.16 TCER: ADBox use case 3 without a Wazuh connection</a></li>
+<li><a href="#TRP-017">1.17 TCER: ADBox use case 2 without a Wazuh connection</a></li>
+<li><a href="#TRP-018">1.18 TCER: ADBox use case 1 without a Wazuh connection</a></li>
+<li><a href="#TRP-019">1.19 TCER: Run ADBox in default mode without a Wazuh connection</a></li>
+<li><a href="#TRP-020">1.20 TCER: Install ADBox as dev container</a></li>
+<li><a href="#TRP-022">1.21 TCER: ADBox shipping install</a></li>
+<li><a href="#TRP-023">1.22 TCER: ADBox deployment</a></li>
+<li><a href="#TRP-024">1.23 TCER: ADBox in dev container</a></li>
+<li><a href="#TRP-025">1.24 TCER: ADBox console</a></li>
+<li><a href="#TRP-026">1.25 TCER: ADBox in default mode with Wazuh</a></li>
+<li><a href="#TRP-027">1.26 TCER: ADBox UC scenario 2 with Wazuh</a></li>
+<li><a href="#TRP-028">1.27 TCER: ADBox UC scenario 3 with Wazuh</a></li>
+</ul>
+</li>
+<li><a href="#TRP-029">2.0 RADAR test case execution results</a><ul>
+<li><a href="#TRP-030">2.1 TCER: Setup RADAR foundation</a></li>
+<li><a href="#TRP-031">2.2 TCER: Build suspicious login</a></li>
+<li><a href="#TRP-032">2.3 TCER: Build non-whitelist GeoIP detection</a></li>
+<li><a href="#TRP-033">2.4 TCER: Build log volume abnormal growth</a></li>
+<li><a href="#TRP-034">2.5 TCER: Run RADAR for log volume abnormal growth</a></li>
+<li><a href="#TRP-035">2.6 TCER: DECIPHER-RADAR detection validation for suspicious login</a></li>
+<li><a href="#TRP-036">2.7 TCER: Detection validation for GeoIP detection</a></li>
+<li><a href="#TRP-037">2.8 TCER: Detection validation for log volume abnormal growth</a></li>
+</ul>
+</li>
+</ul>
+          </nav>
+      </div>
+      <div class="col-lg-8" id="main">
+        <h1 id="TRP-021">1.0 ADBox test execution results</h1>
+<h2 id="TRP-001">1.1 TCER: Deploy ADBox via Docker and shell scripts <small><a href="TRP.html#TRP-001">TRP-001</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Clone the ADBox repository — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Change the working directory — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: Build the image — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 4</strong>: Run the container via shell script — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-001">TST-001 Deploy ADBox via Docker and shell scripts</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>4</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-003">1.3 TCER: Install ADBox as dev container <small><a href="TRP.html#TRP-003">TRP-003</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+</ul>
+<h2>Test execution results</h2>
+<p>The docker build command fails. See reference. Test repeated.</p>
+<p><strong>Test case step 4</strong>: Open project in dev container in VS Code — <span style="color:red"><strong>4 = critical defect</strong></span>: dev container build failure — not enough memory</p>
+<p>All other steps: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect category: <span style="color:red"><strong>4 = critical defect</strong></span></p>
+<p>Dev container build failure — not enough memory (step 4). See referenced screenshot.</p>
+<h3>Text execution evidence</h3>
+<p>See <code>tra-003_Dev_container_error.png</code> in assets.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<blockquote>
+<p><code>docs/specs/trp/assets/tra-003_Dev_container_error.png</code></p>
+</blockquote>
+<p><em>Parent links:</em> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-24</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:red"><strong>4 = critical defect</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>5</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-004">1.4 TCER: Install ADBox as dev container <small><a href="TRP.html#TRP-004">TRP-004</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Container size ~26 GB.</p>
+<p><strong>Test case step 6</strong>: Run ADBox via its entrypoint — <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>: entrypoint specification unclear (<code>poetry run adbox</code> required)</p>
+<p>All other steps: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect category: <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span></p>
+<p>Entrypoint specification unclear (change last step: entrypoint <code>poetry run adbox</code>).</p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-24</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>5</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-005">1.5 TCER: Run ADBox console <small><a href="TRP.html#TRP-005">TRP-005</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run the <code>siem-mtad-gat-container</code> container in interactive mode — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-004">TST-004 Run ADBox console</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-24</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-006">1.6 TCER: Run ADBox in default mode with a Wazuh connection <small><a href="TRP.html#TRP-006">TRP-006</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run the <code>adbox</code> container without any parameters — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Input <code>y</code> after the choice prompt for running in default mode — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Suggestion: decrease the number of default epochs.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-007">1.7 TCER: Run ADBox in default mode without a Wazuh connection <small><a href="TRP.html#TRP-007">TRP-007</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run the AD driver in default mode — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Verify offline data loading — <span style="color:orange"><strong>2 = minor defect</strong></span>: offline data not available due to filename mismatch</p>
+<p>Output observed:</p>
+<pre><code>Running AD driver in default mode.
+JSON file 'detector_input_parameters.json' saved at .../detector_models/.../input/detector_input_parameters.json.
+Could not establish a connection with OpenSearch.
+The file '.../assets/data/train/wazuh-alerts-*.*-2024.07.*.json' does not exist, returning all default data.
+</code></pre>
+<p>Problem with file names:</p>
+<pre><code>wazuh-alerts-.-2024.03..json  wazuh-alerts-.-2024.05..json  wazuh-alerts-.-2024.07..json
+wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
+</code></pre>
+<h3>Defect summary description</h3>
+<p>Defect category: <span style="color:orange"><strong>2 = minor defect</strong></span></p>
+<p>Offline data not available (filename mismatch).</p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:orange"><strong>2 = minor defect</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-008">1.8 TCER: ADBox use case 1 with a Wazuh connection <small><a href="TRP.html#TRP-008">TRP-008</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 1 — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-007">TST-007 ADBox use case 1 with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-009">1.9 TCER: ADBox use case 1 without a Wazuh connection <small><a href="TRP.html#TRP-009">TRP-009</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 1 (no Wazuh connection) — <span style="color:orange"><strong>2 = minor defect</strong></span>: offline data not available due to filename mismatch</p>
+<p>Output observed:</p>
+<pre><code>Running AD driver in default mode.
+JSON file 'detector_input_parameters.json' saved at .../detector_models/.../input/detector_input_parameters.json.
+Could not establish a connection with OpenSearch.
+The file '.../assets/data/train/wazuh-alerts-*.*-2024.07.*.json' does not exist, returning all default data.
+</code></pre>
+<p>Problem with file names:</p>
+<pre><code>wazuh-alerts-.-2024.03..json  wazuh-alerts-.-2024.05..json  wazuh-alerts-.-2024.07..json
+wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
+</code></pre>
+<h3>Defect summary description</h3>
+<p>Defect category: <span style="color:orange"><strong>2 = minor defect</strong></span></p>
+<p>Offline data not available (filename mismatch).</p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:orange"><strong>2 = minor defect</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-010">1.10 TCER: ADBox use case 2 with a Wazuh connection <small><a href="TRP.html#TRP-010">TRP-010</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 2 — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-011">1.11 TCER: ADBox use case 3 with a Wazuh connection <small><a href="TRP.html#TRP-011">TRP-011</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 3 — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-012">1.12 TCER: ADBox use case 4 with a Wazuh connection <small><a href="TRP.html#TRP-012">TRP-012</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 4 — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-013">TST-013 ADBox use case 4 with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-013">1.13 TCER: ADBox use case 5 with a Wazuh connection <small><a href="TRP.html#TRP-013">TRP-013</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 5 — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-015">TST-015 ADBox use case 5 with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-25</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-014">1.14 TCER: ADBox use case 5 without a Wazuh connection <small><a href="TRP.html#TRP-014">TRP-014</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 5 (no Wazuh connection) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Suggestions</h3>
+<p>For prediction the response should be null if the data are not available.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-016">TST-016 ADBox use case 5 without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-26</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-015">1.15 TCER: ADBox use case 4 without a Wazuh connection <small><a href="TRP.html#TRP-015">TRP-015</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 4 (no Wazuh connection) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Suggestions</h3>
+<p>For prediction the response should be null if the data are not available.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-014">TST-014 ADBox use case 4 without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-26</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-016">1.16 TCER: ADBox use case 3 without a Wazuh connection <small><a href="TRP.html#TRP-016">TRP-016</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 3 (no Wazuh connection) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-012">TST-012 ADBox use case 3 without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-26</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-017">1.17 TCER: ADBox use case 2 without a Wazuh connection <small><a href="TRP.html#TRP-017">TRP-017</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 2 (no Wazuh connection) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Suggestions</h3>
+<p>For prediction the response should be null if the data are not available.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-010">TST-010 ADBox use case 2 without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-26</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-018">1.18 TCER: ADBox use case 1 without a Wazuh connection <small><a href="TRP.html#TRP-018">TRP-018</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario 1 (no Wazuh connection) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-008">TST-008 ADBox use case 1 without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-26</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-019">1.19 TCER: Run ADBox in default mode without a Wazuh connection <small><a href="TRP.html#TRP-019">TRP-019</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+<li>Wazuh host: 192.168.5.5</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run the <code>adbox</code> container without any parameters — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Input <code>y</code> after the choice prompt for running in default mode — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-26</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-020">1.20 TCER: Install ADBox as dev container <small><a href="TRP.html#TRP-020">TRP-020</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: vm-cyfort-idps-escape</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Clone the repo — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Start Docker Desktop — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: Open project folder in VS Code — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 4</strong>: Open project in dev container in VS Code — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 5</strong>: Run <code>poetry install</code> in the container — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 6</strong>: Run ADBox via its entrypoint — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>None</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-07-29</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AGI</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>6</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-022">1.21 TCER: ADBox shipping install <small><a href="TRP.html#TRP-022">TRP-022</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: Running the container with the <code>-s</code> flag</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span></li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>N/A</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-017">TST-017 ADBox shipping install</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2024-12-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-023">1.22 TCER: ADBox deployment <small><a href="TRP.html#TRP-023">TRP-023</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Clone the repo — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Change directory — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: Build the image — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 4</strong>: Make the container executable and run it — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>N/A</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-001">TST-001 Deploy ADBox via Docker and shell scripts</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2025-01-17</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>4</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-024">1.23 TCER: ADBox in dev container <small><a href="TRP.html#TRP-024">TRP-024</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Clone the repo — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Start Docker Desktop — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: Open project folder in VS Code — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 4</strong>: Open project in dev container in VS Code — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 5</strong>: Run <code>poetry install</code> in the container — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 6</strong>: Run ADBox via its entrypoint — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence / Comments — N/A</h3>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-003">TST-003 Install ADBox as dev container</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2025-01-17</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>6</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-025">1.24 TCER: ADBox console <small><a href="TRP.html#TRP-025">TRP-025</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run the <code>siem-mtad-gat-container</code> container in interactive mode — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence / Comments — N/A</h3>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-004">TST-004 Run ADBox console</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2025-01-17</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-026">1.25 TCER: ADBox in default mode with Wazuh <small><a href="TRP.html#TRP-026">TRP-026</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run the <code>adbox</code> container without any parameters — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Input <code>y</code> after the choice prompt for running in default mode — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence / Comments — N/A</h3>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2025-01-22</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-027">1.26 TCER: ADBox UC scenario 2 with Wazuh <small><a href="TRP.html#TRP-027">TRP-027</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario number 2 — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence / Comments — N/A</h3>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-009">TST-009 ADBox use case 2 with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2025-01-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-028">1.27 TCER: ADBox UC scenario 3 with Wazuh <small><a href="TRP.html#TRP-028">TRP-028</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Run <code>adbox</code> with use case scenario number 3 — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence / Comments — N/A</h3>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-011">TST-011 ADBox use case 3 with a Wazuh connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2025-01-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TRP-029">2.0 RADAR test case execution results</h1>
+<h2 id="TRP-030">2.1 TCER: Setup RADAR foundation <small><a href="TRP.html#TRP-030">TRP-030</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: Verify working directory availability</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>radar</code> directory available.</li>
+</ul>
+<p><strong>Test case step 2</strong>: Verify configuration of <code>.env</code> file</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: available as indicated in the test case specification.</li>
+</ul>
+<p><strong>Test case step 3</strong>: Verify Ansible configuration, setup and reachability</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: remote agent configuration successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: remote manager configuration successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: vault creation and setup for agent and manager successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: sudo setup for access to controlled node successful</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Ansible reaching nodes in the SSH group successful</li>
+</ul>
+<p><strong>Test case step 4</strong>: Verify creation and setup of SSL/TLS certificates</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: certificates created and stored under <code>config/wazuh_indexer_ssl_certs/</code></li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-041">TST-041 Setup RADAR foundation</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>4</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-031">2.2 TCER: Build suspicious login <small><a href="TRP.html#TRP-031">TRP-031</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>sudo ./build-radar.sh suspicious_login --agent remote --manager local --manager_exists false
+</code></pre>
+<h4>In Wazuh Manager</h4>
+<p><strong>Test case step 2.1:</strong> Custom <code>0310 SSH</code> decoder deployed</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, with mode <code>0640</code>.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> Custom <code>0310 SSH</code> decoder contains RADAR fields</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: decoder contains the decoders <code>sshd-*-with-radar</code> (e.g., including RADAR fields like <code>ASN</code>, <code>country</code>, <code>geo_velocity</code>).</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> RADAR rules for <code>suspicious_login</code> are in <code>/var/ossec/etc/rules/</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a3-suspicious-login.xml</code> exists with owner <code>root:wazuh</code>, mode <code>0640</code>.</li>
+</ul>
+<p><strong>Test case step 2.5:</strong> Suspicious login rules are bound to active responses</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: suspicious login rule ID(s) reference the intended <code>&lt;active-response&gt;</code> triggering <code>radar_ar.py</code>.</li>
+</ul>
+<p><strong>Test case step 2.6:</strong> Agent is registered with the manager</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: an entry exists for each agent.</li>
+</ul>
+<p><strong>Test case step 2.7:</strong> Agent configurations are in place</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: agent configurations for suspicious login exist in the <code>&lt;!-- RADAR: suspicious_login agent_config --&gt;</code> block.</li>
+</ul>
+<p><strong>Test case step 2.8:</strong> Wazuh Manager is running after restart</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the status output indicates the manager is <code>running</code> with no error messages.</li>
+</ul>
+<h4>In endpoints running agents</h4>
+<p><strong>Test case step 2.9:</strong> RADAR helper directory and script are installed on the SSH agent host</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</li>
+</ul>
+<p><strong>Test case step 2.10:</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the service is active.</li>
+</ul>
+<h4>Post-test cleanup</h4>
+<p><strong>Test case step 3:</strong> Check the cleanup after successful validations, the command output should be empty</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The command output is empty.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-042">TST-042 Build suspicious login</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>11</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-032">2.3 TCER: Build non-whitelist GeoIP detection <small><a href="TRP.html#TRP-032">TRP-032</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./build-radar.sh geoip_detection --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<h4>In Wazuh Manager</h4>
+<p><strong>Test case step 2.1:</strong> Whitelist file exists</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/var/ossec/etc/lists/whitelist_countries</code> exists, its contents match the scenario's <code>whitelist_countries</code>, and its owner is <code>root:wazuh</code>, with mode <code>0664</code>.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> <code>ossec.conf</code> has <code>&lt;list&gt;</code> entry for <code>whitelist_countries</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: under <code>&lt;ruleset&gt;</code>, there is a <code>&lt;list&gt;...whitelist_countries&lt;/list&gt;</code> entry with the RADAR marker for <code>geoip_detection</code>.</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> Custom <code>0310 SSH</code> decoder deployed</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0310-ssh.xml</code> exists, and is owned by <code>root:wazuh</code>, mode <code>0640</code>.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> Default <code>0310 decoder</code> is excluded in <code>ossec.conf</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: a <code>&lt;decoder_exclude&gt;0310-ssh_decoders.xml&lt;/decoder_exclude&gt;</code> line appears (ideally once) under <code>&lt;ruleset&gt;</code>.</li>
+</ul>
+<p><strong>Test case step 2.5:</strong> RADAR rules for <code>geoip_detection</code> exist</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a2-geoip-detection.xml</code> contains a <code>RADAR_RULES: geoip_detection</code> block; rules use <code>whitelist_countries</code> to detect non-whitelisted countries.</li>
+</ul>
+<p><strong>Test case step 2.6:</strong> GeoIP non-whitelist rules are bound to active responses</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: GeoIP non-whitelist rule ID(s) reference the correct <code>&lt;active-response&gt;</code>.</li>
+</ul>
+<p><strong>Test case step 2.7:</strong> Active response config files are in place</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>ar.yaml</code> and <code>radar_ar.py</code> present in <code>/var/ossec/active-response/bin/</code>.</li>
+</ul>
+<p><strong>Test case step 2.8:</strong> Agent configurations are in place</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: agent configurations for geoip detection exist.</li>
+</ul>
+<h4>In endpoints running agents</h4>
+<p><strong>Test case step 2.9:</strong> RADAR helper directory and script are installed on the SSH agent host</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</li>
+</ul>
+<p><strong>Test case step 2.10:</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the service is active.</li>
+</ul>
+<h4>Post-test cleanup</h4>
+<p><strong>Test case step 3:</strong> Check the cleanup after successful validations, the command output should be empty</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The command output is empty.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-043">TST-043 Build non-whitelist GeoIP detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>11</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-033">2.4 TCER: Build log volume abnormal growth <small><a href="TRP.html#TRP-033">TRP-033</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./build-radar.sh log_volume --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<h4>In Wazuh Manager</h4>
+<p><strong>Test case step 2.1:</strong> RADAR snippet for <code>log_volume</code> is present in <code>ossec.conf</code></p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>ossec.conf</code> contains a <code>RADAR: log_volume BEGIN/END</code> block with the log volume-related settings.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> RADAR decoders for <code>log_volume</code> exist</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0001-log-volume.xml</code> contains a block defining decoders that produce a <code>log_bytes</code> field.</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> RADAR rules for <code>log_volume</code> exist</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a1-log-volume.xml</code> exists in <code>/var/ossec/etc/rules</code>.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> OpenSearch template <code>radar-log-volume</code> is present</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: HTTP status is <code>200</code> and the template JSON exists with mappings for <code>log_bytes</code> as a numeric type.</li>
+</ul>
+<p><strong>Test case step 2.5:</strong> <code>log_volume</code> rules are bound to active responses</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: log volume anomaly rule ID(s) reference <code>radar_ar.py</code> as intended.</li>
+</ul>
+<p><strong>Test case step 2.6:</strong> Agent configurations are in place</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: agent configurations for log volume exist.</li>
+</ul>
+<h4>In endpoints running agents</h4>
+<p><strong>Test case step 2.7:</strong> RADAR helper directory and script are installed on the SSH agent host</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/opt/radar</code> exists with mode <code>0755</code> and owner <code>root:root</code>; <code>radar-helper.py</code> exists with mode <code>0750</code> and owner <code>root:root</code>.</li>
+</ul>
+<p><strong>Test case step 2.8:</strong> <code>radar-helper.service</code> systemd unit is installed, enabled, and running</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the service is active.</li>
+</ul>
+<h4>Post-test cleanup</h4>
+<p><strong>Test case step 3:</strong> Check the cleanup after successful validations, the command output should be empty</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The command output is empty.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-044">TST-044 Build log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>9</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-034">2.5 TCER: Run RADAR for log volume abnormal growth <small><a href="TRP.html#TRP-034">TRP-034</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./run-radar.sh log_volume
+</code></pre>
+<h4>In Wazuh Dashboard</h4>
+<p><strong>Test case step 2.1:</strong> The detector <code>LOG_VOLUME_DETECTOR</code> is created in the Wazuh Dashboard with the correct configurations</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: In the Anomaly Detection menu, the created detector is visible. The expected configurations are found in <a href="/radar/config.yaml"><code>config.yaml</code></a> under the <code>log_volume</code> key.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> Monitor creation and trigger to webhook existence</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the monitor is created in the Wazuh Dashboard with a trigger to a RADAR webhook instance. In the Alerting menu, the created Monitor is listed under the Monitors tab.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-035">2.6 TCER: DECIPHER-RADAR detection validation for suspicious login <small><a href="TRP.html#TRP-035">TRP-035</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>sudo ./simulate-radar.sh suspicious_login --agent remote
+</code></pre>
+<p><strong>Test case step 2.1:</strong> The ansible playbook executes successfully</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The simulation was successfully executed.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> In the Wazuh Dashboard Discovery page, at least one of rule IDs <code>210012</code>, <code>210013</code>, <code>210020</code>, or <code>210021</code> is triggered for the remote agent</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Alerts with one of the rule.id : [<code>210012</code>, <code>210013</code>, <code>210020</code>, or <code>210021</code>] appear in the Wazuh Dashboard.</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> In Wazuh manager, alert tier verified via <code>grep "Risk computed" /var/ossec/logs/active-responses.log | tail -1</code></p>
+<ul>
+<li>Tier 0:<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: no email received at <code>EMAIL_TO</code>.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: no FlowIntel case created.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: no mitigation command in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 1: (Same alerts were generated, but by putting one of the IPs present in the alert in MISP changed the tier from 0 to 1)<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: email received at <code>EMAIL_TO</code> with risk score, tier, and FlowIntel case URL.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: FlowIntel case created and accessible at the URL included in the email.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: FlowIntel case contains relevant information about the suspicious login event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>misp_available: true</code> appears in the FlowIntel case description, confirmed via <code>"DECIPHER analyze completed"</code> log entry matched by <code>decision_id</code>.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: FlowIntel case is tagged with low priority.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: no mitigation command in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>FlowIntel case:</p>
+<p><img alt="" src="assets/trb-032-RADAR-v0.8-FlowIntel-case.png" width="80%" /></p>
+<p>Email:</p>
+<p><img alt="" src="assets/trb-032-RADAR-v0.8-email.png" width="80%" /></p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-046">TST-046 DECIPHER-RADAR detection validation for Suspicious login</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>3</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-036">2.7 TCER: Detection validation for GeoIP detection <small><a href="TRP.html#TRP-036">TRP-036</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>sudo ./simulate-radar.sh geoip_detection --agent remote
+</code></pre>
+<p><strong>Test case step 2.1:</strong> The ansible playbook executes successfully</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The ansible playbook executed successfully.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> In the Wazuh Dashboard Discovery page, a rule with ID matching <code>10090*</code> is triggered for the remote agent</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: A rule with rule.id '100900' was triggered and appeared in Wazuh Dashboard</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> In Wazuh manager, alert tier verified via <code>grep "Risk computed" /var/ossec/logs/active-responses.log | tail -1</code></p>
+<ul>
+<li>
+<p>Tier 1:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: email received at <code>EMAIL_TO</code> with risk score, tier.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: no mitigation command in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>
+<p>Tier 3:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: email received at <code>EMAIL_TO</code> with risk score, and tier.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: mitigation commands from <code>mitigations_tier3</code> for <code>geoip_detection</code> appear in <code>/var/ossec/logs/active-responses.log</code>.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>firewall-drop</code>: IP address blocked in the agent.</li>
+</ul>
+</li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-047">TST-047 Detection validation for GeoIP detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-10</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>3</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-037">2.8 TCER: Detection validation for log volume abnormal growth <small><a href="TRP.html#TRP-037">TRP-037</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running Ubuntu 22.04.5 LTS (Jammy Jellyfish)</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. The executed command was as follows:</p>
+<pre><code>./simulate-radar.sh log_volume --agent remote
+</code></pre>
+<p><strong>Test case step 2.1:</strong> The ansible playbook executes successfully</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The ansible playbook executed successfully.</li>
+</ul>
+<p><strong>Test case step 2.2:</strong> In the Wazuh Dashboard Discovery page, rule ID <code>100309</code> is triggered for the remote agent</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: An alert with rule.id <code>100309</code> has been triggered and appears in the Wazuh dashboard.</li>
+</ul>
+<p><strong>Test case step 2.3:</strong> Spike has happened in the agent</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>/var/log</code> size increase confirmed.</li>
+</ul>
+<p><strong>Test case step 2.4:</strong> In Wazuh manager, alert tier verified via <code>grep "Risk computed" /var/ossec/logs/active-responses.log | tail -1</code></p>
+<ul>
+<li>Tier 2:<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: email received at <code>EMAIL_TO</code> with risk score, tier, and FlowIntel case URL.</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: mitigation commands from <code>mitigations_tier2</code> for <code>log_volume</code> appear in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Test case step 2.5:</strong> Spike file removed after <code>cleanup_minutes</code> elapsed (or manually if <code>cleanup_minutes</code> is 0)</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Spike file removed after <code>cleanup_minutes</code> elapsed</li>
+</ul>
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-048">TST-048 Detection validation for Log volume abnormal growth</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-11</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>DMA</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>5</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+      </div>
+    </div>
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="assets/doorstop/jquery.min.js"></script>
+<script src="assets/doorstop/bootstrap.min.js"></script>
+<script>
+    $(function() {
+        $("table").addClass("table");
+        $("nav ul").addClass("nav nav-stacked");
+        $("nav").affix();
+        $('body').scrollspy({
+          target: '.sidebar'
+        });
+        $("#main a").attr("target", "parent");
+
+  $(window).on('hashchange', function() {
+    $(window).scrollTop($(location.hash.toLowerCase()).offset().top);});
+  });
+</script>
+</body>
+</html>
+

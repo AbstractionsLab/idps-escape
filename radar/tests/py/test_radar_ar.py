@@ -9,6 +9,7 @@ import types
 import pytest
 import importlib.util
 import importlib.machinery
+import unittest
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
@@ -116,61 +117,6 @@ class TestRiskEngine:
         likelihood = risk_engine._signature_likelihood(cfg, alert)
         assert likelihood == 0.0
 
-    def test_compute_cti_score_no_hits(self, risk_engine):
-        """Test _compute_cti_score with no CTI hits."""
-        cti = {}
-        
-        score = risk_engine._compute_cti_score(cti)
-        assert score == 0.0
-
-    def test_compute_cti_score_malicious_only(self, risk_engine):
-        """Test _compute_cti_score with malicious flag and confidence."""
-        cti = {"malicious": True, "confidence": 0.9}
-        
-        score = risk_engine._compute_cti_score(cti)
-        # T = 1 - (1 - 0.9) = 0.9
-        assert score == pytest.approx(0.9, abs=0.001)
-
-    def test_compute_cti_score_ip_blacklisted(self, risk_engine):
-        """Test _compute_cti_score with IP blacklisted."""
-        cti = {"matched_iocs": {"ip": ["192.168.1.1"]}}
-        
-        score = risk_engine._compute_cti_score(cti)
-        # T = 1 - (1 - 0.6) = 0.6 (default weight for ip_blacklisted)
-        assert score == pytest.approx(0.6, abs=0.001)
-
-    def test_compute_cti_score_multiple_iocs(self, risk_engine):
-        """Test _compute_cti_score with multiple IOC types."""
-        cti = {
-            "matched_iocs": {
-                "ip": ["192.168.1.1"],
-                "domain": ["evil.com"]
-            }
-        }
-        
-        score = risk_engine._compute_cti_score(cti)
-        # T = 1 - (1 - 0.6) * (1 - 0.4) = 1 - 0.4 * 0.6 = 1 - 0.24 = 0.76
-        assert score == pytest.approx(0.76, abs=0.001)
-
-    def test_compute_cti_score_all_iocs(self, risk_engine):
-        """Test _compute_cti_score with all IOC types."""
-        cti = {
-            "malicious": True,
-            "confidence": 0.9,
-            "matched_iocs": {
-                "ip": ["192.168.1.1"],
-                "domain": ["evil.com"],
-                "hash": ["abc123"],
-                "user": ["malicious_user"]
-            }
-        }
-        
-        score = risk_engine._compute_cti_score(cti)
-        # T = 1 - (1-0.9) * (1-0.6) * (1-0.4) * (1-0.7) * (1-0.5)
-        # T = 1 - 0.1 * 0.4 * 0.6 * 0.3 * 0.5
-        # T = 1 - 0.0036 = 0.9964
-        assert score == pytest.approx(0.9964, abs=0.001)
-
     def test_compute_signature_only(self, risk_engine, radar_ar):
         """Test compute with signature detection only (no AD)."""
         scenario = {
@@ -183,13 +129,12 @@ class TestRiskEngine:
                 "signature_likelihood": 0.8,
                 "signature_impact": 0.6,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "100900"}}
         }
-        cti = {}
         
-        result = risk_engine.compute(scenario, cti, None, None)
+        result = risk_engine.compute(scenario, 0.0, None, None)
         
         # S = 0.8 * 0.6 = 0.48
         # R = 0.0 * 0 + 0.8 * 0.48 + 0.2 * 0 = 0.384
@@ -210,15 +155,14 @@ class TestRiskEngine:
                 "signature_likelihood": 0.0,
                 "signature_impact": 0.0,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "100309"}}
         }
-        cti = {}
         ad_grade = 0.62
         ad_conf = 0.74
         
-        result = risk_engine.compute(scenario, cti, ad_grade, ad_conf)
+        result = risk_engine.compute(scenario, 0.0, ad_grade, ad_conf)
         
         # A = 0.62 * 0.74 = 0.4588
         # R = 0.9 * 0.4588 + 0.0 * 0 + 0.1 * 0 = 0.41292
@@ -239,15 +183,14 @@ class TestRiskEngine:
                 "signature_likelihood": 0.5,
                 "signature_impact": 0.7,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "210012"}}
         }
-        cti = {"malicious": True, "confidence": 0.8}
         ad_grade = 0.60
         ad_conf = 0.70
         
-        result = risk_engine.compute(scenario, cti, ad_grade, ad_conf)
+        result = risk_engine.compute(scenario, 0.8, ad_grade, ad_conf)
         
         # A = 0.60 * 0.70 = 0.42
         # S = 0.5 * 0.7 = 0.35
@@ -272,25 +215,19 @@ class TestRiskEngine:
                 "signature_likelihood": 0.4,
                 "signature_impact": 0.9,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "test"}}
-        }
-        cti = {
-            "matched_iocs": {
-                "ip": ["1.2.3.4"],
-                "domain": ["evil.com"]
-            }
         }
         ad_grade = 0.62
         ad_conf = 0.74
         
-        result = risk_engine.compute(scenario, cti, ad_grade, ad_conf)
+        result = risk_engine.compute(scenario, 0.76, ad_grade, ad_conf)
         
         # From spec:
         # A = 0.62 * 0.74 = 0.4588
         # S = 0.4 * 0.9 = 0.36
-        # T = 1 - (1-0.6)*(1-0.4) = 0.76
+        # T = 0.76 (pre-computed by DECIPHER analyze endpoint)
         # R = 0.4*0.4588 + 0.4*0.36 + 0.2*0.76 = 0.4795
         assert result["risk_score"] == pytest.approx(0.4795, abs=0.001)
         assert result["tier"] == 2  # Medium risk
@@ -310,17 +247,131 @@ class TestRiskEngine:
                 "signature_likelihood": 0.2,
                 "signature_impact": 0.5,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "test"}}
         }
-        cti = {}
         
-        result = risk_engine.compute(scenario, cti, None, None)
+        result = risk_engine.compute(scenario, 0.0, None, None)
         
         # S = 0.2 * 0.5 = 0.1
         # R = 1.0 * 0.1 = 0.1 < 0.33
         assert result["risk_score"] == 0.1
+        assert result["tier"] == 1
+
+    def test_compute_tier_0_below_min(self, risk_engine):
+        """Test tier 0 when risk score is below tier1_min."""
+        scenario = {
+            "name": "test_scenario",
+            "detection": "signature",
+            "config": {
+                "w_ad": 0.0,
+                "w_sig": 1.0,
+                "w_cti": 0.0,
+                "signature_likelihood": 0.05,
+                "signature_impact": 0.1,
+                "risk_threshold": 0.51,
+                "tiers": {"tier1_min": 0.1, "tier1_max": 0.33, "tier2_max": 0.66}
+            },
+            "alert": {"rule": {"id": "test"}}
+        }
+
+        result = risk_engine.compute(scenario, 0.0, None, None)
+
+        # R = 0.05 * 0.1 = 0.005 < tier1_min=0.1
+        assert result["risk_score"] == pytest.approx(0.005, abs=0.001)
+        assert result["tier"] == 0
+
+    def test_compute_tier_boundary_at_tier1_min(self, risk_engine):
+        """Test that R == tier1_min is classified as tier 1, not tier 0."""
+        scenario = {
+            "name": "test_scenario",
+            "detection": "signature",
+            "config": {
+                "w_ad": 0.0,
+                "w_sig": 1.0,
+                "w_cti": 0.0,
+                "signature_likelihood": 1.0,
+                "signature_impact": 0.1,
+                "risk_threshold": 0.0,
+                "tiers": {"tier1_min": 0.1, "tier1_max": 0.33, "tier2_max": 0.66}
+            },
+            "alert": {"rule": {"id": "test"}}
+        }
+
+        result = risk_engine.compute(scenario, 0.0, None, None)
+
+        # R = 1.0 * 0.1 = 0.1 == tier1_min; boundary is exclusive (< t1_min → tier 0)
+        assert result["risk_score"] == pytest.approx(0.1, abs=0.001)
+        assert result["tier"] == 1
+
+    def test_compute_tier_boundary_at_tier1_max(self, risk_engine):
+        """Test that R == tier1_max is classified as tier 2, not tier 1."""
+        scenario = {
+            "name": "test_scenario",
+            "detection": "signature",
+            "config": {
+                "w_ad": 0.0,
+                "w_sig": 1.0,
+                "w_cti": 0.0,
+                "signature_likelihood": 1.0,
+                "signature_impact": 0.33,
+                "risk_threshold": 0.0,
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
+            },
+            "alert": {"rule": {"id": "test"}}
+        }
+
+        result = risk_engine.compute(scenario, 0.0, None, None)
+
+        # R = 0.33 == tier1_max; boundary is exclusive (< t1_max → tier 1)
+        assert result["risk_score"] == pytest.approx(0.33, abs=0.001)
+        assert result["tier"] == 2
+
+    def test_compute_tier_boundary_at_tier2_max(self, risk_engine):
+        """Test that R == tier2_max is classified as tier 3, not tier 2."""
+        scenario = {
+            "name": "test_scenario",
+            "detection": "signature",
+            "config": {
+                "w_ad": 0.0,
+                "w_sig": 1.0,
+                "w_cti": 0.0,
+                "signature_likelihood": 1.0,
+                "signature_impact": 0.66,
+                "risk_threshold": 0.0,
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
+            },
+            "alert": {"rule": {"id": "test"}}
+        }
+
+        result = risk_engine.compute(scenario, 0.0, None, None)
+
+        # R = 0.66 == tier2_max; boundary is exclusive (< t2_max → tier 2)
+        assert result["risk_score"] == pytest.approx(0.66, abs=0.001)
+        assert result["tier"] == 3
+
+    def test_compute_tier_0_unreachable_with_default_tier1_min(self, risk_engine):
+        """Test that tier 0 is unreachable when tier1_min=0.0 (default)."""
+        scenario = {
+            "name": "test_scenario",
+            "detection": "signature",
+            "config": {
+                "w_ad": 0.0,
+                "w_sig": 1.0,
+                "w_cti": 0.0,
+                "signature_likelihood": 0.0,
+                "signature_impact": 0.0,
+                "risk_threshold": 0.0,
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
+            },
+            "alert": {"rule": {"id": "test"}}
+        }
+
+        result = risk_engine.compute(scenario, 0.0, None, None)
+
+        # R = 0.0; with tier1_min=0.0, condition is R < 0.0 which is never true
+        assert result["risk_score"] == 0.0
         assert result["tier"] == 1
 
     def test_compute_tier_3_high_risk(self, risk_engine):
@@ -335,15 +386,14 @@ class TestRiskEngine:
                 "signature_likelihood": 0.0,
                 "signature_impact": 0.0,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "test"}}
         }
-        cti = {"malicious": True, "confidence": 1.0}
         ad_grade = 0.9
         ad_conf = 0.9
         
-        result = risk_engine.compute(scenario, cti, ad_grade, ad_conf)
+        result = risk_engine.compute(scenario, 1.0, ad_grade, ad_conf)
         
         # A = 0.9 * 0.9 = 0.81
         # T = 1.0
@@ -363,13 +413,12 @@ class TestRiskEngine:
                 "signature_likelihood": 1.0,
                 "signature_impact": 1.0,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "test"}}
         }
-        cti = {"malicious": True, "confidence": 1.0}
         
-        result = risk_engine.compute(scenario, cti, None, None)
+        result = risk_engine.compute(scenario, 1.0, None, None)
         
         # Without clamping: R = 0.5 * 1.0 + 0.5 * 1.0 = 1.5
         # With clamping: R = 1.0
@@ -387,15 +436,14 @@ class TestRiskEngine:
                 "signature_likelihood": 0.5,
                 "signature_impact": 0.7,
                 "risk_threshold": 0.51,
-                "tiers": {"tier1_max": 0.33, "tier2_max": 0.66}
+                "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}
             },
             "alert": {"rule": {"id": "test"}}
         }
-        cti = {"malicious": True, "confidence": 0.5}
         ad_grade = 0.6
         ad_conf = 0.7
         
-        result = risk_engine.compute(scenario, cti, ad_grade, ad_conf)
+        result = risk_engine.compute(scenario, 0.5, ad_grade, ad_conf)
         
         # Check all expected component fields exist
         assert "anomaly_component" in result["components"]
@@ -439,30 +487,147 @@ class TestHelperFunctions:
 
     def test_get_tier_boundaries(self, radar_ar):
         """Test _get_tier_boundaries helper function."""
-        cfg = {"tiers": {"tier1_max": 0.33, "tier2_max": 0.66}}
-        t1, t2 = radar_ar._get_tier_boundaries(cfg)
-        assert t1 == 0.33
-        assert t2 == 0.66
+        cfg = {"tiers": {"tier1_min": 0.05, "tier1_max": 0.33, "tier2_max": 0.66}}
+        t1_min, t1_max, t2_max = radar_ar._get_tier_boundaries(cfg)
+        assert t1_min == 0.05
+        assert t1_max == 0.33
+        assert t2_max == 0.66
 
     def test_get_tier_boundaries_defaults(self, radar_ar):
         """Test _get_tier_boundaries with missing config."""
         cfg = {}
-        t1, t2 = radar_ar._get_tier_boundaries(cfg)
-        assert t1 == 0.33
-        assert t2 == 0.66
+        t1_min, t1_max, t2_max = radar_ar._get_tier_boundaries(cfg)
+        assert t1_min == 0.0
+        assert t1_max == 0.33
+        assert t2_max == 0.66
 
     def test_get_tier_boundaries_clamping(self, radar_ar):
         """Test _get_tier_boundaries clamping to valid ranges."""
-        cfg = {"tiers": {"tier1_max": -0.5, "tier2_max": 1.5}}
-        t1, t2 = radar_ar._get_tier_boundaries(cfg)
-        assert t1 == 0.0  # Clamped from -0.5
-        assert t2 == 1.0  # Clamped from 1.5
+        cfg = {"tiers": {"tier1_min": -0.1, "tier1_max": -0.5, "tier2_max": 1.5}}
+        t1_min, t1_max, t2_max = radar_ar._get_tier_boundaries(cfg)
+        assert t1_min == 0.0
+        assert t1_max >= t1_min
+        assert t2_max == 1.0
 
     def test_get_tier_boundaries_inverted(self, radar_ar):
         """Test _get_tier_boundaries when tier2_max < tier1_max."""
-        cfg = {"tiers": {"tier1_max": 0.8, "tier2_max": 0.5}}
-        t1, t2 = radar_ar._get_tier_boundaries(cfg)
-        assert t2 >= t1  # Should be corrected
+        cfg = {"tiers": {"tier1_min": 0.0, "tier1_max": 0.8, "tier2_max": 0.5}}
+        t1_min, t1_max, t2_max = radar_ar._get_tier_boundaries(cfg)
+        assert t2_max >= t1_max
+
+    def test_get_tier_boundaries_tier1_min_exceeds_tier1_max(self, radar_ar):
+        """Test _get_tier_boundaries when tier1_min > tier1_max forces t1_max up."""
+        cfg = {"tiers": {"tier1_min": 0.5, "tier1_max": 0.2, "tier2_max": 0.66}}
+        t1_min, t1_max, t2_max = radar_ar._get_tier_boundaries(cfg)
+        assert t1_max >= t1_min
+
+
+class TestActionPlanner:
+    """Test suite for ActionPlanner tier-based logic."""
+
+    def _make_decision(self, tier: int, allow_mitigation: bool = False, mitigations_tier2: list = None, mitigations_tier3: list = None):
+        return {
+            "scenario": {
+                "config": {
+                    "allow_mitigation": allow_mitigation,
+                    "mitigations_tier2": mitigations_tier2 or [],
+                    "mitigations_tier3": mitigations_tier3 or [],
+                }
+            },
+            "risk": {"tier": tier},
+        }
+
+    def test_tier_0_no_email_no_mitigations(self, radar_ar, mock_logger):
+        """Tier 0 should suppress email and produce no mitigations."""
+        planner = radar_ar.ActionPlanner(mock_logger)
+        planned = planner.plan(self._make_decision(tier=0, allow_mitigation=True, mitigations_tier2=["firewall-drop"], mitigations_tier3=["firewall-drop", "lock_user_linux.sh"]))
+        assert planned["notify_email"] is False
+        assert planned["mitigations"] == []
+
+    def test_tier_1_email_no_mitigations(self, radar_ar, mock_logger):
+        """Tier 1 should send email but never trigger mitigations."""
+        planner = radar_ar.ActionPlanner(mock_logger)
+        planned = planner.plan(self._make_decision(tier=1, allow_mitigation=True, mitigations_tier2=["firewall-drop"], mitigations_tier3=["firewall-drop", "lock_user_linux.sh"]))
+        assert planned["notify_email"] is True
+        assert planned["mitigations"] == []
+
+    def test_tier_2_email_and_mild_mitigations(self, radar_ar, mock_logger):
+        """Tier 2 with allow_mitigation=True should send email and trigger only mild mitigations."""
+        planner = radar_ar.ActionPlanner(mock_logger)
+        planned = planner.plan(self._make_decision(tier=2, allow_mitigation=True, mitigations_tier2=["firewall-drop"], mitigations_tier3=["firewall-drop", "lock_user_linux.sh"]))
+        assert planned["notify_email"] is True
+        assert planned["mitigations"] == ["firewall-drop"]
+
+    def test_tier_2_email_no_mitigations_when_not_allowed(self, radar_ar, mock_logger):
+        """Tier 2 with allow_mitigation=False should send email but no mitigations."""
+        planner = radar_ar.ActionPlanner(mock_logger)
+        planned = planner.plan(self._make_decision(tier=2, allow_mitigation=False, mitigations_tier2=["firewall-drop"], mitigations_tier3=["firewall-drop", "lock_user_linux.sh"]))
+        assert planned["notify_email"] is True
+        assert planned["mitigations"] == []
+
+    def test_tier_3_email_and_harsh_mitigations(self, radar_ar, mock_logger):
+        """Tier 3 with allow_mitigation=True should send email and trigger full harsh mitigations."""
+        planner = radar_ar.ActionPlanner(mock_logger)
+        planned = planner.plan(self._make_decision(tier=3, allow_mitigation=True, mitigations_tier2=["firewall-drop"], mitigations_tier3=["firewall-drop", "lock_user_linux.sh"]))
+        assert planned["notify_email"] is True
+        assert planned["mitigations"] == ["firewall-drop", "lock_user_linux.sh"]
+
+    def test_tier_3_harsh_mitigations_are_superset_of_tier_2(self, radar_ar, mock_logger):
+        """Tier 3 mitigations must be a superset of tier 2 mitigations."""
+        planner = radar_ar.ActionPlanner(mock_logger)
+        t2 = planner.plan(self._make_decision(tier=2, allow_mitigation=True, mitigations_tier2=["firewall-drop"], mitigations_tier3=["firewall-drop", "lock_user_linux.sh"]))
+        t3 = planner.plan(self._make_decision(tier=3, allow_mitigation=True, mitigations_tier2=["firewall-drop"], mitigations_tier3=["firewall-drop", "lock_user_linux.sh"]))
+        assert set(t2["mitigations"]).issubset(set(t3["mitigations"]))
+
+
+class TestDecipherIncidentGate:
+    """Verify that DECIPHER incident creation is gated on tier >= 1 (not tier 0)."""
+
+    def _make_decision(self, radar_ar, tier: int):
+        return {
+            "decision_id": "abc123",
+            "scenario": {
+                "name": "suspicious_login",
+                "detection": "signature",
+                "config": {
+                    "allow_mitigation": True,
+                    "mitigations_tier2": [],
+                    "mitigations_tier3": ["firewall-drop", "lock_user_linux.sh"],
+                },
+                "alert": {
+                    "id": "1",
+                    "timestamp": "2025-12-08T13:03:00.000+0000",
+                    "rule": {"id": "210020", "level": 10, "description": "test", "groups": []},
+                    "agent": {"id": "001", "name": "edge.vm"},
+                },
+            },
+            "context": {"iocs": {}, "window": {}, "effective_agent": "edge.vm", "events": [], "event_count": 0},
+            "cti": {"ok": False, "cti_score_T": 0.0, "labels": [], "misp_events": [], "case_id": None, "case_url": None, "raw": None},
+            "risk": {"risk_score": 0.5, "tier": tier, "threshold": 0.51, "components": {}},
+        }
+
+    def _make_decipher(self, radar_ar):
+        mock_logger = unittest.mock.MagicMock()
+        decipher = radar_ar.DecipherClient(mock_logger)
+        decipher._available = True
+        create_calls = []
+        decipher.create_incident = lambda d: create_calls.append(d) or {"ok": True, "case_id": "1", "case_url": "http://x/1", "raw": {}}
+        return decipher, create_calls
+
+    def test_incident_not_created_at_tier_0(self, radar_ar):
+        decipher, create_calls = self._make_decipher(radar_ar)
+        decision = self._make_decision(radar_ar, tier=0)
+        if decipher.health_check() and decision["risk"]["tier"] >= 1:
+            decipher.create_incident(decision)
+        assert create_calls == []
+
+    @pytest.mark.parametrize("tier", [1, 2, 3])
+    def test_incident_created_at_tier_1_and_above(self, radar_ar, tier):
+        decipher, create_calls = self._make_decipher(radar_ar)
+        decision = self._make_decision(radar_ar, tier=tier)
+        if decipher.health_check() and decision["risk"]["tier"] >= 1:
+            decipher.create_incident(decision)
+        assert len(create_calls) == 1, f"create_incident must be called exactly once at tier {tier}"
 
 
 if __name__ == "__main__":

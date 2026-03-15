@@ -92,7 +92,7 @@ When mitigations are enabled, the script uses `WazuhApiClient` to dispatch activ
 PUT /active-response?agents_list={agent_id}&wait_for_complete=true
 Authorization: Bearer {token}
 {
-  "command": "firewall_drop",
+  "command": "firewall-drop",
   "arguments": ["203.0.113.42"],
   "alert": {"data": {...}}
 }
@@ -209,22 +209,22 @@ Typical IOCs:
 
 ## SATRAP CTI Integration
 
-> **Current Implementation Status:** The active response script currently uses a mock CTI client (`SatrapClientMock` in `/radar/scenarios/active_responses/radar_ar.py`). Full SATRAP-DL DECIPHER subsystem integration is planned for a future release. The risk engine formulas and CTI score calculations described below are implemented and functional, using mock data for testing and demonstration purposes.
+The active response script integrates with the SATRAP-DL DECIPHER subsystem via `DecipherClient`. DECIPHER performs CTI analysis on extracted IOCs and optionally creates FlowIntel incident cases.
 
-### What SATRAP should return
+### DECIPHER Health Check
+
+Before any CTI operation, the script calls `DecipherClient.health_check()`. If DECIPHER is unreachable or `DECIPHER_BASE_URL` is not configured:
+- CTI score is set to `T = 0.0`
+- No FlowIntel case is created
+- A warning is logged and execution continues with AD + signature components only
+
+### What DECIPHER returns
 
 We define a minimal normalized CTI contract:
 
 - `cti_threat_score` in [0..1]
 - `cti_confidence` in [0..1]
 - `labels`: `botnet`, `scanner`, `ransomware`, `vpn_exit_node`
-
-If SATRAP does not provide numeric score:
-- We map categorical severity into [0..1] with a static table.
-
-If SATRAP is unreachable:
-- We set `cti_threat_score = 0` and `cti_confidence = 0`
-- Record this case.
 
 ---
 
@@ -300,39 +300,51 @@ For complete calculation examples, see [radar-risk-math.md](radar-risk-math.md#c
 
 ## Tiering
 
-The system implements a three-tier response framework. Default boundaries (configurable in `ar.yaml`):
+The system implements a four-tier response framework. Default boundaries (configurable in `ar.yaml` per scenario):
+- **tier1_min**: 0.0 (scores below this fall into Tier 0)
 - **tier1_max**: 0.33
 - **tier2_max**: 0.66
 
+### Tier 0: Below Threshold
+**Threshold:** `R < tier1_min`
+
+**Actions:**
+- Audit log entry only
+
+**Rationale:** Risk score too low to warrant any notification or action.
+
 ### Tier 1: Low Risk
-**Threshold:** `0.0 ≤ R < 0.33` (risk score below tier1_max)
+**Threshold:** `tier1_min ≤ R < tier1_max`
 
 **Mandatory Actions:**
 - Email notification to security operations team
+- FlowIntel case creation via DECIPHER incident endpoint
 
-**Rationale:** Low-risk events require awareness but do not warrant automated remediation.
+**Rationale:** Low-risk events require awareness and tracking but do not warrant automated remediation.
 
 ### Tier 2: Medium Risk
-**Threshold:** `0.33 ≤ R < 0.66` (risk score between tier1_max and tier2_max)
+**Threshold:** `tier1_max ≤ R < tier2_max`
 
 **Mandatory Actions:**
 - Email notification to security operations team
-- Flowintel case creation for incident tracking and investigation
+- FlowIntel case creation via DECIPHER incident endpoint
 
-**Optional Mitigations:**
+**Optional Mitigations** (if `allow_mitigation: true` and `mitigations_tier2` is non-empty):
   - GeoIP: `firewall-drop` (with timeout)
-  - Log volume: notify only
-  - Suspicious login: `lock_user_linux` and/or `firewall-drop` depending on evidence
+  - Log volume: notify only (no `mitigations_tier2` entries)
+  - Suspicious login: `firewall-drop`
 
 ### Tier 3: High Risk
-**Threshold:** `0.66 ≤ R ≤ 1.0` (risk score at or above tier2_max)
+**Threshold:** `tier2_max ≤ R ≤ 1.0`
 
 **Mandatory Actions:**
 - Email notification to security operations team
-- Flowintel case creation with high-priority classification
+- FlowIntel case creation via DECIPHER incident endpoint
 
-**Mitigation Actions:**
-- Service termination, only when root cause is reliably identified
+**Mitigation Actions** (if `allow_mitigation: true`):
+- GeoIP: `firewall-drop`
+- Suspicious login: `firewall-drop` + `lock_user_linux.sh`
+- Log volume: `terminate_service.sh`
 
 ---
 
@@ -348,31 +360,18 @@ After risk calculation, the `ActionPlanner` determines which actions to execute 
 
 ```python
 {
-  "notify_email": bool,           # Always True (all tiers)
-  "create_flowintel_case": bool,  # True for tier 2 and 3
-  "mitigations": [str]            # List of mitigation commands
+  "notify_email": bool,   # True for tier >= 1
+  "mitigations": [str]    # List of mitigation commands (tier 2: mitigations_tier2, tier 3: mitigations_tier3)
 }
 ```
 
 **Decision Tree:**
 
-1. **Email Notification**: Always enabled for all tiers
-2. **Flowintel Case**: Enabled for tier 2 and tier 3
+1. **Email Notification**: Enabled for tier ≥ 1
+2. **FlowIntel Case**: Created automatically via DECIPHER for tier ≥ 1
 3. **Mitigations**: Enabled only if:
-   - Tier is 2 or 3, AND
-   - `allow_mitigation = true` in scenario configuration, AND
-   - `mitigations` list is configured in scenario YAML
-
-**Example Configuration (ar.yaml):**
-
-```yaml
-scenarios:
-  geoip_detection:
-    allow_mitigation: true
-    mitigations:
-      - firewall_drop
-    # ... other config
-```
+   - Tier is 2 (uses `mitigations_tier2` list), OR tier is 3 (uses `mitigations_tier3` list), AND
+   - `allow_mitigation: true` in scenario configuration
 
 **Safety**: The planner respects the `allow_mitigation` flag (default: `false`) to prevent unintended automated actions in production.
 
@@ -380,26 +379,22 @@ scenarios:
 
 ## Action Execution
 
-The `ActionExecutor` orchestrates the execution of planned actions and handles failures gracefully.
+The `ActionExecutor` orchestrates the execution of planned mitigations and handles failures gracefully.
 
 ### Execution Flow (`ActionExecutor.execute()`)
 
-1. **Flowintel Case Creation** (if planned):
-   - Call `FlowintelClient.create_case()`
-   - Build case title: `"RADAR {scenario_name} {vm_name} {YYYYMMDD} {HHMMSS}"`
-   - Build case description with scenario, risk, IOCs, decision ID
-   - Return case ID or error details
-
-2. **Mitigation Commands** (if planned):
-   - For each command in `mitigations` list:
+1. **Mitigation Commands** (if planned):
+   - For each command in the selected tier's mitigation list:
      - Resolve target agent ID
      - Build command-specific arguments
      - Dispatch via Wazuh API
      - Capture result or error
 
-3. **Result Aggregation**:
-   - Return dictionary with Flowintel case result and mitigation results
-   - Failures are logged but don't stop other actions
+2. **Result Aggregation**:
+   - Return dictionary with mitigation results
+   - Failures are logged but don't stop other mitigations
+
+> **Note**: FlowIntel case creation is handled separately in `RadarActiveResponse.run()` via `DecipherClient.create_incident()`, not by `ActionExecutor`.
 
 ### Mitigation Command Execution
 
@@ -420,9 +415,9 @@ Each mitigation command requires specific arguments extracted from IOCs:
 
 | Command | Argument Source | Example |
 |---------|----------------|---------|
-| `firewall_drop` | First IP from `iocs.ip` | `["203.0.113.42"]` |
-| `lock_user_linux` | First user from `iocs.user` | `["admin"]` |
-| `terminate_service` | First service from `iocs.service` | `["apache2"]` |
+| `firewall-drop` | First IP from `iocs.ip` | `["203.0.113.42"]` |
+| `lock_user_linux.sh` | First user from `iocs.user` | `["admin"]` |
+| `terminate_service.sh` | First service from `iocs.service` | `["apache2"]` |
 
 **Safety**: If required IOCs are missing, arguments return `None` and mitigation is skipped with error log.
 
@@ -435,7 +430,7 @@ Content-Type: application/json
 Authorization: Bearer {token}
 
 {
-  "command": "firewall_drop",
+  "command": "firewall-drop",
   "arguments": ["203.0.113.42"],
   "alert": {
     "data": {...}  # Original alert data
@@ -452,21 +447,15 @@ Authorization: Bearer {token}
 
 ```python
 {
-  "flowintel_case": {
-    "ok": True,
-    "case_id": "12345",
-    "title": "RADAR geoip_detection web-server-01 20260206 101530",
-    "raw": {...}
-  },
   "mitigations": [
     {
-      "command": "firewall_drop",
+      "command": "firewall-drop",
       "agent_id": "001",
       "args": ["203.0.113.42"],
       "result": {...}  # Wazuh API response
     },
     {
-      "command": "lock_user_linux",
+      "command": "lock_user_linux.sh",
       "agent_id": "001",
       "args": ["admin"],
       "error": "Wazuh API timeout"
@@ -516,7 +505,7 @@ decision_id: "a3f5b2c8d9e1f4a7b6c3d8e2f5a9b4c7d1e8f3a6b9c2d5e8f1a4b7c0d3e6f9a2"
 This ID appears in:
 - Structured logs
 - Email notifications
-- Flowintel case descriptions
+- FlowIntel case descriptions
 - Execution result records
 
 ---
@@ -548,14 +537,17 @@ The system implements comprehensive error handling and structured logging throug
 All logs use structured JSON format written to `/var/ossec/logs/active-responses.log`:
 
 ```
-2026-02-06T10:15:30Z [INFO] RADAR Active Response started
-2026-02-06T10:15:30Z [INFO] Config loaded {"path":"/var/ossec/active-response/ar.yaml"}
-2026-02-06T10:15:30Z [INFO] Events {"events":[...],"iocs":{...}}
-2026-02-06T10:15:31Z [INFO] SATRAP mock enrichment {"malicious":true}
-2026-02-06T10:15:31Z [INFO] Risk computed {"risk_score":0.4795,"tier":2,"threshold":0.5}
-2026-02-06T10:15:31Z [INFO] Actions planned {"tier":2,"allow_mitigation":true,"mitigations":["firewall_drop"]}
-2026-02-06T10:15:32Z [INFO] Wazuh Active Response dispatched {"agent_id":"001","command":"firewall_drop","args":["203.0.113.42"]}
-2026-02-06T10:15:32Z [INFO] RADAR Active Response completed {"decision_id":"a3f5b2c8...","exec_results":{...}}
+2026-03-05T15:20:55Z [INFO] RADAR Active Response started
+2026-03-05T15:20:55Z [INFO] Config loaded {"scenarios":["geoip_detection","suspicious_login","log_volume"]}
+2026-03-05T15:21:00Z [INFO] Alert parsed {"rule_id":"210020"}
+2026-03-05T15:21:00Z [INFO] Scenario identified {"scenario":"suspicious_login","detection":"signature","rule_id":"210020"}
+2026-03-05T15:21:01Z [INFO] Events {"events":[],"iocs":{"ip":["185.220.100.1"],"user":["admin"],"domain":["edge.vm"],"hash":[],"service":[],"country":["Russia"],"asn":["AS12345"],"agent":["edge.vm"]}}
+2026-03-05T15:21:01Z [INFO] DECIPHER health check passed {"url":"http://localhost:8000"}
+2026-03-05T15:21:01Z [INFO] DECIPHER analyze completed {"scenario":"suspicious_login","cti_score_T":0.0,"case_id":"0","case_url":""}
+2026-03-05T15:21:01Z [INFO] Risk computed {"risk_score":0.13999999999999999,"tier":0,"threshold":0.51}
+2026-03-05T15:21:01Z [INFO] DECIPHER incident created {"case_id":"5","case_url":"http://flowintel:7006/case/5"}
+2026-03-05T15:21:01Z [INFO] Actions planned {"tier":0,"allow_mitigation":true,"mitigations":[]}
+2026-03-05T15:21:01Z [INFO] RADAR Active Response completed {"decision_id":"4ebe114ad8ad424c526f39700786d947aae76683f77ed4e8cf7ade2223e16108","exec_results":{"mitigations":[]}}
 ```
 
 ### Log Levels
@@ -564,7 +556,7 @@ All logs use structured JSON format written to `/var/ossec/logs/active-responses
 |-------|-------|----------|
 | `INFO` | Normal operation milestones | Config loaded, risk computed, actions executed |
 | `WARNING` | Recoverable issues | No scenario matched, API lookup fallback, missing optional config |
-| `ERROR` | Failed operations (non-critical) | Mitigation skipped, email send failed, Flowintel API error |
+| `ERROR` | Failed operations (non-critical) | Mitigation skipped, email send failed, DECIPHER API error |
 | `CRITICAL` | Unhandled exceptions | System-level failures that prevent execution |
 
 ### Error Handling Strategies
@@ -591,18 +583,18 @@ All logs use structured JSON format written to `/var/ossec/logs/active-responses
 - **Action**: Log ERROR, use fallback agent ID from alert
 - **Recovery**: Partial degradation (may target wrong agent)
 
-**SATRAP/CTI:**
-- **Scenario**: CTI service unavailable
-- **Action**: Log WARNING, set CTI score to 0
+**DECIPHER/CTI:**
+- **Scenario**: DECIPHER service unavailable
+- **Action**: Log WARNING, set CTI score to 0, skip FlowIntel case creation
 - **Recovery**: Risk calculation uses only AD + signature components
 
 **Email/SMTP:**
 - **Scenario**: SMTP connection failure
 - **Action**: Log ERROR with SMTP details
-- **Recovery**: Continue with other actions (Flowintel, mitigations)
+- **Recovery**: Continue with other actions (DECIPHER, mitigations)
 
-**Flowintel:**
-- **Scenario**: Case creation API error
+**DECIPHER / FlowIntel:**
+- **Scenario**: Incident creation API error
 - **Action**: Log ERROR with API response
 - **Recovery**: Continue with other actions (email, mitigations)
 
@@ -668,11 +660,10 @@ WAZUH_AUTH_PASS=WazuhPassword123
 WAZUH_VERIFY_SSL=false
 WAZUH_TIMEOUT_SEC=30
 
-# Flowintel Configuration
-FLOWINTEL_BASE_URL=https://flowintel.example.com
-FLOWINTEL_API_KEY=your-api-key-here
-FLOWINTEL_VERIFY_SSL=true
-PYFLOWINTEL_PATH=/var/ossec/active-response/pyflowintel
+# DECIPHER Configuration
+DECIPHER_BASE_URL=https://decipher.example.com
+DECIPHER_VERIFY_SSL=false
+DECIPHER_TIMEOUT_SEC=30
 
 # Script Configuration
 AR_LOG_FILE=/var/ossec/logs/active-responses.log
@@ -717,16 +708,15 @@ AR_RISK_CONFIG=/var/ossec/active-response/ar.yaml
 
 **Note**: Required for mitigation execution. Script initializes client but mitigations will fail if credentials are invalid.
 
-#### Flowintel Variables
+#### DECIPHER Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `FLOWINTEL_BASE_URL` | `""` | Flowintel instance base URL |
-| `FLOWINTEL_API_KEY` | `""` | Flowintel API key for authentication |
-| `FLOWINTEL_VERIFY_SSL` | `true` | Verify SSL certificates for Flowintel API |
-| `PYFLOWINTEL_PATH` | `/var/ossec/active-response/pyflowintel` | Path to pyflowintel library |
+| `DECIPHER_BASE_URL` | `""` | DECIPHER instance base URL |
+| `DECIPHER_VERIFY_SSL` | `false` | Verify SSL certificates for DECIPHER API |
+| `DECIPHER_TIMEOUT_SEC` | `30` | API request timeout in seconds |
 
-**Note**: Required for Tier 2/3 case creation. If URL or API key are empty, case creation is skipped with error log.
+**Note**: Required for CTI enrichment and FlowIntel case creation at tier ≥ 1. If `DECIPHER_BASE_URL` is empty or the health check fails, CTI score is set to 0 and no case is created.
 
 #### Script Configuration Variables
 
@@ -754,65 +744,67 @@ The configuration file is located at `/var/ossec/active-response/ar.yaml` (or pa
 ### Configuration Structure
 
 ```yaml
-# Global tier boundaries (optional)
-tiers:
-  tier1_max: 0.33  # Low risk upper bound
-  tier2_max: 0.66  # Medium risk upper bound
-
-# Scenario definitions
 scenarios:
   geoip_detection:
     # Scenario identification
-    rules: [210012, 210013, 210014]
-    detection: signature
-    
+    ad:
+      rule_ids: []
+    signature:
+      rule_ids: [100900, 100901]
+
     # Risk calculation weights (must sum to 1.0)
     w_ad: 0.0
     w_sig: 0.6
     w_cti: 0.4
-    
+
     # Signature risk parameters
     signature_likelihood: 0.8  # Can be scalar or list (see below)
-    signature_impact: 0.75
-    
+    signature_impact: 0.6
+
     # Time windows for context collection
     delta_ad_minutes: 10
     delta_signature_minutes: 1
-    
-    # Risk threshold (optional, for filtering)
-    risk_threshold: 0.5
-    
+
+    # Tier boundaries
+    tiers:
+      tier1_min: 0.0
+      tier1_max: 0.33
+      tier2_max: 0.66
+
     # Mitigation configuration
-    allow_mitigation: false  # CRITICAL: Enable only after testing
-    mitigations:
-      - firewall_drop
-    
+    allow_mitigation: true
+    mitigations_tier2:
+      - firewall-drop
+    mitigations_tier3:
+      - firewall-drop
+
   suspicious_login:
-    rules: [210020, 210021]
-    detection: ad
+    ad:
+      rule_ids: [100021]
+    signature:
+      rule_ids: [210012, 210013, 210020, 210021]
     w_ad: 0.3
     w_sig: 0.4
     w_cti: 0.3
     signature_likelihood:
-      - rule_id: [210020]
-        weight: 0.6
-      - rule_id: [210021]
-        weight: 0.8
-    signature_impact: 0.9
-    allow_mitigation: false
-    mitigations:
-      - lock_user_linux
-      - firewall_drop
+      - rule_id: [210012, 210013]
+        weight: 0.5
+      - rule_id: [210020, 210021]
+        weight: 0.5
+    signature_impact: 0.7
+    tiers:
+      tier1_min: 0.0
+      tier1_max: 0.33
+      tier2_max: 0.66
+    allow_mitigation: true
+    mitigations_tier2:
+      - firewall-drop
+    mitigations_tier3:
+      - firewall-drop
+      - lock_user_linux.sh
 ```
 
 ### Configuration Parameters
-
-#### Global Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `tiers.tier1_max` | float | `0.33` | Upper bound of Tier 1 (low risk) |
-| `tiers.tier2_max` | float | `0.66` | Upper bound of Tier 2 (medium risk) |
 
 #### Per-Scenario Parameters
 
@@ -860,9 +852,9 @@ In list mode, if a rule ID doesn't match any entry, likelihood defaults to 0.0.
 
 | Command | Required IOC | Argument | Description |
 |---------|--------------|----------|-------------|
-| `firewall_drop` | `ip` | First IP address | Block IP at firewall level |
-| `lock_user_linux` | `user` | First username | Lock user account on Linux systems |
-| `terminate_service` | `service` | First service name | Stop specified service |
+| `firewall-drop` | `ip` | First IP address | Block IP at firewall level |
+| `lock_user_linux.sh` | `user` | First username | Lock user account on Linux systems |
+| `terminate_service.sh` | `service` | First service name | Stop specified service |
 
 **Note**: Custom active response scripts must be registered in Wazuh configuration (`/var/ossec/etc/ossec.conf`) and deployed to agents.
 
@@ -872,11 +864,9 @@ When deploying to production:
 
 1. **Test in staging**: Validate configuration with `allow_mitigation: false`
 2. **Configure environment variables**: Complete `active_responses.env` with all required credentials
-3. **Verify external services**: Test connectivity to OpenSearch, Wazuh API, SMTP, Flowintel
-4. **Review tier boundaries**: Adjust `tier1_max` and `tier2_max` to match organizational risk tolerance
+3. **Verify external services**: Test connectivity to OpenSearch, Wazuh API, SMTP, DECIPHER
+4. **Review tier boundaries**: Adjust `tier1_min`, `tier1_max`, and `tier2_max` per scenario to match organizational risk tolerance
 5. **Tune risk weights**: Calibrate `w_ad`, `w_sig`, `w_cti` based on detection source reliability
-6. **Enable mitigations gradually**: Start with Tier 1 (notify only), then enable Tier 2/3 selectively
+6. **Enable mitigations gradually**: Start with Tier 1 (notify + case only), then enable Tier 2/3 mitigations selectively
 7. **Monitor logs**: Review `/var/ossec/logs/active-responses.log` for errors and false positives
-8. **Update FlowIntel variables**: Configure `FLOWINTEL_*` environment variables for Tier 2+ integration
-
-
+8. **Configure DECIPHER**: Ensure `DECIPHER_BASE_URL` and connectivity are validated before enabling Tier ≥ 1 response

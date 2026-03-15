@@ -68,12 +68,16 @@ def find_detector_id(sess, base, name, verify, timeout):
     hits = r.json().get("hits", {}).get("hits", [])
     return hits[0]["_id"] if hits else None
 
+def build_rules(scn: Dict[str, Any]) -> List[Dict[str, Any]]:
+    rules = scn.get("rules", [])
+    return rules
+
 def detector_spec(scn_name: str, scn: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "name": f"{scn_name.upper()}_DETECTOR",
         "description": f"{scn_name} detector",
         "time_field": scn["time_field"],
-        "shingleSize": scn.get("shingle_size",8),
+        "shingle_size": scn.get("shingle_size",8),
         "indices": [index_pattern(scn)],
         "filter_query": {"match_all": {}},
         "feature_attributes": build_features(scn),
@@ -81,7 +85,11 @@ def detector_spec(scn_name: str, scn: Dict[str, Any]) -> Dict[str, Any]:
         "window_delay": {"period": {"interval": int(scn.get("delay_minutes", 1)), "unit": "Minutes"}},
         "category_field": [scn["categorical_field"]],
         "result_index": scn["result_index"],
-        "rules": [],
+        "result_index_min_age": scn.get("result_index_min_age", 10),
+        "result_index_min_size":  scn.get("result_index_min_size", 51200),
+        "result_index_ttl":  scn.get("result_index_ttl", 60),
+        "flatten_custom_result_index": scn.get("flatten_custom_result_index", False),
+        "rules": build_rules(scn),
     }
 
 def create_detector(sess: requests.Session, base: str, spec: Dict[str, Any], verify: bool, timeout: float) -> str:
@@ -123,7 +131,6 @@ def main() -> None:
     else:
         spec = detector_spec(scn_name, scn)
         det_id = create_detector(session, os_url, spec, os_verify, os_timeout)
-
     # 3) start
     start_detector(session, os_url, det_id, os_verify, os_timeout)
     sys.stdout.write(det_id)

@@ -5,49 +5,10 @@ version: '3.7'
 #     driver: bridge
 
 services:
-  agent.insider:
-    build:
-      context: insider_threat
-      dockerfile: Dockerfile.agent
-    container_name: agent.insider
-    privileged: true
-    # networks:
-    #   - soar-radar
-    tty: true
-    command: ["tail", "-f", "/dev/null"]
-    volumes:
-      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
-
-  agent.ddos:
-    build:
-      context: ddos_detection
-      dockerfile: Dockerfile.agent
-    container_name: agent.ddos
-    # networks:
-    #   - soar-radar
-    tty: true
-    ports:
-      - "8800:80"
-    command: ["tail", "-f", "/dev/null"]
-    volumes:
-      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
-
-  agent.malcom:
-    build:
-      context: malware_communication
-      dockerfile: Dockerfile.agent
-    container_name: agent.malcom
-    # networks:
-    #   - soar-radar
-    tty: true
-    command: [ "tail", "-f", "/dev/null" ]
-    volumes:
-      - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
-
   agent.suspicious:
     build:
-      context: suspicious_login
-      dockerfile: Dockerfile.agent
+      context: scenarios/dockerfiles
+      dockerfile: Dockerfile.suspicious_login_agent
     container_name: agent.suspicious
     restart: always
     # networks:
@@ -63,8 +24,8 @@ services:
 
   agent.geoip:
     build:
-      context: geoip_detection
-      dockerfile: Dockerfile.agent
+      context: scenarios/dockerfiles
+      dockerfile: Dockerfile.geoip_detection_agent
     container_name: agent.geoip
     # networks:
     #   - soar-radar
@@ -75,8 +36,8 @@ services:
 
   agent.logvolume:
     build:
-      context: log_volume
-      dockerfile: Dockerfile.agent
+      context: scenarios/dockerfiles
+      dockerfile: Dockerfile.log_volume_agent
     container_name: agent.logvolume
     # networks:
     #   - soar-radar
@@ -84,3 +45,42 @@ services:
     command: [ "tail", "-f", "/dev/null" ]
     volumes:
       - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
+
+  # agent.insider:
+  #   build:
+  #     context: scenarios/dockerfiles
+  #     dockerfile: Dockerfile.agent
+  #   container_name: agent.insider
+  #   privileged: true
+  #   # networks:
+  #   #   - soar-radar
+  #   tty: true
+  #   command: ["tail", "-f", "/dev/null"]
+  #   volumes:
+  #     - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
+
+  # agent.ddos:
+  #   build:
+  #     context: scenarios/dockerfiles
+  #     dockerfile: Dockerfile.agent
+  #   container_name: agent.ddos
+  #   # networks:
+  #   #   - soar-radar
+  #   tty: true
+  #   ports:
+  #     - "8800:80"
+  #   command: ["tail", "-f", "/dev/null"]
+  #   volumes:
+  #     - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf
+
+  # agent.malcom:
+  #   build:
+  #     context: malware_communication
+  #     dockerfile: Dockerfile.agent
+  #   container_name: agent.malcom
+  #   # networks:
+  #   #   - soar-radar
+  #   tty: true
+  #   command: [ "tail", "-f", "/dev/null" ]
+  #   volumes:
+  #     - ./config/wazuh_agent/local_internal_options.conf:/wazuh-config-mount/etc/local_internal_options.conf

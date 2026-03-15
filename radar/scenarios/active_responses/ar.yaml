@@ -13,13 +13,14 @@ scenarios:
     delta_signature_minutes: 1
     signature_impact: 0.6
     signature_likelihood: 0.8
-    risk_threshold: 0.51
     tiers:
+      tier1_min: 0.0
       tier1_max: 0.33
       tier2_max: 0.66
-    mitigations:
+    mitigations_tier2: 
       - firewall-drop
-    create_case: true
+    mitigations_tier3:
+      - firewall-drop
     allow_mitigation: true
   
   suspicious_login:
@@ -43,14 +44,15 @@ scenarios:
         weight: 0.5
       - rule_id: [210020, 210021]
         weight: 0.5
-    risk_threshold: 0.51
     tiers:
+      tier1_min: 0.2
       tier1_max: 0.33
       tier2_max: 0.66
-    mitigations:
+    mitigations_tier2: 
       - firewall-drop
-      - lock_user_linux
-    create_case: true
+    mitigations_tier3:
+      - firewall-drop
+      - lock_user_linux.sh
     allow_mitigation: true
   
   log_volume:
@@ -66,11 +68,11 @@ scenarios:
     delta_signature_minutes: 1
     signature_impact: 0.0
     signature_likelihood: 0.0
-    risk_threshold: 0.51
     tiers:
+      tier1_min: 0.0
       tier1_max: 0.33
       tier2_max: 0.66
-    mitigations:
-      - terminate_service
-    create_case: true
+    mitigations_tier2: []
+    mitigations_tier3:
+      - terminate_service.sh
     allow_mitigation: true

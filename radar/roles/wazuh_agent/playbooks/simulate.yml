@@ -1,0 +1,67 @@
+---
+- name: RATF simulate scenario script on agent endpoint
+  hosts: all
+  gather_facts: false
+  become: true
+
+  vars:
+    remote_workdir: "/tmp/ratf-simulate"
+    remote_scenarios_dir: "{{ remote_workdir }}/scenarios"
+
+  tasks:
+    - name: Validate required variables
+      assert:
+        that:
+          - radar_simulate_scenario is defined
+          - radar_simulate_scenario in ["suspicious_login", "geoip_detection", "log_volume"]
+          - ratf_scenarios_dir is defined
+        fail_msg: "Expected radar_simulate_scenario in [suspicious_login, geoip_detection] and ratf_scenarios_dir set."
+
+    - name: Install PyYAML on Debian/Ubuntu
+      raw: |
+        if command -v apt-get >/dev/null 2>&1; then
+          apt-get update -y && apt-get install -y python3-yaml
+        fi
+      changed_when: false
+
+    - name: Install PyYAML on RHEL/CentOS/Rocky/Alma
+      raw: |
+        if command -v dnf >/dev/null 2>&1; then
+          dnf install -y python3-PyYAML
+        elif command -v yum >/dev/null 2>&1; then
+          yum install -y python3-PyYAML
+        fi
+      changed_when: false
+
+    - name: Install PyYAML on Alpine
+      raw: |
+        if command -v apk >/dev/null 2>&1; then
+          apk add --no-cache py3-yaml
+        fi
+      changed_when: false
+
+    - name: Create remote workdir
+      file:
+        path: "{{ remote_scenarios_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy RATF scenario scripts to agent
+      copy:
+        src: "{{ ratf_scenarios_dir }}/"
+        dest: "{{ remote_scenarios_dir }}/"
+        mode: "0755"
+
+    - name: Run selected scenario script on agent
+      command: "python3 {{ remote_scenarios_dir }}/{{ radar_simulate_scenario }}.py"
+      register: sim_run
+
+    - name: Print stdout from simulation
+      debug:
+        var: sim_run.stdout
+
+    - name: Cleanup remote workdir
+      file:
+        path: "{{ remote_workdir }}"
+        state: absent
+      when: true

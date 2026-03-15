@@ -3,9 +3,4 @@
     <location>/var/log/suspicious_login.log</location>
     <log_format>syslog</log_format>
 </localfile>
-<command>
-    <name>lock_user_linux</name>
-    <executable>lock_user_linux.sh</executable>
-    <timeout_allowed>yes</timeout_allowed>
-</command>
 </agent_config>

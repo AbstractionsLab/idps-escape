@@ -6,25 +6,32 @@
 
 echo Usage guide:
 echo ---
-echo ./c5dec.sh
-echo ... to publish tech specs without the CC database
-echo ./publish.sh keep-cc
-echo ... to keep CC database in published tech specs
+echo ./publish.sh
+echo ... runs the C5-DEC SpecEngine pipeline to publish tech specs
 echo ---
 
 # Run c5 keyword replacement with "replace" argument
-python ./c5-keyword.py ./tra replace
-python ./c5-keyword.py ./trb replace
-# python ./c5-keyword.py ./trs replace
+poetry run python ./SpecEngine/c5-keyword.py ./trp replace
 
-# Parse the "keep-cc" argument
-if [[ "$@" == *"keep-cc"* ]]; then
-    python ./c5publish.py --include-cc-db
-else
-    python ./c5publish.py
-fi
+# Render Mermaid diagrams in spec items (one-way, idempotent)
+poetry run python ./SpecEngine/c5mermaid.py .
+
+# Publish specifications using Doorstop 
+poetry run python ./SpecEngine/c5publish.py
 
 # Run c5 keyword replacement with "undo" argument
-python ./c5-keyword.py ./tra undo
-python ./c5-keyword.py ./trb undo
-# python ./c5-keyword.py ./trs undo
+poetry run python ./SpecEngine/c5-keyword.py ./trp undo
+
+# Undo Mermaid diagram encoding (restore readable ```mermaid blocks)
+poetry run python ./SpecEngine/c5mermaid.py . undo
+
+# Generate traceability statistics (console + HTML report)
+poetry run python ./SpecEngine/c5traceability.py --config ./SpecEngine/c5traceability_config.yaml --csv ./docs/publish/traceability.csv --html
+
+# Generate interactive specification item browser
+poetry run python ./SpecEngine/c5browser.py
+
+poetry run python ./SpecEngine/c5publish.py --linkify-only
+
+# Generate interactive Cytoscape.js traceability graph
+poetry run python ./SpecEngine/c5graph.py

@@ -1,12 +1,12 @@
 ---
 active: true
 derived: false
-level: 5.0
+level: 2.2
 links:
 - MRS-007: hXM-PkC-g29wtz-Qe3MbM2viHIYzarGh2jFtSD-7N18=
 normative: true
 ref: ''
-reviewed: ujFUXNiB0JPOowo9gAhrGPTUry4PvJgIbSxXLNaIHnc=
+reviewed: nCyWWQkm9J5c2yPb9fuuwcx5O5kRqCiHnHDOYklVZhE=
 ---
 
 # RADAR Automated Test Framework architecture

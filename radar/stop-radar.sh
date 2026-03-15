@@ -10,7 +10,6 @@ set -Eeuo pipefail
 
 DOCKER_BIN="${DOCKER_BIN:-docker}"
 ANSIBLE_BIN="${ANSIBLE_BIN:-ansible-playbook}"
-PROJECT="${PROJECT:-soar-radar}"
 CORE_COMPOSE="${CORE_COMPOSE:-docker-compose.core.yml}"
 WEBHOOK_COMPOSE="${WEBHOOK_COMPOSE:-docker-compose.webhook.yml}"
 AGENTS_COMPOSE="${AGENTS_COMPOSE:-docker-compose.agents.yml}"
@@ -113,14 +112,14 @@ stop_local_manager() {
   
   if [[ -f "$WEBHOOK_COMPOSE" ]]; then
     echo ">>> Stopping webhook..."
-    "$DOCKER_BIN" compose -p "$PROJECT" -f "$WEBHOOK_COMPOSE" down --remove-orphans "${PURGE_FLAGS[@]}"
+    "$DOCKER_BIN" compose -f "$WEBHOOK_COMPOSE" down --remove-orphans "${PURGE_FLAGS[@]}"
   else
     echo ">>> Skip webhook: $WEBHOOK_COMPOSE not found"
   fi
   
   if [[ -f "$CORE_COMPOSE" ]]; then
     echo ">>> Stopping core stack..."
-    "$DOCKER_BIN" compose -p "$PROJECT" -f "$CORE_COMPOSE" down --remove-orphans "${PURGE_FLAGS[@]}"
+    "$DOCKER_BIN" compose -f "$CORE_COMPOSE" down --remove-orphans "${PURGE_FLAGS[@]}"
   else
     echo ">>> Skip core: $CORE_COMPOSE not found"
   fi
@@ -167,7 +166,7 @@ stop_local_agents() {
   PURGE_FLAGS=()
   [[ "$PURGE" == true ]] && PURGE_FLAGS+=("-v")
   
-  "$DOCKER_BIN" compose -p "$PROJECT" -f "$AGENTS_COMPOSE" down --remove-orphans "${PURGE_FLAGS[@]}"
+  "$DOCKER_BIN" compose -f "$AGENTS_COMPOSE" down --remove-orphans "${PURGE_FLAGS[@]}"
   if [[ "$DISABLE_WAZUH_AGENT" == true ]]; then
     echo ">>> NOTE: --disable-wazuh-agent only applies to remote SSH agents, not container agents"
   fi

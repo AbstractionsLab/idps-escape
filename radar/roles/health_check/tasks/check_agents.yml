@@ -1,0 +1,117 @@
+---
+- name: agents | init report
+  set_fact:
+    _health_report: []
+
+- name: agents | wazuh-agentd running (SSH)
+  shell: |
+    systemctl is-active --quiet wazuh-agent 2>/dev/null \
+      || pgrep -x wazuh-agentd >/dev/null 2>&1 \
+      && echo "OK - wazuh-agentd running" \
+      || echo "FAIL - wazuh-agentd not running"
+  args:
+    executable: /bin/bash
+  register: _r_agentd
+  changed_when: false
+  failed_when: false
+  when: agent_mode | default('') == 'ssh'
+
+- set_fact:
+    _health_report: "{{ _health_report + [_r_agentd.stdout | trim] }}"
+  when: agent_mode | default('') == 'ssh'
+
+- name: agents | wazuh-agentd running (container)
+  shell: pgrep -x wazuh-agentd >/dev/null 2>&1 && echo "OK - wazuh-agentd running" || echo "FAIL - wazuh-agentd not running"
+  register: _r_agentd_c
+  changed_when: false
+  failed_when: false
+  when: agent_mode | default('') == 'container'
+
+- set_fact:
+    _health_report: "{{ _health_report + [_r_agentd_c.stdout | trim] }}"
+  when: agent_mode | default('') == 'container'
+
+
+- name: agents | radar-helper (script + service + maxminddb)
+  shell: |
+    out=""
+    test -f /opt/radar/radar-helper.py \
+      && out="${out}OK - radar-helper.py present\n" \
+      || out="${out}FAIL - radar-helper.py not found at /opt/radar/\n"
+    systemctl is-active --quiet radar-helper 2>/dev/null \
+      && out="${out}OK - radar-helper.service active\n" \
+      || out="${out}WARN - radar-helper.service not active\n"
+    /opt/radar/venv/bin/python3 -c "import maxminddb" 2>/dev/null \
+      && out="${out}OK - maxminddb available in venv\n" \
+      || out="${out}FAIL - maxminddb not available in /opt/radar/venv\n"
+    printf '%b' "$out"
+  args:
+    executable: /bin/bash
+  register: _r_helper
+  changed_when: false
+  failed_when: false
+
+- set_fact:
+    _health_report: "{{ _health_report + (_r_helper.stdout_lines | default([])) }}"
+
+
+- name: agents | GeoIP databases
+  shell: |
+    out=""
+    for db in GeoLite2-City.mmdb GeoLite2-ASN.mmdb; do
+      test -f "/usr/share/GeoIP/$db" \
+        && out="${out}OK - $db found\n" \
+        || out="${out}FAIL - $db not found at /usr/share/GeoIP/\n"
+    done
+    printf '%b' "$out"
+  args:
+    executable: /bin/bash
+  register: _r_geo
+  changed_when: false
+  failed_when: false
+
+- set_fact:
+    _health_report: "{{ _health_report + (_r_geo.stdout_lines | default([])) }}"
+
+
+- name: agents | AR scripts present
+  shell: |
+    count=$(ls /var/ossec/active-response/bin/*.sh 2>/dev/null | wc -l)
+    [ "${count:-0}" -gt 0 ] \
+      && echo "OK - ${count} AR script(s) found" \
+      || echo "WARN - no AR scripts (.sh) found in /var/ossec/active-response/bin/"
+  args:
+    executable: /bin/bash
+  register: _r_ar
+  changed_when: false
+  failed_when: false
+
+- set_fact:
+    _health_report: "{{ _health_report + [_r_ar.stdout | trim] }}"
+
+- name: agents | compute summary counts
+  set_fact:
+    _sf: "{{ _health_report | select('match', '^FAIL') | list }}"
+    _sw: "{{ _health_report | select('match', '^WARN') | list }}"
+    _so: "{{ _health_report | select('match', '^OK')   | list | length }}"
+
+- name: agents | write agent summary file
+  vars:
+    _problems: "{{ _sf + _sw }}"
+  copy:
+    dest: "{{ summary_file | default('/tmp/radar_health_summary.txt') | splitext | first }}_agent_{{ inventory_hostname }}.txt"
+    content: |
+      ╔══════════════════════════════════════════════════════════════════╗
+      ║  AGENT ({{ inventory_hostname }})
+      ╠══════════════════════════════════════════════════════════════════╣
+      {% if _problems | length == 0 %}
+      ║  All checks passed.
+      {% else %}
+      {% for line in _problems %}
+      ║  {{ line[:62] }}
+      {% endfor %}
+      {% endif %}
+      ╠══════════════════════════════════════════════════════════════════╣
+      ║  FAIL : {{ _sf | length }}   WARN : {{ _sw | length }}   OK : {{ _so }}
+      ╚══════════════════════════════════════════════════════════════════╝
+  delegate_to: localhost

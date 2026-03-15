@@ -23,6 +23,11 @@ teardown() {
   run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login
   [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; echo "---- calls.log ----"; cat "$LOG_DIR/calls.log" 2>/dev/null || true; echo "-------------------"; false; }
 
+  # final docker build
+  if [[ -f Dockerfile.radar-cli ]]; then
+    assert_in_log "docker build -f Dockerfile.radar-cli -t radar-cli:latest ."
+  fi
+
   # Ingest call (no --network in current script)
   grep -F \
     "docker run --rm -v $TEST_TMP/suspicious_login/dataset:/app/suspicious_login/dataset -v $TEST_TMP/config/wazuh_indexer_ssl_certs/root-ca.pem:/app/config/wazuh_indexer_ssl_certs/root-ca.pem -v $TEST_TMP/.env:/app/.env:ro radar-cli:latest python suspicious_login/wazuh_ingest.py" \

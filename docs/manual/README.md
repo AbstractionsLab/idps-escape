@@ -58,7 +58,6 @@ The [RADAR](/radar/README.md) subsystem provides solutions for completing the SO
 ### Deployment and Integration
 - [Getting started with full stack](./getting-started-stack.md) - Quick deployment
 - [Joint IDPS + SIEM deployment](../../deployment/README.md) - Suricata + Wazuh
-- [Integrations](../../integrations/README.md) - MISP, OpenCTI, SATRAP, OpenTRICK
 
 ### ADBox (Legacy - Research Only)
 

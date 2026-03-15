@@ -59,17 +59,20 @@ def _parse_iso(ts: str):
 
 def _get_tier_boundaries(cfg: dict):
     tiers = cfg.get("tiers") or {}
+    t1_min = _to_float(tiers.get("tier1_min"), 0.0)
     t1_max = _to_float(tiers.get("tier1_max"), 0.33)
     t2_max = _to_float(tiers.get("tier2_max"), 0.66)
-    if t1_max < 0.0:
-        t1_max = 0.0
+    if t1_min < 0.0:
+        t1_min = 0.0
+    if t1_max < t1_min:
+        t1_max = t1_min
     if t2_max < t1_max:
         t2_max = t1_max
     if t2_max > 1.0:
         t2_max = 1.0
     if t1_max > 1.0:
         t1_max = 1.0
-    return t1_max, t2_max
+    return t1_min, t1_max, t2_max
 
 
 class EnvLoader:
@@ -232,13 +235,25 @@ class IOCExtractor:
     def __init__(self):
         self.ip_re = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
         self.domain_re = re.compile(r"\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b")
+        self._file_ext_blocklist = {
+            "pid", "py", "pyc", "log", "json", "temp", "sh", "xml",
+            "conf", "yaml", "yml", "gz", "tar", "zip", "state", "task",
+            "legacy", "cpython-310",
+        }
         self.md5_re = re.compile(r"\b[a-fA-F0-9]{32}\b")
         self.sha1_re = re.compile(r"\b[a-fA-F0-9]{40}\b")
         self.sha256_re = re.compile(r"\b[a-fA-F0-9]{64}\b")
 
     def extract(self, alert: dict, events: list) -> dict:
-        out = {"ip": set(), "user": set(), "domain": set(), "hash": set(), "service": set()}
+        out = {
+            "ip": set(), "user": set(), "domain": set(),
+            "hash": set(), "service": set(),
+            "country": set(), "asn": set(), "agent": set(),
+        }
         self._extract_from_object(alert, out)
+        agent_name = _safe_str((alert.get("agent") or {}).get("name")).strip()
+        if agent_name:
+            out["agent"].add(agent_name)
         for ev in events:
             self._extract_from_object(ev, out)
         return {k: sorted([x for x in v if _safe_str(x).strip()]) for k, v in out.items()}
@@ -261,19 +276,27 @@ class IOCExtractor:
             if v:
                 out["service"].add(_safe_str(v))
 
+        country = _safe_str(data.get("radar_country")).strip()
+        if country:
+            out["country"].add(country)
+        asn = _safe_str(data.get("radar_asn")).strip()
+        if asn:
+            out["asn"].add(asn)
+
+        for k in ("md5", "sha1", "sha256", "hash", "file_hash"):
+            v = _safe_str(data.get(k)).strip()
+            if v:
+                out["hash"].add(v)
+
         full_log = _safe_str(obj.get("full_log"))
         if full_log:
             for ip in self.ip_re.findall(full_log):
                 out["ip"].add(ip)
             for dom in self.domain_re.findall(full_log):
                 if not self.ip_re.fullmatch(dom):
-                    out["domain"].add(dom)
-            for hv in self.md5_re.findall(full_log):
-                out["hash"].add(hv)
-            for hv in self.sha1_re.findall(full_log):
-                out["hash"].add(hv)
-            for hv in self.sha256_re.findall(full_log):
-                out["hash"].add(hv)
+                    tld = dom.rsplit(".", 1)[-1].lower()
+                    if tld not in self._file_ext_blocklist and "/" not in dom:
+                        out["domain"].add(dom)
 
 
 class BaseScenario:
@@ -398,20 +421,208 @@ class Registry:
         return self._map.get(scenario_name, self._default)
 
 
-class SatrapClientMock:
+class DecipherClient:
+
+    ANALYZE_ENDPOINTS = {
+        "suspicious_login": "/api/v0.1/analyze/suspicious_login",
+    }
+    HEALTH_ENDPOINT = "/health"
+    INCIDENT_ENDPOINTS = {
+        "suspicious_login": "/api/v0.1/incident/suspicious_login",
+        #"geoip_detection":  "/api/v0.1/incident/geoip_detection",
+        #"log_volume":       "/api/v0.1/incident/log_volume",
+    }
+
     def __init__(self, logger: Logger):
         self.logger = logger
+        self.base_url = os.environ.get("DECIPHER_BASE_URL", "").strip().rstrip("/")
+        self.verify_ssl = _parse_bool(os.environ.get("DECIPHER_VERIFY_SSL", "false"), False)
+        self.timeout = int(os.environ.get("DECIPHER_TIMEOUT_SEC", "30"))
+        self._available: Optional[bool] = None  # None = not yet checked
 
-    def enrich(self, scenario: dict, iocs: dict) -> dict:
-        key = json.dumps({"scenario": scenario["name"], "iocs": iocs}, sort_keys=True, ensure_ascii=False)
-        out = {
-            "malicious": True,
-            "confidence": 1.0,
-            "labels": ["mock_malicious"],
-            "matched_iocs": iocs,
+        try:
+            import requests
+            self._requests = requests
+        except ImportError as e:
+            self._requests = None
+            self.logger.log("ERROR", "requests library unavailable for DecipherClient", error=str(e))
+
+    def _request(self, method: str, path: str, json_data: dict = None) -> dict:
+        if not self._requests:
+            raise RuntimeError("requests library not available")
+        if not self.base_url:
+            raise RuntimeError("DECIPHER_BASE_URL not configured")
+        url = f"{self.base_url}{path}"
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        resp = self._requests.request(
+            method=method, url=url, json=json_data,
+            headers=headers, timeout=self.timeout, verify=self.verify_ssl,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def health_check(self) -> bool:
+        if self._available is not None:
+            return self._available
+        if not self.base_url:
+            self.logger.log("WARNING", "DECIPHER_BASE_URL not set; DECIPHER integration disabled")
+            self._available = False
+            return False
+        try:
+            self._request("GET", self.HEALTH_ENDPOINT)
+            self.logger.log("INFO", "DECIPHER health check passed", url=self.base_url)
+            self._available = True
+        except Exception as e:
+            self.logger.log(
+                "WARNING",
+                "DECIPHER unavailable; continuing without CTI enrichment and case creation",
+                error=str(e),
+            )
+            self._available = False
+        return self._available
+
+    def analyze(self, scenario_name: str, iocs: dict, alert: dict) -> dict:
+        null_result = {
+            "ok": False, "cti_score_T": 0.0, "labels": [],
+            "misp_events": [],
+            "case_id": None, "case_url": None, "raw": None,
         }
-        self.logger.log("INFO", "SATRAP mock enrichment", malicious=out["malicious"])
-        return out
+        endpoint = self.ANALYZE_ENDPOINTS.get(scenario_name)
+        if not endpoint:
+            self.logger.log(
+                "WARNING",
+                "No DECIPHER analyze endpoint defined for scenario; skipping CTI enrichment",
+                scenario=scenario_name,
+            )
+            return null_result
+
+        payload = self._build_analyze_payload(scenario_name, iocs, alert)
+        try:
+            raw = self._request("POST", endpoint, json_data=payload)
+            cti_score_T = _to_float(raw.get("severity"), 0.0)
+            report = raw.get("report") or {}
+            labels = list(report.get("log_summary") or [])
+            misp_events = list(report.get("misp_events_found") or [])
+            created_case = raw.get("created_case") or {}
+            case_id = _safe_str(created_case.get("id"))
+            case_url = _safe_str(created_case.get("link"))
+            self.logger.log(
+                "INFO", "DECIPHER analyze completed",
+                scenario=scenario_name, cti_score_T=cti_score_T,
+                case_id=case_id, case_url=case_url,
+            )
+            return {
+                "ok": True, "cti_score_T": cti_score_T, "labels": labels,
+                "misp_events": misp_events,
+                "case_id": case_id, "case_url": case_url, "raw": raw,
+            }
+        except Exception as e:
+            self.logger.log(
+                "ERROR", "DECIPHER analyze failed; using T=0.0, no case created",
+                scenario=scenario_name, error=str(e),
+            )
+            return null_result
+
+    def _build_analyze_payload(self, scenario_name: str, iocs: dict, alert: dict) -> dict:
+        ts = _safe_str(alert.get("timestamp"))
+        target_host = _safe_str((alert.get("agent") or {}).get("name")).strip()
+
+        if scenario_name == "suspicious_login":
+            users = iocs.get("user") or []
+            return {
+                "title":       "RADAR: suspicious login attempts",
+                "username":    users[0] if users else None,
+                "target_host": target_host,
+                "src_ips":     iocs.get("ip") or [],
+                "timestamp":   ts,
+            }
+
+        return {"target_host": target_host, "timestamp": ts}
+
+    def create_incident(self, decision: dict) -> dict:
+        null_result = {"ok": False, "case_id": None, "case_url": None, "raw": None}
+        scenario_name = decision["scenario"]["name"]
+        endpoint = self.INCIDENT_ENDPOINTS.get(scenario_name)
+        if not endpoint:
+            self.logger.log("WARNING", "No DECIPHER incident endpoint defined for scenario; skipping incident creation", scenario=scenario_name)
+            return null_result
+        try:
+            raw = self._request("POST", endpoint, json_data=self._build_incident_payload(decision))
+            case_id = _safe_str(raw.get("id"))
+            case_url = _safe_str(raw.get("link"))
+            self.logger.log("INFO", "DECIPHER incident created", case_id=case_id, case_url=case_url)
+            return {"ok": True, "case_id": case_id, "case_url": case_url, "raw": raw}
+        except Exception as e:
+            self.logger.log("ERROR", "DECIPHER incident creation failed", error=str(e))
+            return null_result
+
+    def _build_incident_payload(self, decision: dict) -> dict:
+        scenario = decision["scenario"]
+        alert = scenario["alert"]
+        risk = decision["risk"]
+        ctx = decision["context"]
+        cti = decision["cti"]
+        rule = alert.get("rule") or {}
+        agent = alert.get("agent") or {}
+        components = risk.get("components") or {}
+        iocs = ctx.get("iocs") or {}
+        return {
+            "title": self._incident_title(scenario["name"]),
+            "source": "RADAR",
+            "score": round(risk["risk_score"], 6),
+            "decision_id": _safe_str(decision.get("decision_id")),
+            "timestamp": _safe_str(alert.get("timestamp")),
+            "misp_events": list(cti.get("misp_events") or []),
+            "scenario": {
+                "name": scenario["name"],
+                "detection_type": scenario["detection"],
+            },
+            "agent": {
+                "id": _safe_str(agent.get("id")),
+                "name": _safe_str(agent.get("name")),
+            },
+            "alert": {
+                "id": _safe_str(alert.get("id")),
+                "rule_id": _safe_str(rule.get("id")),
+                "rule_level": int(rule.get("level") or 0),
+                "rule_description": _safe_str(rule.get("description")),
+                "rule_groups": list(rule.get("groups") or []),
+            },
+            "risk": {
+                "score": round(risk["risk_score"], 6),
+                "tier": risk["tier"],
+                "components": {
+                    "anomaly_component": components.get("anomaly_component", 0.0),
+                    "anomaly_intensity_A": components.get("anomaly_intensity_A", 0.0),
+                    "anomaly_grade_G": components.get("anomaly_grade", 0.0) or 0.0,
+                    "anomaly_confidence_C": components.get("anomaly_confidence", 0.0) or 0.0,
+                    "signature_component": components.get("signature_component", 0.0),
+                    "signature_risk_S": components.get("signature_risk_S", 0.0),
+                    "signature_likelihood_L": components.get("signature_likelihood", 0.0),
+                    "signature_impact_I": components.get("signature_impact", 0.0),
+                    "cti_component": components.get("cti_component", 0.0),
+                    "cti_score_T": components.get("cti_score_T", 0.0),
+                },
+            },
+            "iocs": {
+                "ip": list(iocs.get("ip") or []),
+                "user": list(iocs.get("user") or []),
+                "domain": list(iocs.get("domain") or []),
+                "hash": list(iocs.get("hash") or []),
+                "service": list(iocs.get("service") or []),
+                "asn": list(iocs.get("asn") or []),
+                "country": list(iocs.get("country") or []),
+                "agent": list(iocs.get("agent") or []),
+            },
+        }
+
+    def _incident_title(self, scenario_name: str) -> str:
+        titles = {
+            "suspicious_login": "RADAR: suspicious login attempts",
+            "geoip_detection": "RADAR: suspicious geographic access",
+            "log_volume": "RADAR: abnormal log volume",
+        }
+        return titles.get(scenario_name, f"RADAR: {scenario_name}")
 
 
 class RiskEngine:
@@ -440,63 +651,20 @@ class RiskEngine:
                     rule_ids = [_safe_str(rule_ids).strip()]
                 else:
                     rule_ids = []
-                
+
                 if rule_id in rule_ids:
                     return _to_float(item.get("weight"), 0.0)
 
         return 0.0
 
-    def _compute_cti_score(self, cti: dict) -> float:
-        """
-        Compute CTI score using Option A (additive): T = 1 - \prod_i^n(1 - w_i)
-        Returns 0 if no CTI hits, approaches 1 as indicators accumulate.
-        """
-        # Default CTI weights (can be made configurable later)
-        cti_weights = {
-            "ip_blacklisted": 0.6,
-            "domain_malicious": 0.4,
-            "hash_malicious": 0.7,
-            "user_flagged": 0.5,
-        }
-        
-        matched_iocs = cti.get("matched_iocs") or {}
-        active_weights = []
-        
-        # Primary malicious flag with confidence
-        if cti.get("malicious"):
-            conf = _to_float(cti.get("confidence"), 0.0)
-            if conf > 0:
-                active_weights.append(conf)
-        
-        # Specific IOC type weights
-        if matched_iocs.get("ip"):
-            active_weights.append(cti_weights["ip_blacklisted"])
-        if matched_iocs.get("domain"):
-            active_weights.append(cti_weights["domain_malicious"])
-        if matched_iocs.get("hash"):
-            active_weights.append(cti_weights["hash_malicious"])
-        if matched_iocs.get("user"):
-            active_weights.append(cti_weights["user_flagged"])
-        
-        if not active_weights:
-            return 0.0
-        
-        # Apply formula: T = 1 - \prod_i^n(1 - w_i)
-        product = 1.0
-        for w in active_weights:
-            product *= (1.0 - min(max(w, 0.0), 1.0))  # Clamp w to [0,1]
-        
-        return 1.0 - product
-
-    def compute(self, scenario: dict, cti: dict, ad_grade: Optional[float], ad_conf: Optional[float]) -> dict:
+    def compute(self, scenario: dict, cti_score_T: float, ad_grade: Optional[float], ad_conf: Optional[float]) -> dict:
         cfg = scenario.get("config")
         alert = scenario.get("alert")
-        
-        # Extract weights
+
         w_ad = _to_float(cfg.get("w_ad"), 0.0)
         w_sig = _to_float(cfg.get("w_sig"), 0.0)
         w_cti = _to_float(cfg.get("w_cti"), 0.0)
-        
+
         # Compute A (anomaly intensity): A = G x C
         if ad_grade is not None and ad_conf is not None:
             A = ad_grade * ad_conf
@@ -504,38 +672,36 @@ class RiskEngine:
         else:
             A = 0.0
             ad_component = 0.0
-        
+
         # Compute S (signature risk): S = L x I
         likelihood = self._signature_likelihood(cfg, alert)
         impact = _to_float(cfg.get("signature_impact"), 0.0)
         S = likelihood * impact
         sig_component = S * w_sig
-        
-        # Compute T (CTI score): T = 1 - \prod_i^n(1 - w_i)
-        T = self._compute_cti_score(cti)
+
+        # Compute T (CTI score): T from DECIPHER analyze endpoint
+        T = max(0.0, min(1.0, _to_float(cti_score_T, 0.0)))
         cti_component = T * w_cti
-        
+
         # Final risk score: R = w_A x A + w_S x S + w_T x T
-        risk_0_1 = ad_component + sig_component + cti_component
-        risk_0_1 = max(0.0, min(1.0, risk_0_1))  # Clamp to [0,1]
-        
+        risk_0_1 = max(0.0, min(1.0, ad_component + sig_component + cti_component))
+
         # Determine tier
-        t1_max, t2_max = _get_tier_boundaries(cfg)
-        if risk_0_1 < t1_max:
+        t1_min, t1_max, t2_max = _get_tier_boundaries(cfg)
+        if risk_0_1 < t1_min:
+            tier = 0
+        elif risk_0_1 < t1_max:
             tier = 1
         elif risk_0_1 < t2_max:
             tier = 2
         else:
             tier = 3
-        
-        threshold_0_1 = _to_float(cfg.get("risk_threshold"), 0.0)
-        
-        # Build detailed components dict
+
         components = {
             "anomaly_component": round(ad_component, 6),
             "anomaly_intensity_A": round(A, 6),
             "anomaly_grade": None if ad_grade is None else round(ad_grade, 6),
-            "anomaly_confidence": None if ad_conf is None else round(ad_conf, 6),
+            "anomaly_confidence": None if ad_conf  is None else round(ad_conf,  6),
             "signature_component": round(sig_component, 6),
             "signature_risk_S": round(S, 6),
             "signature_likelihood": round(likelihood, 6),
@@ -544,9 +710,9 @@ class RiskEngine:
             "cti_score_T": round(T, 6),
             "risk_score": round(risk_0_1, 6),
         }
-        
-        out = {"risk_score": risk_0_1, "tier": tier, "threshold": threshold_0_1, "components": components}
-        self.logger.log("INFO", "Risk computed", risk_score=risk_0_1, tier=tier, threshold=threshold_0_1)
+
+        out = {"risk_score": risk_0_1, "tier": tier, "components": components}
+        self.logger.log("INFO", "Risk computed", risk_score=risk_0_1, tier=tier)
         return out
 
 
@@ -594,8 +760,7 @@ class EmailNotifier:
             return False
 
     def _build_subject(self, decision: dict) -> str:
-        scenario = decision["scenario"]
-        scenario_name = scenario["name"]
+        scenario_name = decision["scenario"]["name"]
         return f"[RADAR] {scenario_name}"
 
     def _build_body(self, decision: dict) -> str:
@@ -622,152 +787,27 @@ class EmailNotifier:
             f"Threshold: {risk.get('threshold', '')}",
             f"Components: {json.dumps(risk.get('components', {}), ensure_ascii=False)}",
             "",
-            f"CTI malicious: {cti.get('malicious')}",
+            f"CTI score (T): {(risk.get('components') or {}).get('cti_score_T', 0.0)}",
             f"CTI labels: {', '.join(cti.get('labels') or [])}",
             "",
             f"Context window: {json.dumps(ctx.get('window', {}), ensure_ascii=False)}",
             f"Context events: {ctx.get('event_count', 0)}",
             f"IOCs: {json.dumps(ctx.get('iocs', {}), ensure_ascii=False)}",
             "",
-            f"Decision id: {decision.get('decision_id', '')}",
         ]
+
+        incident = decision.get("incident") or {}
+        case_id = _safe_str(incident.get("case_id"))
+        case_url = _safe_str(incident.get("case_url"))
+        if case_id and case_url:
+            lines += [
+                f"FlowIntel case: {case_id}",
+                f"Case URL: {case_url}",
+                "",
+            ]
+
+        lines.append(f"Decision id: {decision.get('decision_id', '')}")
         return "\n".join(lines)
-
-
-class FlowintelClient:
-    def __init__(self, logger: Logger):
-        self.logger = logger
-        self.base_url = os.environ.get("FLOWINTEL_BASE_URL", "").strip()
-        self.api_key = os.environ.get("FLOWINTEL_API_KEY", "").strip()
-        self.verify_ssl = _parse_bool(os.environ.get("FLOWINTEL_VERIFY_SSL", "true"), True)
-        self.timeout = int(os.environ.get("FLOWINTEL_TIMEOUT", "30"))
-        
-        # Validate configuration
-        if not self.base_url:
-            self.logger.log("WARNING", "FLOWINTEL_BASE_URL not configured")
-        if not self.api_key:
-            self.logger.log("WARNING", "FLOWINTEL_API_KEY not configured")
-        
-        # Normalize base URL
-        self.base_url = self.base_url.rstrip("/")
-        
-        try:
-            import requests
-            self._requests = requests
-            if self.base_url and self.api_key:
-                self.logger.log("INFO", "Flowintel client ready", base_url=self.base_url)
-        except ImportError as e:
-            self._requests = None
-            self.logger.log("ERROR", "requests library not available", error=str(e))
-
-    def _make_request(self, method: str, endpoint: str, json_data: dict = None) -> dict:
-        """Make HTTP request to Flowintel API."""
-        if not self._requests:
-            raise RuntimeError("requests library not available")
-        
-        url = f"{self.base_url}{endpoint}"
-        headers = {
-            "X-API-KEY": self.api_key,
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        }
-        
-        try:
-            response = self._requests.request(
-                method=method,
-                url=url,
-                json=json_data,
-                headers=headers,
-                timeout=self.timeout,
-                verify=self.verify_ssl
-            )
-            response.raise_for_status()
-            
-            try:
-                return response.json()
-            except ValueError:
-                return {"message": response.text}
-                
-        except self._requests.exceptions.Timeout as e:
-            raise RuntimeError(f"Request timeout: {url}") from e
-        except self._requests.exceptions.ConnectionError as e:
-            raise RuntimeError(f"Connection failed: {url}") from e
-        except self._requests.exceptions.HTTPError as e:
-            # Extract error message from response if available
-            try:
-                error_data = e.response.json()
-                error_msg = error_data.get("message", str(e))
-            except (ValueError, AttributeError):
-                error_msg = str(e)
-            raise RuntimeError(f"HTTP error: {error_msg}") from e
-
-    def _build_case(self, decision: dict):
-        """Build case title and description from decision data."""
-        scenario = decision["scenario"]
-        alert = scenario["alert"]
-        risk = decision["risk"]
-        ctx = decision["context"]
-        rule = alert.get("rule") or {}
-
-        vm_name = (
-            _safe_str(ctx.get("effective_agent")).strip()
-            or _safe_str((alert.get("agent") or {}).get("name")).strip()
-        )
-
-        ts = _utc_now().strftime("%Y%m%d %H%M%S")
-        yyyymmdd, hhmmss = ts.split(" ")
-        title = f"RADAR {scenario['name']} {vm_name} {yyyymmdd} {hhmmss}"
-
-        desc = "\n".join([
-            f"Scenario: {scenario['name']}",
-            f"Detection: {scenario['detection']}",
-            f"Timestamp: {alert.get('timestamp','')}",
-            f"Effective agent: {ctx.get('effective_agent','')}",
-            f"Rule: {rule.get('id','')} - {rule.get('description','')}",
-            f"Risk: {risk['risk_score']:.6f} Tier{risk['tier']}",
-            f"Components: {json.dumps(risk.get('components', {}), ensure_ascii=False)}",
-            f"IOCs: {json.dumps((ctx.get('iocs') or {}), ensure_ascii=False)}",
-            f"Decision id: {decision.get('decision_id','')}",
-        ])
-        return title, desc
-
-    def create_case(self, decision: dict) -> dict:
-        """Create a case in Flowintel using REST API.
-        
-        Args:
-            decision: Decision dictionary containing scenario, context, risk data
-            
-        Returns:
-            Dictionary with case creation result:
-            - ok: Boolean indicating success
-            - case_id: The created case ID (if successful)
-            - title: The case title
-            - raw: Raw response from API
-            - error: Error message (if failed)
-        """
-        if not self.base_url or not self.api_key:
-            self.logger.log("ERROR", "Flowintel not configured")
-            return {"ok": False, "case_id": None, "title": None, "raw": None, "error": "Flowintel not configured"}
-        
-        title, description = self._build_case(decision)
-        
-        try:
-            # Make POST request to /case/create endpoint
-            payload = {"title": title, "description": description}
-            result = self._make_request("POST", "/case/create", json_data=payload)
-            
-            # Extract case_id from response
-            case_id = result.get("case_id")
-            self.logger.log("INFO", "Flowintel case created", case_id=_safe_str(case_id), title=title)
-            return {"ok": True, "case_id": case_id, "title": title, "raw": result}
-            
-        except Exception as e:
-            msg = str(e) or e.__class__.__name__
-            dup = "title already exist" in msg.lower()
-            self.logger.log("WARNING" if dup else "ERROR",
-                        "Flowintel case creation failed",
-                        title=title, error=msg)
-            return {"ok": False, "case_id": None, "title": title, "raw": None, "error": msg}
 
 
 class WazuhApiClient:
@@ -849,35 +889,32 @@ class ActionPlanner:
         scfg = scenario["config"] or {}
         tier = int(risk["tier"])
         allow_mitigation = bool(scfg.get("allow_mitigation", False))
-        mitigations = [str(x) for x in ((scfg.get("mitigations") or []))]
 
-        planned = {"notify_email": True, "create_flowintel_case": tier in (2, 3), "mitigations": []}
+        planned = {"notify_email": tier >= 1, "mitigations": []}
 
-        if tier in (2, 3) and allow_mitigation:
-            planned["mitigations"] = mitigations
+        if allow_mitigation:
+            if tier == 2:
+                planned["mitigations"] = [str(x) for x in (scfg.get("mitigations_tier2") or [])]
+            elif tier == 3:
+                planned["mitigations"] = [str(x) for x in (scfg.get("mitigations_tier3") or [])]
 
         self.logger.log("INFO", "Actions planned", tier=tier, allow_mitigation=allow_mitigation, mitigations=planned["mitigations"])
         return planned
 
 
 class ActionExecutor:
-    def __init__(self, logger: Logger, wazuh_api: WazuhApiClient, flowintel: FlowintelClient):
+    def __init__(self, logger: Logger, wazuh_api: WazuhApiClient):
         self.logger = logger
         self.wazuh_api = wazuh_api
-        self.flowintel = flowintel
 
     def execute(self, decision: dict, planned: dict) -> dict:
-        results = {"flowintel_case": None, "mitigations": []}
-        if planned.get("create_flowintel_case"):
-            results["flowintel_case"] = self.flowintel.create_case(decision)
-
+        results = {"mitigations": []}
         for cmd in planned.get("mitigations") or []:
-            res = self._execute_mitigation(decision, cmd)
-            if res is not None:
+            for res in self._execute_mitigation(decision, cmd):
                 results["mitigations"].append(res)
         return results
 
-    def _execute_mitigation(self, decision: dict, command: str):
+    def _execute_mitigation(self, decision: dict, command: str) -> list:
         scenario = decision["scenario"]
         alert = scenario["alert"]
         context = decision["context"] or {}
@@ -886,19 +923,22 @@ class ActionExecutor:
         agent_id = self._resolve_agent_id(scenario, context)
         if not agent_id:
             self.logger.log("ERROR", "Mitigation skipped, agent_id unresolved", command=command)
-            return None
+            return []
 
-        args = self._build_args(command, scenario, iocs)
-        if args is None:
+        args_list = self._build_args(command, scenario, iocs)
+        if not args_list:
             self.logger.log("ERROR", "Mitigation skipped, args unresolved", command=command)
-            return None
+            return []
 
-        try:
-            resp = self.wazuh_api.send_active_response(agent_id, command, args, alert.get("data") or {})
-            return {"command": command, "agent_id": agent_id, "args": args, "result": resp}
-        except Exception as e:
-            self.logger.log("ERROR", "Mitigation execution failed", command=command, agent_id=agent_id, error=str(e))
-            return {"command": command, "agent_id": agent_id, "args": args, "error": str(e)}
+        out = []
+        for args in args_list:
+            try:
+                resp = self.wazuh_api.send_active_response(agent_id, f"!{command}", args, alert.get("data") or {})
+                out.append({"command": command, "agent_id": agent_id, "args": args, "result": resp})
+            except Exception as e:
+                self.logger.log("ERROR", "Mitigation execution failed", command=command, agent_id=agent_id, error=str(e))
+                out.append({"command": command, "agent_id": agent_id, "args": args, "error": str(e)})
+        return out
 
     def _resolve_agent_id(self, scenario: dict, context: dict):
         effective_agent = _safe_str(context.get("effective_agent")).strip()
@@ -919,24 +959,21 @@ class ActionExecutor:
         alert_agent_id = _safe_str((scenario["alert"].get("agent") or {}).get("id")).strip()
         return alert_agent_id or None
 
-    def _build_args(self, command: str, scenario: dict, iocs: dict):
-        if command == "firewall_drop":
-            ips = iocs.get("ip")
-            if ips:
-                return [ips[0]]
-            return None
+    def _build_args(self, command: str, scenario: dict, iocs: dict) -> list:
+        if command == "firewall-drop":
+            ips = iocs.get("ip") or []
+            return [[ips[0]]] if ips else []
 
-        if command == "lock_user_linux":
-            users = iocs.get("user") or []
-            if users:
-                return [users[0]]
-            return None
+        if command == "lock_user_linux.sh":
+            return [[u] for u in (iocs.get("user") or []) if u and u.lower() != "root"]
 
-        if command == "terminate_service":
+        if command == "terminate_service.sh":
             services = iocs.get("service") or []
             if services:
-                return [services[0]]
-            return None
+                return [[services[0]]]
+            ips = iocs.get("ip") or []
+            if ips:
+                return [[ips[0]]]
         return []
 
 
@@ -967,13 +1004,12 @@ class RadarActiveResponse:
         self.input_handler = WazuhInputHandler(self.logger)
         self.os = OpenSearchClient(self.logger)
         self.strategies = Registry(self.logger, self.os)
-        self.satrap = SatrapClientMock(self.logger)
+        self.decipher = DecipherClient(self.logger)
         self.risk_engine = RiskEngine(self.logger)
         self.email = EmailNotifier(self.logger)
-        self.flowintel = FlowintelClient(self.logger)
         self.wazuh_api = WazuhApiClient(self.logger)
         self.planner = ActionPlanner(self.logger)
-        self.executor = ActionExecutor(self.logger, self.wazuh_api, self.flowintel)
+        self.executor = ActionExecutor(self.logger, self.wazuh_api)
 
     def run(self) -> int:
         self.logger.log("INFO", "RADAR Active Response started")
@@ -991,24 +1027,33 @@ class RadarActiveResponse:
         strategy = self.strategies.get(scenario["name"])
         context = strategy.collect_context(scenario)
 
-        cti = self.satrap.enrich(scenario, context.get("iocs") or {})
+        if self.decipher.health_check():
+            cti = self.decipher.analyze(scenario["name"], context.get("iocs") or {}, alert)
+        else:
+            cti = {"ok": False, "cti_score_T": 0.0, "labels": [],
+                   "case_id": None, "case_url": None, "raw": None}
 
         ad_grade = None
         ad_conf = None
         if scenario["detection"] == "ad":
             ad_grade, ad_conf = strategy.resolve_ad_scores(scenario)
 
-        risk = self.risk_engine.compute(scenario, cti, ad_grade, ad_conf)
+        risk = self.risk_engine.compute(scenario, cti["cti_score_T"], ad_grade, ad_conf)
 
         decision_id = DecisionId.build(scenario, context)
         decision = {"decision_id": decision_id, "scenario": scenario, "context": context, "cti": cti, "risk": risk}
 
+        if self.decipher.health_check() and risk["tier"] >= 1:
+            incident = self.decipher.create_incident(decision)
+            decision["incident"] = incident
+
         planned = self.planner.plan(decision)
+
+        exec_results = self.executor.execute(decision, planned)
+        decision["exec_results"] = exec_results
 
         if planned.get("notify_email"):
             self.email.send(decision)
-
-        exec_results = self.executor.execute(decision, planned)
 
         self.logger.log("INFO", "RADAR Active Response completed", decision_id=decision_id, exec_results=exec_results)
         return 0

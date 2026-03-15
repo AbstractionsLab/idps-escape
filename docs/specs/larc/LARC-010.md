@@ -1,7 +1,7 @@
 ---
 active: true
 derived: false
-level: 10.0
+level: 3.6
 links:
 - SRS-040: cREhp_97IrNZCm7iF93KlpafqdG-IYEfJ68lGKsAYio=
 normative: true

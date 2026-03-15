@@ -28,5 +28,6 @@ fi
 echo "Running bats..."
 run bats -p tests/bash/build-radar.bats
 run bats -p tests/bash/run-radar.bats
+run bats -p tests/bash/simulate-radar.bats
 
 echo "All tests passed"

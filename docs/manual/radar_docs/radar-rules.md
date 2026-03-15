@@ -94,8 +94,8 @@ Each scenario has its own subdirectory containing XML rule files that are automa
 |---------|-------|-------------|-------------------|-----------|
 | `210012` | 8 | Failed-burst brute force | ≥5 failed SSH logins from same source user | 60 seconds |
 | `210013` | 8 | Failed-burst brute force | ≥5 failed SSH logins from same destination user | 60 seconds |
-| `210020` | 10 | Impossible travel (with success) | Auth success + country change + velocity ≥900 km/h | N/A |
-| `210021` | 10 | Impossible travel (with failure) | Auth failure + country change + velocity ≥900 km/h | N/A |
+| `210020` | 10 | Impossible travel (with success) | Auth success + velocity ≥900 km/h | N/A |
+| `210021` | 10 | Impossible travel (with failure) | Auth failure + velocity ≥900 km/h | N/A |
 
 **Alert Flow - Brute Force**:
 ```

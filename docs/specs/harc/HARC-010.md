@@ -1,13 +1,13 @@
 ---
 active: true
 derived: false
-level: 10.0
+level: 1.2
 links:
 - MRS-032: T6hCz4404Ang3Ig9Z1a4aSLoszOGnnuq3HdS2NZZ2LQ=
 - MRS-039: -K_FLcCc63SwoERy1DmALXIhaL5t_KOpDmEBzdT0mZY=
 normative: true
 ref: ''
-reviewed: GCdtHrRloB2D4vSuNgDAE2AO1BuxGhaFmMrbEL4XWU4=
+reviewed: nnndtxGMJOBCe5nNgyG9QTOOk5NyrVzD18njaPsNue8=
 ---
 
 # SONAR component architecture

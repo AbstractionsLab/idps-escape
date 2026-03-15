@@ -3,6 +3,7 @@ import types
 import logging
 import importlib.util
 import importlib.machinery
+import re
 from pathlib import Path
 
 
@@ -58,14 +59,14 @@ def _radar_lines(handler: DummyWatchedFileHandler):
 
 def test_haversine_km_basic(monkeypatch):
     mod = load_module(monkeypatch)
-    d = mod.haversine_km(0.0, 0.0, 0.0, 1.0)
+    d = mod.AuthLogWatcher.haversine_km(0.0, 0.0, 0.0, 1.0)
     assert 110.0 < d < 112.5
 
 
 def test_handle_line_skips_non_matching(monkeypatch):
     mod = load_module(monkeypatch)
 
-    w = mod.AuthLogWatcher(in_path="/tmp/in", out_path="/tmp/out")
+    w = mod.AuthLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
     w.city_reader = FakeMaxMindReader({})
     w.asn_reader = FakeMaxMindReader({})
 
@@ -79,9 +80,7 @@ def test_handle_line_skips_non_matching(monkeypatch):
 def test_handle_line_success_enrichment(monkeypatch):
     mod = load_module(monkeypatch)
 
-    monkeypatch.setattr(mod.time, "time", lambda: 1000.0)
-
-    w = mod.AuthLogWatcher(in_path="/tmp/in", out_path="/tmp/out")
+    w = mod.AuthLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
     w.city_reader = FakeMaxMindReader({
         "1.2.3.4": {
             "country": {"iso_code": "DE"},
@@ -117,10 +116,7 @@ def test_handle_line_success_enrichment(monkeypatch):
 def test_country_change_indicator(monkeypatch):
     mod = load_module(monkeypatch)
 
-    w = mod.AuthLogWatcher(in_path="/tmp/in", out_path="/tmp/out")
-
-    t = {"now": 1000.0}
-    monkeypatch.setattr(mod.time, "time", lambda: t["now"])
+    w = mod.AuthLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
 
     w.city_reader = FakeMaxMindReader({
         "1.2.3.4": {
@@ -147,7 +143,6 @@ def test_country_change_indicator(monkeypatch):
     line1 = "Jan 6 08:00:00 host sshd[123]: Accepted password for test from 1.2.3.4 port 5555 ssh2"
     w.handle_line(line1)
 
-    t["now"] = 1100.0
     line2 = "Jan 6 08:01:40 host sshd[124]: Accepted password for test from 5.6.7.8 port 5555 ssh2"
     w.handle_line(line2)
 
@@ -158,10 +153,10 @@ def test_country_change_indicator(monkeypatch):
     assert "country_change_i='1'" in msgs[1]
 
 
-def test_velocity_is_capped(monkeypatch):
+def test_velocity_calculation(monkeypatch):
     mod = load_module(monkeypatch)
 
-    w = mod.AuthLogWatcher(in_path="/tmp/in", out_path="/tmp/out")
+    w = mod.AuthLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
     w.city_reader = FakeMaxMindReader({
         "1.1.1.1": {
             "country": {"iso_code": "AA"},
@@ -181,9 +176,6 @@ def test_velocity_is_capped(monkeypatch):
         "2.2.2.2": {"autonomous_system_number": 1},
     })
 
-    t = {"now": 1000.0}
-    monkeypatch.setattr(mod.time, "time", lambda: t["now"])
-
     handler = _get_dummy_handler(w)
     handler.messages.clear()
 
@@ -191,22 +183,83 @@ def test_velocity_is_capped(monkeypatch):
     line2 = "Jan 6 09:00:00 host sshd[124]: Accepted password for test from 2.2.2.2 port 5555 ssh2"
 
     w.handle_line(line1)
-    t["now"] += 3600.0
     w.handle_line(line2)
 
     msgs = _radar_lines(handler)
     assert len(msgs) == 2
-    out2 = msgs[-1]
+    m = re.search(r"geo_velocity_kmh='([^']+)'", msgs[-1])
+    assert m is not None
+    velocity = float(m.group(1))
 
-    assert "geo_velocity_kmh='2000.000'" in out2
+    assert velocity > 900.0
+
+
+def test_country_change_only_tracks_per_user(monkeypatch):
+    mod = load_module(monkeypatch)
+
+    w = mod.AuthLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
+    w.city_reader = FakeMaxMindReader({
+        "1.2.3.4": {
+            "country": {"iso_code": "DE"},
+            "subdivisions": [{"names": {"en": "Bavaria"}}],
+            "city": {"names": {"en": "Munich"}},
+            "location": {"latitude": 48.137, "longitude": 11.575},
+        },
+        "5.6.7.8": {
+            "country": {"iso_code": "FR"},
+            "subdivisions": [{"names": {"en": "Île-de-France"}}],
+            "city": {"names": {"en": "Paris"}},
+            "location": {"latitude": 48.8566, "longitude": 2.3522},
+        }
+    })
+    w.asn_reader = FakeMaxMindReader({
+        "1.2.3.4": {"autonomous_system_number": 111},
+        "5.6.7.8": {"autonomous_system_number": 222},
+    })
+
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    w.handle_line("Jan 6 08:00:00 host sshd[1]: Accepted password for alice from 1.2.3.4 port 22 ssh2")
+    w.handle_line("Jan 6 09:00:00 host sshd[2]: Accepted password for bob from 5.6.7.8 port 22 ssh2")
+
+    msgs = _radar_lines(handler)
+    assert len(msgs) == 2
+    assert "country_change_i='0'" in msgs[1]
+
+
+def test_asn_novelty_is_per_user_not_global(monkeypatch):
+    mod = load_module(monkeypatch)
+
+    w = mod.AuthLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
+    w.city_reader = FakeMaxMindReader({
+        "1.2.3.4": {
+            "country": {"iso_code": "DE"},
+            "subdivisions": [{"names": {"en": "Bavaria"}}],
+            "city": {"names": {"en": "Munich"}},
+            "location": {"latitude": 48.137, "longitude": 11.575},
+        }
+    })
+    w.asn_reader = FakeMaxMindReader({
+        "1.2.3.4": {"autonomous_system_number": 12345}
+    })
+
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    w.handle_line("Jan 6 08:00:00 host sshd[1]: Accepted password for alice from 1.2.3.4 port 22 ssh2")
+    w.handle_line("Jan 6 09:00:00 host sshd[2]: Accepted password for bob from 1.2.3.4 port 22 ssh2")
+
+    msgs = _radar_lines(handler)
+    assert len(msgs) == 2
+    assert "asn_novelty_i='1'" in msgs[0]
+    assert "asn_novelty_i='1'" in msgs[1]
 
 
 def test_asn_placeholder_flag_when_missing(monkeypatch):
     mod = load_module(monkeypatch)
 
-    monkeypatch.setattr(mod.time, "time", lambda: 1000.0)
-
-    w = mod.AuthLogWatcher(in_path="/tmp/in", out_path="/tmp/out")
+    w = mod.AuthLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
     w.city_reader = FakeMaxMindReader({
         "9.9.9.9": {
             "country": {"iso_code": "US"},

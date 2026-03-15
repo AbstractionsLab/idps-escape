@@ -1,0 +1,82 @@
+# c5traceability.yaml — configuration for c5traceability.py
+#
+# This file defines which document types exist, the order they appear in the
+# summary table, which coverage checks to run, and which documents carry
+# defect annotations.  Edit this file (or supply a different one via --config)
+# to adapt the tool to a project with a different Doorstop document tree.
+#
+# To auto-generate a starter config from your .doorstop.yml files, run:
+#   python c5traceability.py --discover [--discover-write]
+
+# -------------------------------------------------------------------
+# Ordered list of document prefixes shown in the summary totals table.
+# -------------------------------------------------------------------
+document_order: [MRS, HARC, SRS, LARC, SWD, TST, TRA, TRB]
+
+# -------------------------------------------------------------------
+# Coverage checks — executed in the order listed here.
+#
+# Each check has:
+#   subject   — the CSV column whose items are being evaluated
+#   linked    — one or more CSV columns; an item is "covered" when at
+#               least one of these columns has a value in any row that
+#               shares the same subject value
+#   title     — human-readable section heading
+#   uncovered_label — word/phrase used to describe an uncovered item
+#                     in status badges and console output
+#
+# The section number is assigned automatically (1 = summary totals,
+# then 2…N for each check in order, N+1 = defects, N+2 = health).
+# -------------------------------------------------------------------
+checks:
+
+  - id: srs_tst
+    subject: SRS
+    linked: [TST]
+    title: "SRS → TST test coverage (untested requirements)"
+    uncovered_label: "untested"
+
+  - id: srs_design
+    subject: SRS
+    linked: [LARC, SWD]
+    title: "SRS → LARC/SWD design coverage (no design docs)"
+    uncovered_label: "no design docs"
+
+  - id: mrs_srs
+    subject: MRS
+    linked: [SRS]
+    title: "MRS → SRS specification coverage (unspecified mission needs)"
+    uncovered_label: "no SRS"
+
+  - id: harc_srs
+    subject: HARC
+    linked: [SRS]
+    title: "HARC → SRS implementation coverage (architecture not backed by requirements)"
+    uncovered_label: "no SRS"
+
+  - id: tst_execution
+    subject: TST
+    linked: [TRA, TRB]
+    title: "TST execution coverage (test cases not yet executed / reported)"
+    uncovered_label: "not executed"
+
+# -------------------------------------------------------------------
+# Defect sources — documents whose .md files are scanned for the
+# ?c5-defect-X keyword (levels 0–4).
+#
+#   prefix              — subdirectory name under specs_dir (= the
+#                          document prefix, e.g. "TRB")
+#   frontmatter_field   — when present, read this YAML frontmatter key
+#                         instead of scanning the body text (preferred
+#                         for TRB-style structured reports)
+#   guide_strip_heading — when body scanning is used, truncate at this
+#                         heading before scanning so that the template
+#                         "Guide" section's enumeration of all levels
+#                         does not skew results
+# -------------------------------------------------------------------
+defect_sources:
+  - prefix: TRB
+    frontmatter_field: defect-category
+
+  - prefix: TRA
+    guide_strip_heading: "### Guide"
