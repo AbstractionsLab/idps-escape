@@ -16,8 +16,13 @@ Detection relies on **custom rules, decoders, and whitelists**:
 
 - **Rules (`/radar/scenarios/rules/geoip_detection/a2-geoip-detection.xml`)**
     - Match log events with unusual geographic origin.
+    - **SSH login monitoring** (rule 100900-100901): Detects SSH authentication attempts from non-whitelisted countries.
+    - **Web access log monitoring** (rule 100902): Detects HTTP/HTTPS requests from non-whitelisted countries (Apache, Nginx).
+- **Decoders**
+    - Standard SSH decoder for authentication logs.
+    - Apache/Nginx web accesslog decoder: Parses web server access logs and enriches them with GeoIP country information.
 - **Whitelists (`/radar/scenarios/lists/whitelist_countries`)**
-    - Lists countries considered safe for login.
+    - Lists countries considered safe for login and web access.
     - Events from these countries are ignored by the rules.
 
 ### Active Response Analysis
@@ -86,13 +91,20 @@ systemctl restart wazuh-agent
 
 #### Manager-side Setup
 
-1. Copy `/radar/scenarios/decoders/geoip_detection/0310-ssh.xml` to the manager and ensure that it has the needed permissions `root:wazuh`:
+1. Copy the Apache/Nginx accesslog decoder to the manager:
+```
+cp /radar/scenarios/decoders/geoip_detection/0375-web-accesslog.xml /var/ossec/etc/decoders/0375-web-accesslog.xml
+chmod 640 /var/ossec/etc/decoders/0375-web-accesslog.xml
+chown root:wazuh /var/ossec/etc/decoders/0375-web-accesslog.xml
+```
+
+2. Copy the SSH decoder to the manager and ensure that it has the needed permissions `root:wazuh`:
 ```
 cp /radar/scenarios/decoders/geoip_detection/0310-ssh.xml /var/ossec/etc/decoders/0310-ssh.xml
 chmod 640 /var/ossec/etc/decoders/0310-ssh.xml
 chown root:wazuh /var/ossec/etc/decoders/0310-ssh.xml
 ```
-2. Ensure that the default `0310` SSH decoders are excluded from the configurations of manager:
+3. Ensure that the default `0310` SSH decoders are excluded from the configurations of manager:
 ```
 nano /var/ossec/etc/ossec.conf
 ```

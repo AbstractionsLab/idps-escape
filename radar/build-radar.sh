@@ -140,7 +140,6 @@ echo "=================="
 if [[ "$MANAGER_MODE" == "local" && "$MANAGER_EXISTS" == "false" ]]; then
   echo ">>> Bringing up local core stack (docker-compose.core.yml)..."
   docker compose -f docker-compose.core.yml -f volumes.yml up -d
-  docker compose -f docker-compose.webhook.yml up -d
 else
   echo ">>> Not touching local manager."
 fi
@@ -153,11 +152,14 @@ else
   echo ">>> Agents are remote; will not start local agent containers."
 fi
 
-
-# if [[ -f Dockerfile.radar-cli ]]; then
-#   echo ">>> Building radar-cli image..."
-#   docker build -f Dockerfile.radar-cli -t radar-cli:latest .
-# fi
+if [[ -f docker-compose.webhook.yml ]]; then
+  if [[ "$MANAGER_MODE" == "local" ]]; then
+    echo ">>> Building webhook locally..."
+    docker compose -f docker-compose.webhook.yml up -d
+  else
+    echo ">>> Manager is remote; webhook will be deployed via Ansible."
+  fi
+fi
 
 export $(grep -v '^#' .env | grep -v '^$' | sed 's/#.*$//' | xargs)
 

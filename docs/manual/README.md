@@ -44,6 +44,7 @@ The [RADAR](/radar/README.md) subsystem provides solutions for completing the SO
 - [Architecture](./sonar_docs/architecture.md) - System design and patterns
 
 ### RADAR Documentation
+- [RADAR standalone user manual](./radar-user-manual.md) - Single end-user-oriented manual for deployment and operations
 - [RADAR README](./radar_docs/README.md) - Main documentation
 - [RADAR developer README](/radar/README.md) - Developer quick reference
 - [Architecture](./radar_docs/radar-architecture.md) - System design and components

@@ -1,3 +1,43 @@
+# 0.9 (2026-04-01)
+
+## Added
+
+- **Apache/Nginx web access log support for GeoIP detection**: Extended GeoIP scenario to monitor HTTP/HTTPS requests in addition to SSH authentication
+  - New `accesslog` decoder (`0375-web-accesslog.xml`) for parsing Apache and Nginx web server access logs
+  - New detection rule 100902 for identifying non-whitelisted country web access
+  - Updated `SRS-055` with web server access log detection requirements and acceptance criteria
+  - Extended unit tests for GeoIP enrichment functionality
+- **Multi-node Wazuh deployment support**: Full support for multi-node Wazuh manager topologies
+- **Webhook service bootstrap improvements**: Separate `bootstrap_webhook.yml` Ansible task for independent webhook deployment
+- **Optional data ingestion for flexible detector training**: New `--ingest` flag for `run-radar.sh` script
+  - Control synthetic dataset ingestion during scenario deployment
+  - Enables both fresh deployments with training data and production deployments with live data
+  - Updated documentation with usage examples and guidance on when to use/skip ingestion
+  - BATS test case validating `--ingest` flag behavior
+- **Test Case Specification TST-049**: New comprehensive test specification for RADAR integrity testing with a resulted report `TRP-038`
+- A "What's new" page to the product presentation website highlighting the main features of our release notes
+
+## Modified
+
+- **GeoIP detection scenario**: Updated to support both SSH authentication and HTTP/HTTPS web access monitoring
+- **DECIPHER incident endpoint**: Active Response was updated to new incident endpoint specification.
+- **RADAR deployment documentation**:
+  - `radar-getting-started.md`: Added multi-node deployment mode and configuration parameter documentation. Specified precondition details for Ansible executable.
+  - `radar-architecture.md`: Added multi-node Wazuh deployment section with topology guidance
+  - `radar-run-ad.md`: Updated with `--ingest` flag documentation and data ingestion guidance
+  - `radar-manager-ansible-playbook.md`: Webhook bootstrap section explained
+  - `geoip_detection_explained.md`: Added Apache/Nginx web server configuration for GeoIP monitoring
+- **Specifications** (`docs/specs/srs/SRS-055.md`):
+  - Expanded scope to include Apache/Nginx web access log monitoring
+  - Added rule `100902` specifications for web server access control via GeoIP
+  - Updated acceptance criteria with web access log test cases
+
+## Fixed
+
+- Improved webhook container initialization reliability with state-aware checks and retry logic
+- Enhanced anomaly detection accuracy through configurable threshold-based filtering rules
+- Health check validation now uses explicit file lists instead of pattern matching for higher reliability
+
 # 0.8.1 (2026-03-16)
 
 ## Modified

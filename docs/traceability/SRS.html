@@ -56,6 +56,9 @@
 <li><a href="#SRS-058">2.11 RADAR scenario: DLP2 - network data exfiltration</a></li>
 <li><a href="#SRS-059">2.12 RADAR Scenario Simulation Framework</a></li>
 <li><a href="#SRS-060">2.13 RADAR Deployment Health Check</a></li>
+<li><a href="#SRS-062">2.14 RADAR scenario: off-hour login detection</a></li>
+<li><a href="#SRS-063">2.15 RADAR SOAR Web Interface - REST API</a></li>
+<li><a href="#SRS-064">2.16 RADAR SOAR Web Interface - Frontend</a></li>
 </ul>
 </li>
 <li><a href="#SRS-ADBox">3.0 ADBox v1 System Requirements (Maintenance)</a></li>
@@ -1515,7 +1518,7 @@ I want RADAR to detect suspicious login activity (failed-login bursts and imposs
 <li><strong>No false positives</strong>: Legitimate user behavior (normal login patterns, expected country changes with low velocity) shall not trigger alerts</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a>, <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a>, <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a>, <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a>, <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a>, <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a>, <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a>, <a href="TST.html#TST-042">TST-042 Build suspicious login</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-015">LARC-015 RADAR scenario setup flow</a>, <a href="LARC.html#LARC-016">LARC-016 RADAR active response flow</a>, <a href="LARC.html#LARC-017">LARC-017 RADAR integration with Opensearch modules</a>, <a href="LARC.html#LARC-018">LARC-018 RADAR logical flow</a>, <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a>, <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a>, <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a>, <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a>, <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a>, <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a>, <a href="TST.html#TST-042">TST-042 Build suspicious login</a>, <a href="TST.html#TST-049">TST-049 RADAR deployment integrity verification</a></p>
 <table>
 <thead>
 <tr>
@@ -1794,6 +1797,7 @@ I want the RADAR test workflow to be automated end-to-end for reproducibility, t
 I want RADAR to enforce access control by detecting access attempts from non-whitelisted countries and applying the existing active response, so that connections from not approved geographies are detected.</p>
 <h2>Scope</h2>
 <p><strong>Authentication protocol coverage</strong>: This requirement applies to any authentication event classified under Wazuh group <code>authentication_success</code>, including but not limited to: SSH (rule series 5715), web authentication (rule series 311XX), VPN authentication, and database logins.</p>
+<p><strong>Web server access logs</strong>: This requirement additionally applies to HTTP/HTTPS access logs from Apache and Nginx web servers, classified under Wazuh group <code>accesslog</code>. Detection monitors all incoming web requests regardless of HTTP status code.</p>
 <p><strong>GeoIP data source</strong>: Requires RADAR Helper enrichment service running as Wazuh integration, utilizing MaxMind GeoLite2 databases for IP-to-country resolution. Enrichment adds <code>radar_country</code> and <code>radar_srcip</code> custom fields to qualifying events.</p>
 <p><strong>Whitelist management</strong>: Country whitelist maintained as Wazuh CDB list at <code>etc/lists/whitelist_countries</code> using country names matching GeoLite2 country name format (e.g., "Luxembourg", "France", "Germany", "Belgium").</p>
 <p><strong>Private/internal IP handling</strong>: Detection logic explicitly excludes RFC1918 private address ranges (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) and link-local addresses to prevent false positives from internal network access. Private IP addresses do not trigger GeoIP enrichment or whitelist checking.</p>
@@ -1820,7 +1824,11 @@ I want RADAR to enforce access control by detecting access attempts from non-whi
 </ol>
 <ul>
 <li>
-<p><strong>(i)</strong> Triggering events: Any event belonging to Wazuh group <code>authentication_success</code> with a valid source IP address</p>
+<p><strong>(i)</strong> Triggering events:</p>
+<ul>
+<li>Any event belonging to Wazuh group <code>authentication_success</code> with a valid source IP address</li>
+<li>Any HTTP/HTTPS access log line from Apache or Nginx web servers monitored by the agent</li>
+</ul>
 </li>
 <li>
 <p><strong>(ii)</strong> Enrichment fields added:</p>
@@ -1844,7 +1852,7 @@ I want RADAR to enforce access control by detecting access attempts from non-whi
 </ol>
 <ul>
 <li>
-<p><strong>(i)</strong> List-based detection (Rule 100900, level 10):</p>
+<p><strong>(i)</strong> List-based detection for authentication events (Rule 100900, level 10):</p>
 <ul>
 <li>Matches events in group <code>authentication_success</code></li>
 <li>Requires <code>radar_country</code> field to be populated (PCRE2 regex <code>.+</code> check)</li>
@@ -1854,21 +1862,33 @@ I want RADAR to enforce access control by detecting access attempts from non-whi
 </ul>
 </li>
 <li>
-<p><strong>(ii)</strong> Fallback hardcoded detection (Rule 100901, level 10):</p>
+<p><strong>(ii)</strong> List-based detection for web access log events (Rule 100902, level 10):</p>
 <ul>
-<li>Matches events in group <code>authentication_success</code></li>
-<li>Uses inline country check: <code>&lt;srcgeoip negate="yes"&gt;Luxembourg|France|Germany|Belgium&lt;/srcgeoip&gt;</code></li>
-<li>Serves as backup detection for environments without CDB list support</li>
-<li>Rule description: "Connection from non-whitelist country"</li>
+<li>Matches events in group <code>accesslog</code></li>
+<li>Requires <code>radar_country</code> field to be populated (PCRE2 regex <code>.+</code> check)</li>
+<li>Uses same Wazuh list lookup as Rule 100900: <code>&lt;list field="radar_country" lookup="not_match_key"&gt;etc/lists/whitelist_countries&lt;/list&gt;</code></li>
+<li>Fires when <code>radar_country</code> value NOT found in whitelist</li>
+<li>Rule description: "Connection from non-whitelist country (access log)"</li>
+<li>Decoded by <code>web-accesslog-domain</code>, <code>web-accesslog-ip-ip</code>, or <code>web-accesslog-ip</code> child decoders (extended with <code>type="pcre2"</code> regex to capture <code>radar_country</code>, <code>radar_region</code>, <code>radar_city</code> fields from the RADAR tail)</li>
 </ul>
 </li>
 <li>
-<p><strong>(iii)</strong> Private IP exclusion: Rules shall NOT fire when source IP is in private address ranges (Wazuh's <code>&lt;srcip&gt;</code> matching with negation ensures this)</p>
+<p><strong>(iii)</strong> Fallback hardcoded detection (Rule 100901, level 10):</p>
+<ul>
+<li>Matches events in group <code>authentication_success</code></li>
+<li>Uses inline country check: <code>&lt;srcgeoip negate="yes"&gt;Luxembourg|France|Germany|Belgium&lt;/srcgeoip&gt;</code></li>
+<li>Serves as backup detection only</li>
+<li>Rule description: "Connection from non-whitelist country"</li>
+<li>Limitation: The <code>&lt;srcgeoip&gt;</code> rule option requires Wazuh to be compiled from source with <code>USE_GEOIP=yes</code> flag and the legacy GeoIP.dat database.</li>
+</ul>
 </li>
 <li>
-<p><strong>(iv)</strong> Alert metadata includes:</p>
+<p><strong>(iv)</strong> Private IP exclusion: Rules shall NOT fire when source IP is in private address ranges (Wazuh's <code>&lt;srcip&gt;</code> matching with negation ensures this)</p>
+</li>
+<li>
+<p><strong>(v)</strong> Alert metadata includes:</p>
 <ul>
-<li>Rule metadata: rule.id (100900 or 100901), rule.level (10), rule.description, rule.groups</li>
+<li>Rule metadata: rule.id (100900, 100901, 100902), rule.level (10), rule.description, rule.groups</li>
 <li>User/host context: dstuser, srcip (or radar_srcip), agent.name, agent.id</li>
 <li>GeoIP context: radar_country, radar_city, radar_region, radar_asn (if available)</li>
 <li>Temporal context: timestamp</li>
@@ -1954,11 +1974,15 @@ I want RADAR to enforce access control by detecting access attempts from non-whi
 <h2>Acceptance criteria</h2>
 <p>Successful validation according to test case specification <a href="TST.html#TST-055">TST-055</a>, which shall verify:</p>
 <ol>
-<li><strong>Whitelisted country access</strong>: SSH login from whitelisted country (e.g., Luxembourg) → No alert fired</li>
-<li><strong>Non-whitelisted country detection (list-based)</strong>: SSH login from non-whitelisted country (e.g., USA) with <code>radar_country</code> enrichment → Rule 100900 fires with level 10</li>
+<li><strong>Whitelisted country access (SSH)</strong>: SSH login from whitelisted country (e.g., Luxembourg) → No alert fired</li>
+<li><strong>Non-whitelisted country detection (list-based, SSH)</strong>: SSH login from non-whitelisted country (e.g., USA) with <code>radar_country</code> enrichment → Rule 100900 fires with level 10</li>
 <li><strong>Non-whitelisted country detection (fallback)</strong>: SSH login from non-whitelisted country without CDB list → Rule 100901 fires with level 10</li>
 <li><strong>Whitelist update</strong>: Add USA to <code>etc/lists/whitelist_countries</code>, reload Wazuh manager, repeat login from USA → No alert fired</li>
 <li><strong>Private IP exclusion</strong>: SSH login from private IP (192.168.1.10) regardless of geolocation → No alert fired</li>
+<li><strong>Web access log detection</strong>: HTTP request to Apache/Nginx from non-whitelisted country IP (e.g., Brazil) → RADAR Helper enriches log line with <code>radar_country="Brazil"</code>, Rule 100902 fires with level 10</li>
+<li><strong>Web access log - whitelisted country</strong>: HTTP request from whitelisted country → Rule 100902 does not fire</li>
+<li><strong>Web access log - private IP</strong>: HTTP request from RFC1918 address → <code>ApacheLogWatcher</code> skips enrichment, no rule fires</li>
+<li><strong>Web decoder format support</strong>: Verify <code>radar_country</code> field correctly extracted for all supported log formats (single IP, domain+IP, hostname:port+IP) via <code>wazuh-logtest</code></li>
 <li><strong>Risk score computation</strong>: For rule 100900 alert, verify R = 0.6 × (0.8 × 0.6) + 0.4 × T = 0.288 + 0.4T, tier assignment based on threshold</li>
 <li><strong>Tier 2 firewall action</strong>: Generate alert with risk_score ≥ 0.51 → Verify <code>firewall-drop</code> active response executes, source IP blocked in iptables, audit log entry created</li>
 <li><strong>Email notification</strong>: Verify SOC email sent with correct alert metadata, risk score breakdown, and source country information</li>
@@ -1966,7 +1990,7 @@ I want RADAR to enforce access control by detecting access attempts from non-whi
 <li><strong>RADAR Helper dependency</strong>: Disable RADAR Helper, generate authentication event → Verify enrichment fields absent, rule 100900 does not fire (rule 100901 fallback may fire if <code>srcgeoip</code> available from other source)</li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a>, <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a>, <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a>, <a href="LARC.html#LARC-028">LARC-028 RADAR GeoIP detection scenario flow</a>, <a href="TST.html#TST-043">TST-043 Build non-whitelist GeoIP detection</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a>, <a href="LARC.html#LARC-025">LARC-025 RADAR helper enrichment pipeline</a>, <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a>, <a href="LARC.html#LARC-028">LARC-028 RADAR GeoIP detection scenario flow</a>, <a href="TST.html#TST-043">TST-043 Build non-whitelist GeoIP detection</a>, <a href="TST.html#TST-049">TST-049 RADAR deployment integrity verification</a></p>
 <table>
 <thead>
 <tr>
@@ -2365,7 +2389,7 @@ I want RADAR to detect unusual log volume spikes for each endpoint based on its 
 </li>
 </ol>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a>, <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a>, <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a>, <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a>, <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a>, <a href="LARC.html#LARC-029">LARC-029 RADAR log volume detection scenario flow</a>, <a href="TST.html#TST-044">TST-044 Build log volume abnormal growth</a>, <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-021">LARC-021 RADAR risk engine calculation flow</a>, <a href="LARC.html#LARC-022">LARC-022 RADAR detector creation workflow</a>, <a href="LARC.html#LARC-023">LARC-023 RADAR monitor and webhook workflow</a>, <a href="LARC.html#LARC-026">LARC-026 RADAR active response decision pipeline</a>, <a href="LARC.html#LARC-027">LARC-027 RADAR data ingestion pipeline</a>, <a href="LARC.html#LARC-029">LARC-029 RADAR log volume detection scenario flow</a>, <a href="TST.html#TST-044">TST-044 Build log volume abnormal growth</a>, <a href="TST.html#TST-045">TST-045 Run RADAR for log volume abnormal growth</a>, <a href="TST.html#TST-049">TST-049 RADAR deployment integrity verification</a></p>
 <table>
 <thead>
 <tr>
@@ -2700,6 +2724,937 @@ I want a structured and automated scenario simulation framework that generates r
 <tr>
 <td>risk</td>
 <td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-062">2.14 RADAR scenario: off-hour login detection <small><a href="SRS.html#SRS-062">SRS-062</a></small></h2>
+<p>As a security engineer,
+I want RADAR to detect authentication activity occurring outside of normal business hours using per-user behavioral baselines, and then apply the existing risk policy to contain potential account compromise.</p>
+<h2>Scope</h2>
+<p><strong>Protocol coverage</strong>: This requirement applies to all authentication events including VPN, SSH, LDAP, RDP, web-based authentication, and database logins. The system is protocol-agnostic and detects off-hour access based on temporal patterns regardless of authentication mechanism.</p>
+<p><strong>Authentication sources</strong>: Authentication events from multiple sources via syslog integration, forwarded to Wazuh manager and indexed in OpenSearch.</p>
+<p><strong>Required event fields</strong> (must be present in all authentication sources):</p>
+<pre><code>- User identification: data.user or equivalent field (username from authentication event)
+- Temporal context: timestamp field (ISO8601 format with millisecond precision)
+- Authentication outcome (optional for filtering events): Success/failure indicator (e.g., rule.id, data.status)
+</code></pre>
+<p><strong>Detection method</strong>: Per-user behavioral baseline using OpenSearch RCF Anomaly Detection algorithm with categorical field <code>data.user.keyword</code>. Each user learns their own "normal" work schedule over the detector training period.</p>
+<p><strong>Business hours definition</strong>: The system trains exclusively on authentication events occurring during business hours (Monday-Friday, 07:00-20:00 local time). Events outside this window (weekends, nights, early mornings) are considered off-hours and flagged as anomalous when detected.</p>
+<p><strong>Alert delivery</strong>: Anomaly detection results → OpenSearch monitor → webhook → Wazuh log ingestion → rule-based active response trigger.</p>
+<h2>Requirements</h2>
+<ol>
+<li>RADAR shall emit an "Off-hour login detected" alert when OpenSearch Anomaly Detection identifies authentication activity occurring outside a user's learned work schedule:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> OpenSearch detector configuration (defined in <code>config.yaml</code> under <code>scenarios.suspicious_login</code>):</p>
+<ul>
+<li>Detector name: "off_hour_login"</li>
+<li>Index pattern: <code>wazuh-alerts-*</code> (date-based indexing for time-series data)</li>
+<li>Result index: <code>opensearch-ad-plugin-result-off-hour</code> (stores anomaly grades and metadata)</li>
+<li>Categorical field: <code>data.user.keyword</code> (enables per-user baselines using multi-entity detection)</li>
+<li>Feature definitions:<ul>
+<li><code>login_hour</code>: Hour extraction from timestamp (0-23) using Painless script <code>doc['timestamp'].value.getHour()</code>, aggregation: <code>avg</code></li>
+<li><code>login_day_of_week</code>: Day of week extraction (1=Monday, 7=Sunday) using Painless script <code>doc['timestamp'].value.getDayOfWeek()</code>, aggregation: <code>avg</code></li>
+</ul>
+</li>
+<li>Shingle size: 8</li>
+<li>Detector interval: 60 minutes (hourly detection windows)</li>
+<li>Window delay: 1 minute (allows for indexing lag before analysis)</li>
+<li>Filter query: <code>authentication</code> groups or successful logins</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> Anomaly threshold criteria (both must be met to trigger alert):</p>
+<ul>
+<li>Anomaly grade: <code>anomaly_grade ≥ 0.3</code> (configurable via <code>anomaly_grade_threshold</code>)</li>
+<li>Confidence: <code>confidence ≥ 0.3</code> (configurable via <code>confidence_threshold</code>)</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> Baseline learning requirements:</p>
+<ul>
+<li>Minimum data points: 8 intervals (8 * 60 minutes = 8 hours)</li>
+<li>Training period: Detector learns each user's "normal" authentication pattern independently<ul>
+<li>Training data filtered to business hours only (Mon-Fri, 07:00-20:00)</li>
+<li>Zero weekend data in training set (weekends = off-hours by definition)</li>
+<li>Zero night/early morning data in training set (nights = off-hours by definition)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>(iv)</strong> Anomaly quantification:</p>
+<ul>
+<li>Anomaly grade &gt; 0.3 typically indicates authentication time/day deviation &gt; 2σ (two standard deviations) from the user's learned schedule</li>
+<li>Grade &gt; 0.7 indicates extreme deviation (&gt; 3σ), such as weekend login for strictly Monday-Friday user, or 2 AM login for user who normally works 9 AM - 5 PM</li>
+</ul>
+</li>
+<li>
+<p><strong>(v)</strong> Temporal feature rationale:</p>
+<ul>
+<li><strong>login_hour</strong>: Direct mapping to 24-hour cycle captures business hours (7-20) vs off-hours patterns. Hourly patterns are critical for User Behavior Analytics (UEBA) temporal anomaly detection.</li>
+<li><strong>login_day_of_week</strong>: Captures weekly work patterns (Mon-Fri vs weekends). Temporal behavior modeling analyzing daily routines is fundamental to authentication anomaly detection.</li>
+</ul>
+</li>
+</ul>
+<ol start="2">
+<li>The "Off-hour login detected" alert shall carry comprehensive metadata through the detection and response pipeline:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> OpenSearch monitor message (webhook payload structure):</p>
+<ul>
+<li>Monitor metadata: <code>monitor_name="OffHourLogin-Monitor"</code>, <code>trigger_name="OffHourLogin-Detected"</code></li>
+<li>Anomaly metrics: <code>anomaly_grade</code> (severity score [0,1]), <code>confidence</code> (model certainty [0,1])</li>
+<li>Entity identification: <code>entity</code> field contains username</li>
+<li>Feature data:<ul>
+<li><code>feature_data.login_hour.data</code> (actual login hour value)</li>
+<li><code>feature_data.login_day_of_week.data</code> (actual day of week value)</li>
+</ul>
+</li>
+<li>Time window: <code>period_start</code>, <code>period_end</code> (ISO8601 timestamps defining the detection interval)</li>
+<li>Detector context: <code>detector_name</code> for traceability</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> Wazuh event fields (after webhook writes to log file and Wazuh ingests):</p>
+<ul>
+<li>Alert decoder: <code>opensearch_ad</code> (custom decoder)</li>
+<li>Extracted fields: <code>data.anomaly_grade</code>, <code>data.confidence</code>, <code>data.trigger_name</code>, <code>data.entity_keyword</code></li>
+<li>Trigger matching: Rule 100300 (generic AD alert) → Rule 100310 (specific to "OffHourLogin-Detected")</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> Active response augmentation (<code>radar_ar.py</code>):</p>
+<ul>
+<li>User resolution: Parses <code>data.entity_keyword</code> to extract username</li>
+<li>Time window computation: Converts <code>period_start</code>/<code>period_end</code> to datetime for context collection</li>
+<li>Detector metadata: Adds <code>detector_name="off_hour_login"</code>, <code>scenario_id="off_hour_login"</code> to audit records</li>
+<li>Context enrichment: Queries OpenSearch for authentication events from affected user within time window</li>
+<li>IOC extraction: Collects source IPs, countries, user agents from context events</li>
+</ul>
+</li>
+</ul>
+<ol start="3">
+<li>Training data preparation shall ensure clean baseline establishment by filtering authentication logs to business hours only:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> Data filtering requirements:</p>
+<ul>
+<li>Training index: <code>wazuh-alerts-*</code></li>
+<li>Temporal filter: Monday-Friday, 07:00-20:00 local time</li>
+<li>Include both successful AND failed logins during business hours (failed attempts are legitimate security events to track during normal operations)</li>
+<li>Exclude all weekend events (Saturday-Sunday)</li>
+<li>Exclude all off-hour events (20:00-07:00, Mon-Fri)</li>
+<li>Date mapping: Historical authentication data (e.g., CSV import from RBA dataset) dynamically mapped to recent dates via configurable <code>days_before_start</code> parameter</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> Data ingestion pipeline (Python script: <code>wazuh_ingest.py</code>):</p>
+<ul>
+<li>Configuration: Reads from <code>config.yaml</code> under <code>suspicious_login.ingest</code> section</li>
+<li>CSV input: RBA dataset or equivalent authentication logs</li>
+<li>Dynamic date shift: Maps CSV timestamps to N days before script execution (<code>days_before_start: 7</code>)</li>
+<li>Weekend skipping: Automatically filters weekends during import (<code>skip_weekends: true</code>)</li>
+<li>Rule configuration: Injects rule IDs, severity levels, and group tags from config</li>
+<li>OpenSearch indexing: Bulk ingestion with chunk size optimization (default 1000 docs/batch)</li>
+<li>Index pattern: <code>wazuh-alerts-YYYY.MM.DD</code> (date-based for retention management)</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> Baseline establishment verification:</p>
+<ul>
+<li>Minimum training duration: 7 days of business hours = 168 hourly data points</li>
+<li>User coverage: Baseline only established for users with ≥100 authentication events during training period</li>
+<li>Anomaly grade verification: During training period, <code>anomaly_grade</code> should remain &lt; 0.3 for all business-hour events (validates clean baseline)</li>
+</ul>
+</li>
+</ul>
+<ol start="4">
+<li>OpenSearch monitor shall evaluate detector results and deliver alerts via webhook when off-hour activity is detected:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> Monitor configuration (automated via <code>radar/anomaly_detector/monitor.py</code>):</p>
+<ul>
+<li>Monitor type: Per-query monitor (queries anomaly detector result index)</li>
+<li>Schedule: Runs every detector interval</li>
+<li>Query: <code>anomaly_grade &gt;= 0.3 AND confidence &gt;= 0.3</code> against <code>opensearch-ad-plugin-result-off-hour</code></li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> Trigger conditions: When query returns results (off-hour authentication detected for any user)</p>
+<ul>
+<li>Trigger name: "OffHourLogin-Detected" (matched by Wazuh rule 100310)</li>
+<li>Severity: High (off-hour access indicates potential account compromise)</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> Webhook action: HTTP POST to RADAR webhook service endpoint</p>
+<ul>
+<li>Webhook URL: <code>http://&lt;webhook-service&gt;:8080/notify</code> (configurable)</li>
+<li>Payload: JSON containing monitor metadata, anomaly metrics, entity (username), time window, feature values</li>
+</ul>
+</li>
+<li>
+<p><strong>(iv)</strong> Webhook processing (RADAR webhook service):</p>
+<ul>
+<li>Receives JSON POST request</li>
+<li>Formats message as syslog-compatible text with structured fields</li>
+<li>Writes to <code>/var/log/ad_alerts.log</code> with timestamp</li>
+</ul>
+</li>
+<li>
+<p><strong>(v)</strong> Wazuh ingestion:</p>
+<ul>
+<li>Wazuh manager monitors <code>/var/log/ad_alerts.log</code> (configured in <code>ossec.conf</code>)</li>
+<li>Decoder <code>opensearch_ad</code> parses structured fields</li>
+<li>Rule 100300 fires (generic AD alert), then rule 100310 fires (specific OffHourLogin trigger match)</li>
+<li>Rule 100310 invokes active response via <code>&lt;active-response&gt;</code> block</li>
+</ul>
+</li>
+</ul>
+<ol start="5">
+<li>RADAR shall execute risk-based active response when off-hour authentication anomalies exceed the configured risk threshold:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> Risk scoring: Active response script (<code>radar_ar.py</code>) computes risk score using formula $R = w_{ad} \times A + w_{sig} \times S + w_{cti} \times T$ where:</p>
+<ul>
+<li>$w_{ad}$ = 0.7 (anomaly detection component weight - primary detection mechanism)</li>
+<li>$w_{sig}$ = 0.0 (signature component weight - reserved for future rule-based augmentation)</li>
+<li>$w_{cti}$ = 0.3 (cyber threat intelligence component weight)</li>
+<li>$A$ = <code>anomaly_grade</code> × <code>confidence</code> (both from detector output, range [0,1])</li>
+<li>$S$ = signature score (currently 0; future: correlation with failed-login bursts, impossible travel)</li>
+<li>$T$ = CTI enrichment score (queries threat intel for source IP; typically 0 unless IP has known malicious history)</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> Example risk calculation:</p>
+<ul>
+<li>Off-hour login: Sunday 2 AM, anomaly_grade=0.85, confidence=0.88</li>
+<li>$A$ = 0.85 × 0.88 = 0.748</li>
+<li>$T$ = 0 (no CTI hits for source IP)</li>
+<li>$R$ = 0.7 × 0.748 + 0.0 × 0 + 0.3 × 0 = 0.524</li>
+<li>Result: risk_score = 0.524 → Tier 2 (0.33 ≤ 0.524 &lt; 0.66)</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> Risk threshold: Alerts with risk_score ≥ 0.2 (configurable in <code>ar.yaml</code>) trigger containment actions; below threshold alerts are logged only</p>
+</li>
+<li>
+<p><strong>(iv)</strong> Tiered response actions:</p>
+<ul>
+<li>
+<p><strong>Tier 0</strong> (<code>risk_score &lt; tier1_min</code>): Logging only</p>
+<ul>
+<li>Record alert in OpenSearch anomaly response index</li>
+<li>No notifications, no containment actions</li>
+<li>Used for low-confidence detections or whitelisted users</li>
+</ul>
+</li>
+<li>
+<p><strong>Tier 1</strong> (<code>tier1_min ≤ risk_score &lt; tier1_max</code>, default 0.33): Passive monitoring</p>
+<ul>
+<li>Log alert to OpenSearch anomaly response index</li>
+<li>Send email notification to SOC with alert details:<ul>
+<li>Username, login time (hour, day), anomaly grade, confidence</li>
+<li>Source IP, geolocation, user agent</li>
+<li>Expected schedule summary (e.g., "User typically logs in Mon-Fri 8:00-18:00")</li>
+<li>Risk score breakdown</li>
+</ul>
+</li>
+<li>Record decision in audit log with tier=1</li>
+<li>No active containment (user retains access)</li>
+</ul>
+</li>
+<li>
+<p><strong>Tier 2</strong> (<code>tier1_max ≤ risk_score &lt; tier2_max</code>, default 0.66): Active containment</p>
+<ul>
+<li>All Tier 1 actions, plus:</li>
+<li>Session tracking: Monitor user activity for anomalous behavior (file access, privilege escalation)</li>
+</ul>
+</li>
+<li>
+<p><strong>Tier 3</strong> (<code>risk_score ≥ tier2_max</code>, default 0.66): Aggressive containment</p>
+<ul>
+<li>All Tier 2 actions, plus:</li>
+<li>Terminate active session</li>
+<li>Disable user account temporarily</li>
+<li>Block source IP via firewall</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>(v)</strong> Email notification format:</p>
+<ul>
+<li>Subject: <code>[RADAR Alert] Off-Hour Login Detected - {username} - Risk Tier {tier}</code></li>
+<li>Body sections:<ul>
+<li>Alert summary (username, login time, day of week)</li>
+<li>Anomaly metrics (grade, confidence)</li>
+<li>Source context (IP address, country, city, ISP)</li>
+<li>Temporal context (actual login hour vs expected schedule)</li>
+<li>Risk score computation breakdown (A, S, T components)</li>
+<li>Tier classification and actions taken</li>
+<li>Direct link to FlowIntel case for context exploration</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ol start="6">
+<li>The system shall maintain comprehensive audit logs of all active response executions:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> Each active response invocation generates unique decision_id (SHA256 hash of scenario+timestamp+alert+entity)</p>
+</li>
+<li>
+<p><strong>(ii)</strong> Audit records shall capture:</p>
+<ul>
+<li>Decision metadata:<ul>
+<li><code>decision_id</code> (unique identifier)</li>
+<li><code>timestamp</code> (ISO8601 execution time)</li>
+<li><code>scenario_name="off_hour_login"</code></li>
+<li><code>detection_type="ad"</code> (anomaly detection)</li>
+</ul>
+</li>
+<li>Input data:<ul>
+<li>Alert content: <code>trigger_name</code>, <code>anomaly_grade</code>, <code>confidence</code></li>
+<li>Entity: username (<code>data.user</code>)</li>
+<li>Time window: <code>period_start</code>, <code>period_end</code></li>
+<li>Feature values: <code>login_hour</code>, <code>login_day_of_week</code>, <code>hour_deviation</code></li>
+</ul>
+</li>
+<li>Risk computation:<ul>
+<li><code>anomaly_component</code> (A): anomaly_grade × confidence</li>
+<li><code>signature_component</code> (S): currently 0</li>
+<li><code>cti_component</code> (T): threat intel enrichment score</li>
+<li><code>final_risk_score</code> (R): weighted sum</li>
+<li><code>tier</code>: classification (0, 1, 2, 3)</li>
+</ul>
+</li>
+<li>Context:<ul>
+<li>Source IP, geolocation, user agent</li>
+<li>Expected user schedule summary</li>
+<li>Previous authentication events (last 24 hours)</li>
+</ul>
+</li>
+<li>Actions taken:<ul>
+<li>List of executed actions (email, session_termination, account_disable, firewall_block)</li>
+<li>Timestamp for each action</li>
+<li>Command/API call details</li>
+</ul>
+</li>
+<li>Outcomes:<ul>
+<li>Success/failure status for each action</li>
+<li>Error messages if any</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> Log retention: Audit logs shall be retained for minimum 90 days (configurable per organizational compliance requirements). For regulated industries (PCI-DSS, HIPAA), retention may extend to 1+ years.</p>
+</li>
+</ul>
+<ol start="7">
+<li>The system shall provide testing and evaluation capabilities to measure detector performance:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> Test data generation:</p>
+<ul>
+<li>Test index: <code>wazuh-alerts-*</code></li>
+<li>Test scenarios:<ul>
+<li>Normal business hours logins (Mon-Fri 9:00-17:00) → Expected: no alert</li>
+<li>Off-hours logins (Mon-Fri 21:00, 23:00, 02:00, 05:00) → Expected: alert</li>
+<li>Weekend logins (Saturday 10:00, Sunday 14:00) → Expected: alert</li>
+<li>Edge cases: Exactly 07:00 (boundary), exactly 20:00 (boundary)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> Evaluation metrics:</p>
+<ul>
+<li>Precision: TP / (TP + FP) - measures false positive rate</li>
+<li>Recall: TP / (TP + FN) - measures detection coverage</li>
+<li>F1 Score: 2 × (Precision × Recall) / (Precision + Recall) - harmonic mean</li>
+<li>False Positive Rate: FP / (FP + TN) - critical for operational acceptance</li>
+<li>Detection latency: Time from event ingestion to alert generation</li>
+<li>Target thresholds: Precision ≥ 0.90, Recall ≥ 0.85, FPR ≤ 0.05</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> Visualization and reporting:</p>
+<ul>
+<li>Confusion matrix: True positives, false positives, true negatives, false negatives</li>
+<li>ROC curve: TPR vs FPR at different anomaly_grade thresholds</li>
+<li>Precision-Recall curve: Tradeoff analysis for threshold tuning</li>
+<li>Time series plot: Anomaly grades over time, colored by ground truth</li>
+<li>Export formats: PNG charts, CSV metrics, JSON detailed results</li>
+</ul>
+</li>
+</ul>
+<h2>Rationale</h2>
+<p>Off-hour authentication is an indicator of account compromise. Attackers often use stolen credentials outside the victim's normal work schedule to avoid detection. Per-user behavioral baselines accommodate diverse work patterns (9-to-5 employees, shift workers, remote workers in different time zones) while identifying suspicious deviations. Unlike signature-based detection, temporal anomaly detection adapts to legitimate schedule changes (e.g., user switches to night shift) without manual rule updates.</p>
+<h2>Dependencies</h2>
+<ul>
+<li><strong>OpenSearch Anomaly Detection Plugin</strong>: Provides HCAD (High-Cardinality Anomaly Detection) engine for per-user baseline learning. Requires OpenSearch 2.x with AD plugin installed.</li>
+<li><strong>RADAR Webhook Service</strong>: Relays OpenSearch monitor alerts to Wazuh ingestion. Deployed as standalone service (Flask/Python) or integrated into RADAR core.</li>
+<li><strong>RADAR Anomaly Detector Module</strong> (<code>radar/anomaly_detector/</code>): Python automation for detector/monitor provisioning via OpenSearch API. Includes <code>detector.py</code>, <code>monitor.py</code>, <code>webhook.py</code> scripts.</li>
+<li><strong>Data Ingestion Pipeline</strong>: Python script <code>wazuh_ingest.py</code> with supporting config files (<code>.env</code>, <code>config.yaml</code>) for training data import.</li>
+<li><strong><a href="LARC.html#LARC-016">LARC-016</a></strong>: Active response framework (provides script execution infrastructure, <code>radar_ar.py</code> implementation).</li>
+<li><strong><a href="MRS.html#MRS-007">MRS-007</a></strong>: Intrusion Prevention (parent mission requirement).</li>
+</ul>
+<h2>Related requirements</h2>
+<ul>
+<li><strong><a href="SRS.html#SRS-051">SRS-051</a></strong>: Suspicious login detection (shares risk scoring engine, active response framework, and alert correlation patterns)</li>
+<li><strong><a href="SRS.html#SRS-055">SRS-055</a></strong>: Geo-based access control (shares CTI enrichment, audit logging approaches, and GeoIP metadata)</li>
+<li><strong><a href="SRS.html#SRS-056">SRS-056</a></strong>: Log volume detection (shares HCAD methodology, webhook pipeline, and tiered response actions)</li>
+<li><strong><a href="SRS.html#SRS-058">SRS-058</a></strong>: Data exfiltration detection (similar behavioral baseline approach for network volume anomalies)</li>
+</ul>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to test case specification:</p>
+<ol>
+<li>
+<p><strong>Baseline establishment</strong>: Import 7 days (168 hours) of business-hour authentication data for test users. Verify:
+   - OpenSearch detector processes all 168 intervals
+   - Anomaly_grade &lt; 0.3 for all business-hour events during training period
+   - Detector status: "Running" with 0 initialization errors
+   - Result index contains entries for each categorical field (user)</p>
+</li>
+<li>
+<p><strong>Off-hour detection - weeknight</strong>: Simulate a user logging in Monday 23:00 (11 PM). Verify:
+   - Anomaly_grade &gt; 0.3 within 2 detection intervals (2 hours max)
+   - Confidence &gt; 0.3
+   - Feature values: <code>login_hour=23</code>, <code>login_day_of_week=1</code> (Monday)</p>
+</li>
+<li>
+<p><strong>Off-hour detection - weekend</strong>: Simulate a user logging in Saturday 14:00. Verify:
+   - Anomaly_grade &gt; 0.5 (higher confidence for weekend anomaly)
+   - Feature values: <code>login_day_of_week=6</code> (Saturday)
+   - Demonstrates weekend detection even during "business hours" (14:00)</p>
+</li>
+<li>
+<p><strong>Off-hour detection - early morning</strong>: Simulate a user logging in Tuesday 05:30 AM. Verify:
+   - Anomaly_grade &gt; 0.3
+   - Feature values: <code>login_hour=5</code></p>
+</li>
+<li>
+<p><strong>Normal hour non-detection</strong>: Simulate multiple users logging in during business hours (Mon-Fri, 09:00-17:00). Verify:
+   - Anomaly_grade &lt; 0.3 for all events
+   - No alerts generated
+   - Demonstrates clean baseline, no false positives</p>
+</li>
+<li>
+<p><strong>Webhook delivery</strong>: When off-hour anomaly detected, verify:
+   - OpenSearch monitor fires within 1 detection interval (60 minutes)
+   - HTTP POST sent to webhook endpoint
+   - Webhook log (<code>/var/log/ad_alerts.log</code>) contains entry with correct structure
+   - JSON payload includes: <code>trigger_name="OffHourLogin-Detected"</code>, <code>anomaly_grade</code>, <code>confidence</code>, <code>entity</code>, <code>period_start</code>, <code>period_end</code></p>
+</li>
+<li>
+<p><strong>Wazuh ingestion and rule matching</strong>: Verify:
+   - Wazuh ingests webhook log entry
+   - Rule 100300 fires (generic OpenSearch AD alert)
+   - Rule 100310 fires (specific OffHourLogin-Detected trigger match)
+   - Active response invoked (check <code>/var/ossec/logs/active-responses.log</code>)</p>
+</li>
+<li>
+<p><strong>Risk score computation - Tier 1</strong>: Given anomaly_grade=0.45, confidence=0.70, no CTI hits:
+   - $A$ = 0.45 × 0.70 = 0.315
+   - $R$ = 0.8 × 0.315 + 0.1 × 0 + 0.1 × 0 = 0.252
+   - Verify: risk_score = 0.252, tier = 1 (assuming tier1_min=0.0, tier1_max=0.33)
+   - Actions: Email sent, OpenSearch index updated, no containment</p>
+</li>
+<li>
+<p><strong>Risk score computation - Tier 2</strong>: Given anomaly_grade=0.75, confidence=0.80, no CTI hits:
+   - $A$ = 0.75 × 0.80 = 0.60
+   - $R$ = 0.8 × 0.60 = 0.48
+   - Verify: risk_score = 0.48, tier = 2 (0.33 ≤ 0.48 &lt; 0.66)
+   - Actions: Email sent, session monitoring activated</p>
+</li>
+<li>
+<p><strong>Risk score computation - Tier 3</strong>: Given anomaly_grade=0.90, confidence=0.95, CTI score=0.3:</p>
+<ul>
+<li>$A$ = 0.90 × 0.95 = 0.855</li>
+<li>$T$ = 0.3 (source IP has known malicious history)</li>
+<li>$R$ = 0.8 × 0.855 + 0.1 × 0 + 0.1 × 0.3 = 0.684 + 0.03 = 0.714</li>
+<li>Verify: risk_score = 0.714, tier = 3 (≥ 0.66)</li>
+<li>Actions: Session terminated, account disabled, IP blocked, incident case created</li>
+</ul>
+</li>
+<li>
+<p><strong>Per-user independence</strong>: Import training data for two users with different schedules:</p>
+<ul>
+<li>User A: Mon-Fri 09:00-17:00 (typical office hours)</li>
+<li>User B: Mon-Fri 14:00-22:00 (afternoon/evening shift)</li>
+</ul>
+<p>Test scenarios:
+- User A logs in at 20:00 → Anomaly detected (outside A's schedule)
+- User B logs in at 20:00 → No anomaly (within B's schedule)
+- Demonstrates categorical field isolation (independent baselines)</p>
+</li>
+<li>
+<p><strong>Alert metadata completeness</strong>: For any triggered alert, verify all required fields present:</p>
+<ul>
+<li><code>decision_id</code> (SHA256 hash)</li>
+<li><code>scenario_name="off_hour_login"</code></li>
+<li><code>detection_type="ad"</code></li>
+<li><code>anomaly_grade</code>, <code>confidence</code> (from detector)</li>
+<li><code>entity</code> (username)</li>
+<li><code>period_start</code>, <code>period_end</code> (time window)</li>
+<li><code>feature_values</code>: <code>login_hour</code>, <code>login_day_of_week</code>, <code>hour_deviation_from_mean</code></li>
+<li><code>risk_score</code>, <code>tier</code></li>
+<li><code>actions_taken</code> (array of executed actions)</li>
+<li><code>timestamp</code> (alert processing time)</li>
+<li><code>source_ip</code>, <code>country</code>, <code>city</code> (geolocation context)</li>
+</ul>
+</li>
+<li>
+<p><strong>Audit log integrity</strong>: For each active response execution, verify:</p>
+<ul>
+<li>Entry in Wazuh AR log (<code>/var/ossec/logs/active-responses.log</code>)</li>
+<li>Entry in RADAR audit log (<code>/var/log/radar_ar.log</code>)</li>
+<li>All three logs contain matching <code>decision_id</code> for correlation</li>
+<li>Audit record includes full risk computation breakdown</li>
+<li>Action outcomes (success/failure) logged for each executed command</li>
+</ul>
+</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-007">MRS-007 Intrusion Prevention</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>3</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-063">2.15 RADAR SOAR Web Interface - REST API <small><a href="SRS.html#SRS-063">SRS-063</a></small></h2>
+<p>As a security engineer,
+I want a REST API that exposes RADAR's scenario, rule, decoder, and active response configuration as structured JSON resources, so that the SOAR web interface and any future tooling can read and write RADAR configuration through a stable contract without directly editing configuration files on the Wazuh manager.</p>
+<h2>Scope</h2>
+<p><strong>API coverage</strong>: This requirement defines the REST API that backs the RADAR SOAR web interface (<a href="SRS.html#SRS-064">SRS-064</a>). It covers all configuration resources managed by the interface: scenarios, Wazuh detection rules, log decoders, and active response records. It also covers operational read-only resources: system health and recent alert feed.</p>
+<p><strong>Integration boundary</strong>: The API is the single integration point between the web interface and the RADAR backend. It shall not communicate directly with Wazuh, OpenSearch, or any RADAR subsystem - all reads and writes are mediated by the API layer. This ensures the web interface remains decoupled from backend infrastructure changes.</p>
+<p><strong>Persistence backend</strong>: The requirement defines the API contract (endpoints, request/response schemas, status codes). The storage backend implementation is an implementation decision outside this specification, provided the contract is satisfied.</p>
+<h2>Requirements</h2>
+<h3>Endpoint catalogue</h3>
+<p>The API shall expose the following HTTP endpoints. All endpoints shall return JSON:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/health</code></td>
+<td>Returns <code>{"status":"ok"}</code> and HTTP 200 if the API is running; HTTP 503 otherwise</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/status</code></td>
+<td>Returns aggregate KPI counts (scenario counts, rule counts, decoder counts, total fired)</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/scenarios</code></td>
+<td>Returns full scenario registry array</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/rules</code></td>
+<td>Returns full rule registry array</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/rules</code></td>
+<td>Creates a new rule; returns created record with HTTP 201</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/rules/&lt;id&gt;</code></td>
+<td>Deletes rule by ID; returns HTTP 204 on success</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/decoders</code></td>
+<td>Returns full decoder registry array</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/decoders</code></td>
+<td>Creates a new decoder; returns created record with HTTP 201</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/decoders/&lt;id&gt;</code></td>
+<td>Deletes decoder by ID; returns HTTP 204 on success</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/active-responses</code></td>
+<td>Returns full AR registry array</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/api/active-responses/&lt;id&gt;</code></td>
+<td>Partially updates an AR record; returns updated record</td>
+</tr>
+</tbody>
+</table>
+<h3>Resource schemas</h3>
+<p>Each endpoint shall return or accept the following data shapes:</p>
+<ul>
+<li>
+<p><strong>(i)</strong> <code>GET /api/scenarios</code> - each record shall contain at minimum: <code>id</code>, <code>label</code>, <code>status</code>, <code>detection</code>, <code>description</code>, <code>rules[]</code>, <code>decoders[]</code>, and <code>activeResponse</code> (linking to the AR registry by ID).</p>
+</li>
+<li>
+<p><strong>(ii)</strong> <code>GET /api/rules</code> - each record shall include: <code>id</code>, <code>level</code>, <code>scenario</code>, <code>file</code>, <code>group</code>, <code>description</code>, <code>trigger</code>, <code>detection</code>, <code>status</code>, and optionally <code>timeframe</code> and <code>frequency</code>.</p>
+</li>
+<li>
+<p><strong>(iii)</strong> <code>GET /api/decoders</code> - each record shall include: <code>id</code>, <code>scenario</code>, <code>name</code>, <code>file</code>, <code>fields[]</code>, <code>description</code>, <code>status</code>, and <code>xml</code>.</p>
+</li>
+<li>
+<p><strong>(iv)</strong> <code>GET /api/active-responses</code> - each record shall include: <code>id</code>, <code>scenario</code>, <code>name</code>, <code>script</code>, <code>tiers{}</code>, <code>weights{}</code>, <code>riskThreshold</code>, <code>allowMitigation</code>, <code>mitigations[]</code>, <code>status</code>.</p>
+</li>
+<li>
+<p><strong>(v)</strong> <code>PATCH /api/active-responses/&lt;id&gt;</code> - accepts any subset of the mutable fields: <code>weights</code>, <code>riskThreshold</code>, <code>allowMitigation</code>, <code>mitigations</code>. The fields <code>id</code>, <code>scenario</code>, <code>name</code>, <code>script</code>, <code>tiers</code> are read-only via this endpoint.</p>
+</li>
+</ul>
+<h3>Error handling</h3>
+<p>All error responses shall return a JSON body <code>{"error": "&lt;message&gt;"}</code> with an appropriate HTTP status code:</p>
+<ul>
+<li><strong>(i)</strong> Validation errors (missing required field, type mismatch, duplicate ID): HTTP 400.</li>
+<li><strong>(ii)</strong> Resource not found: HTTP 404.</li>
+<li><strong>(iii)</strong> Server errors: HTTP 500.</li>
+</ul>
+<h3>Backend persistence</h3>
+<p>The API implementation may use any storage backend (flat YAML/JSON files mirroring <code>ar.yaml</code> and scenario configuration, SQLite, or a full database). The storage layer shall be swappable without changes to the API contract or the frontend.</p>
+<h3>Wazuh manager sync</h3>
+<p>Write operations on rules and decoders (<code>POST</code>, <code>DELETE</code>) shall additionally push changes to the Wazuh manager via the Wazuh API, triggering a configuration reload. If the sync fails the API shall return HTTP 202 with a <code>{"warning": "saved locally; Wazuh sync failed"}</code> body rather than rolling back the local write.</p>
+<h3>Frontend file structure</h3>
+<p>The API shall be designed to serve a frontend consisting of exactly the following files, with no additional build artifacts required at runtime:</p>
+<pre><code>radar-soar/
+├── index.html               ← Dashboard
+├── scenarios.html           ← Scenarios
+├── rules.html               ← Rules
+├── decoders.html            ← Decoders
+├── active-responses.html    ← Active Responses
+├── mapping.html             ← Pipeline Mapping
+├── styles.css               ← Shared stylesheet (CSS variables, components)
+└── data.js                  ← Shared data layer and RADAR helper utilities
+</code></pre>
+<p>Each HTML page corresponds to one resource domain served by the API. The file structure is normative - the API endpoint catalogue and resource schemas are the backend contract for this frontend shape.</p>
+<h2>Rationale</h2>
+<p>RADAR's configuration is currently distributed across XML rule and decoder files, <code>ar.yaml</code>, and per-scenario configuration - all residing on the Wazuh manager filesystem. A REST API layer decouples consumers from the storage backend and deployment topology, enables testing with mock data, and provides a stable versioned contract that can evolve independently of the frontend pages it serves.</p>
+<h2>Dependencies</h2>
+<ul>
+<li><strong><a href="SRS.html#SRS-051">SRS-051</a></strong>: Suspicious login scenario - the rule IDs, decoder fields, and AR configuration in the API registry are drawn from this specification.</li>
+<li><strong><a href="SRS.html#SRS-055">SRS-055</a></strong>: GeoIP detection scenario - supplies rule IDs, whitelist-based decoder configuration, and AR weights present in the registry.</li>
+<li><strong><a href="SRS.html#SRS-056">SRS-056</a></strong>: Log volume monitoring scenario - supplies OpenSearch AD-based rule IDs and AR configuration present in the registry.</li>
+<li><strong><a href="SRS.html#SRS-060">SRS-060</a></strong>: RADAR Deployment Health Check - the <code>GET /api/health</code> endpoint may proxy the health-check output from <a href="SRS.html#SRS-060">SRS-060</a> to surface deployment readiness in the dashboard.</li>
+<li><strong>Wazuh API</strong>: The API uses Wazuh's REST API to push rule/decoder changes to the manager.</li>
+</ul>
+<h2>Related requirements</h2>
+<ul>
+<li><strong><a href="SRS.html#SRS-064">SRS-064</a></strong>: RADAR SOAR Web Interface - Frontend. The primary consumer of this API. All data shapes used by <code><a href="SRS.html#SRS-064">SRS-064</a></code> are defined here.</li>
+</ul>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to test case specification <a href="TST.html#TST-063">TST-063</a>, which shall verify:</p>
+<ol>
+<li><strong>Health probe</strong>: Verify the API correctly reports its own operational status when running and correctly signals unavailability when it is not.</li>
+<li><strong>Status aggregation</strong>: Verify the status endpoint returns accurate aggregate counts for all resource types, consistent with the data held in the backend store.</li>
+<li><strong>Scenario list</strong>: Verify the scenarios endpoint returns the full registry and that each record exposes all required fields, including the linked rule IDs, decoder IDs, and active response reference.</li>
+<li><strong>Rule lifecycle</strong>: Verify that a rule can be created, retrieved, and deleted through the API, and that each operation is durably reflected in subsequent reads.</li>
+<li><strong>Duplicate rule rejection</strong>: Verify the API rejects creation of a rule whose ID already exists in the registry, returning an appropriate error.</li>
+<li><strong>Decoder lifecycle</strong>: Verify that a decoder can be created and deleted through the API and that each operation is reflected in subsequent reads.</li>
+<li><strong>Active response partial update - mutable fields</strong>: Verify that the risk weights and threshold of an active response record can be updated through the API and that the changes are immediately visible on subsequent retrieval.</li>
+<li><strong>Active response partial update - read-only fields</strong>: Verify the API rejects any attempt to modify fields that are designated read-only (identity and scenario association), returning an appropriate error.</li>
+<li><strong>API contract</strong>: Verify that every endpoint in the catalogue returns responses whose structure matches the documented schema and whose status codes correctly distinguish success from client error from server error.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-017">MRS-017 Monitoring Frontend</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>4</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-064">2.16 RADAR SOAR Web Interface - Frontend <small><a href="SRS.html#SRS-064">SRS-064</a></small></h2>
+<p>As a security engineer,
+I want a browser-based SOAR management interface for RADAR that lets me inspect, create, and edit scenarios, Wazuh rules, decoders, and active response configurations, so that I can manage the full detection and response pipeline without directly editing configuration files on the Wazuh manager.</p>
+<h2>Scope</h2>
+<p><strong>Interface coverage</strong>: This requirement applies to a web-based management interface for all production RADAR components: scenarios, Wazuh detection rules, log decoders, and active response configurations and mappings. The interface presents a read/write view over the RADAR configuration layer and provides a live operational dashboard.</p>
+<p><strong>Deployment model</strong>: The interface shall be served as a standalone web application, backed by the REST API defined in <code><a href="SRS.html#SRS-063">SRS-063</a></code>. The frontend is technology-agnostic plain HTML, CSS, and JavaScript; no build toolchain is required to serve or modify pages.</p>
+<p><strong>User persona</strong>: Primary users are security engineers and SOC operators who understand RADAR concepts (scenarios, risk tiers, decoders, active response weights) but may not have shell access to the Wazuh manager host. The interface shall not require knowledge of XML or YAML editing for routine operations.</p>
+<p><strong>Integration boundary</strong>: The frontend integrates exclusively through the REST API defined in <code><a href="SRS.html#SRS-063">SRS-063</a></code>. It shall not communicate directly with Wazuh, OpenSearch, or any RADAR subsystem.</p>
+<h2>Requirements</h2>
+<h3>Dashboard</h3>
+<p>The interface shall provide an operational dashboard as the default landing page, giving security engineers a real-time overview of the RADAR deployment state:</p>
+<ul>
+<li>
+<p><strong>(i)</strong> <strong>KPI summary row</strong>: Four metric cards displayed at the top of the page, each populated via a single <code>GET /api/status</code> API call:</p>
+<ul>
+<li><em>Production Scenarios</em>: Count of scenarios with <code>status = "production"</code>, with total scenario count as subtitle.</li>
+<li><em>Active Rules</em>: Count of Wazuh rules with count of distinct rule files as subtitle.</li>
+<li><em>Active Decoders</em>: Count of decoders with descriptive subtitle.</li>
+<li><em>Active Active Responses</em>: Count of active response with descriptive subtitle.</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> <strong>Active Scenarios panel</strong>: A scrollable list of all registered scenarios, each showing:</p>
+<ul>
+<li>Scenario label, status badge (<code>production</code> / <code>demo</code>), detection type badge (<code>signature</code>, <code>ad</code>, <code>signature+ad</code>).</li>
+<li>Clicking any row navigates to the Scenarios page with the corresponding scenario pre-selected.</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> <strong>System status indicator</strong>: A pulsing green dot with the label "SYSTEM OPERATIONAL" in the page header, sourced from <code>GET /api/health</code>. If the API is unreachable the dot shall turn red and the label shall read "API UNREACHABLE".</p>
+</li>
+</ul>
+<h3>Scenarios Page</h3>
+<p>The interface shall provide a dedicated Scenarios page for browsing and inspecting all registered RADAR detection scenarios:</p>
+<ul>
+<li>
+<p><strong>(i)</strong> <strong>Scenario list</strong>: All registered scenarios displayed as cards in the left column, each showing label, status, detection type, description, and rule/decoder counts. Cards are clickable to expand a detail panel.</p>
+</li>
+<li>
+<p><strong>(ii)</strong> <strong>Detail panel</strong>: When a scenario card is selected, a detail panel opens in the right column containing:</p>
+<ul>
+<li><strong>General description</strong>: Header with scenario name, full description, status and detection type badges.</li>
+<li><strong>Statistics row</strong>: Four metric boxes - linked rule count, linked decoder count, and current status - sourced from the scenario record and its linked active response record.</li>
+<li><strong>Linked Rules sub-panel</strong>: Lists each rule ID, level badge, description, and source file for all rules whose IDs appear in <code>scenario.rules[]</code>.</li>
+<li><strong>Linked Decoders sub-panel</strong>: Lists each decoder name, status dot, and extracted field tags for all decoders whose IDs appear in <code>scenario.decoders[]</code>.</li>
+<li><strong>Active Response weights sub-panel</strong>: Three horizontal progress bars for <code>w_ad</code>, <code>w_sig</code>, and <code>w_cti</code> weight values, plus <code>risk_threshold</code> and <code>allow_mitigation</code> status chips.</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> <strong>URL state</strong>: The selected scenario ID shall be reflected as a query parameter (<code>?id=&lt;scenario_id&gt;</code>) so that links to a specific scenario can be bookmarked and shared.</p>
+</li>
+</ul>
+<h3>Rules Page</h3>
+<p>The interface shall provide a dedicated Rules page for viewing and managing Wazuh detection rules:</p>
+<ul>
+<li>
+<p><strong>(i)</strong> <strong>Rule list</strong>: All registered rules displayed in a flat list, each row showing:</p>
+<ul>
+<li>Rule ID, level badge by severity (L5 = green, L8 = yellow, L10 = orange, L12+ = red), detection type badge, frequency/timeframe badge (if applicable), and scenario tag.</li>
+<li>Rule description and source file path.</li>
+<li>Status dot (active / inactive), view button, and delete button.</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> <strong>Scenario filter bar</strong>: A row of pill buttons above the list - one per scenario plus an "All" catch-all - that filter the visible rules to those belonging to the selected scenario.</p>
+</li>
+<li>
+<p><strong>(iii)</strong> <strong>Rule detail modal</strong>: Clicking the view button opens a modal with:</p>
+<ul>
+<li>All rule metadata fields in a two-column grid (ID, level, scenario, detection type, file, group, timeframe/frequency if present, status).</li>
+<li>Trigger condition description.</li>
+<li>Full XML definition rendered in a monospace code block, generated from the rule record. The XML is the canonical Wazuh XML element as it would appear in the deployed file.</li>
+</ul>
+</li>
+<li>
+<p><strong>(iv)</strong> <strong>Add Rule modal</strong>: A "New Rule" button opens a form collecting: Rule ID, level (1–15), scenario (dropdown), detection type (dropdown), group name, file name, description, trigger condition, and an editable XML textarea pre-populated with a template. On submission, <code>POST /api/rules</code> is called with the form payload; the new rule is appended to the list without a page reload.</p>
+</li>
+<li>
+<p><strong>(v)</strong> <strong>Delete Rule</strong>: Clicking the delete button calls <code>DELETE /api/rules/&lt;id&gt;</code> after a confirmation prompt. The row is removed from the list on success.</p>
+</li>
+</ul>
+<h3>Decoders Page</h3>
+<p>The interface shall provide a dedicated Decoders page for viewing and managing Wazuh log decoders:</p>
+<ul>
+<li>
+<p><strong>(i)</strong> <strong>Decoder list</strong>: All registered decoders displayed as cards, each showing:</p>
+<ul>
+<li>Decoder name, status, linked scenario tag, file path.</li>
+<li>Description text.</li>
+<li>Extracted field tags - one pill per field name in <code>decoder.fields[]</code>.</li>
+<li>View button and delete button.</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> <strong>Decoder detail modal</strong>: Clicking the view button opens a modal with:</p>
+<ul>
+<li>Decoder metadata (name, scenario, file, status) in a two-column grid.</li>
+<li>Full extracted fields list as tags.</li>
+<li>XML definition rendered in a monospace code block.</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> <strong>Add Decoder modal</strong>: A "New Decoder" button opens a form collecting: decoder name, scenario (dropdown), description, extracted fields, and an editable XML textarea pre-populated with a template. On submission, <code>POST /api/decoders</code> is called; the new decoder card is prepended to the list.</p>
+</li>
+<li>
+<p><strong>(iv)</strong> <strong>Delete Decoder</strong>: <code>DELETE /api/decoders/&lt;id&gt;</code> called after confirmation; card removed on success.</p>
+</li>
+</ul>
+<h3>Active Responses Page</h3>
+<p>The interface shall provide a dedicated Active Responses page for viewing and editing RADAR active response configurations:</p>
+<ul>
+<li>
+<p><strong>(i)</strong> <strong>AR card list</strong>: All active response configurations displayed as cards in the left column, each showing:</p>
+<ul>
+<li>AR name, status dot, <code>allow_mitigation</code> badge (red, shown only when enabled), linked scenario tag.</li>
+<li>Risk threshold progress bar.</li>
+</ul>
+</li>
+<li>
+<p><strong>(ii)</strong> <strong>AR detail panel</strong>: Selecting a card opens a detail panel in the right column containing:</p>
+<ul>
+<li><strong>Risk Weight panel</strong>: Three metric boxes for <code>w_ad</code>, <code>w_sig</code>, and <code>w_cti</code>, each displaying the percentage value, a label, and a colour-coded mini progress bar. An "Edit" button in the panel header opens the edit modal.</li>
+<li><strong>Tier panel</strong>: Three tier rows (T0, T1, T2, T3) each showing the risk range and a list of action chips (<code>notify_email</code>, <code>create_flowintel_case</code>, <code>firewall_drop</code>, <code>lock_user_linux</code>, <code>terminate_service</code>). Tier boundaries are derived from the global <code>tiers.tier1_min</code>, <code>tiers.tier1_max</code> and <code>tiers.tier2_max</code> values in <code>ar.yaml</code>.</li>
+<li><strong>Mitigation panel</strong>: <code>allow_mitigation</code> status, <code>risk_threshold</code> value, and the list of configured mitigation commands displayed as monospace chips.</li>
+</ul>
+</li>
+<li>
+<p><strong>(iii)</strong> <strong>Edit AR modal</strong>: Clicking "Edit" opens a form pre-populated with current values, allowing modification of:</p>
+<ul>
+<li><code>w_ad</code>, <code>w_sig</code>, <code>w_cti</code> (three numeric inputs; the form shall display a live sum so the engineer can verify weights sum to 1.0).</li>
+<li><code>risk_threshold</code> (numeric input, 0–1).</li>
+<li><code>allow_mitigation</code> toggle with a clear warning label.</li>
+<li>Mitigation commands (comma-separated free-text input).</li>
+</ul>
+</li>
+</ul>
+<p>On save, <code>PATCH /api/active-responses/&lt;id&gt;</code> is called; the detail panel and card are updated in-place without a page reload.</p>
+<h3>Mapping Page</h3>
+<p>The interface shall provide a dedicated Mapping page that visualises the full detection-and-response pipeline for each scenario as a horizontal three-column pipeline diagram, making explicit which active response - with what weights and tier thresholds - is linked to each scenario:</p>
+<ul>
+<li>
+<p><strong>(i)</strong> <strong>Pipeline layout</strong>: For each scenario a self-contained block is rendered with a header row (scenario name, ID, status and detection type badges) followed by a three-column pipeline: <strong>Rules → Decoders → Active Response</strong>, with directional arrows between columns colour-matched to the scenario accent colour.</p>
+</li>
+<li>
+<p><strong>(ii)</strong> <strong>Rules column</strong>: Lists each linked rule as a card with rule ID, level badge, truncated description, group name, and detection type. Cards are left-bordered in the colour corresponding to rule level severity.</p>
+</li>
+<li>
+<p><strong>(iii)</strong> <strong>Decoders column</strong>: Lists each linked decoder as a card with decoder name, status, and the first three extracted field tags (with "+N" overflow pill if more exist).</p>
+</li>
+<li>
+<p><strong>(iv)</strong> <strong>Active Response column</strong>: Renders the linked AR configuration inline showing: script name, status dot, compact <code>w_ad</code>/<code>w_sig</code>/<code>w_cti</code> weight values, <code>risk_threshold</code>, and the four tier rows (T0/T1/T2/T3) with their numeric risk-score bounds and action chips per tier. A red <code>MITIGATION ON</code> badge is appended if <code>allow_mitigation</code> is true.</p>
+</li>
+<li>
+<p><strong>(v)</strong> <strong>Tier threshold display</strong>: The tier boundaries (<code>tier1_min</code>, <code>tier1_max</code>, <code>tier2_max</code>) shall be shown explicitly as numeric labels on the tier rows in the AR column, sourced from the <code>tiers</code> object in the active response record.</p>
+</li>
+</ul>
+<h3>Frontend architecture</h3>
+<p>The frontend shall consist of self-contained HTML pages requiring no build toolchain, framework, or package manager to run, following the file structure defined in <code><a href="SRS.html#SRS-063">SRS-063</a></code>:</p>
+<ul>
+<li><strong>(i)</strong> <strong>Shared sidebar</strong>: All pages shall render an identical left-side navigation bar via a shared function in <code>data.js</code>. The active page item shall be visually distinguished.</li>
+</ul>
+<h3>Visual and UX requirements</h3>
+<ul>
+<li>
+<p><strong>(i)</strong> The interface shall be understandable for the user and easy to follow.</p>
+</li>
+<li>
+<p><strong>(ii)</strong> Colour usage shall follow consistent semantic conventions throughout: green for active/production/low-risk states, orange for demo/medium-risk/warning states, red for critical/high-risk/mitigation-enabled states, blue for rules and signature detection, purple for decoders and AD/RRCF detection.</p>
+</li>
+</ul>
+<h2>Rationale</h2>
+<p>RADAR's configuration is currently distributed across XML rule and decoder files, <code>ar.yaml</code>, and per-scenario configuration - all residing on the Wazuh manager filesystem. Managing these files requires shell access, knowledge of Wazuh's XML schema, and manual consistency checking between linked components. A web interface centralizes the configuration view, enforces cross-component consistency through the linked data model, and lowers the skill barrier for SOC operators performing routine configuration tasks.</p>
+<h2>Dependencies</h2>
+<ul>
+<li><strong><a href="SRS.html#SRS-063">SRS-063</a></strong>: RADAR SOAR Web Interface - REST API. All data displayed and all mutations performed by the frontend are mediated through the API contract defined in <code><a href="SRS.html#SRS-063">SRS-063</a></code>.</li>
+<li><strong><a href="SRS.html#SRS-051">SRS-051</a></strong>: Suspicious login scenario - supplies rule IDs, decoder fields, and AR configuration consumed by the interface.</li>
+<li><strong><a href="SRS.html#SRS-055">SRS-055</a></strong>: GeoIP detection scenario - supplies rule IDs, whitelist-based decoder configuration, and AR weights consumed by the interface.</li>
+<li><strong><a href="SRS.html#SRS-056">SRS-056</a></strong>: Log volume monitoring scenario - supplies OpenSearch AD-based rule IDs and AR configuration consumed by the interface.</li>
+<li><strong><a href="SRS.html#SRS-060">SRS-060</a></strong>: RADAR Deployment Health Check - the dashboard system status indicator sources its signal from <code>GET /api/health</code>, which may proxy the <code><a href="SRS.html#SRS-060">SRS-060</a></code> health-check output.</li>
+</ul>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to test case specification, which shall verify:</p>
+<ol>
+<li><strong>Dashboard</strong>: Verify the dashboard displays a summary of current RADAR deployment state, including production scenario count, active rule and decoder counts, total alerts fired, and a feed of recent alert invocations. Verify the system health status is correctly reflected.</li>
+<li><strong>Scenario detail</strong>: Verify that selecting a scenario presents its full configuration context: linked rule count and decoder count, the list of linked rules and decoders with their metadata, and the active response weight values. Verify that switching between scenarios updates the displayed information accordingly, and that a specific scenario can be reached directly via a stable URL.</li>
+<li><strong>Rules filtering and inspection</strong>: Verify that the rules list can be filtered by scenario and that the correct rules are shown for each filter selection. Verify that the full metadata of an individual rule - including level, detection type, trigger condition, and XML definition - is accessible from the list.</li>
+<li><strong>Rule creation</strong>: Verify that a new rule can be created through the interface by providing its required attributes, and that it is immediately reflected in the rule list upon submission.</li>
+<li><strong>Rule deletion</strong>: Verify that an existing rule can be removed through the interface and that it is no longer present in the list after deletion.</li>
+<li><strong>Decoder creation</strong>: Verify that a new decoder can be created through the interface by providing its required attributes including extracted field names, and that it appears correctly in the decoder list with its fields visible.</li>
+<li><strong>Active response editing</strong>: Verify that an active response configuration can be edited through the interface. The interface shall prevent saving a weight configuration that does not sum to 1.0, and enabling mitigation shall require an explicit acknowledgement of the risk. Changes shall be reflected in the displayed configuration immediately after saving.</li>
+<li><strong>Mapping completeness</strong>: Verify that the mapping page shows the full detection-to-response pipeline for all registered scenarios. For each scenario, the linked rules, decoders, and active response shall all be visible together, with the active response showing its risk weights and tier boundaries with their associated actions.</li>
+<li><strong>Navigation</strong>: Verify that all pages of the interface are reachable from the shared navigation and that the currently active page is visually indicated.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-017">MRS-017 Monitoring Frontend</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>3</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>2</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>1</td>
 </tr>
 <tr>
 <td>type</td>

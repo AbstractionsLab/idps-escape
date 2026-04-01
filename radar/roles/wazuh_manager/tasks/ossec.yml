@@ -22,17 +22,14 @@
     backup: false
   register: _ossec_insert
 
-- name: ossec | Check if 0310-ssh.xml exists in container decoders dir
-  ansible.builtin.shell: |
-    docker exec "{{ _mgr_container }}" bash -lc 'test -f /var/ossec/etc/decoders/0310-ssh.xml && echo YES || echo NO'
-  args:
-    executable: /bin/bash
+- name: ossec | Check if 0310-ssh.xml exists in host decoders dir
+  stat:
+    path: "{{ _host_decoders_dir }}/0310-ssh.xml"
   register: _ssh_decoder_present
   changed_when: false
-  failed_when: false
 
 - name: ossec | Ensure default SSH decoders are excluded when 0310-ssh.xml exists (host ossec.conf)
-  when: _ssh_decoder_present.stdout is search('YES')
+  when: _ssh_decoder_present.stat.exists
   ansible.builtin.blockinfile:
     path: "{{ _host_ossec_conf }}"
     marker: "<!-- RADAR: ssh decoder_exclude {mark} -->"
@@ -41,6 +38,23 @@
       <decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>
     backup: false
   register: _ssh_decoder_exclude_insert
+
+- name: ossec | Check if 0375-web-accesslog.xml exists in host decoders dir
+  stat:
+    path: "{{ _host_decoders_dir }}/0375-web-accesslog.xml"
+  register: _web_accesslog_decoder_present
+  changed_when: false
+
+- name: ossec | Ensure default Web Access Log decoders are excluded when 0375-web-accesslog.xml exists (host ossec.conf)
+  when: _web_accesslog_decoder_present.stat.exists
+  ansible.builtin.blockinfile:
+    path: "{{ _host_ossec_conf }}"
+    marker: "<!-- RADAR: web-accesslog decoder_exclude {mark} -->"
+    insertbefore: "</ruleset>"
+    block: |
+      <decoder_exclude>0375-web-accesslog_decoders.xml</decoder_exclude>
+    backup: false
+  register: _web_accesslog_decoder_exclude_insert
 
 - name: ossec | Ensure logall is 'yes' (host ossec.conf)
   ansible.builtin.replace:
@@ -74,6 +88,7 @@
       {{
         (_ossec_insert is defined and _ossec_insert.changed) or
         (_ssh_decoder_exclude_insert is defined and _ssh_decoder_exclude_insert.changed) or
+        (_web_accesslog_decoder_exclude_insert is defined and _web_accesslog_decoder_exclude_insert.changed) or
         (_ossec_logall is defined and _ossec_logall.changed) or
         (_ossec_logall_json is defined and _ossec_logall_json.changed) or
         (_decoders_copied is defined and _decoders_copied is changed) or

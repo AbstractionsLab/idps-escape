@@ -74,6 +74,35 @@ RADAR consists of six primary components working together in an orchestrated pip
 
 *Figure 1: RADAR component architecture showing the six primary components and their interactions*
 
+## Multi-node Wazuh deployment
+
+RADAR supports multi-node Wazuh deployments for high availability and scalability. When deploying multiple Wazuh manager nodes (master/worker topology), ensure that:
+
+### Configuration for multi-node setup
+
+1. **Inventory configuration** (`radar/inventory.yaml`):
+   - Set `manager_service_name` to a service discovery name or load balancer hostname
+   - This service name must match the DNS name or volume service names defined in `volumes.yml` for Docker deployments
+   - Example:
+     ```yaml
+     manager_service_name: "multi-node-wazuh.manager-1"
+     ```
+
+2. **Volumes** (`radar/volumes.yml`): 
+   - The volumes are listed and reflected for each service (master and worker), the name of the service should match to with `manager_service_name` in `radar/inventory.yaml`.
+
+3. **Scenario deployment**:
+   - Scenarios are deployed to all manager nodes in the cluster
+   - Ansible playbooks handle replication of decoders, rules, and configurations across all nodes
+   - Anomaly detectors and monitors are created once in Opensearch (shared across cluster)
+
+### Benefits of multi-node deployment
+
+- **High availability**: Service continues if one manager node fails
+- **Load distribution**: Incoming logs are load-balanced across manager nodes
+- **Scalability**: Add nodes to handle increased log volume
+- **Resilience**: Maintains detection and response even during node maintenance
+
 ## Module Structure
 
 ### Wazuh Agent Module
@@ -190,16 +219,38 @@ The Webhook Endpoint receives anomaly notifications and bridges Opensearch monit
 #### HTTP Webhook Service
 **Purpose**: Receive and process anomaly alerts from Opensearch monitors
 
-**Implementation**: Custom HTTP service (Python/Flask)
+**Implementation**: Custom HTTP service (Python/Flask) running in Docker container
 
 **Endpoint**: `POST /notify`
 
-**Function**:
+**Key Functions**:
 1. Receive webhook POST request with anomaly data
 2. Parse and validate notification payload
 3. Format alert for Wazuh rule processing
 4. Write alert to monitored log file (e.g., `/var/log/ad_alerts.log`)
 5. Wazuh Manager detects new log entry and triggers rules
+
+#### Webhook Bootstrap Process
+
+The webhook service is automatically bootstrapped during manager deployment via the `bootstrap_webhook.yml` Ansible task:
+
+**Initialization steps**:
+1. **Container check**: Verifies if webhook container (`ad-webhook`) already exists
+2. **State management**: 
+   - If container exists but is stopped → restart it
+   - If container doesn't exist → deploy new instance
+3. **Deployment**: Uses `docker-compose.webhook.yml` to orchestrate the webhook container
+4. **Health verification**: Waits for the webhook container to be in "running" state with retry logic
+5. **Ready-to-serve**: Webhook service becomes available for monitor notifications
+
+**Configuration files**:
+- `docker-compose.webhook.yml`: Docker Compose configuration for webhook container
+- `.env`: Environment variables and credentials (copied from RADAR root directory)
+- `webhook/` directory: Application code and dependencies
+
+**Automatic restart**: The webhook container is configured to restart automatically if it crashes, ensuring continuous availability of the notification endpoint.
+
+#### Webhook failover behavior
 
 
 ### RADAR Controller/Orchestrator Module

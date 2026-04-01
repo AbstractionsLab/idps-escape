@@ -72,6 +72,18 @@ def build_rules(scn: Dict[str, Any]) -> List[Dict[str, Any]]:
     rules = scn.get("rules", [])
     return rules
 
+def build_filter_query(scn: Dict[str, Any]) -> Dict[str, Any]:
+    fq = scn.get("filter_query")
+    if fq is None:
+        return {"match_all": {}}
+    if not isinstance(fq, dict):
+        die("filter_query must be a valid YAML object in config.yaml")
+    return fq
+
+def build_category_field(scn: Dict[str, Any]) -> List[str]:
+    field = scn.get("categorical_field")
+    return [field] if field else []
+
 def detector_spec(scn_name: str, scn: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "name": f"{scn_name.upper()}_DETECTOR",
@@ -79,11 +91,11 @@ def detector_spec(scn_name: str, scn: Dict[str, Any]) -> Dict[str, Any]:
         "time_field": scn["time_field"],
         "shingle_size": scn.get("shingle_size",8),
         "indices": [index_pattern(scn)],
-        "filter_query": {"match_all": {}},
+        "filter_query": build_filter_query(scn),
         "feature_attributes": build_features(scn),
         "detection_interval": {"period": {"interval": int(scn.get("detector_interval", 5)), "unit": "Minutes"}},
         "window_delay": {"period": {"interval": int(scn.get("delay_minutes", 1)), "unit": "Minutes"}},
-        "category_field": [scn["categorical_field"]],
+        "category_field": build_category_field(scn),
         "result_index": scn["result_index"],
         "result_index_min_age": scn.get("result_index_min_age", 10),
         "result_index_min_size":  scn.get("result_index_min_size", 51200),

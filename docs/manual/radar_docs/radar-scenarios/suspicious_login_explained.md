@@ -605,10 +605,6 @@ Below is the end-to-end sequence when a suspicious login anomaly triggers Tier 2
 - **Whitelist handling**: The script can be extended to skip blocking on known safe IP ranges (e.g., corporate VPN egress points).
 - **Short rollback window** (e.g. 15–30 minutes) limits disruption if a benign IP is inadvertently blocked.
 
-### OpenCTI Enrichment
-
-For Contextual Enrichment and Threat Intelligence, corresponding Active Response can be triggered on every Anomaly detection. The instruction is in [Automated OpenCTI Enrichment](/integrations/opencti-wazuh-connector/automated_trigger/).
-
 ### Dataset
 
 The dataset originates from [Kaggle - RBA-dataset](https://www.kaggle.com/datasets/dasgroup/rba-dataset).

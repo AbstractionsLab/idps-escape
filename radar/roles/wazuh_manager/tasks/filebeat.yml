@@ -23,7 +23,7 @@
         set -e
         docker cp "{{ _mgr_container }}:/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json" \
             "pipeline.wazuh.archives.orig.json"
-        cp pipeline.wazuh.archives.orig.json pipeline.wazuh.archives.backup.json
+        cp -f pipeline.wazuh.archives.orig.json pipeline.wazuh.archives.backup.json
       args:
         executable: /bin/bash
       register: _archives_pipeline_pull

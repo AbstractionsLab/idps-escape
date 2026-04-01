@@ -35,6 +35,15 @@ The deployment of RADAR supports also:
 
 See the [Usage](README.md#1-deploy-the-radar-infrastructure) section for details.
 
+### Multi-node Wazuh deployment
+
+For high-availability deployments requiring multiple Wazuh manager nodes:
+
+1. **Inventory configuration**: In `inventory.yaml`, set `manager_service_name` to a service discovery hostname or load balancer name that resolves to all manager nodes
+2. **Volume configuration**: In `volumes.yml`, ensure the service name matches across all manager nodes for consistent artifact deployment
+
+See [Architecture - Multi-node Wazuh deployment](/docs/manual/radar_docs/radar-architecture.md#multi-node-wazuh-deployment) for detailed configuration steps.
+
 ## Prerequisites
 
 Verify your environment meets the requirements:
@@ -54,6 +63,7 @@ ansible --version    # Should be 2.15+
         - if `pipx` is available, follow the instruction` in [Ansible Installation Documentation using pipx](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html#pipx-install).
         - otherwise, follow the [official instructions for Linux distributions](https://docs.ansible.com/projects/ansible/latest/installation_guide/installation_distros.html).
         - Minimum version: Ansible `2.15+`.
+    - **Ensure Ansible is installed and accessible under the root account:** After installation, verify that `ansible` and `ansible-playbook` commands are accessible by the root user by running `sudo ansible --version`.
 - Targeted Wazuh manager and agent versions: `4.14.1` (automatically handled by our deployment artifacts)
 - **Optional**: If automatic CTI enrichment and incident case creation are desired, a DECIPHER instance must be running, with a connection between DECIPHER and the Wazuh Manager. To bring up the supporting services for DECIPHER, MISP and FlowIntel integration, follow the [**DECIPHER deployment guide**](https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher). To enable the connection, configure the `DECIPHER_*` variables in `.env`.
 - Environment values such as `OS_URL`, `OS_USER`, `OS_PASS`, `DASHBOARD_URL`, `DASHBOARD_USER`, `DASHBOARD_PASS` and SMTP credentials are available to the tester. The tester has network access (SSH) from the test controller node to controlled endpoints.
@@ -195,6 +205,7 @@ The **`config.yaml`** file is essential for ML-based (behavior-based) anomaly de
 | `anomaly_grade_threshold` | Minimum anomaly score to trigger an alert (0.0-1.0) | Lower = more sensitive (more alerts); Higher = fewer false positives |
 | `confidence_threshold` | Minimum confidence level required (0.0-1.0) | Higher values require more certainty before alerting |
 | `features` | OpenSearch aggregation queries defining what metrics to analyze | Determines what behavioral patterns the detector learns |
+| `rules` | Filter rules to ignore anomalies based on thresholds | Reduces false positives by ignoring anomalies that fall below configured thresholds |
 
 **Feature aggregation types:**
 
@@ -211,6 +222,42 @@ Features use OpenSearch aggregation queries to extract metrics:
 - **Missing detections**: Decrease thresholds, add more features, or reduce `detector_interval`
 - **Per-entity detection**: Ensure `categorical_field` points to the correct entity identifier (user, host, IP)
 - **Seasonal patterns**: Increase `shingle_size` to capture longer behavioral cycles
+
+
+#### Filter rules for anomaly suppression
+
+The optional `rules` section allows you to define filter rules that suppress (ignore) anomalies based on threshold conditions. This is useful for reducing false positives when certain metrics fluctuate slightly above baseline:
+
+**Example configuration:**
+```yaml
+rules:
+  - action: "IGNORE_ANOMALY"
+    conditions:
+      - feature_name: "log_volume_max"
+        threshold_type: "ACTUAL_OVER_EXPECTED_RATIO"
+        operator: "LTE"
+        value: 0.001
+  - action: "IGNORE_ANOMALY"
+    conditions:
+      - feature_name: "log_volume_max"
+        threshold_type: "EXPECTED_OVER_ACTUAL_RATIO"
+        operator: "LTE"
+        value: 0.2
+```
+
+**Threshold types:**
+- `ACTUAL_OVER_EXPECTED_RATIO`: Actual value divided by expected baseline (e.g., 0.001 = 0.1%)
+- `EXPECTED_OVER_ACTUAL_RATIO`: Expected baseline divided by actual value
+
+**Operators:**
+- `LTE` (Less Than or Equal)
+- `GTE` (Greater Than or Equal)
+- `EQ` (Equal)
+- `NEQ` (Not Equal)
+
+**Use cases:**
+- Suppress alerts when actual log volume is extremely low compared to baseline (noise filtering)
+- Ignore minor deviations from baseline (within tolerance bounds)
 
 
 ### 5.Configure active response parameters

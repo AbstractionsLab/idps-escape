@@ -2,19 +2,35 @@
 
 ## Overview
 
-`run-radar.sh` is an orchestration script that automates the deployment of anomaly detection scenarios in a Wazuh environment. It executes a three-stage pipeline: data ingestion, detector creation/configuration, and monitoring setup.
+`run-radar.sh` is an orchestration script that automates the deployment of anomaly detection scenarios in a Wazuh environment. It executes a three-stage pipeline: data ingestion (optional), detector creation/configuration, and monitoring setup.
 
 ### Execution Flow
 
 ```
-run-radar.sh <scenario>
+run-radar.sh <scenario> [--ingest true|false]
      ↓
-[1] Data Ingestion → wazuh_ingest.py
+[1] (Optional) Data Ingestion → wazuh_ingest.py
      ↓
 [2] Detector Setup → detector.py → returns DETECTOR_ID
      ↓
 [3] Monitor Setup → monitor.py → returns MONITOR_ID
 ```
+
+### Usage
+
+**Basic usage (without ingestion):**
+```bash
+./run-radar.sh <scenario>
+```
+
+**With optional data ingestion:**
+```bash
+./run-radar.sh <scenario> --ingest true
+```
+
+**Parameters:**
+- `<scenario>`: Name of the scenario to deploy (e.g., `suspicious_login`, `log_volume`)
+- `--ingest true|false`: Whether to ingest synthetic training data (default: `false`)
 
 ### Required Environment Variables
 
@@ -52,6 +68,36 @@ Each supported scenario has its own:
 - Data injection, detector and monitor setup are run in the image `radar-cli:latest`
 - Python scripts executed in isolated containers
 - Output IDs captured via stdout for pipeline chaining
+
+## About Data Ingestion
+
+Data ingestion is **optional** and controlled by the `--ingest` flag. 
+
+**When to use ingestion (`--ingest true`):**
+- Starting with a fresh scenario and no historical data
+- Training the anomaly detector with synthetic baseline behavior
+- Testing scenarios before deploying with real production data
+- Generating a warm-start for faster anomaly detection
+
+**When to skip ingestion (`--ingest false`, default):**
+- Detector operates on existing live data in OpenSearch
+- Real production logs are already flowing into the index
+- Using historical data from your environment
+- Fine-tuning detectors after initial deployment
+
+**Example scenarios:**
+
+1. **Fresh deployment with synthetic data:**
+```bash
+./run-radar.sh log_volume --ingest true
+```
+Creates and trains detector with synthetic log volume progression data.
+
+2. **Production deployment with live data:**
+```bash
+./run-radar.sh log_volume
+```
+Detector immediately starts analyzing existing OpenSearch data without synthetic ingestion.
 
 ## Stage 1: Data ingestion (`wazuh_ingest.py`)
 

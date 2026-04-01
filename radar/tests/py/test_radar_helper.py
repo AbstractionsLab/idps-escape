@@ -57,6 +57,10 @@ def _radar_lines(handler: DummyWatchedFileHandler):
     return [m for m in handler.messages if "RADAR outcome" in m]
 
 
+def _radar_apache_lines(handler: DummyWatchedFileHandler):
+    return [m for m in handler.messages if 'RADAR country="' in m]
+
+
 def test_haversine_km_basic(monkeypatch):
     mod = load_module(monkeypatch)
     d = mod.AuthLogWatcher.haversine_km(0.0, 0.0, 0.0, 1.0)
@@ -286,3 +290,186 @@ def test_asn_placeholder_flag_when_missing(monkeypatch):
     assert "asn=''" in out
     assert "asn_placeholder_flag='true'" in out
     assert "asn_novelty_i='0'" in out
+
+
+_BRAZIL_GEO = {
+    "country": {"names": {"en": "Brazil"}},
+    "subdivisions": [{"names": {"en": "Parana"}}],
+    "city": {"names": {"en": "Curitiba"}},
+    "location": {"latitude": -25.5026, "longitude": -49.2908},
+}
+
+
+def _make_apache_watcher(mod, geo_mapping):
+    w = mod.ApacheLogWatcher(mod.RADAR_LOG, in_path="/tmp/in", out_path="/tmp/out")
+    w.city_reader = FakeMaxMindReader(geo_mapping)
+    return w
+
+
+def test_apache_skips_line_without_http(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"1.2.3.4": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    w.handle_line("1.2.3.4 - - [24/Mar/2026:10:00:00 +0100] no protocol here")
+    assert _radar_apache_lines(handler) == []
+
+
+def test_apache_skips_line_without_quote(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"1.2.3.4": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    w.handle_line("1.2.3.4 - - [24/Mar/2026:10:00:00 +0100] GET /index HTTP/1.1 200 512")
+    assert _radar_apache_lines(handler) == []
+
+
+def test_apache_skips_private_ip(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    for private_ip in ("192.168.1.10", "10.0.0.5", "172.16.0.1", "127.0.0.1"):
+        line = f'{private_ip} - - [24/Mar/2026:10:00:00 +0100] "GET /index HTTP/1.1" 200 512 "-" "curl/7.68.0"'
+        w.handle_line(line)
+
+    assert _radar_apache_lines(handler) == []
+
+
+def test_apache_single_ip_enrichment(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"187.88.104.81": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = '187.88.104.81 - - [12/Mar/2026:11:17:54 +0100] "GET /index.html HTTP/1.1" 200 1234 "-" "curl/7.68.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    out = msgs[0]
+    assert 'RADAR country="Brazil"' in out
+    assert 'region="Parana"' in out
+    assert 'city="Curitiba"' in out
+    assert 'lat="-25.5026"' in out
+    assert 'lon="-49.2908"' in out
+    assert out.startswith(line)
+
+
+def test_apache_host_port_ip_format(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"187.88.104.81": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = 'nextcloud.com:443 187.88.104.81 - - [12/Mar/2026:11:18:38 +0100] "GET /ocs/v2.php HTTP/1.1" 404 6871 "-" "Mozilla/5.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    assert 'RADAR country="Brazil"' in msgs[0]
+
+
+def test_apache_domain_ip_format(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"187.88.104.81": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = 'domain.com 187.88.104.81 - - [12/Mar/2026:11:18:38 +0100] "GET /url HTTP/1.1" 200 512 "-" "curl/7.68.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    assert 'RADAR country="Brazil"' in msgs[0]
+
+
+def test_apache_two_ip_format(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"187.88.104.81": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = '10.10.10.1 187.88.104.81 - - [12/Mar/2026:11:18:38 +0100] "GET /url HTTP/1.1" 200 512 "-" "curl/7.68.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    assert 'RADAR country="Brazil"' in msgs[0]
+
+
+def test_apache_ipv6_mapped_format(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"187.88.104.81": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = '::ffff:187.88.104.81 - - [12/Mar/2026:11:18:38 +0100] "GET /url HTTP/1.1" 200 512 "-" "curl/7.68.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    assert 'RADAR country="Brazil"' in msgs[0]
+
+
+def test_apache_rsyslog_prefix_stripped(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"187.88.104.81": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = 'Jan 11 10:13:05 web01 nginx: 187.88.104.81 - - [11/Jan/2026:10:13:05 +0100] "GET /url HTTP/1.1" 200 512 "-" "curl/7.68.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    assert 'RADAR country="Brazil"' in msgs[0]
+
+
+def test_apache_output_uses_double_quotes(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {"187.88.104.81": _BRAZIL_GEO})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = '187.88.104.81 - - [12/Mar/2026:11:17:54 +0100] "GET /index.html HTTP/1.1" 200 1234 "-" "curl/7.68.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    out = msgs[0]
+    assert 'RADAR country="Brazil"' in out
+    assert "RADAR country='Brazil'" not in out
+
+
+def test_apache_unknown_ip_produces_empty_fields(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {})
+    handler = _get_dummy_handler(w)
+    handler.messages.clear()
+
+    line = '8.8.8.8 - - [12/Mar/2026:11:17:54 +0100] "GET /index.html HTTP/1.1" 200 1234 "-" "curl/7.68.0"'
+    w.handle_line(line)
+
+    msgs = _radar_apache_lines(handler)
+    assert len(msgs) == 1
+    out = msgs[0]
+    assert 'RADAR country=""' in out
+    assert 'city=""' in out
+
+
+def test_apache_extract_srcip_priority_order(monkeypatch):
+    mod = load_module(monkeypatch)
+    w = _make_apache_watcher(mod, {})
+
+    ip, _ = w.extract_srcip('nextcloud.com:443 187.88.104.81 - - [ts] "GET / HTTP/1.1" 200 0')
+    assert ip == "187.88.104.81"
+
+    ip, _ = w.extract_srcip('1.2.3.4 - - [ts] "GET / HTTP/1.1" 200 0')
+    assert ip == "1.2.3.4"
+
+    ip, _ = w.extract_srcip("no ip here at all")
+    assert ip is None

@@ -216,23 +216,23 @@
 </decoder>
 
 <decoder name="sshd-success-with-radar">
-    <parent>sshd</parent>
-    <prematch type="pcre2">^Accepted</prematch>
-    <regex type="pcre2" offset="after_prematch">^ \S+ for (\S+) from (\S+) port (\S+).*RADAR outcome='(\S*)' asn='(\S*)' asn_placeholder_flag='(\S*)' country='(\S*)' region='(\S*)' city='(\S*)' geo_velocity_kmh='(\S*)' country_change_i='(\S*)' asn_novelty_i='(\S*)'$</regex>
-    <order>user, srcip, srcport, radar_outcome, radar_asn, radar_asn_placeholder_flag, radar_country, radar_region, radar_city, radar_geo_velocity_kmh, radar_country_change_i, radar_asn_novelty_i</order>
-    <fts>name, user, location</fts>
+  <parent>sshd</parent>
+  <prematch type="pcre2">^Accepted</prematch>
+  <regex type="pcre2" offset="after_prematch">^ \S+ for (\S+) from (\S+) port (\S+).*RADAR outcome='([^']*)' asn='([^']*)' asn_placeholder_flag='([^']*)' country='([^']*)' region='([^']*)' city='([^']*)' geo_velocity_kmh='([^']*)' country_change_i='([^']*)' asn_novelty_i='([^']*)'$</regex>
+  <order>user, srcip, srcport, radar_outcome, radar_asn, radar_asn_placeholder_flag, radar_country, radar_region, radar_city, radar_geo_velocity_kmh, radar_country_change_i, radar_asn_novelty_i</order>
+  <fts>name, user, location</fts>
 </decoder>
 
 <decoder name="ssh-invfailed-with-radar">
   <parent>sshd</parent>
-  <prematch type="pcre2">^Failed \S+ for invalid user|^Failed \S+ for illegal user</prematch>
-  <regex type="pcre2" offset="after_prematch">(\S+) from (\S+).*\sRADAR outcome='(\S*)' asn='(\S*)' asn_placeholder_flag='(\S*)' country='(\S*)' region='(\S*)' city='(\S*)' geo_velocity_kmh='(\S*)' country_change_i='(\S*)' asn_novelty_i='(\S*)'$</regex>
+  <prematch type="pcre2">^Failed \S+ for (?:invalid|illegal) user</prematch>
+  <regex type="pcre2" offset="after_prematch"> (\S+) from (\S+).*\sRADAR outcome='([^']*)' asn='([^']*)' asn_placeholder_flag='([^']*)' country='([^']*)' region='([^']*)' city='([^']*)' geo_velocity_kmh='([^']*)' country_change_i='([^']*)' asn_novelty_i='([^']*)'$</regex>
   <order>srcuser, srcip, radar_outcome, radar_asn, radar_asn_placeholder_flag, radar_country, radar_region, radar_city, radar_geo_velocity_kmh, radar_country_change_i, radar_asn_novelty_i</order>
 </decoder>
 
 <decoder name="ssh-failed-with-radar">
   <parent>sshd</parent>
   <prematch type="pcre2">^Failed \S+ </prematch>
-  <regex type="pcre2" offset="after_prematch">^for (\S+) from (\S+) port (\d+).*\sRADAR outcome='(\S*)' asn='(\S*)' asn_placeholder_flag='(\S*)' country='(\S*)' region='(\S*)' city='(\S*)' geo_velocity_kmh='(\S*)' country_change_i='(\S*)' asn_novelty_i='(\S*)'$</regex>
+  <regex type="pcre2" offset="after_prematch">^for (\S+) from (\S+) port (\d+).*\sRADAR outcome='([^']*)' asn='([^']*)' asn_placeholder_flag='([^']*)' country='([^']*)' region='([^']*)' city='([^']*)' geo_velocity_kmh='([^']*)' country_change_i='([^']*)' asn_novelty_i='([^']*)'$</regex>
   <order>user, srcip, srcport, radar_outcome, radar_asn, radar_asn_placeholder_flag, radar_country, radar_region, radar_city, radar_geo_velocity_kmh, radar_country_change_i, radar_asn_novelty_i</order>
 </decoder>

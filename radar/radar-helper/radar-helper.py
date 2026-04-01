@@ -160,6 +160,119 @@ class BaseLogWatcher(threading.Thread):
         raise NotImplementedError
 
 # ------------------------------------------------------------
+# Apache log watcher
+# ------------------------------------------------------------
+
+class ApacheLogWatcher(BaseLogWatcher):
+    APACHE_LOG = "/var/log/apache2/access.log"
+    OUT_APACHE_LOG = "/var/log/suspicious_login.log"
+    CITY_DB = "/usr/share/GeoIP/GeoLite2-City.mmdb"
+
+    RX_RSYSLOG = re.compile(
+        r"^\w{3}\s+\d+\s+\d{2}:\d{2}:\d{2}\s+\S+\s+(?:nginx|apache):\s+(?P<rest>.*)$"
+    )
+    RX_DOMAIN_IP = re.compile(
+        r"^\S+\.\S+\s+(?P<srcip>\d{1,3}(?:\.\d{1,3}){3})\s+\S+\s+\S+\s+\["
+    )
+    RX_HOST_PORT_IP = re.compile(
+        r"^\S+:\d+\s+(?P<srcip>\d{1,3}(?:\.\d{1,3}){3})\s+\S+\s+\S+\s+\["
+    )
+
+    RX_TWO_IPS = re.compile(
+        r"^(?:\S+)\s+(?P<srcip>\d{1,3}(?:\.\d{1,3}){3})\s+\S+\s+\S+\s+\["
+    )
+
+    RX_SINGLE_IP = re.compile(
+        r"^(?P<srcip>\d{1,3}(?:\.\d{1,3}){3})\s+\S+\s+\S+\s+\["
+    )
+
+    RX_IPV6_MAPPED = re.compile(
+        r"^::ffff:(?P<srcip>\d{1,3}(?:\.\d{1,3}){3})\s+"
+    )
+
+    PRIVATE_PREFIXES = (
+        "10.", "192.168.", "127.", "172.16.", "172.17.", "172.18.", "172.19.",
+        "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.",
+        "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
+    )
+
+    def __init__(self, radar_logger: RadarLogger, in_path: str = None, out_path: str = None):
+        super().__init__(
+            in_path or self.APACHE_LOG,
+            out_path or self.OUT_APACHE_LOG,
+            logger_name="radar.apache",
+            radar_logger=radar_logger,
+        )
+        try:
+            self.city_reader = maxminddb.open_database(self.CITY_DB)
+        except FileNotFoundError as e:
+            raise SystemExit(f"[FATAL] Missing MaxMind DB file: {e}")
+
+    def extract_srcip(self, line: str):
+        m = self.RX_RSYSLOG.match(line)
+        rest = m.group("rest") if m else line
+
+        m = self.RX_IPV6_MAPPED.match(rest)
+        if m:
+            return m.group("srcip"), rest
+
+        m = self.RX_HOST_PORT_IP.match(rest)
+        if m:
+            return m.group("srcip"), rest
+
+        m = self.RX_DOMAIN_IP.match(rest)
+        if m:
+            return m.group("srcip"), rest
+
+        m = self.RX_TWO_IPS.match(rest)
+        if m:
+            return m.group("srcip"), rest
+
+        m = self.RX_SINGLE_IP.match(rest)
+        if m:
+            return m.group("srcip"), rest
+
+        return None, rest
+
+    def geo_lookup(self, ip: str):
+        country = region = city = ""
+        lat = lon = None
+        try:
+            c = self.city_reader.get(ip) or {}
+            country = ((c.get("country") or {}).get("names") or {}).get("en") or \
+                      (c.get("country") or {}).get("iso_code") or ""
+            subs = c.get("subdivisions") or []
+            if subs and isinstance(subs, list):
+                region = ((subs[0].get("names") or {}).get("en") or "")
+            city = ((c.get("city") or {}).get("names") or {}).get("en") or ""
+            loc = c.get("location") or {}
+            lat = loc.get("latitude")
+            lon = loc.get("longitude")
+        except Exception as e:
+            self.debug.warning("geo_lookup failed for %s: %s", ip, e)
+        return country, region, city, lat, lon
+
+    def handle_line(self, line: str):
+        if '"' not in line or "HTTP/" not in line:
+            return
+
+        srcip, _ = self.extract_srcip(line)
+        if not srcip:
+            return
+
+        if any(srcip.startswith(p) for p in self.PRIVATE_PREFIXES):
+            return
+
+        country, region, city, lat, lon = self.geo_lookup(srcip)
+
+        radar_tail = (
+            f' RADAR country="{country}" region="{region}" city="{city}"'
+            f' lat="{lat or ""}" lon="{lon or ""}"'
+        )
+        self.logger.info(f"{line}{radar_tail}")
+
+
+# ------------------------------------------------------------
 # Auth log watcher
 # ------------------------------------------------------------
 
@@ -328,7 +441,11 @@ class AuditLogWatcher(BaseLogWatcher):
 
 def main():
     auth_watcher = AuthLogWatcher(RADAR_LOG)
+    apache_watcher = ApacheLogWatcher(RADAR_LOG)
+
     auth_watcher.start()
+    apache_watcher.start()
+
     try:
         while True:
             time.sleep(1.0)
@@ -336,7 +453,9 @@ def main():
         pass
     finally:
         auth_watcher.stop()
+        apache_watcher.stop()
         auth_watcher.join(timeout=5.0)
+        apache_watcher.join(timeout=5.0)
 
 
 if __name__ == "__main__":

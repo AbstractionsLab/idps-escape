@@ -427,10 +427,11 @@ class DecipherClient:
         "suspicious_login": "/api/v0.1/analyze/suspicious_login",
     }
     HEALTH_ENDPOINT = "/health"
-    INCIDENT_ENDPOINTS = {
-        "suspicious_login": "/api/v0.1/incident/suspicious_login",
-        #"geoip_detection":  "/api/v0.1/incident/geoip_detection",
-        #"log_volume":       "/api/v0.1/incident/log_volume",
+    INCIDENT_ENDPOINT = "/api/v0.1/incident"
+    TIER_PRIORITY = {
+        1: "priority-level:low",
+        2: "priority-level:medium",
+        3: "priority-level:high",
     }
 
     def __init__(self, logger: Logger):
@@ -541,13 +542,8 @@ class DecipherClient:
 
     def create_incident(self, decision: dict) -> dict:
         null_result = {"ok": False, "case_id": None, "case_url": None, "raw": None}
-        scenario_name = decision["scenario"]["name"]
-        endpoint = self.INCIDENT_ENDPOINTS.get(scenario_name)
-        if not endpoint:
-            self.logger.log("WARNING", "No DECIPHER incident endpoint defined for scenario; skipping incident creation", scenario=scenario_name)
-            return null_result
         try:
-            raw = self._request("POST", endpoint, json_data=self._build_incident_payload(decision))
+            raw = self._request("POST", self.INCIDENT_ENDPOINT, json_data=self._build_incident_payload(decision))
             case_id = _safe_str(raw.get("id"))
             case_url = _safe_str(raw.get("link"))
             self.logger.log("INFO", "DECIPHER incident created", case_id=case_id, case_url=case_url)
@@ -566,53 +562,60 @@ class DecipherClient:
         agent = alert.get("agent") or {}
         components = risk.get("components") or {}
         iocs = ctx.get("iocs") or {}
+
+        tier = int(risk["tier"])
+        priority_level = self.TIER_PRIORITY.get(tier, "priority-level:low")
+
         return {
+            "priority_level": priority_level,
             "title": self._incident_title(scenario["name"]),
-            "source": "RADAR",
-            "score": round(risk["risk_score"], 6),
-            "decision_id": _safe_str(decision.get("decision_id")),
-            "timestamp": _safe_str(alert.get("timestamp")),
-            "misp_events": list(cti.get("misp_events") or []),
-            "scenario": {
-                "name": scenario["name"],
-                "detection_type": scenario["detection"],
-            },
-            "agent": {
-                "id": _safe_str(agent.get("id")),
-                "name": _safe_str(agent.get("name")),
-            },
-            "alert": {
-                "id": _safe_str(alert.get("id")),
-                "rule_id": _safe_str(rule.get("id")),
-                "rule_level": int(rule.get("level") or 0),
-                "rule_description": _safe_str(rule.get("description")),
-                "rule_groups": list(rule.get("groups") or []),
-            },
-            "risk": {
-                "score": round(risk["risk_score"], 6),
-                "tier": risk["tier"],
-                "components": {
-                    "anomaly_component": components.get("anomaly_component", 0.0),
-                    "anomaly_intensity_A": components.get("anomaly_intensity_A", 0.0),
-                    "anomaly_grade_G": components.get("anomaly_grade", 0.0) or 0.0,
-                    "anomaly_confidence_C": components.get("anomaly_confidence", 0.0) or 0.0,
-                    "signature_component": components.get("signature_component", 0.0),
-                    "signature_risk_S": components.get("signature_risk_S", 0.0),
-                    "signature_likelihood_L": components.get("signature_likelihood", 0.0),
-                    "signature_impact_I": components.get("signature_impact", 0.0),
-                    "cti_component": components.get("cti_component", 0.0),
-                    "cti_score_T": components.get("cti_score_T", 0.0),
+            "template_id": scenario["name"],
+            "description": {
+                "source": "RADAR",
+                "decision_id": _safe_str(decision.get("decision_id")),
+                "timestamp": _safe_str(alert.get("timestamp")),
+                "scenario": {
+                    "name": scenario["name"],
+                    "detection_type": scenario["detection"],
                 },
-            },
-            "iocs": {
-                "ip": list(iocs.get("ip") or []),
-                "user": list(iocs.get("user") or []),
-                "domain": list(iocs.get("domain") or []),
-                "hash": list(iocs.get("hash") or []),
-                "service": list(iocs.get("service") or []),
-                "asn": list(iocs.get("asn") or []),
-                "country": list(iocs.get("country") or []),
-                "agent": list(iocs.get("agent") or []),
+                "agent": {
+                    "id": _safe_str(agent.get("id")),
+                    "name": _safe_str(agent.get("name")),
+                },
+                "alert": {
+                    "id": _safe_str(alert.get("id")),
+                    "rule_id": _safe_str(rule.get("id")),
+                    "rule_level": int(rule.get("level") or 0),
+                    "rule_description": _safe_str(rule.get("description")),
+                    "rule_groups": list(rule.get("groups") or []),
+                },
+                "risk": {
+                    "score": round(risk["risk_score"], 6),
+                    "tier": tier,
+                    "components": {
+                        "anomaly_component": components.get("anomaly_component", 0.0),
+                        "anomaly_intensity_A": components.get("anomaly_intensity_A", 0.0),
+                        "anomaly_grade_G": components.get("anomaly_grade", 0.0) or 0.0,
+                        "anomaly_confidence_C": components.get("anomaly_confidence", 0.0) or 0.0,
+                        "signature_component": components.get("signature_component", 0.0),
+                        "signature_risk_S": components.get("signature_risk_S", 0.0),
+                        "signature_likelihood_L": components.get("signature_likelihood", 0.0),
+                        "signature_impact_I": components.get("signature_impact", 0.0),
+                        "cti_component": components.get("cti_component", 0.0),
+                        "cti_score_T": components.get("cti_score_T", 0.0),
+                    },
+                },
+                "misp_events": list(cti.get("misp_events") or []),
+                "iocs": {
+                    "ip": list(iocs.get("ip") or []),
+                    "user": list(iocs.get("user") or []),
+                    "domain": list(iocs.get("domain") or []),
+                    "hash": list(iocs.get("hash") or []),
+                    "service": list(iocs.get("service") or []),
+                    "asn": list(iocs.get("asn") or []),
+                    "country": list(iocs.get("country") or []),
+                    "agent": list(iocs.get("agent") or []),
+                },
             },
         }
 

@@ -6,13 +6,18 @@ scenarios:
       rule_ids:
         - "100900"
         - "100901"
+        - "100902"
     w_ad: 0.0
     w_sig: 0.6
     w_cti: 0.4
     delta_ad_minutes: 10
     delta_signature_minutes: 1
     signature_impact: 0.6
-    signature_likelihood: 0.8
+    signature_likelihood: 
+      - rule_id: [100900, 100901]
+        weight: 0.9
+      - rule_id: [100902]
+        weight: 0.1
     tiers:
       tier1_min: 0.0
       tier1_max: 0.33

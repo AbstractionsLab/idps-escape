@@ -20,7 +20,7 @@ teardown() {
 }
 
 @test "default run ingest dataset, cert, and passes DET_ID to monitor" {
-  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login --ingest true
   [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; echo "---- calls.log ----"; cat "$LOG_DIR/calls.log" 2>/dev/null || true; echo "-------------------"; false; }
 
   # final docker build
@@ -39,6 +39,25 @@ teardown() {
     "$LOG_DIR/calls.log"
 
   # Monitor call should include det-12345
+  grep -F \
+    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -v $TEST_TMP/.env:/app/.env:ro radar-cli:latest python monitor.py suspicious_login det-12345" \
+    "$LOG_DIR/calls.log"
+}
+
+@test "default run without ingest" {
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login
+  [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; echo "---- calls.log ----"; cat "$LOG_DIR/calls.log" 2>/dev/null || true; echo "-------------------"; false; }
+
+  if grep -Fq "wazuh_ingest.py" "$LOG_DIR/calls.log"; then
+    echo "ingest should not run when --ingest is not specified"
+    echo "---- calls.log ----"; cat "$LOG_DIR/calls.log"; echo "-------------------"
+    false
+  fi
+
+  grep -F \
+    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -v $TEST_TMP/.env:/app/.env:ro radar-cli:latest python detector.py suspicious_login" \
+    "$LOG_DIR/calls.log"
+
   grep -F \
     "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -v $TEST_TMP/.env:/app/.env:ro radar-cli:latest python monitor.py suspicious_login det-12345" \
     "$LOG_DIR/calls.log"

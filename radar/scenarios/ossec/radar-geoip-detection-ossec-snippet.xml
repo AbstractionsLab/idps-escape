@@ -7,11 +7,5 @@
     <disabled>no</disabled>
     <command>radar_ar_geoip</command>
     <location>server</location>
-    <rules_id>100901</rules_id>
-</active-response>
-<active-response>
-    <disabled>no</disabled>
-    <command>radar_ar_geoip</command>
-    <location>server</location>
-    <rules_id>100900</rules_id>
+    <rules_id>100900,100901,100902</rules_id>
 </active-response>

@@ -10,4 +10,10 @@
     <srcgeoip negate="yes">Luxembourg|France|Germany|Belgium</srcgeoip>
     <description>Connection from non-whitelist country</description>
   </rule>
+  <rule id="100902" level="10">
+    <if_group>accesslog</if_group>
+    <field name="radar_country" type="pcre2">.+</field>
+    <list field="radar_country" lookup="not_match_key">etc/lists/whitelist_countries</list>
+    <description>Connection from non-whitelist country</description>
+  </rule>
 </group>

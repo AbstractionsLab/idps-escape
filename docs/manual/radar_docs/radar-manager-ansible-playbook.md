@@ -78,6 +78,7 @@ START
       ├─ (If docker_remote)
       │  ├─ Create staging dir on remote
       │  ├─ Bootstrap manager (if needed)
+      │  ├─ Bootstrap webhook (if needed)
       │  ├─ Check container running
       │  ├─ [Same as docker_local, executed on remote]
       │
@@ -172,6 +173,7 @@ Common task modules (`roles/wazuh_manager/tasks/`):
 | `ossec.yml`        | Core manager configuration             | `ossec.conf`                               |
 | `filebeat.yml`     | Ingest & indexing logic                | Filebeat config, pipelines                 |
 | `bootstrap.yml`    | Manager / webhook bootstrap            | Docker Compose stack                       |
+| `bootstrap_webhook.yml`| Webhook container deployment           | Webhook Docker Compose stack               |
 | `agent_config.yml` | Centralized agent configuration        | `/var/ossec/etc/shared/<group>/agent.conf` |
 
 Each task file:
@@ -618,11 +620,13 @@ Transfers scenario-specific files into container via volume-mapped directories:
 1. **Verify snippet exists**: Check scenario ossec snippet file on controller
 2. **Ensure file exists**: Validate `{host_ossec_conf}` exists on host
 3. **Insert RADAR snippet**: Use `blockinfile` with scenario-specific markers (idempotent) 
-4. **Check for custom SSH decoder**: Execute `docker exec` to test if `0310-ssh.xml` exists
-5. **Add SSH decoder exclusion**: Insert `<decoder_exclude>` if custom override present
-6. **Ensure logging**: Set `<logall>yes</logall>` and `<logall_json>yes</logall_json>`
-7. **Fix perms**: Execute in container to set root:wazuh ownership, 0640 mode
-8. **Track changes**: Register all modification tasks
+4. **Check for custom SSH decoder**: Use Ansible `stat` on `{host_decoders_dir}/0310-ssh.xml` (host filesystem check — **not** `docker exec`)
+5. **Add SSH decoder exclusion**: Insert `<decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>` if decoder file present
+6. **Check for custom web-accesslog decoder**: Use Ansible `stat` on `{host_decoders_dir}/0375-web-accesslog.xml`
+7. **Add web-accesslog decoder exclusion**: Insert `<decoder_exclude>0375-web-accesslog_decoders.xml</decoder_exclude>` if decoder file present
+8. **Ensure logging**: Set `<logall>yes</logall>` and `<logall_json>yes</logall_json>`
+9. **Fix perms**: Execute in container to set root:wazuh ownership, 0640 mode
+10. **Track changes**: Register all modification tasks
 
 **Idempotency**: 
 - `blockinfile` with markers prevents duplicates
@@ -746,8 +750,8 @@ _stage.path = /tmp/radar_mgr_XXXXX/
 #### 3.3 Webhook bootstrap
 **What**: Deploy webhook container alongside manager  
 **How**: Separate Docker Compose stack  
-**Why**: Enable Teams/Slack integrations  
-**When**: If `manager_bootstrap == true` AND webhook container not running
+**Why**: Enables Anomaly Detector rule triggers  
+**When**: Always executed in `docker_remote` block (idempotent, skips if already running)
 
 **Purpose**: Deploy webhook container alongside manager  
 **Scope**: Separate from manager configuration

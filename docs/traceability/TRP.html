@@ -59,6 +59,7 @@
 <li><a href="#TRP-035">2.6 TCER: DECIPHER-RADAR detection validation for suspicious login</a></li>
 <li><a href="#TRP-036">2.7 TCER: Detection validation for GeoIP detection</a></li>
 <li><a href="#TRP-037">2.8 TCER: Detection validation for log volume abnormal growth</a></li>
+<li><a href="#TRP-038">2.9 TCER: RADAR deployment integrity verification</a></li>
 </ul>
 </li>
 </ul>
@@ -2500,6 +2501,214 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <tr>
 <td>release-version</td>
 <td>0.8</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-038">2.9 TCER: RADAR deployment integrity verification <small><a href="TRP.html#TRP-038">TRP-038</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: none — aligned with test case specification</li>
+<li>Controller host: vm-cyfort-1 — Ubuntu 22.04 LTS, RADAR v0.8.2 repository at <code>~/radar</code></li>
+<li>Wazuh host (remote): vm-cyfort-radar — Ubuntu 22.04 LTS, 12 GB RAM, Wazuh multi-node Docker stack v4.14.4</li>
+<li>Remote agent: vm-cyfort-testing-2</li>
+<li>Hardware deviations: aligned with test case specification (VMs handled via QEMU KVM hypervisor)</li>
+<li>NFS snapshot source: vm-lan-nfs.itrust.lu:/nfs/wazuh-snapshots, snapshot: wazuh-20260312</li>
+<li>Fingerprint cutoff used: <code>2026-03-26T12:00:00.000Z</code></li>
+<li>Deployment mode: <code>--manager remote --agent remote</code></li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<h3>Step 2 — Pre-deployment snapshot</h3>
+<h4>Pre-01: Wazuh configuration backup</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>ossec.conf</code> backed up for master (8.7K) and worker (8.7K).</li>
+</ul>
+<h4>Pre-02: Active response scripts backup</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: 15 AR bin files hashed to baseline.</li>
+</ul>
+<h4>Pre-03: Wazuh index file hashes</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: manager 68 files, worker 68 files.</li>
+</ul>
+<h4>Pre-04: File permissions snapshot</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: 68 permission entries captured for manager.</li>
+</ul>
+<h4>Pre-05: Indexer document fingerprint</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Fingerprint file: 19273 lines. Hash: <code>4b78de52aa936ead05278aedb86b9fe366411d1f287c068b3b21d28c5bcbd909</code></li>
+</ul>
+<h4>Pre-06: Cluster health</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>manager master &lt;span style="color:green"&gt;**0 = flawless**&lt;/span&gt;</code>, <code>worker01 worker &lt;span style="color:green"&gt;**0 = flawless**&lt;/span&gt;</code></li>
+</ul>
+<h4>Pre-07: Agent connectivity</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>000 wazuh.master active</code>, <code>001 vm-cyfort-testing-2 active</code></li>
+</ul>
+<h4>Pre-08: Wazuh API health</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>version: v4.14.4</code>, <code>uuid: 7794ccab-52c8-4505-aba0-bb25084b86ed</code>, <code>type: server</code></li>
+</ul>
+<h4>Pre-09: Existing detection test</h4>
+<p>Both master and worker tested with:</p>
+<pre><code>2026-03-26T13:43:53.668837+01:00 vm-cyfort-testing-2 sudo: pam_unix(sudo:session): session closed for user root
+</code></pre>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: master — decoder: <code>pam</code>, rule: <code>5502</code>, level: <code>3</code>, description: <code>PAM: Login session closed.</code>, groups: <code>pam, syslog</code></li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: worker — identical result</li>
+</ul>
+<h4>Pre-10: Filebeat pipeline state</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Pipeline <code>filebeat-7.10.2-wazuh-archives-pipeline</code> captured.</li>
+</ul>
+<h4>Pre-11: Wazuh manager service state</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: All core daemons running: <code>wazuh-clusterd</code>, <code>wazuh-modulesd</code>, <code>wazuh-monitord</code>, <code>wazuh-logcollector</code>, <code>wazuh-remoted</code>, <code>wazuh-syscheckd</code>, <code>wazuh-analysisd</code>, <code>wazuh-execd</code>, <code>wazuh-db</code>, <code>wazuh-authd</code>, <code>wazuh-apid</code>. Not running (expected in Docker): <code>wazuh-maild</code>, <code>wazuh-agentlessd</code>, <code>wazuh-integratord</code>, <code>wazuh-dbd</code>, <code>wazuh-csyslogd</code>.</li>
+</ul>
+<hr />
+<h3>Step 3 — RADAR deployment</h3>
+<p><strong>geoip_detection:</strong>
+- <span style="color:green"><strong>0 = flawless</strong></span>: Ansible tasks completed. <code>failed=0</code> for all hosts.</p>
+<p><strong>suspicious_login:</strong>
+- <span style="color:green"><strong>0 = flawless</strong></span>: Ansible tasks completed. <code>failed=0</code> for all hosts.</p>
+<p><strong>log_volume:</strong>
+- <span style="color:green"><strong>0 = flawless</strong></span>: Ansible tasks completed. <code>failed=0</code> for all hosts.</p>
+<hr />
+<h3>Step 4 — Post-deployment checks</h3>
+<h4>Post-01: Wazuh index file hashes</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>PASS - No unexpected file modifications (manager)</code></li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>PASS - No unexpected file modifications (worker)</code></li>
+</ul>
+<p>New files added by RADAR (all within RADAR scope):
+<code>client.keys</code>, <code>decoders/0001-ad-common.xml</code>, <code>decoders/0001-log-volume.xml</code>, <code>decoders/0310-ssh.xml</code>, <code>decoders/0375-web-accesslog.xml</code>, <code>lists/whitelist_countries</code>, <code>lists/whitelist_countries.cdb</code>, <code>ossec.conf</code>, <code>rules/a1-log-volume.xml</code>, <code>rules/a2-geoip-detection.xml</code>, <code>rules/a3-suspicious-login.xml</code>, <code>shared/ar.conf</code>, <code>shared/default/agent.conf</code>, <code>shared/default/agent.conf.*~</code>, <code>shared/default/merged.mg</code></p>
+<h4>Post-02: File permissions</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>PASS - No unexpected permission changes</code></li>
+</ul>
+<h4>Post-03: Existing detection test</h4>
+<p>Same log line tested on both master and worker after deployment:</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: master — decoder: <code>pam</code>, rule: <code>5502</code>, level: <code>3</code>, description: <code>PAM: Login session closed.</code>, groups: <code>pam, syslog</code> — identical to pre-deployment baseline</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: worker — identical result</li>
+</ul>
+<h4>Post-04: Agent connectivity</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>CHECK - Agent changes (webhook enrollment expected)</code>: agent <code>002 3c59000272f3 active</code> enrolled — expected. Agents 000 and 001 unchanged.</li>
+</ul>
+<h4>Post-05: Cluster health</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>PASS - Cluster nodes unchanged</code> — <code>manager master</code>, <code>worker01 worker</code></li>
+</ul>
+<h4>Post-06: Indexer document fingerprint</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>PASS - Index data fingerprint identical</code></li>
+<li>Pre-RADAR:  <code>4c4f86dc42b5286ace58e99ec4d08f7ae0bec8eae4c0fca71c064124a41aae9b</code></li>
+<li>Post-RADAR: <code>4c4f86dc42b5286ace58e99ec4d08f7ae0bec8eae4c0fca71c064124a41aae9b</code></li>
+</ul>
+<h4>Post-07: Wazuh API</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: API was confirmed reachable and returning valid responses (token refresh succeeded, version v4.14.4 confirmed).</li>
+</ul>
+<h4>Post-08: No new errors in ossec.log</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: No error types introduced by RADAR.</li>
+</ul>
+<h4>Post-09: Webhook service</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Container status: <code>running</code>. HTTP endpoint on port 8080 returns <code>301 Moved Permanently</code> (nginx proxy) — endpoint responding.</li>
+</ul>
+<h4>Post-10: Active response wiring</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>radar_ar_geoip</code>: 2 matches — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>radar_ar_log_volume</code>: 2 matches — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>terminate_service</code>/<code>lock_user_linux</code>: 4 matches — PASS</li>
+</ul>
+<h4>Post-11: Decoder and rule deployment</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0310-ssh.xml</code> — owner=<code>root:wazuh</code> mode=<code>640</code> — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0375-web-accesslog.xml</code> — owner=<code>root:wazuh</code> mode=<code>640</code> — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0001-ad-common.xml</code> — owner=<code>root:wazuh</code> mode=<code>640</code> — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>0001-log-volume.xml</code> — owner=<code>root:wazuh</code> mode=<code>640</code> — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a2-geoip-detection.xml</code> — owner=<code>root:wazuh</code> mode=<code>640</code> — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a3-suspicious-login.xml</code> — owner=<code>root:wazuh</code> mode=<code>640</code> — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>a1-log-volume.xml</code> — owner=<code>root:wazuh</code> mode=<code>640</code> — PASS</li>
+</ul>
+<h4>Post-12: Python dependencies</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>PASS - pyyaml and requests importable</code></li>
+</ul>
+<h4>Post-13: GeoIP databases on agents</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>GeoLite2-City.mmdb</code> — 63,823,624 bytes — PASS</li>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>GeoLite2-ASN.mmdb</code> — 10,819,328 bytes — PASS</li>
+</ul>
+<h4>Post-14: Existing rules unmodified</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>PASS - All pre-existing files byte-for-byte unmodified</code></li>
+</ul>
+<h4>Post-15: Filebeat pipeline integrity</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Container pipeline file <code>/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json</code> contains 2 matches of <code>log_volume_metric</code> - PASS.</li>
+</ul>
+<h4>Post-16: OpenSearch index mappings</h4>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: RADAR-specific template <code>radar-log-volume</code> present covering <code>wazuh-ad-log-volume-*</code> — PASS. Existing <code>wazuh-alerts-*</code> templates unchanged.</li>
+</ul>
+<hr />
+<h3>Defect summary description</h3>
+<p><span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Any additional informative details not fitting in the above sections.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-049">TST-049 RADAR deployment integrity verification</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-03-26</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>GDU</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td>0 = flawless; 1 = insignificant defect; 2 = minor defect; 3 = major defect; 4 = critical defect</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
 </tr>
 <tr>
 <td>verification-method</td>

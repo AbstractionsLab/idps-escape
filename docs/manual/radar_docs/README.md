@@ -409,4 +409,3 @@ A: Edit scenario-specific Python scripts in `radar/scenarios/<scenario>/active_r
 - [Project root README](../../../README.md)
 - [SONAR documentation](../sonar_docs/README.md)
 - [Deployment guides](../../../deployment/README.md)
-- [CTI integration](../../../integrations/README.md)

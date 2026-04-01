@@ -75,6 +75,7 @@
 <li><a href="#TST-046">3.6 DECIPHER-RADAR detection validation for Suspicious login</a></li>
 <li><a href="#TST-047">3.7 Detection validation for GeoIP detection</a></li>
 <li><a href="#TST-048">3.8 Detection validation for Log volume abnormal growth</a></li>
+<li><a href="#TST-049">3.9 RADAR deployment integrity verification</a></li>
 </ul>
 </li>
 </ul>
@@ -4092,6 +4093,754 @@ ls -l /opt/radar/radar-helper.py
 <tr>
 <td>version</td>
 <td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-049">3.9 RADAR deployment integrity verification <small><a href="TST.html#TST-049">TST-049</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ol>
+<li><strong>Wazuh host</strong> (<code>vm-cyfort-radar</code>):</li>
+</ol>
+<ul>
+<li>A Wazuh multi-node Docker stack (master + worker + indexer + dashboard + nginx) is deployed from the <a href="https://github.com/wazuh/wazuh-docker/tree/4.14.4">Wazuh docker repository</a>. All containers are running (<code>Up</code> status in <code>docker ps</code>).</li>
+<li>The <code>docker-compose.yml</code> (or its override) uses host bind-mount directories for all Wazuh container volumes with separate volumes for master and worker nodes. The bind-mount root used in this test run is <code>/srv/docker-data/wazuh/</code>. All bind-mount paths must exist on the host filesystem before the containers are started.</li>
+<li>An NFS snapshot of historical Wazuh data is accessible and mountable at <code>/mnt/snapshots</code> inside the indexer container. The snapshot data is restored into multi-node Wazuh and the Opensearch cluster is <code>green</code>.</li>
+<li>The user has <code>sudo</code> privileges on the Wazuh host.</li>
+</ul>
+<ol start="2">
+<li><strong>Controller host</strong> (<code>vm-cyfort-1</code>):</li>
+</ol>
+<ul>
+<li>The RADAR v0.8.2 repository is checked out.</li>
+<li>
+<p>The following three configuration files in the RADAR repository root are correctly configured before running RADAR:</p>
+</li>
+<li>
+<p><strong><code>inventory.yaml</code></strong>: defines the SSH connection details for the Wazuh master and worker nodes (under <code>wazuh_manager_ssh</code>) and for at least one remote agent endpoint (under <code>wazuh_agents_ssh</code>). Other required variables are set:</p>
+</li>
+</ul>
+<pre><code class="language-yaml">        mgr.remote:
+          ansible_host: WAZUH_HOST_IP
+          ansible_user: linuxuser
+          manager_mode: &quot;docker_remote&quot;
+          manager_address: &quot;WAZUH_HOST_IP&quot;
+          manager_address_public: &quot;WAZUH_HOST_IP&quot;
+          manager_service_name: &quot;wazuh.master&quot;
+          manager_container_name: &quot;multi-node-wazuh.master-1&quot;
+          ansible_python_interpreter: /usr/bin/python3
+          ansible_become: true
+          ansible_become_method: sudo
+          ansible_ssh_common_args: &quot;-o StrictHostKeyChecking=no -o ConnectTimeout=10&quot;
+        mgr.remote1:
+          ansible_host: WAZUH_HOST_IP
+          ansible_user: linuxuser
+          manager_mode: &quot;docker_remote&quot;
+          manager_address: &quot;WAZUH_HOST_IP&quot;
+          manager_address_public: &quot;WAZUH_HOST_IP&quot;
+          manager_service_name: &quot;wazuh.worker&quot;
+          manager_container_name: &quot;multi-node-wazuh.worker-1&quot;
+          ansible_python_interpreter: /usr/bin/python3
+          ansible_become: true
+          ansible_become_method: sudo
+          ansible_ssh_common_args: &quot;-o StrictHostKeyChecking=no -o ConnectTimeout=10&quot;
+</code></pre>
+<ul>
+<li><strong><code>volumes.yml</code></strong>: maps each Wazuh container path to its corresponding host bind-mount path on the Wazuh host. The RADAR Ansible playbook reads this file to locate configuration files (ossec.conf, decoders, rules, lists, filebeat.yml) on the Wazuh host filesystem. Every entry must reflect the actual host paths configured in the Wazuh host <code>docker-compose.yml</code>. If <code>volumes.yml</code> does not match the real bind-mounts, the playbook will fail or deploy files to the wrong location.</li>
+</ul>
+<pre><code class="language-yaml">services:
+  wazuh.master:
+    volumes:
+      - /root/docker-data/wazuh/manager/var/ossec/api/configuration:/var/ossec/api/configuration
+      - /root/docker-data/wazuh/manager/var/ossec/etc:/var/ossec/etc
+      - /root/docker-data/wazuh/manager/var/ossec/logs:/var/ossec/logs
+      - /root/docker-data/wazuh/manager/var/ossec/queue:/var/ossec/queue
+      - /root/docker-data/wazuh/manager/var/ossec/var/multigroups:/var/ossec/var/multigroups
+      - /root/docker-data/wazuh/manager/var/ossec/integrations:/var/ossec/integrations
+      - /root/docker-data/wazuh/manager/var/ossec/active-response/bin:/var/ossec/active-response/bin
+      - /root/docker-data/wazuh/manager/etc/filebeat:/etc/filebeat
+      - /root/docker-data/wazuh/manager/var/lib/filebeat:/var/lib/filebeat
+
+  wazuh.worker:
+    volumes:
+      - /root/docker-data/wazuh/worker/var/ossec/api/configuration:/var/ossec/api/configuration
+      - /root/docker-data/wazuh/worker/var/ossec/etc:/var/ossec/etc
+      - /root/docker-data/wazuh/worker/var/ossec/logs:/var/ossec/logs
+      - /root/docker-data/wazuh/worker/var/ossec/queue:/var/ossec/queue
+      - /root/docker-data/wazuh/worker/var/ossec/var/multigroups:/var/ossec/var/multigroups
+      - /root/docker-data/wazuh/worker/var/ossec/integrations:/var/ossec/integrations
+      - /root/docker-data/wazuh/worker/var/ossec/active-response/bin:/var/ossec/active-response/bin
+      - /root/docker-data/wazuh/worker/etc/filebeat:/etc/filebeat
+      - /root/docker-data/wazuh/worker/var/lib/filebeat:/var/lib/filebeat
+</code></pre>
+<ul>
+<li><strong><code>.env</code></strong>: contains all runtime secrets and configuration values consumed by the Ansible playbook and by active response scripts at runtime. This includes OpenSearch credentials (<code>OS_URL</code>, <code>OS_USER</code>, <code>OS_PASS</code>), Wazuh API credentials (<code>WAZUH_API_URL</code>, <code>WAZUH_API_USER</code>, <code>WAZUH_API_PASS</code>), SMTP settings for email notifications, webhook address (<code>WAZUH_MANAGER_ADDRESS</code>), active response log path (<code>AR_LOG_FILE</code>), and risk config path (<code>AR_RISK_CONFIG</code>).</li>
+</ul>
+<pre><code># =======================
+# OpenSearch Configuration
+# =======================
+OS_URL=https://192.168.5.4:9200  # Change accordingly
+OS_USER=admin
+OS_PASS=SecretPassword
+OS_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
+
+DASHBOARD_URL=https://192.168.5.4  # Change accordingly
+DASHBOARD_USER=admin
+DASHBOARD_PASS=SecretPassword
+DASHBOARD_VERIFY_SSL=&quot;/app/config/wazuh_indexer_ssl_certs/root-ca.pem&quot;
+
+WAZUH_API_URL=https://192.168.5.4:55000  # Change accordingly
+WAZUH_AUTH_USER=wazuh-wui
+WAZUH_AUTH_PASS=MyS3cr37P450r.*-
+
+WAZUH_AGENT_VERSION=4.14.1-1
+WAZUH_MANAGER_ADDRESS=192.168.5.4  # Change accordingly
+
+WEBHOOK_NAME=&quot;RADAR_Webhook&quot;
+WEBHOOK_URL=http://192.168.5.4:8080/notify  # Change accordingly
+
+# =======================
+# Logging
+# =======================
+
+AR_LOG_FILE=/var/ossec/logs/active-responses.log
+AR_RISK_CONFIG=/var/ossec/active-response/bin/ar.yaml
+
+# =======================
+# SMTP
+# =======================
+
+SMTP_HOST=SMTP_HOST # Change accordingly
+SMTP_PORT=SMTP_PORT # Change accordingly
+SMTP_USER=SMTP_USER # Change accordingly
+SMTP_PASS=SMTP_PASS # Change accordingly
+EMAIL_TO=RECEIVER_EMAIL@example.com # Change accordingly
+SMTP_STARTTLS=yes
+</code></pre>
+<h2>Test steps</h2>
+<hr />
+<h3>1. Set session variables (Wazuh host)</h3>
+<p>Set these variables in your shell before running any pre-deployment or post-deployment check commands. They must remain set for the entire session.</p>
+<pre><code class="language-bash">SNAPSHOT_DIR=/srv/radar-integrity-snapshots
+mkdir -p $SNAPSHOT_DIR
+DATE=$(date +%Y%m%d_%H%M%S)
+INDEX_PATTERN=&quot;wazuh-alerts-4.x-2026.*,wazuh-archives-4.x-2026.*&quot;
+TOKEN=$(curl -sk -u &quot;WAZUH_AUTH_USER:WAZUH_AUTH_PASS&quot; \
+  -X POST &quot;https://localhost:55000/security/user/authenticate?raw=true&quot;)
+sudo chown $USER:$USER $SNAPSHOT_DIR
+</code></pre>
+<p>Choose a value for <code>FINGERPRINT_CUTOFF</code>. This timestamp defines the upper time boundary for all OpenSearch aggregation queries used in the index integrity check (Pre-05 and Post-06). It must be a UTC timestamp in the format <code>YYYY-MM-DDTHH:MM:SS.000Z</code>.</p>
+<p>The value must fall within the restored snapshot data range — that is, before the most recent document in the restored snapshot — so that the query window is entirely frozen historical data. Choosing a time that lies before any live agent activity begins ensures that new alerts written after the restore cannot enter the query window and cause a false mismatch between the pre-deployment and post-deployment fingerprints. The same value must be passed identically to both Pre-05 and Post-06:</p>
+<pre><code class="language-bash">FINGERPRINT_CUTOFF=&quot;&lt;chosen_cutoff&gt;&quot;   # e.g. 2026-03-12T23:59:59.000Z
+echo &quot;Session: DATE=$DATE  CUTOFF=$FINGERPRINT_CUTOFF&quot;
+</code></pre>
+<hr />
+<h3>2. Pre-deployment snapshot (Wazuh host)</h3>
+<p>Run each check in order. Do not run any <code>build-radar.sh</code> command until all pre-deployment checks are complete.</p>
+<h4>Pre-01: Wazuh configuration backup</h4>
+<pre><code class="language-bash">sudo cp /srv/docker-data/wazuh/manager/var/ossec/etc/ossec.conf \
+  $SNAPSHOT_DIR/manager_ossec.conf_${DATE}.bak
+sudo cp /srv/docker-data/wazuh/worker/var/ossec/etc/ossec.conf \
+  $SNAPSHOT_DIR/worker_ossec.conf_${DATE}.bak
+ls -lh $SNAPSHOT_DIR/*ossec.conf*${DATE}*
+</code></pre>
+<h4>Pre-02: Active response scripts backup</h4>
+<pre><code class="language-bash">sudo find /srv/docker-data/wazuh/manager/var/ossec/active-response/bin -type f \
+  | sort | sudo xargs sha256sum \
+  &gt; $SNAPSHOT_DIR/manager_ar_hashes_${DATE}.sha256
+echo &quot;AR baseline files: $(wc -l &lt; $SNAPSHOT_DIR/manager_ar_hashes_${DATE}.sha256)&quot;
+</code></pre>
+<h4>Pre-03: Wazuh config file hashes</h4>
+<pre><code class="language-bash">sudo find /srv/docker-data/wazuh/manager/var/ossec/etc -type f \
+  | sort | sudo xargs sha256sum \
+  &gt; $SNAPSHOT_DIR/manager_hashes_${DATE}.sha256
+
+sudo find /srv/docker-data/wazuh/worker/var/ossec/etc -type f \
+  | sort | sudo xargs sha256sum \
+  &gt; $SNAPSHOT_DIR/worker_hashes_${DATE}.sha256
+
+echo &quot;Manager: $(wc -l &lt; $SNAPSHOT_DIR/manager_hashes_${DATE}.sha256) files&quot;
+echo &quot;Worker:  $(wc -l &lt; $SNAPSHOT_DIR/worker_hashes_${DATE}.sha256) files&quot;
+</code></pre>
+<h4>Pre-04: File permissions snapshot</h4>
+<pre><code class="language-bash">sudo find /srv/docker-data/wazuh/manager/var/ossec/etc -type f \
+  -printf &quot;%m %u %g %p\n&quot; | sort \
+  &gt; $SNAPSHOT_DIR/manager_permissions_${DATE}.txt
+
+sudo find /srv/docker-data/wazuh/worker/var/ossec/etc -type f \
+  -printf &quot;%m %u %g %p\n&quot; | sort \
+  &gt; $SNAPSHOT_DIR/worker_permissions_${DATE}.txt
+
+echo &quot;Permission entries: $(wc -l &lt; $SNAPSHOT_DIR/manager_permissions_${DATE}.txt)&quot;
+</code></pre>
+<h4>Pre-05: Indexer document fingerprint</h4>
+<pre><code class="language-bash">FINGERPRINT_FILE=$SNAPSHOT_DIR/index_fingerprint_${DATE}.txt
+echo &quot;Time range: 2026-01-01T00:00:00Z to ${FINGERPRINT_CUTOFF}&quot; &gt; $FINGERPRINT_FILE
+echo &quot;---&quot; &gt;&gt; $FINGERPRINT_FILE
+
+for INDEX in $(curl -sk -u admin:SecretPassword \
+  &quot;https://localhost:9200/_cat/indices/${INDEX_PATTERN}?h=index&quot; | sort); do
+
+  echo &quot;=== $INDEX ===&quot; &gt;&gt; $FINGERPRINT_FILE
+
+  curl -sk -u admin:SecretPassword \
+    &quot;https://localhost:9200/$INDEX/_search&quot; \
+    -H &quot;Content-Type: application/json&quot; \
+    -d &quot;{
+      \&quot;size\&quot;: 0,
+      \&quot;query\&quot;: {\&quot;range\&quot;: {\&quot;timestamp\&quot;: {
+        \&quot;gte\&quot;: \&quot;2026-01-01T00:00:00.000Z\&quot;,
+        \&quot;lte\&quot;: \&quot;${FINGERPRINT_CUTOFF}\&quot;
+      }}},
+      \&quot;aggs\&quot;: {
+        \&quot;total_docs\&quot;: {\&quot;value_count\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}},
+        \&quot;min_timestamp\&quot;: {\&quot;min\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}},
+        \&quot;max_timestamp\&quot;: {\&quot;max\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}},
+        \&quot;rule_id_distribution\&quot;: {
+          \&quot;terms\&quot;: {\&quot;field\&quot;: \&quot;rule.id\&quot;, \&quot;size\&quot;: 2000, \&quot;order\&quot;: {\&quot;_key\&quot;: \&quot;asc\&quot;}},
+          \&quot;aggs\&quot;: {\&quot;count\&quot;: {\&quot;value_count\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}}}
+        }
+      }
+    }&quot; | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+aggs = data.get('aggregations', {})
+total = aggs.get('total_docs', {}).get('value', 0)
+min_ts = aggs.get('min_timestamp', {}).get('value_as_string', 'N/A')
+max_ts = aggs.get('max_timestamp', {}).get('value_as_string', 'N/A')
+print(f'  total_docs: {total}')
+print(f'  min_timestamp: {min_ts}')
+print(f'  max_timestamp: {max_ts}')
+buckets = aggs.get('rule_id_distribution', {}).get('buckets', [])
+print(f'  rule_id_count: {len(buckets)}')
+for b in buckets:
+    print(f'  rule:{b[\&quot;key\&quot;]} count:{b[\&quot;doc_count\&quot;]}')
+&quot; &gt;&gt; $FINGERPRINT_FILE
+  echo &quot;---&quot; &gt;&gt; $FINGERPRINT_FILE
+done
+
+echo &quot;Fingerprint file: $(wc -l &lt; $FINGERPRINT_FILE) lines written&quot;
+
+FILTER_PY=$(mktemp /tmp/radar_filter_XXXXXX.py)
+python3 -c &quot;
+code = [
+    'import sys, hashlib',
+    'def filter_file(path):',
+    '    with open(path) as f:',
+    '        lines = f.read().splitlines()',
+    '    out = []',
+    '    i = 0',
+    '    while i &lt; len(lines):',
+    '        line = lines[i]',
+    '        if line.startswith(\&quot;Time range:\&quot;):',
+    '            i += 1',
+    '            continue',
+    '        if line.startswith(\&quot;=== \&quot;) and line.endswith(\&quot; ===\&quot;):',
+    '            block = [line]',
+    '            j = i + 1',
+    '            while j &lt; len(lines) and not (lines[j].startswith(\&quot;=== \&quot;) and lines[j].endswith(\&quot; ===\&quot;)):',
+    '                block.append(lines[j])',
+    '                j += 1',
+    '            total_line = next((l for l in block if \&quot;total_docs:\&quot; in l), \&quot;\&quot;)',
+    '            total = total_line.split(\&quot;:\&quot;)[-1].strip() if total_line else \&quot;?\&quot;',
+    '            if total != \&quot;0\&quot;:',
+    '                out.extend(block)',
+    '            i = j',
+    '        else:',
+    '            out.append(line)',
+    '            i += 1',
+    '    return chr(10).join(out)',
+    'import hashlib',
+    'text = filter_file(sys.argv[1])',
+    'print(hashlib.sha256(text.encode()).hexdigest())',
+]
+with open('$FILTER_PY', 'w') as fh:
+    fh.write(chr(10).join(code) + chr(10))
+&quot;
+python3 &quot;$FILTER_PY&quot; &quot;$FINGERPRINT_FILE&quot; &gt; $SNAPSHOT_DIR/index_fingerprint_${DATE}.sha256
+rm -f &quot;$FILTER_PY&quot;
+echo &quot;Fingerprint hash: $(cat $SNAPSHOT_DIR/index_fingerprint_${DATE}.sha256)&quot;
+</code></pre>
+<h4>Pre-06: Cluster health</h4>
+<pre><code class="language-bash">curl -sk -H &quot;Authorization: Bearer $TOKEN&quot; \
+  &quot;https://localhost:55000/cluster/nodes&quot; &gt; /tmp/cluster_raw.json
+
+python3 -c &quot;
+import json
+with open('/tmp/cluster_raw.json') as f:
+    data = json.load(f)
+for n in data.get('data', {}).get('affected_items', []):
+    print(n.get('name','?'), n.get('type','?'), n.get('status','?'))
+&quot; | sort &gt; $SNAPSHOT_DIR/cluster_${DATE}.txt
+cat $SNAPSHOT_DIR/cluster_${DATE}.txt
+</code></pre>
+<h4>Pre-07: Agent connectivity</h4>
+<pre><code class="language-bash">curl -sk -H &quot;Authorization: Bearer $TOKEN&quot; \
+  &quot;https://localhost:55000/agents?limit=100&quot; \
+  | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+for a in data['data']['affected_items']:
+    print(f\&quot;{a['id']} {a['name']} {a['status']}\&quot;)
+&quot; | sort &gt; $SNAPSHOT_DIR/agents_${DATE}.txt
+cat $SNAPSHOT_DIR/agents_${DATE}.txt
+</code></pre>
+<h4>Pre-08: Wazuh API health</h4>
+<pre><code class="language-bash">curl -sk -H &quot;Authorization: Bearer $TOKEN&quot; \
+  &quot;https://localhost:55000/manager/info&quot; \
+  | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+info = data['data']['affected_items'][0]
+print(f\&quot;version: {info['version']}\&quot;)
+print(f\&quot;uuid: {info['uuid']}\&quot;)
+print(f\&quot;type: {info['type']}\&quot;)
+&quot; &gt; $SNAPSHOT_DIR/api_info_${DATE}.txt
+cat $SNAPSHOT_DIR/api_info_${DATE}.txt
+</code></pre>
+<h4>Pre-09: Existing detection test</h4>
+<p>Run a known log line through wazuh-logtest on both master and worker before any RADAR deployment. This records the baseline decoder and rule match to compare against after deployment.</p>
+<pre><code class="language-bash">docker exec -it multi-node-wazuh.master-1 bash -c \
+  'echo &quot;2026-03-26T13:43:53.668837+01:00 vm-cyfort-testing-2 sudo: pam_unix(sudo:session): session closed for user root&quot; \
+  | /var/ossec/bin/wazuh-logtest 2&gt;&amp;1 \
+  | grep -E &quot;Phase|name:|id:|level:|description:|groups:&quot;'
+
+docker exec -it multi-node-wazuh.worker-1 bash -c \
+  'echo &quot;2026-03-26T13:43:53.668837+01:00 vm-cyfort-testing-2 sudo: pam_unix(sudo:session): session closed for user root&quot; \
+  | /var/ossec/bin/wazuh-logtest 2&gt;&amp;1 \
+  | grep -E &quot;Phase|name:|id:|level:|description:|groups:&quot;'
+</code></pre>
+<h4>Pre-10: Filebeat pipeline state</h4>
+<pre><code class="language-bash">curl -sk -u admin:SecretPassword \
+  &quot;https://localhost:9200/_ingest/pipeline/filebeat-7.10.2-wazuh-archives-pipeline&quot; \
+  &gt; $SNAPSHOT_DIR/filebeat_pipeline_${DATE}.json
+echo &quot;Pipeline captured: $(wc -c &lt; $SNAPSHOT_DIR/filebeat_pipeline_${DATE}.json) bytes&quot;
+</code></pre>
+<h4>Pre-11: Wazuh manager service state</h4>
+<pre><code class="language-bash">docker exec multi-node-wazuh.master-1 \
+  /var/ossec/bin/wazuh-control status \
+  &gt; $SNAPSHOT_DIR/wazuh_status_${DATE}.txt
+cat $SNAPSHOT_DIR/wazuh_status_${DATE}.txt
+</code></pre>
+<p>Save snapshot date:</p>
+<pre><code class="language-bash">echo &quot;PRE_DATE=$DATE&quot; &gt; $SNAPSHOT_DIR/latest.env
+echo &quot;Pre-deployment snapshot complete: $DATE&quot;
+ls -lh $SNAPSHOT_DIR/
+</code></pre>
+<hr />
+<h3>3. RADAR deployment (controller host)</h3>
+<p>Before running <code>build-radar.sh</code>, verify that the three configuration files described in the preconditions are correct and up to date:</p>
+<ul>
+<li><code>inventory.yaml</code> — SSH coordinates for the Wazuh manager host and agent endpoints are correct and reachable.</li>
+<li><code>volumes.yml</code> — bind-mount paths match the actual Docker volume configuration on the Wazuh host.</li>
+<li><code>.env</code> — all credentials, addresses, and paths are set correctly for this environment.</li>
+</ul>
+<p>Deploy all three scenarios sequentially:</p>
+<pre><code class="language-bash">cd ~/radar
+
+./build-radar.sh geoip_detection \
+  --manager remote --agent remote --manager_exists true
+
+./build-radar.sh suspicious_login \
+  --manager remote --agent remote --manager_exists true
+
+./build-radar.sh log_volume \
+  --manager remote --agent remote --manager_exists true
+</code></pre>
+<p>Verify each run completes with Ansible play recap showing <code>failed=0</code> for all hosts.</p>
+<hr />
+<h3>4. Post-deployment checks (Wazuh host)</h3>
+<p>Load baseline and refresh token. Use the same <code>FINGERPRINT_CUTOFF</code> value set in step 1:</p>
+<pre><code class="language-bash">source /srv/radar-integrity-snapshots/latest.env
+SNAPSHOT_DIR=/srv/radar-integrity-snapshots
+FINGERPRINT_CUTOFF=&quot;&lt;same value as step 2&gt;&quot;
+INDEX_PATTERN=&quot;wazuh-alerts-4.x-2026.*,wazuh-archives-4.x-2026.*&quot;
+TOKEN=$(curl -sk -u &quot;WAZUH_AUTH_USER:WAZUH_AUTH_PASS&quot; \
+  -X POST &quot;https://localhost:55000/security/user/authenticate?raw=true&quot;)
+
+echo &quot;PRE_DATE=$PRE_DATE&quot;
+</code></pre>
+<p>In case of errors in the following commands, reset these variables again.</p>
+<h4>Post-01: Wazuh index file hashes</h4>
+<pre><code class="language-bash">sudo find /srv/docker-data/wazuh/manager/var/ossec/etc -type f \
+  | sort | sudo xargs sha256sum &gt; /tmp/manager_hashes_now.sha256
+
+MODIFIED=$(diff $SNAPSHOT_DIR/manager_hashes_${PRE_DATE}.sha256 \
+  /tmp/manager_hashes_now.sha256 \
+  | grep &quot;^&lt;&quot; | awk '{print $NF}' \
+  | grep -v &quot;decoders\|rules\|lists\|active-response\|ossec.conf\|shared/\|client.keys\|sslmanager&quot;)
+[ -z &quot;$MODIFIED&quot; ] \
+  &amp;&amp; echo &quot;PASS - No unexpected file modifications (manager)&quot; \
+  || { echo &quot;FAIL - Modified files outside RADAR scope (manager):&quot;; echo &quot;$MODIFIED&quot;; }
+echo &quot;New files (manager):&quot;
+diff $SNAPSHOT_DIR/manager_hashes_${PRE_DATE}.sha256 /tmp/manager_hashes_now.sha256 \
+  | grep &quot;^&gt;&quot; | awk '{print $NF}'
+
+sudo find /srv/docker-data/wazuh/worker/var/ossec/etc -type f \
+  | sort | sudo xargs sha256sum &gt; /tmp/worker_hashes_now.sha256
+
+MODIFIED=$(diff $SNAPSHOT_DIR/worker_hashes_${PRE_DATE}.sha256 \
+  /tmp/worker_hashes_now.sha256 \
+  | grep &quot;^&lt;&quot; | awk '{print $NF}' \
+  | grep -v &quot;decoders\|rules\|lists\|active-response\|ossec.conf\|shared/\|client.keys\|sslmanager&quot;)
+[ -z &quot;$MODIFIED&quot; ] \
+  &amp;&amp; echo &quot;PASS - No unexpected file modifications (worker)&quot; \
+  || { echo &quot;FAIL - Modified files outside RADAR scope (worker):&quot;; echo &quot;$MODIFIED&quot;; }
+</code></pre>
+<h4>Post-02: File permissions</h4>
+<pre><code class="language-bash">sudo find /srv/docker-data/wazuh/manager/var/ossec/etc -type f \
+  -printf &quot;%m %u %g %p\n&quot; | sort &gt; /tmp/manager_permissions_now.txt
+
+PERM_DIFF=$(diff $SNAPSHOT_DIR/manager_permissions_${PRE_DATE}.txt \
+  /tmp/manager_permissions_now.txt \
+  | grep &quot;^&lt;&quot; \
+  | grep -v &quot;decoders\|rules\|lists\|active-response\|ossec.conf\|shared/\|client.keys\|sslmanager&quot;)
+[ -z &quot;$PERM_DIFF&quot; ] \
+  &amp;&amp; echo &quot;PASS - No unexpected permission changes&quot; \
+  || { echo &quot;FAIL - Permission changes outside RADAR scope:&quot;; echo &quot;$PERM_DIFF&quot;; }
+</code></pre>
+<h4>Post-03: Existing detection test</h4>
+<p>Re-run the identical log line through wazuh-logtest on both master and worker after RADAR deployment. The decoder name, rule ID, level, description, and groups must be identical to the pre-deployment baseline recorded in Pre-09:</p>
+<pre><code class="language-bash">docker exec -it multi-node-wazuh.master-1 bash -c \
+  'echo &quot;2026-03-26T13:43:53.668837+01:00 vm-cyfort-testing-2 sudo: pam_unix(sudo:session): session closed for user root&quot; \
+  | /var/ossec/bin/wazuh-logtest 2&gt;&amp;1 \
+  | grep -E &quot;Phase|name:|id:|level:|description:|groups:&quot;'
+
+docker exec -it multi-node-wazuh.worker-1 bash -c \
+  'echo &quot;2026-03-26T13:43:53.668837+01:00 vm-cyfort-testing-2 sudo: pam_unix(sudo:session): session closed for user root&quot; \
+  | /var/ossec/bin/wazuh-logtest 2&gt;&amp;1 \
+  | grep -E &quot;Phase|name:|id:|level:|description:|groups:&quot;'
+</code></pre>
+<h4>Post-04: Agent connectivity</h4>
+<pre><code class="language-bash">curl -sk -H &quot;Authorization: Bearer $TOKEN&quot; \
+  &quot;https://localhost:55000/agents?limit=100&quot; \
+  | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+for a in data['data']['affected_items']:
+    print(f\&quot;{a['id']} {a['name']} {a['status']}\&quot;)
+&quot; | sort &gt; /tmp/agents_now.txt
+
+PRE_AGENTS=$(cat $SNAPSHOT_DIR/agents_${PRE_DATE}.txt)
+POST_AGENTS=$(cat /tmp/agents_now.txt)
+[ &quot;$PRE_AGENTS&quot; = &quot;$POST_AGENTS&quot; ] \
+  &amp;&amp; { echo &quot;PASS - All agents unchanged&quot;; cat /tmp/agents_now.txt; } \
+  || { echo &quot;CHECK - Agent changes (webhook enrollment expected):&quot;; \
+       diff &lt;(echo &quot;$PRE_AGENTS&quot;) &lt;(echo &quot;$POST_AGENTS&quot;) || true; }
+</code></pre>
+<h4>Post-05: Cluster health</h4>
+<pre><code class="language-bash">curl -sk -H &quot;Authorization: Bearer $TOKEN&quot; \
+  &quot;https://localhost:55000/cluster/nodes&quot; &gt; /tmp/cluster_raw_now.json
+
+python3 -c &quot;
+import json
+with open('/tmp/cluster_raw_now.json') as f:
+    data = json.load(f)
+for n in data.get('data', {}).get('affected_items', []):
+    print(n.get('name','?'), n.get('type','?'), n.get('status','?'))
+&quot; | sort &gt; /tmp/cluster_now.txt
+
+[ &quot;$(cat $SNAPSHOT_DIR/cluster_${PRE_DATE}.txt)&quot; = &quot;$(cat /tmp/cluster_now.txt)&quot; ] \
+  &amp;&amp; { echo &quot;PASS - Cluster nodes unchanged&quot;; cat /tmp/cluster_now.txt; } \
+  || { echo &quot;CHECK - Cluster changes:&quot;; \
+       diff $SNAPSHOT_DIR/cluster_${PRE_DATE}.txt /tmp/cluster_now.txt || true; }
+</code></pre>
+<h4>Post-06: Indexer document fingerprint</h4>
+<pre><code class="language-bash">DATE_POST=$(date +%Y%m%d_%H%M%S)
+FINGERPRINT_POST=/tmp/index_fingerprint_post_${DATE_POST}.txt
+echo &quot;Time range: 2026-01-01T00:00:00Z to ${FINGERPRINT_CUTOFF}&quot; &gt; $FINGERPRINT_POST
+echo &quot;---&quot; &gt;&gt; $FINGERPRINT_POST
+
+for INDEX in $(curl -sk -u admin:SecretPassword \
+  &quot;https://localhost:9200/_cat/indices/${INDEX_PATTERN}?h=index&quot; | sort); do
+
+  echo &quot;=== $INDEX ===&quot; &gt;&gt; $FINGERPRINT_POST
+
+  curl -sk -u admin:SecretPassword \
+    &quot;https://localhost:9200/$INDEX/_search&quot; \
+    -H &quot;Content-Type: application/json&quot; \
+    -d &quot;{
+      \&quot;size\&quot;: 0,
+      \&quot;query\&quot;: {\&quot;range\&quot;: {\&quot;timestamp\&quot;: {
+        \&quot;gte\&quot;: \&quot;2026-01-01T00:00:00.000Z\&quot;,
+        \&quot;lte\&quot;: \&quot;${FINGERPRINT_CUTOFF}\&quot;
+      }}},
+      \&quot;aggs\&quot;: {
+        \&quot;total_docs\&quot;: {\&quot;value_count\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}},
+        \&quot;min_timestamp\&quot;: {\&quot;min\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}},
+        \&quot;max_timestamp\&quot;: {\&quot;max\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}},
+        \&quot;rule_id_distribution\&quot;: {
+          \&quot;terms\&quot;: {\&quot;field\&quot;: \&quot;rule.id\&quot;, \&quot;size\&quot;: 2000, \&quot;order\&quot;: {\&quot;_key\&quot;: \&quot;asc\&quot;}},
+          \&quot;aggs\&quot;: {\&quot;count\&quot;: {\&quot;value_count\&quot;: {\&quot;field\&quot;: \&quot;timestamp\&quot;}}}
+        }
+      }
+    }&quot; | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+aggs = data.get('aggregations', {})
+total = aggs.get('total_docs', {}).get('value', 0)
+min_ts = aggs.get('min_timestamp', {}).get('value_as_string', 'N/A')
+max_ts = aggs.get('max_timestamp', {}).get('value_as_string', 'N/A')
+print(f'  total_docs: {total}')
+print(f'  min_timestamp: {min_ts}')
+print(f'  max_timestamp: {max_ts}')
+buckets = aggs.get('rule_id_distribution', {}).get('buckets', [])
+print(f'  rule_id_count: {len(buckets)}')
+for b in buckets:
+    print(f'  rule:{b[\&quot;key\&quot;]} count:{b[\&quot;doc_count\&quot;]}')
+&quot; &gt;&gt; $FINGERPRINT_POST
+  echo &quot;---&quot; &gt;&gt; $FINGERPRINT_POST
+done
+
+echo &quot;Fingerprint file: $(wc -l &lt; $FINGERPRINT_POST) lines written&quot;
+
+FILTER_PY=$(mktemp /tmp/radar_filter_XXXXXX.py)
+python3 -c &quot;
+code = [
+    'import sys, hashlib',
+    'def filter_file(path):',
+    '    with open(path) as f:',
+    '        lines = f.read().splitlines()',
+    '    out = []',
+    '    i = 0',
+    '    while i &lt; len(lines):',
+    '        line = lines[i]',
+    '        if line.startswith(\&quot;Time range:\&quot;):',
+    '            i += 1',
+    '            continue',
+    '        if line.startswith(\&quot;=== \&quot;) and line.endswith(\&quot; ===\&quot;):',
+    '            block = [line]',
+    '            j = i + 1',
+    '            while j &lt; len(lines) and not (lines[j].startswith(\&quot;=== \&quot;) and lines[j].endswith(\&quot; ===\&quot;)):',
+    '                block.append(lines[j])',
+    '                j += 1',
+    '            total_line = next((l for l in block if \&quot;total_docs:\&quot; in l), \&quot;\&quot;)',
+    '            total = total_line.split(\&quot;:\&quot;)[-1].strip() if total_line else \&quot;?\&quot;',
+    '            if total != \&quot;0\&quot;:',
+    '                out.extend(block)',
+    '            i = j',
+    '        else:',
+    '            out.append(line)',
+    '            i += 1',
+    '    return chr(10).join(out)',
+    'print(filter_file(sys.argv[1]))',
+]
+with open('$FILTER_PY', 'w') as fh:
+    fh.write(chr(10).join(code) + chr(10))
+&quot;
+
+PRE_HASH=$(python3 &quot;$FILTER_PY&quot; &quot;$SNAPSHOT_DIR/index_fingerprint_${PRE_DATE}.txt&quot; \
+  | sha256sum | awk '{print $1}')
+POST_HASH=$(python3 &quot;$FILTER_PY&quot; &quot;$FINGERPRINT_POST&quot; \
+  | sha256sum | awk '{print $1}')
+rm -f &quot;$FILTER_PY&quot;
+
+echo &quot;Pre-RADAR:  $PRE_HASH&quot;
+echo &quot;Post-RADAR: $POST_HASH&quot;
+[ &quot;$PRE_HASH&quot; = &quot;$POST_HASH&quot; ] \
+  &amp;&amp; echo &quot;PASS - Index data fingerprint identical&quot; \
+  || { echo &quot;FAIL - Fingerprint changed:&quot;; \
+       diff &lt;(grep -v &quot;^Time range:&quot; $SNAPSHOT_DIR/index_fingerprint_${PRE_DATE}.txt) \
+            &lt;(grep -v &quot;^Time range:&quot; $FINGERPRINT_POST) \
+            | grep &quot;^[&lt;&gt;]&quot; | head -30 || true; }
+</code></pre>
+<h4>Post-07: Wazuh API</h4>
+<pre><code class="language-bash">curl -sk -H &quot;Authorization: Bearer $TOKEN&quot; \
+  &quot;https://localhost:55000/manager/info&quot; \
+  | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+info = data['data']['affected_items'][0]
+print(f\&quot;version: {info['version']}\&quot;)
+print(f\&quot;uuid: {info['uuid']}\&quot;)
+print(f\&quot;type: {info['type']}\&quot;)
+&quot; &gt; /tmp/api_info_now.txt
+
+[ &quot;$(cat $SNAPSHOT_DIR/api_info_${PRE_DATE}.txt)&quot; = &quot;$(cat /tmp/api_info_now.txt)&quot; ] \
+  &amp;&amp; { echo &quot;PASS - API info unchanged&quot;; cat /tmp/api_info_now.txt; } \
+  || { echo &quot;CHECK - API info changed:&quot;; \
+       diff $SNAPSHOT_DIR/api_info_${PRE_DATE}.txt /tmp/api_info_now.txt || true; }
+</code></pre>
+<h4>Post-08: No new errors in ossec.log</h4>
+<pre><code class="language-bash">docker exec multi-node-wazuh.master-1 bash -c \
+  'grep -c &quot;ERROR\|CRITICAL&quot; /var/ossec/logs/ossec.log 2&gt;/dev/null || echo 0'
+
+echo &quot;--- Last 10 ERROR/CRITICAL entries ---&quot;
+docker exec multi-node-wazuh.master-1 bash -c \
+  'grep &quot;ERROR\|CRITICAL&quot; /var/ossec/logs/ossec.log 2&gt;/dev/null | tail -10 || echo &quot;none&quot;'
+</code></pre>
+<h4>Post-09: Webhook service</h4>
+<pre><code class="language-bash">docker inspect ad-webhook --format '{{.State.Status}}' 2&gt;/dev/null \
+  &amp;&amp; echo &quot;Webhook container: running&quot; \
+  || echo &quot;FAIL - Webhook container not found or not running&quot;
+
+curl -sf http://localhost:8080/health \
+  &amp;&amp; echo &quot;PASS - Webhook HTTP endpoint responding&quot; \
+  || echo &quot;FAIL - Webhook not responding on port 8080&quot;
+</code></pre>
+<h4>Post-10: Active response wiring</h4>
+<pre><code class="language-bash">echo &quot;--- radar_ar_geoip ---&quot;
+docker exec multi-node-wazuh.master-1 bash -c \
+  'grep -c &quot;radar_ar_geoip&quot; /var/ossec/etc/ossec.conf' \
+  &amp;&amp; echo &quot;PASS - radar_ar_geoip present&quot; || echo &quot;FAIL&quot;
+
+echo &quot;--- radar_ar_log_volume ---&quot;
+docker exec multi-node-wazuh.master-1 bash -c \
+  'grep -c &quot;radar_ar_log_volume&quot; /var/ossec/etc/ossec.conf' \
+  &amp;&amp; echo &quot;PASS - radar_ar_log_volume present&quot; || echo &quot;FAIL&quot;
+
+echo &quot;--- suspicious_login AR scripts ---&quot;
+docker exec multi-node-wazuh.master-1 bash -c \
+  'grep -c &quot;terminate_service\|lock_user_linux&quot; /var/ossec/etc/ossec.conf' \
+  &amp;&amp; echo &quot;PASS - suspicious_login AR blocks present&quot; || echo &quot;FAIL&quot;
+</code></pre>
+<h4>Post-11: Decoder and rule deployment</h4>
+<pre><code class="language-bash">echo &quot;--- Decoders ---&quot;
+docker exec multi-node-wazuh.master-1 bash -c \
+  'for f in 0310-ssh.xml 0375-web-accesslog.xml 0001-ad-common.xml 0001-log-volume.xml; do
+     path=&quot;/var/ossec/etc/decoders/$f&quot;
+     if [ -f &quot;$path&quot; ]; then
+       stat -c &quot;PASS %n owner=%U:%G mode=%a&quot; &quot;$path&quot;
+     else
+       echo &quot;FAIL $f not found&quot;
+     fi
+   done'
+
+echo &quot;--- Rules ---&quot;
+docker exec multi-node-wazuh.master-1 bash -c \
+  'for f in a2-geoip-detection.xml a3-suspicious-login.xml a1-log-volume.xml; do
+     path=&quot;/var/ossec/etc/rules/$f&quot;
+     if [ -f &quot;$path&quot; ]; then
+       stat -c &quot;PASS %n owner=%U:%G mode=%a&quot; &quot;$path&quot;
+     else
+       echo &quot;FAIL $f not found&quot;
+     fi
+   done'
+</code></pre>
+<h4>Post-12: Python dependencies</h4>
+<pre><code class="language-bash">docker exec multi-node-wazuh.master-1 python3 -c \
+  &quot;import yaml, requests; print('PASS - pyyaml and requests importable')&quot; \
+  || echo &quot;FAIL - Python dependency missing in container&quot;
+</code></pre>
+<h4>Post-13: GeoIP databases on agents (in agent host)</h4>
+<pre><code class="language-bash">for db in GeoLite2-City.mmdb GeoLite2-ASN.mmdb; do
+  path=&quot;/usr/share/GeoIP/$db&quot;
+     [ -f &quot;$path&quot; ] \
+       &amp;&amp; stat -c &quot;PASS %n size=%s bytes&quot; &quot;$path&quot; \
+       || echo &quot;FAIL $db not found&quot;
+done
+</code></pre>
+<h4>Post-14: Existing rules unmodified</h4>
+<pre><code class="language-bash">UNCHANGED=$(diff $SNAPSHOT_DIR/manager_hashes_${PRE_DATE}.sha256 \
+  /tmp/manager_hashes_now.sha256 \
+  | grep &quot;^&lt;&quot; | awk '{print $NF}' \
+  | grep -v &quot;decoders\|rules\|lists\|active-response\|ossec.conf\|shared/\|client.keys\|sslmanager&quot;)
+
+[ -z &quot;$UNCHANGED&quot; ] \
+  &amp;&amp; echo &quot;PASS - All pre-existing files byte-for-byte unmodified&quot; \
+  || { echo &quot;FAIL - Pre-existing files changed outside RADAR scope:&quot;; echo &quot;$UNCHANGED&quot;; }
+</code></pre>
+<h4>Post-15: Filebeat pipeline integrity</h4>
+<pre><code class="language-bash">curl -sk -u admin:SecretPassword \
+  &quot;https://localhost:9200/_ingest/pipeline/filebeat-7.10.2-wazuh-archives-pipeline&quot; \
+  | python3 -c &quot;
+import json, sys
+content = sys.stdin.read()
+print('PASS - log_volume patch in OpenSearch pipeline' if 'log_volume_metric' in content \
+  else 'FAIL - patch not in OpenSearch pipeline')
+&quot;
+</code></pre>
+<h4>Post-16: OpenSearch index mappings</h4>
+<pre><code class="language-bash">echo &quot;--- Existing wazuh-alerts-* template ---&quot;
+curl -sk -u admin:SecretPassword \
+  &quot;https://localhost:9200/_index_template/wazuh&quot; \
+  | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+for t in data.get('index_templates', []):
+    print(t.get('name'), '-&gt;', t.get('index_template', {}).get('index_patterns'))
+&quot;
+
+echo &quot;--- RADAR-specific templates (log_volume) ---&quot;
+curl -sk -u admin:SecretPassword \
+  &quot;https://localhost:9200/_index_template/radar*&quot; \
+  | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+templates = data.get('index_templates', [])
+if templates:
+    for t in templates:
+        print('PRESENT:', t.get('name'), t.get('index_template', {}).get('index_patterns'))
+else:
+    print('No RADAR templates (expected unless log_volume deployed)')
+&quot;
+</code></pre>
+<hr />
+<h3>5. Cleanup</h3>
+<pre><code class="language-bash">cd ~/wazuh-docker/multi-node
+docker compose down -v
+docker stop ad-webhook 2&gt;/dev/null || true
+sudo rm -rf /srv/docker-data/wazuh/
+sudo rm -rf /tmp/
+</code></pre>
+<h2>Expected outcome</h2>
+<p><strong>Step 2 — Pre-deployment:</strong> All baseline files created. And all commands run without any error and permission issues.</p>
+<p><strong>Step 3 — Deployment:</strong> All three <code>build-radar.sh</code> and <code>run-radar.sh</code> runs complete.</p>
+<p><strong>Step 3 — Post-deployment:</strong></p>
+<ul>
+<li><strong>Post-01:</strong> <code>PASS - No unexpected file modifications (manager)</code> and <code>(worker)</code>.</li>
+<li><strong>Post-02:</strong> <code>PASS - No unexpected permission changes</code>.</li>
+<li><strong>Post-03:</strong> On both master and worker: decoder <code>pam</code>, rule <code>5502</code>, level <code>3</code>, description <code>PAM: Login session closed.</code>, groups <code>pam, syslog</code>. Must be identical before and after deployment.</li>
+<li><strong>Post-04:</strong> Existing agents unchanged. Webhook agent enrollment expected and labelled.</li>
+<li><strong>Post-05:</strong> <code>PASS - Cluster nodes unchanged</code>.</li>
+<li><strong>Post-06:</strong> <code>PASS - Index data fingerprint identical</code>.</li>
+<li><strong>Post-07:</strong> <code>PASS - API info unchanged</code>.</li>
+<li><strong>Post-08:</strong> No ERROR/CRITICAL entries attributable to RADAR in ossec.log.</li>
+<li><strong>Post-09:</strong> Webhook container running and HTTP endpoint responding.</li>
+<li><strong>Post-10:</strong> All three scenario AR command blocks confirmed present in <code>ossec.conf</code>.</li>
+<li><strong>Post-11:</strong> All six decoder and rule files present with <code>root:wazuh</code> ownership.</li>
+<li><strong>Post-12:</strong> <code>PASS - pyyaml and requests importable</code>.</li>
+<li><strong>Post-13:</strong> Both GeoLite2 <code>.mmdb</code> files present on remote agent.</li>
+<li><strong>Post-14:</strong> <code>PASS - All pre-existing files byte-for-byte unmodified</code>.</li>
+<li><strong>Post-15:</strong> <code>log_volume_metric</code> patch present in container pipeline file (2 matches). OpenSearch pipeline <code>filebeat-7.10.2-wazuh-archives-pipeline</code> also contains the patch.</li>
+<li><strong>Post-16:</strong> No changes to <code>wazuh-alerts-*</code> template. <code>wazuh-ad-log-volume-*</code> template present after <code>log_volume</code> deployment.</li>
+</ul>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a>, <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a>, <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-038">TRP-038 TCER: RADAR deployment integrity verification</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>4</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>0.8.2</td>
 </tr>
 </tbody>
 </table>

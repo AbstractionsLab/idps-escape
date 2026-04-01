@@ -128,52 +128,60 @@
 - set_fact:
     _health_report: "{{ _health_report + (_r_ar_wiring.stdout_lines | default([])) }}"
 
-- name: mgr | decoders and rules per scenario
-  shell: |
-    _x="{{ _exec }}"
-    out=""
-    for scn in {{ _target_scenarios | join(' ') }}; do
-      scn_h=$(echo "$scn" | tr '_' '-')
+- name: mgr | define expected decoder and rule files per scenario
+  set_fact:
+    _scenario_files:
+      geoip_detection:
+        decoders:
+          - /var/ossec/etc/decoders/0310-ssh.xml
+          - /var/ossec/etc/decoders/0375-web-accesslog.xml
+        rules:
+          - /var/ossec/etc/rules/a2-geoip-detection.xml
+      suspicious_login:
+        decoders:
+          - /var/ossec/etc/decoders/0310-ssh.xml
+        rules:
+          - /var/ossec/etc/rules/a3-suspicious-login.xml
+      log_volume:
+        decoders:
+          - /var/ossec/etc/decoders/0001-ad-common.xml
+          - /var/ossec/etc/decoders/0001-log-volume.xml
+        rules:
+          - /var/ossec/etc/rules/a1-log-volume.xml
 
-      # --- decoder ---
-      dec_count=$($_x bash -c \
-        "find /var/ossec/etc/decoders/ \( -name \"*${scn}*\" -o -name \"*${scn_h}*\" \) 2>/dev/null | wc -l")
-      if [ "${dec_count:-0}" -gt 0 ]; then
-        grp=$($_x bash -c \
-          "find /var/ossec/etc/decoders/ \( -name \"*${scn}*\" -o -name \"*${scn_h}*\" \) \
-           | head -1 | xargs -r stat -c '%G' 2>/dev/null" || echo unknown)
-        [ "$grp" = "wazuh" ] \
-          && out="${out}OK - decoder(s) for ${scn} present (group: wazuh)\n" \
-          || out="${out}WARN - decoder(s) for ${scn} group is '${grp}' (expected wazuh)\n"
-      elif [ "$scn" = "log_volume" ]; then
-        out="${out}INFO - ${scn}: uses opensearch_ad webhook decoder (no dedicated file expected)\n"
-      else
-        out="${out}WARN - no decoder file found for ${scn}\n"
-      fi
+- name: mgr | build file list for target scenarios
+  set_fact:
+    _files_to_check: >-
+      {{
+        _target_scenarios
+        | map('extract', _scenario_files)
+        | map(attribute='decoders') | flatten
+        + _target_scenarios
+        | map('extract', _scenario_files)
+        | map(attribute='rules') | flatten
+        | unique
+      }}
 
-      # --- rules ---
-      rule_count=$($_x bash -c \
-        "find /var/ossec/etc/rules/ \( -name \"*${scn}*\" -o -name \"*${scn_h}*\" \) 2>/dev/null | wc -l")
-      if [ "${rule_count:-0}" -gt 0 ]; then
-        grp=$($_x bash -c \
-          "find /var/ossec/etc/rules/ \( -name \"*${scn}*\" -o -name \"*${scn_h}*\" \) \
-           | head -1 | xargs -r stat -c '%G' 2>/dev/null" || echo unknown)
-        [ "$grp" = "wazuh" ] \
-          && out="${out}OK - rule(s) for ${scn} present (group: wazuh)\n" \
-          || out="${out}WARN - rule(s) for ${scn} group is '${grp}' (expected wazuh)\n"
-      else
-        out="${out}FAIL - no rule file found for ${scn}\n"
-      fi
-    done
-    printf '%b' "$out"
-  args:
-    executable: /bin/bash
-  register: _r_dec_rules
+- name: mgr | stat decoder and rule files
+  shell: >
+    {{ _exec }} stat -c '%n %G %a' {{ item }} 2>/dev/null
+    || echo "{{ item }} MISSING -"
+  loop: "{{ _files_to_check }}"
+  register: _r_file_stats
   changed_when: false
   failed_when: false
 
-- set_fact:
-    _health_report: "{{ _health_report + (_r_dec_rules.stdout_lines | default([])) }}"
+- name: mgr | evaluate decoder and rule file results
+  set_fact:
+    _health_report: >-
+      {{ _health_report + [
+        'OK - ' + (item.stdout.split()[0] | basename) + ' present (group: ' + item.stdout.split()[1] + ')'
+        if item.stdout.split()[1] | default('') == 'wazuh'
+        else 'WARN - ' + (item.stdout.split()[0] | basename) + ' group is ' + item.stdout.split()[1] | default('?')
+        if item.stdout.split()[1] | default('') not in ['MISSING', '']
+        else 'FAIL - ' + item.item + ' not found'
+      ] }}
+  loop: "{{ _r_file_stats.results }}"
 
 - name: mgr | python dependencies
   shell: |

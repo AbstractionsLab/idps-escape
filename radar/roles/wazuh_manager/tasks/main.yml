@@ -2,6 +2,7 @@
   set_fact:
     _mgr_mode: "{{ hostvars[inventory_hostname].manager_mode }}"
     _mgr_container: "{{ hostvars[inventory_hostname].manager_container_name | default('wazuh.manager') }}"
+    _mgr_service: "{{ hostvars[inventory_hostname].manager_service_name | default(_mgr_container) }}"
     _active_responses_env_dest: "/var/ossec/active-response/bin/active_responses.env"
     _radar_ar_dest: "/var/ossec/active-response/bin/radar_ar.py"
     _lists_dir: "/var/ossec/etc/lists"
@@ -34,9 +35,9 @@
   ansible.builtin.set_fact:
     _volumes_yml: "{{ _volumes_yml_slurp.content | b64decode | from_yaml }}"
 
-- name: Extract volumes list from first service
+- name: Extract volumes list from target manager service
   ansible.builtin.set_fact:
-    _mgr_vols: "{{ ((_volumes_yml.services | dict2items | first).value.volumes) | default([]) }}"
+    _mgr_vols: "{{ _volumes_yml.services[_mgr_service].volumes | default([]) }}"
 
 - name: Validate volumes list exists
   ansible.builtin.assert:
@@ -100,6 +101,7 @@
 
     - name: local docker | Lists
       delegate_to: localhost
+      when: scenario_name == 'geoip_detection'
       block:
         - include_tasks: lists.yml
 
@@ -192,6 +194,11 @@
       become: true
       block:
         - include_tasks: filebeat.yml
+
+    - name: remote docker | Ensure webhook is running
+      become: true
+      block:
+        - include_tasks: bootstrap_webhook.yml
 
   when: _mgr_mode == 'docker_remote'
 

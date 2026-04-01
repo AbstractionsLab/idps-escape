@@ -9,6 +9,8 @@ all:
       hosts:
         wazuh.manager:               
           ansible_connection: local 
+          manager_service_name: "wazuh.manager"
+          manager_container_name: "wazuh.manager"
           manager_address: "wazuh.manager"
           manager_address_public: "192.168.0.28"  
           manager_mode: "docker_local" 
@@ -24,6 +26,7 @@ all:
           manager_mode: "docker_remote"  # "docker_remote" or "host_remote"  (host_remote = non-docker)
           manager_address: "192.168.0.28"  # For container agents to enroll
           manager_address_public: "192.168.0.28" # For remote agents to enroll
+          manager_service_name: "wazuh.manager" # For multi-node Wazuh support, should match with the name in volumes.yml
           manager_container_name: "wazuh.manager" # Only used if manager_mode == docker_remote
           ansible_python_interpreter: /usr/bin/python3
           ansible_become: true

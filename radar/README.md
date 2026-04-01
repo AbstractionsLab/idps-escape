@@ -28,7 +28,7 @@ Currently, anomaly detection coupled with automated response is implemented for 
 
 | Scenario | Status | Data Source | Detection Type | Documentation |
 |----------|--------|-------------|----------------|---------------|
-| **GeoIP Detection** | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md) |
+| **GeoIP Detection** | ✅ Production | Real Wazuh (SSH + Apache/Nginx) | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md) |
 | **Log Volume Monitoring** | ✅ Production | Real Wazuh | RRCF-based | [Guide](/docs/manual/radar_docs/radar-scenarios/log_volume_explained.md) |
 | **Suspicious Login** (Signature) | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md#signature-based-approach) |
 | **Insider Threat** | 🧪 Demo | Synthetic | RRCF-based | [README](/radar/archives/insider_threat/README.md) |

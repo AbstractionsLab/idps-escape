@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IDPS-ESCAPE | Release notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef1f5;
+      --surface: #ffffff;
+      --surface-alt: #f0fafa;
+      --ink: #17212f;
+      --muted: #3d6363;
+      --line: #bfe0e2;
+      --brand: #0d8b94;
+      --brand-strong: #065d65;
+      --accent: #e12f56;
+      --ok: #13874f;
+      --shadow: 0 12px 40px rgba(6, 50, 55, 0.15);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at 10% -10%, #c8f0f2 0, transparent 40%),
+        radial-gradient(circle at 90% 0, #d1f0e8 0, transparent 35%),
+        var(--bg);
+      color: var(--ink);
+      font-family: Manrope, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      scroll-behavior: smooth;
+    }
+
+    .container {
+      width: min(900px, calc(100vw - 2.4rem));
+      margin: 0 auto;
+    }
+
+    /* ── topbar ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(8px);
+      background: rgba(238, 241, 245, 0.82);
+      border-bottom: 1px solid rgba(213, 223, 236, 0.8);
+      z-index: 20;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.8rem 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.62rem;
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: 0.02em;
+      font-weight: 700;
+      color: var(--brand-strong);
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 14px rgba(9, 63, 127, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: #fff;
+    }
+
+    .topnav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .topnav a {
+      text-decoration: none;
+      color: var(--brand-strong);
+      border: 1px solid transparent;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .topnav a:hover {
+      border-color: var(--line);
+      background: var(--surface);
+    }
+
+    /* ── page header ── */
+    .page-header {
+      padding: 3.5rem 0 1.5rem;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 2.5rem;
+    }
+
+    .page-header .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      background: var(--surface);
+      color: var(--brand-strong);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      margin-bottom: 0.9rem;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .page-header .lead {
+      margin-top: 0.8rem;
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 66ch;
+    }
+
+    /* ── release block ── */
+    .release {
+      margin-bottom: 3.5rem;
+    }
+
+    .release-heading {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .release-title {
+      margin: 0;
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+      letter-spacing: -0.01em;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--brand-strong);
+    }
+
+    .release-date {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    /* ── feature card ── */
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 1.4rem 1.5rem;
+      box-shadow: 0 6px 24px rgba(18, 43, 77, 0.07);
+      margin-bottom: 1rem;
+    }
+
+    .feature-card.highlight {
+      background: linear-gradient(115deg, #eef5ff 0%, #f9fbff 100%);
+      border-color: var(--brand);
+      border-width: 2px;
+    }
+
+    .new-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.72rem;
+      border-radius: 999px;
+      padding: 0.2rem 0.65rem;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.07rem;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--brand-strong);
+    }
+
+    .feature-card p {
+      margin: 0 0 0.8rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .feature-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ── detail table inside a card ── */
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 0.9rem;
+    }
+
+    .detail-table th {
+      text-align: left;
+      font-weight: 700;
+      color: var(--brand-strong);
+      padding: 0.35rem 0.6rem;
+      background: rgba(15, 93, 184, 0.07);
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .detail-table td {
+      padding: 0.35rem 0.6rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    .detail-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.88em;
+      background: rgba(15, 93, 184, 0.08);
+      border: 1px solid rgba(15, 93, 184, 0.15);
+      border-radius: 4px;
+      padding: 0.1em 0.38em;
+      color: var(--brand-strong);
+    }
+
+    /* ── chip row ── */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.8rem;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--surface-alt);
+      color: var(--brand-strong);
+      padding: 0.17rem 0.55rem;
+      font-size: 0.77rem;
+      font-weight: 700;
+    }
+
+    /* ── divider ── */
+    .release-divider {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 2.5rem 0;
+    }
+
+    /* ── footer ── */
+    .footer {
+      margin-top: 2rem;
+      padding: 1.6rem 0 2.2rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .footer a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    @media (max-width: 760px) {
+      .page-header {
+        padding-top: 2.2rem;
+      }
+
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .brand-logo {
+        width: 30px;
+        height: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="https://github.com/AbstractionsLab/idps-escape">
+        <img class="brand-logo" src="assets/1D1B2_LOG_IDPS-ESCAPE-400x400.png" alt="IDPS-ESCAPE logo">
+        <span>IDPS-ESCAPE</span>
+      </a>
+      <nav class="topnav" aria-label="Site navigation">
+        <a href="product-presentation.html">Product</a>
+        <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/README.md">Manual</a>
+        <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/CHANGELOG.md">Changelog</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <div class="page-header">
+        <div class="eyebrow">What&#8217;s new</div>
+        <h1>Release notes</h1>
+        <p class="lead">
+          Detailed notes on the features, improvements, and fixes shipped in each IDPS-ESCAPE release.
+          For the full list of all changes see the
+          <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/CHANGELOG.md">changelog</a>.
+        </p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           v0.9
+           ═══════════════════════════════════════════ -->
+      <div class="release" id="v0.9">
+        <div class="release-heading">
+          <h2 class="release-title">v0.9</h2>
+          <span class="release-date">April 2026</span>
+        </div>
+
+        <!-- ── main feature ── -->
+        <div class="feature-card highlight">
+          <div class="new-badge">New feature</div>
+          <h3>Apache/Nginx web access log support for GeoIP detection</h3>
+          <p>
+            The GeoIP detection scenario now covers <strong>HTTP/HTTPS web server traffic</strong> in
+            addition to SSH authentication events. A new <code>accesslog</code> decoder
+            (<code>0375-web-accesslog.xml</code>) parses Apache and Nginx access logs, and a new
+            detection rule <code>100902</code> triggers on requests originating from non-whitelisted
+            countries.  The accompanying <code>SRS-055</code> requirement has been expanded with web
+            server log monitoring scope and updated acceptance criteria covering the new rule and test
+            cases.
+          </p>
+          <p>
+            Unit tests for GeoIP enrichment have been extended to cover the new log formats, and the
+            <code>geoip_detection_explained.md</code> documentation has been updated with Apache and
+            Nginx configuration examples for enabling source-IP GeoIP monitoring over web traffic.
+          </p>
+          <div class="chips">
+            <span class="chip">GeoIP</span>
+            <span class="chip">Apache / Nginx</span>
+            <span class="chip">accesslog decoder</span>
+            <span class="chip">Rule 100902</span>
+            <span class="chip">SRS-055</span>
+            <span class="chip">Unit tests</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Multi-node Wazuh deployment support</h3>
+          <p>
+            IDPS-ESCAPE now fully supports <strong>multi-node Wazuh manager topologies</strong>.
+            The deployment guides and Ansible automation have been updated with multi-node
+            configuration parameters, topology guidance, and precondition details for the
+            Ansible executable.
+          </p>
+          <div class="chips">
+            <span class="chip">Multi-node Wazuh</span>
+            <span class="chip">Ansible</span>
+            <span class="chip">radar-getting-started.md</span>
+            <span class="chip">radar-architecture.md</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Optional data ingestion flag for detector training</h3>
+          <p>
+            A new <code>--ingest</code> flag for <code>run-radar.sh</code> decouples synthetic
+            dataset ingestion from scenario deployment, enabling both fresh deployments that require
+            training data and production deployments that rely on live data.  A BATS test case
+            validates the flag&#8217;s behaviour end-to-end.
+          </p>
+          <div class="chips">
+            <span class="chip">--ingest flag</span>
+            <span class="chip">run-radar.sh</span>
+            <span class="chip">BATS test</span>
+            <span class="chip">detector training</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Webhook bootstrap &amp; reliability improvements</h3>
+          <p>
+            A dedicated <code>bootstrap_webhook.yml</code> Ansible task enables independent
+            webhook service deployment. Container initialisation has been made more reliable through
+            state-aware checks and retry logic, and the health check now uses explicit file lists
+            instead of pattern matching for higher reliability.
+          </p>
+          <div class="chips">
+            <span class="chip">bootstrap_webhook.yml</span>
+            <span class="chip">Ansible</span>
+            <span class="chip">health check</span>
+            <span class="chip">retry logic</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Anomaly detection threshold-based filtering</h3>
+          <p>
+            Anomaly detection accuracy has been improved through configurable threshold-based
+            filtering rules, reducing false positives in noisy environments without requiring
+            model retraining.
+          </p>
+          <div class="chips">
+            <span class="chip">SONAR</span>
+            <span class="chip">threshold filtering</span>
+            <span class="chip">false positive reduction</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Test specification TST-049 &amp; report TRP-038</h3>
+          <p>
+            A new comprehensive test case specification <strong>TST-049</strong> for RADAR integrity
+            testing has been added, along with the corresponding execution report <strong>TRP-038</strong>
+            capturing the v0.9 test campaign results.
+          </p>
+          <div class="chips">
+            <span class="chip">TST-049</span>
+            <span class="chip">TRP-038</span>
+            <span class="chip">RADAR integrity</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- /v0.9 -->
+
+      <hr class="release-divider">
+
+      <!-- ═══════════════════════════════════════════
+           v0.8
+           ═══════════════════════════════════════════ -->
+      <div class="release" id="v0.8">
+        <div class="release-heading">
+          <h2 class="release-title">v0.8</h2>
+          <span class="release-date">March 2026</span>
+        </div>
+
+        <!-- ── main feature ── -->
+        <div class="feature-card highlight">
+          <div class="new-badge">New feature</div>
+          <h3>SATRAP-DL DECIPHER integration for real-time CTI analysis</h3>
+          <p>
+            The stub <code>SatrapClientMock</code> has been replaced by a fully operational
+            <strong><code>DecipherClient</code></strong> connecting to the DECIPHER REST API.
+            RADAR now performs real-time Cyber Threat Intelligence (CTI) analysis via the
+            <code>analyze</code> endpoint and creates incident cases via <code>create_incident</code>
+            as part of the tiered active response pipeline.
+          </p>
+          <p>
+            A new system requirement <strong>SRS-061</strong> formalises the tiered active response
+            logic with DECIPHER risk-based decision making. Environment configuration has been updated
+            with dedicated <code>DECIPHER_BASE_URL</code>, <code>DECIPHER_VERIFY_SSL</code>, and
+            <code>DECIPHER_TIMEOUT_SEC</code> variables, replacing the earlier FlowIntel-only env vars.
+          </p>
+
+          <table class="detail-table" aria-label="DECIPHER integration endpoints">
+            <thead>
+              <tr>
+                <th>Endpoint</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>analyze</code></td>
+                <td>Real-time CTI enrichment — scores IOCs against threat intelligence sources (MISP, SATRAP).</td>
+              </tr>
+              <tr>
+                <td><code>create_incident</code></td>
+                <td>Opens an incident case in FlowIntel when the risk tier warrants escalation.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="chips">
+            <span class="chip">DECIPHER REST API</span>
+            <span class="chip">DecipherClient</span>
+            <span class="chip">CTI analysis</span>
+            <span class="chip">incident creation</span>
+            <span class="chip">SRS-061</span>
+            <span class="chip">tiered AR</span>
+            <span class="chip">MISP</span>
+            <span class="chip">FlowIntel</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>RADAR health check</h3>
+          <p>
+            Manager-side and agent-side health checks via <code>health-radar.sh</code> verify the
+            status of all RADAR elements using dedicated Ansible tasks. The checks cover container
+            liveness, Wazuh connectivity, and RADAR component availability, enabling rapid
+            diagnosis of deployment issues.
+          </p>
+          <div class="chips">
+            <span class="chip">health-radar.sh</span>
+            <span class="chip">Ansible</span>
+            <span class="chip">manager + agent checks</span>
+            <span class="chip">SWD / SRS</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>RADAR attack simulation</h3>
+          <p>
+            A new <code>simulate-radar.sh</code> orchestration script drives attack simulations
+            across three RADAR scenarios — <strong>GeoIP detection</strong>, <strong>log volume</strong>,
+            and <strong>suspicious login</strong> — using Python simulation modules. An Ansible
+            playbook extends simulation support to remote agents via SSH key authentication, enabling
+            end-to-end validation of the full detection and response pipeline without real attacker
+            traffic.
+          </p>
+          <div class="chips">
+            <span class="chip">simulate-radar.sh</span>
+            <span class="chip">GeoIP</span>
+            <span class="chip">log volume</span>
+            <span class="chip">suspicious login</span>
+            <span class="chip">Ansible remote simulation</span>
+            <span class="chip">SWD / SRS / TST</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Tiered active response configuration</h3>
+          <p>
+            The active response configuration has been redesigned around explicit tiers.
+            <code>tier1_min</code> defines the Tier 0 boundary for low-risk events handled without
+            escalation. Mitigations are now split into per-tier <code>mitigations_tier2</code> and
+            <code>mitigations_tier3</code> keys, and the redundant <code>risk_threshold</code> and
+            <code>create_case</code> keys have been removed. IOC extraction now includes country,
+            ASN, and agent fields; domain extraction filters out file-extension-like TLDs.
+          </p>
+          <div class="chips">
+            <span class="chip">tier1_min</span>
+            <span class="chip">mitigations_tier2</span>
+            <span class="chip">mitigations_tier3</span>
+            <span class="chip">IOCExtractor</span>
+            <span class="chip">country / ASN / agent IOCs</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>SpecEngine C5DEC v1.2 upgrade &amp; new tooling</h3>
+          <p>
+            All SpecEngine scripts have been consolidated under <code>docs/specs/SpecEngine/</code>.
+            New tools added in this release include <code>c5graph.py</code> (interactive spec graph
+            viewer), <code>c5mermaid.py</code> (Mermaid diagram rendering), <code>c5traceability.py</code>
+            (traceability matrix with coverage metrics and HTML report), <code>c5browser.py</code>
+            (Bootstrap + DataTables items browser), <code>prune_bad_links.py</code> (link hygiene),
+            and <code>doorstop_yml_to_md.py</code> (item migration helper). The dev container has been
+            extended with Node.js 20, Chromium, and the Mermaid CLI to support diagram rendering.
+          </p>
+          <div class="chips">
+            <span class="chip">c5graph.py</span>
+            <span class="chip">c5mermaid.py</span>
+            <span class="chip">c5traceability.py</span>
+            <span class="chip">c5browser.py</span>
+            <span class="chip">prune_bad_links.py</span>
+            <span class="chip">Node.js 20</span>
+            <span class="chip">Mermaid CLI</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>TRP document type &amp; v0.8 test campaign</h3>
+          <p>
+            The separate TRA and TRB Doorstop document types have been merged into a single
+            <strong>TRP</strong> (Test Case Execution Report) document type.
+            v0.8 test campaign results are captured in <strong>TRP-030 through TRP-037</strong>.
+          </p>
+          <div class="chips">
+            <span class="chip">TRP document type</span>
+            <span class="chip">TRP-030 — TRP-037</span>
+            <span class="chip">Doorstop</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>RADAR helper &amp; suspicious login improvements</h3>
+          <p>
+            The velocity cap has been removed from the RADAR helper; speed calculation now uses
+            the log timestamp instead of the processing time, and a <code>dt_eps</code> constant
+            prevents division-by-zero when events share the same timestamp.  A new suspicious login
+            correlation rule has been added. Country-change and ASN novelty tracking are now
+            maintained independently per user. Unit tests reflect all these changes with two
+            additional tests.
+          </p>
+          <div class="chips">
+            <span class="chip">RADAR helper</span>
+            <span class="chip">velocity calculation</span>
+            <span class="chip">suspicious login rule</span>
+            <span class="chip">per-user tracking</span>
+            <span class="chip">unit tests</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- /v0.8 -->
+
+    </div><!-- /container -->
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      IDPS-ESCAPE release notes.
+      See the <a href="product-presentation.html">product overview</a>,
+      the <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/README.md">user manual</a>,
+      or the full <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/CHANGELOG.md">changelog</a>.
+    </div>
+  </footer>
+
+</body>
+</html>
