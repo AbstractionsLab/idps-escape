@@ -3,7 +3,7 @@ Configuration dataclasses for SONAR pipeline.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 
 @dataclass
@@ -64,6 +64,18 @@ class FeatureConfig:
     # Enable derived features for enhanced attack detection
     # These are computed from alert patterns, not raw fields
     derived_features: bool = True
+
+    # Optional OpenSearch query fragment forwarded to search_alerts(query=...).
+    # Use to restrict ingestion to a specific rule group, e.g.:
+    #   {"terms": {"rule.groups": ["performance_metric"]}}
+    # When None, all alerts in the time window are returned (no extra filter).
+    alert_filter: Optional[Dict[str, Any]] = None
+
+    # Numeric fields for which an additional per-bucket *max* column is computed
+    # alongside the default per-bucket mean. Each entry produces a column named
+    # "<field>__max" in the feature matrix. Useful for detecting brief spikes
+    # (e.g., a 55-second CPU burst) that would be smoothed away by averaging.
+    max_numeric_fields: Sequence[str] = field(default_factory=tuple)
 
 
 @dataclass

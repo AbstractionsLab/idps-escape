@@ -268,11 +268,20 @@ FUNCTION DeployLocal(scenario_path, manager_vars):
              host_ossec_etc + "/decoders/")
   
   // Step 6: Copy rules into volume mapped to /var/ossec/etc/rules/
+  COPY_FILES(scenario_root + "/rules/default/*.xml",
+           host_ossec_etc + "/rules/")
   COPY_FILES(scenario_path.rules_dir + "/*.xml",
              host_ossec_etc + "/rules/")
   
   // Step 7: Modify ossec.conf in volume mapped to /var/ossec/etc/ossec.conf (idempotent)
   ossec_conf ← host_ossec_etc + "/ossec.conf"
+
+  IF MarkerNotExists(ossec_conf, "RADAR: default"):
+  default_snippet ← READ_FILE(scenario_root + "/ossec/radar-default-ossec-snippet.xml")
+  InsertBefore(ossec_conf, "</ossec_config>",
+               markers="RADAR: default",
+               content=default_snippet)
+  END IF
   
   IF MarkerNotExists(ossec_conf, "RADAR: " + scenario_name):
     snippet ← READ_FILE(scenario_path.ossec_snippet)
@@ -923,6 +932,7 @@ controller:/home/user/radar/scenarios/
 ├── lists/
 │   └── whitelist_countries
 ├── ossec/
+|   ├── radar-default-ossec-snippet.xml
 │   ├── radar-geoip-detection-ossec-snippet.xml
 │   ├── radar-log-volume-ossec-snippet.xml
 │   └── radar-suspicious-login-ossec-snippet.xml

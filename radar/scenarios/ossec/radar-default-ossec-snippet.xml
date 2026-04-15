@@ -1,0 +1,11 @@
+<command>
+    <name>radar_ar_default</name>
+    <executable>radar_ar.py</executable>
+</command>
+
+<active-response>
+    <disabled>no</disabled>
+    <command>radar_ar_default</command>
+    <location>server</location>
+    <rules_id>100401,100402,100404,100405</rules_id>
+</active-response>

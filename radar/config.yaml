@@ -1,5 +1,11 @@
 default_scenario: insider_threat
 
+# ---------------------------------------------------------------------------
+# Scenario definitions
+# Each scenario may carry optional sub-keys:
+#   ingest:   config for radar/scenarios/ingest_scripts/<scenario>/wazuh_ingest.py
+#   simulate: config for radar-test-framework/simulate/scenarios/<scenario>.py
+# ---------------------------------------------------------------------------
 scenarios:
   insider_threat:
     container_name: agent.insider
@@ -102,27 +108,6 @@ scenarios:
     anomaly_grade_threshold: 0.8
     confidence_threshold: 0.85
     features:
-#      - feature_name: conn_interval_avg
-#        feature_enabled: true
-#        aggregation_query:
-#          conn_interval_avg:
-#            avg:
-#              field: conn_interval
-#
-#      - feature_name: orig_bytes_avg
-#        feature_enabled: true
-#        aggregation_query:
-#          orig_bytes_avg:
-#            avg:
-#              field: orig_bytes
-#
-#      - feature_name: resp_bytes_avg
-#        feature_enabled: true
-#        aggregation_query:
-#          resp_bytes_avg:
-#            avg:
-#              field: resp_bytes
-
       - feature_name: conn_count
         feature_enabled: true
         aggregation_query:
@@ -193,25 +178,66 @@ scenarios:
             operator: "LTE"
             value: 0.2
 
-  log_volume_general:
-    container_name: agent.logvolume
-    index_prefix: wazuh-ad-log-volume-*
-    result_index: opensearch-ad-plugin-result-log-volume
-    log_index_pattern: wazuh-ad-log-volume-*
-    time_field: "@timestamp"
-    detector_interval: 5
-    delay_minutes: 1
-    monitor_name: "LogVolume-Monitor"
-    trigger_name: "LogVolume-Growth-Detected"
-    anomaly_grade_threshold: 0.8
-    confidence_threshold: 0.85
-    features:
-      - feature_name: log_volume_avg
-        feature_enabled: true
-        aggregation_query:
-          log_volume_avg:
-            avg:
-              field: data.log_bytes
+    ingest:
+      # Wazuh agent ID stamped on every document written to OpenSearch.
+      agent_id: "001"
+      # Wazuh agent hostname stamped on every document written to OpenSearch.
+      agent_name: "edge.vm"
+      # Value of the predecoder.program_name field used to identify the log source.
+      program: "log_volume_metric"
+      # Filesystem path monitored for log growth, stored in data.log_path.
+      log_path: "/var/log"
+      # Base index name; the ingest script appends the date (YYYY.MM.DD) as suffix.
+      index_prefix: "wazuh-ad-log-volume"
+      # How far back (minutes) to generate synthetic historical data points on
+      # first run, so the detector has enough history to build a baseline.
+      history_minutes: 240
+      # Interval (seconds) between generated historical data points.
+      step_seconds: 20
+      # OpenSearch date-math window used to query the two most recent live docs
+      # in order to compute the current byte-growth delta.
+      delta_query_window: "now-10m"
+      # Minimum number of recent documents required to compute a live delta.
+      # If fewer docs exist, fallback_delta is used instead.
+      delta_min_docs: 2
+      # Byte increment per step used when a live delta cannot be computed
+      # (e.g. on a fresh index with no recent documents).
+      fallback_delta: 20000
+      # Seed value (bytes) for the most-recent synthetic data point when no
+      # live documents exist at all. Should reflect the host's typical log size.
+      baseline_bytes: 228654752
+
+    simulate:
+      # Timezone offset applied to ISO-format log timestamps.
+      timezone_offset: "+01:00"
+      # Hostname written into generated log lines.
+      hostname: "edge.vm"
+      # Directory where the spike file is created. Should be monitored by Wazuh
+      # so the size change is picked up and forwarded to OpenSearch.
+      target_dir: "/var/log"
+      # Name of the temporary file that is grown to simulate a log volume spike.
+      spike_filename: "ratf_log_volume_spike.log"
+      # Number of growth steps performed before the simulation ends.
+      steps: 10
+      # Bytes appended in the very first step. Each subsequent step multiplies
+      # this by growth_factor, producing exponential growth.
+      start_bytes: 268435456     # 256 MB
+      # Multiplier applied to the previous step's size at each iteration.
+      growth_factor: 1.5
+      # Seconds to sleep between steps, giving Wazuh time to ingest each increment.
+      sleep_seconds: 1
+      # Absolute ceiling on total bytes written across all steps combined.
+      # Acts as a safety guard against runaway disk consumption.
+      max_total_bytes: 10000000000  # 10 GB
+      # Per-step byte cap. Prevents any single step from writing an
+      # unreasonably large chunk regardless of growth_factor.
+      max_step_bytes: 1500000000   # 1.5 GB
+      # Internal I/O chunk size (bytes) used when appending to the spike file.
+      # Larger values are faster but consume more memory during the write.
+      write_chunk_bytes: 1048576   # 1 MB
+      # Minutes after the simulation completes before the spike file is deleted.
+      # Set to 0 to leave the file in place for manual inspection.
+      cleanup_minutes: 5
 
   suspicious_login:
     container_name: agent.suspicious
@@ -250,12 +276,63 @@ scenarios:
             cardinality:
               field: event_hour
 
-#      - feature_name: login_hour_avg
-#        feature_enabled: true
-#        aggregation_query:
-#          login_hour_avg:
-#            avg:
-#              field: event_hour
+    simulate:
+      # IANA timezone offset applied to ISO-format log timestamps.
+      timezone_offset: "+01:00"
+      # Hostname written into generated sshd log lines.
+      hostname: "edge.vm"
+      # Path to the auth log file where simulated sshd lines are appended.
+      log_path: "/var/log/auth.log"
+      # When true, appends to the log via `sudo tee -a` so the script can write
+      # to root-owned log files without running as root itself.
+      sudo_tee: true
+      # Linux username used in the simulated Accepted/Failed sshd log lines.
+      user: "test01"
+      # PID written into the sshd log lines. Use the real sshd PID on the host
+      # if you want the lines to blend with genuine sshd output.
+      sshd_pid: 1169457
+      # Source port used in the simulated failed login attempts.
+      fail_port: 1045
+      # Source port used in the simulated successful login at the end.
+      success_port: 60850
+      # Key fingerprint written into failed login log lines.
+      key_fingerprint_fail: "ED25519 SHA256:A."
+      # Key fingerprint written into the successful login log line.
+      key_fingerprint_success: "ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+      # List of source IPs cycled through for the failed attempts. Each IP
+      # produces one "Failed password" line. The first IP is also reused for
+      # the final successful login.
+      ip_pool:
+        - "8.8.8.8"
+        - "1.0.136.99"
+        - "89.31.143.90"
+        - "47.91.170.222"
+        - "150.95.255.38"
+        - "84.32.84.32"
+      # Total duration (seconds) over which failed attempts are spread before
+      # the final successful login is injected at the end of the window.
+      window_seconds: 60
 
   geoip_detection:
     container_name: agent.geoip
+    simulate:
+      # Timezone offset applied to ISO-format log timestamps.
+      timezone_offset: "+01:00"
+      # Hostname written into the generated sshd log line.
+      hostname: "edge.vm"
+      # Path to the auth log file where the simulated sshd line is appended.
+      log_path: "/var/log/auth.log"
+      # When true, appends to the log via `sudo tee -a` so the script can write
+      # to root-owned log files without running as root itself.
+      sudo_tee: true
+      # Linux username used in the simulated Accepted publickey log line.
+      user: "test01"
+      # PID written into the sshd log line.
+      sshd_pid: 1169457
+      # Source port written into the simulated successful login line.
+      success_port: 60850
+      # Source IP written into the log line. Should be a foreign IP that will
+      # be flagged as geographically anomalous by the detection rule.
+      ip: "8.8.8.8"
+      # Key fingerprint written into the successful login log line.
+      key_fingerprint_success: "ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"

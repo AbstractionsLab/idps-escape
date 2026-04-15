@@ -19,6 +19,10 @@ scenarios/
 ├── ossec/                 # Manager-side OSSEC configuration snippets
 ├── pipelines/             # Data processing pipeline configurations
 ├── rules/                 # Detection rules per scenario
+│   ├── default/           # Baseline command shell execution detection
+│   ├── geoip_detection/   # Geographic access control rules
+│   ├── log_volume/        # OpenSearch AD integration rules
+│   └── suspicious_login/  # Credential attack detection rules
 └── templates/             # Index templates for OpenSearch
 ```
 
@@ -96,11 +100,14 @@ Pipelines modify how data flows from Wazuh through Filebeat into OpenSearch, ena
 
 Contains Wazuh detection rules organized by scenario. Each scenario folder includes:
 
+- **`default/radar_rules.xml`**: Baseline threat detection rules for all deployments (6 rules: IDs 100400–100405). These rules operate on standard Wazuh event formats without requiring custom decoders, radar-helper enrichment, or index schema modifications. Current focus: command shell execution detection (PowerShell, CMD.exe, batch scripts), extensible to any threat indicators available in standard events.
 - **`geoip_detection/a2-geoip-detection.xml`**: Rules that trigger on SSH connections from non-whitelisted countries
 - **`log_volume/a1-log-volume.xml`**: Rules that detect anomalous log volume event from webhook
 - **`suspicious_login/a3-suspicious-login.xml`**: Rules that identify suspicious authentication patterns (brute force and impossible travel anomalies)
 
 Rules analyze decoded events and generate alerts when suspicious patterns are detected. They integrate with active responses to trigger automated actions.
+
+**Default Rules Philosophy (a0)**: The `default` scenario rules provide a low-friction detection framework applicable to any RADAR deployment. Unlike scenario-specific rules (which may require preprocessing, enrichment, or schema adaptation), Default rules operate on events already present in standard Wazuh installations. This enables rapid threat detection, immediate CTI integration, and extensible case creation without infrastructure investment. The framework is designed to be extended with additional detection rules following the "no-prerequisite" principle.
 
 ### `templates/`
 

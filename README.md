@@ -41,7 +41,7 @@ For a visual user-oriented tour of IDPS-ESCAPE, visit the **[product presentatio
 - **Risk-aware actions**: Tiered response (low/medium/high risk) with host isolation, process control, network rules, alert escalation, and incident case creation
 - **Automatic case creation**: Incident case creation via integration with the DECIPHER subsystem of SATRAP-DL and Flowintel
 - **Flexible deployment**: Local/remote manager and agent configurations
-- **Production scenarios**: GeoIP detection, log volume monitoring, suspicious login
+- **Production scenarios**: Default baseline detection, GeoIP detection, log volume monitoring, suspicious login
 - **Experimental scenarios**: Insider threat, DDoS, C2 malware (require adaptation)
 
 See [RADAR README](/docs/manual/radar_docs/README.md), [scenarios](/radar/scenarios/README.md), [adversarial ML guidance](/docs/manual/radar_docs/adversarial-ml-guidance.md) and [developer README](/radar/README.md).

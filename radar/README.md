@@ -26,8 +26,19 @@ We leverage [OpenSearch's latest advances](https://opensearch.org/anomaly-detect
 
 Currently, anomaly detection coupled with automated response is implemented for the RADAR scenarios listed below. Each scenario integrates a detector, monitor, webhook, decoder, rule, and active response in a deployable solution. They also come with a dataset ingestor (`wazuh_ingest.py`) aimed at populating the Wazuh indexer.
 
+### Default rules
+
+The **Default** rules provides a low-friction framework for rapid threat detection without prerequisite data preparation. Unlike scenario-specific detections (which may require custom decoders, radar-helper enrichment, or index schema modifications), Default rules operate on existing Wazuh data structures and standard event formats. This enables:
+
+- Deploy immediately on any standard Wazuh installation with Sysmon
+- Baseline alerts feed directly into DECIPHER for IOC scoring and threat intelligence enrichment
+- Seamless integration with Flowintel for incident correlation and response automation
+
+Current rule set focuses on command shell execution detection (PowerShell, CMD.exe, batch scripts), but the framework supports any detection rules operating on standard event formats. The Default scenario demonstrates how signature-based detection integrates with RADAR's risk engine and CTI analysis capabilities.
+
 | Scenario | Status | Data Source | Detection Type | Documentation |
 |----------|--------|-------------|----------------|---------------|
+| **Default** | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-rules.md#0-default-threat-detection) |
 | **GeoIP Detection** | ✅ Production | Real Wazuh (SSH + Apache/Nginx) | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md) |
 | **Log Volume Monitoring** | ✅ Production | Real Wazuh | RRCF-based | [Guide](/docs/manual/radar_docs/radar-scenarios/log_volume_explained.md) |
 | **Suspicious Login** (Signature) | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md#signature-based-approach) |

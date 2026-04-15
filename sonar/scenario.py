@@ -56,6 +56,15 @@ class TrainingScenario:
     synthetic_srcip: str = "192.0.2.0"
     """Source IP for synthetic alerts."""
 
+    derived_features: bool = True
+    """Enable derived security/resource features in the feature matrix."""
+
+    alert_filter: Optional[Dict[str, Any]] = None
+    """Optional OpenSearch query fragment to filter alerts on ingestion (e.g. by rule.groups)."""
+
+    max_numeric_fields: List[str] = field(default_factory=list)
+    """Numeric fields for which a per-bucket max column (<field>__max) is also computed."""
+
 
 @dataclass
 class DetectionScenario:
@@ -175,6 +184,9 @@ class UseCase:
             synthetic_mode=training_data.get("synthetic_mode", "random"),
             synthetic_level=training_data.get("synthetic_level", 5),
             synthetic_srcip=training_data.get("synthetic_srcip", "192.0.2.0"),
+            derived_features=training_data.get("derived_features", True),
+            alert_filter=training_data.get("alert_filter", None),
+            max_numeric_fields=training_data.get("max_numeric_fields", []),
         )
 
         # Parse detection config
@@ -229,6 +241,9 @@ class UseCase:
                 "synthetic_mode": self.training.synthetic_mode,
                 "synthetic_level": self.training.synthetic_level,
                 "synthetic_srcip": self.training.synthetic_srcip,
+                "derived_features": self.training.derived_features,
+                "alert_filter": self.training.alert_filter,
+                "max_numeric_fields": self.training.max_numeric_fields,
             },
             "detection": {
                 "mode": self.detection.mode,

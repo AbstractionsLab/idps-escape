@@ -162,6 +162,7 @@ CMD=(
   "${PLAYBOOK}"
   -e "radar_simulate_scenario=${SCENARIO}"
   -e "ratf_scenarios_dir=${RATF_SCENARIO_DIR}"
+  -e "radar_config_path=${CFG_YAML}"
 )
 
 echo "Scenario: ${SCENARIO}"

@@ -678,6 +678,92 @@ detection:
             Path(yaml_path).unlink()
 
 
+class TestTrainingScenarioNewFields(unittest.TestCase):
+    """Tests for the three fields added to TrainingScenario."""
+
+    def test_derived_features_default_true(self):
+        ts = TrainingScenario()
+        self.assertTrue(ts.derived_features)
+
+    def test_alert_filter_default_none(self):
+        ts = TrainingScenario()
+        self.assertIsNone(ts.alert_filter)
+
+    def test_max_numeric_fields_default_empty(self):
+        ts = TrainingScenario()
+        self.assertEqual(ts.max_numeric_fields, [])
+
+    def test_from_yaml_parses_derived_features_false(self):
+        yaml_content = """
+name: Test
+training:
+  derived_features: false
+"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write(yaml_content)
+            yaml_path = f.name
+        try:
+            uc = UseCase.from_yaml(yaml_path)
+            self.assertFalse(uc.training.derived_features)
+        finally:
+            Path(yaml_path).unlink()
+
+    def test_from_yaml_parses_alert_filter(self):
+        yaml_content = """
+name: Test
+training:
+  alert_filter:
+    terms:
+      rule.groups:
+        - performance_metric
+"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write(yaml_content)
+            yaml_path = f.name
+        try:
+            uc = UseCase.from_yaml(yaml_path)
+            self.assertEqual(
+                uc.training.alert_filter,
+                {"terms": {"rule.groups": ["performance_metric"]}},
+            )
+        finally:
+            Path(yaml_path).unlink()
+
+    def test_from_yaml_parses_max_numeric_fields(self):
+        yaml_content = """
+name: Test
+training:
+  max_numeric_fields:
+    - "data.cpu_usage_%"
+    - "data.memory_usage_%"
+"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write(yaml_content)
+            yaml_path = f.name
+        try:
+            uc = UseCase.from_yaml(yaml_path)
+            self.assertEqual(uc.training.max_numeric_fields, ["data.cpu_usage_%", "data.memory_usage_%"])
+        finally:
+            Path(yaml_path).unlink()
+
+    def test_to_yaml_roundtrip_new_fields(self):
+        """New fields survive a YAML write/read roundtrip."""
+        ts = TrainingScenario(
+            derived_features=False,
+            alert_filter={"terms": {"rule.groups": ["performance_metric"]}},
+            max_numeric_fields=["data.cpu_usage_%"],
+        )
+        uc = UseCase(name="Roundtrip", training=ts)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml_path = f.name
+        try:
+            uc.to_yaml(yaml_path)
+            uc2 = UseCase.from_yaml(yaml_path)
+            self.assertFalse(uc2.training.derived_features)
+            self.assertEqual(uc2.training.alert_filter, {"terms": {"rule.groups": ["performance_metric"]}})
+            self.assertEqual(uc2.training.max_numeric_fields, ["data.cpu_usage_%"])
+        finally:
+            Path(yaml_path).unlink()
 
 
 if __name__ == "__main__":

@@ -5,8 +5,18 @@ import json
 from datetime import datetime, timedelta, timezone
 
 import requests
+import yaml
 from pathlib import Path
 from requests.auth import HTTPBasicAuth
+
+
+def _load_config():
+    cfg_path = Path(__file__).resolve().parent.parent / "config.yaml"
+    with cfg_path.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+def _get_ingest_cfg(cfg, scenario):
+    return cfg["scenarios"][scenario]["ingest"]
 
 
 def load_env(env_path: Path) -> None:
@@ -37,7 +47,6 @@ def os_post(url, auth, verify_tls, body):
         raise RuntimeError(f"OpenSearch POST failed {r.status_code}: {r.text}")
     return r.json()
 
-
 def main():
     load_env(Path(".env"))
 
@@ -50,40 +59,47 @@ def main():
         print("Missing OS_URL / OS_USER / OS_PASS. Put them into .env or export them.", file=sys.stderr)
         sys.exit(2)
 
-    agent_id = "001"
-    agent_name = "edge.vm"
-    program = "log_volume_metric"
-    log_path = "/var/log"
+    cfg = _load_config()
+    lv = _get_ingest_cfg(cfg, "log_volume")
 
-    minutes = 240
-    step_s = 20
+    agent_id           = str(lv["agent_id"])
+    agent_name         = str(lv["agent_name"])
+    program            = str(lv["program"])
+    log_path           = str(lv["log_path"])
+    index_prefix       = str(lv["index_prefix"])
+    minutes            = int(lv["history_minutes"])
+    step_s             = int(lv["step_seconds"])
+    delta_query_window = str(lv["delta_query_window"])
+    delta_min_docs     = int(lv["delta_min_docs"])
+    fallback_delta     = int(lv["fallback_delta"])
+    first_value_seed   = int(lv["baseline_bytes"])
 
-    index_pattern = "wazuh-ad-log-volume-*"
-    fallback_delta = 20000
-
-    query_filters = [
-        {"range": {"@timestamp": {"gte": "now-10m"}}},
-        {"term": {"agent.name": agent_name}},
-    ]
+    index_pattern = f"{index_prefix}-*"
 
     search_body = {
-        "size": 2,
+        "size": delta_min_docs,
         "sort": [{"@timestamp": {"order": "desc"}}],
         "_source": ["data.log_bytes"],
-        "query": {"bool": {"filter": query_filters}},
+        "query": {"bool": {"filter": [
+            {"range": {"@timestamp": {"gte": delta_query_window}}},
+            {"term": {"agent.name": agent_name}},
+        ]}},
     }
 
     stats = os_post(
-        os_url + f"/{index_pattern}/_search",
+        f"{os_url}/{index_pattern}/_search",
         HTTPBasicAuth(os_user, os_pass),
         os_verify,
-        search_body
+        search_body,
     )
 
-    first_value = 228654752
+    first_value = first_value_seed
     hits = stats.get("hits", {}).get("hits", [])
-    if len(hits) < 2:
-        print("Need at least 2 recent docs in last 10m to compute delta. Falling back.", file=sys.stderr)
+    if len(hits) < delta_min_docs:
+        print(
+            f"Need at least {delta_min_docs} recent docs in {delta_query_window} to compute delta. Falling back.",
+            file=sys.stderr,
+        )
         delta = fallback_delta
         second_value = first_value + delta
     else:
@@ -103,9 +119,8 @@ def main():
 
     now = datetime.now(timezone.utc)
     start = now - timedelta(minutes=minutes)
-
-    index_name = f"wazuh-ad-log-volume-{now.strftime('%Y.%m.%d')}"
-    bulk_url = os_url + "/_bulk"
+    index_name = f"{index_prefix}-{now.strftime('%Y.%m.%d')}"
+    bulk_url = f"{os_url}/_bulk"
 
     total_points = max(1, (minutes * 60) // step_s)
     start_value = first_value - delta * (total_points - 1)
@@ -113,17 +128,13 @@ def main():
     lines = []
     for i in range(total_points):
         ts = start + timedelta(seconds=i * step_s)
-        val = start_value + delta * i
-        if val < 0:
-            val = 0
-
+        val = max(0, start_value + delta * i)
         doc = {
             "@timestamp": iso(ts),
             "agent": {"name": agent_name, "id": agent_id},
             "data": {"log_path": log_path, "log_bytes": int(val)},
             "predecoder": {"program_name": program},
         }
-
         lines.append(json.dumps({"index": {"_index": index_name}}))
         lines.append(json.dumps(doc))
 
@@ -132,13 +143,12 @@ def main():
         "@timestamp": iso(ts2),
         "agent": {"name": agent_name, "id": agent_id},
         "data": {"log_path": log_path, "log_bytes": int(second_value)},
-        "predecoder": {"program_name": program}
+        "predecoder": {"program_name": program},
     }
     lines.append(json.dumps({"index": {"_index": index_name}}))
     lines.append(json.dumps(doc2))
 
     payload = "\n".join(lines) + "\n"
-
     r = requests.post(
         bulk_url,
         data=payload.encode("utf-8"),

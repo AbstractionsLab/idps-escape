@@ -2,7 +2,7 @@
 
 This document provides comprehensive documentation for the RADAR Active Response system, which implements automated threat detection and response capabilities. The Active Response module is located at `/radar/scenarios/active_responses/radar_ar.py` and follows a structured workflow to identify, assess, and respond to security events.
 
-> **Production Scenario Support:** The active response script's scenario registry (`Registry` class in `radar_ar.py`) currently supports three production scenarios: `geoip_detection`, `suspicious_login`, and `log_volume`. Archived demo scenarios (`insider_threat`, `ddos_detection`, `malware_communication`) in `/radar/archives/` use different active response implementations and require adaptation for production use.
+> **Production Scenario Support:** The active response script's scenario registry (`Registry` class in `radar_ar.py`) currently supports four production scenarios: `default`, `geoip_detection`, `suspicious_login`, and `log_volume`. Archived demo scenarios (`insider_threat`, `ddos_detection`, `malware_communication`) in `/radar/archives/` use different active response implementations and require adaptation for production use.
 
 ## Table of Contents
 
@@ -150,6 +150,32 @@ The system uses a strategy pattern with scenario-specific classes that extend `B
 **AD Score Extraction:**
 - Extracts `anomaly_grade` and `anomaly_confidence` from `alert.data`
 - Returns `(grade_float, confidence_float)` or logs error if missing/invalid
+
+### Default Scenario
+
+**Strategic Purpose**: Provide a low-friction baseline detection framework that enables rapid threat detection without prerequisite data preparation work. The Default scenario demonstrates how RADAR detection rules can operate on standard Wazuh event streams — no custom decoders, no radar-helper enrichment, no index schema modifications — while remaining fully integrated with CTI analysis and automated case creation workflows.
+
+- Rules operate on events already present in standard Wazuh installations
+- Baseline alerts can be immediately enriched with DECIPHER intelligence 
+- Acts as a template showing how signature-based detection integrates with risk computation and automated action planning
+
+**Configuration** (`ar.yaml`):
+```yaml
+default:
+  signature:
+    rule_ids: ["100401", "100402", "100404", "100405"]
+  w_ad: 0.0
+  w_sig: 0.7
+  w_cti: 0.3
+  signature_likelihood: 0.6
+  signature_impact: 0.5
+  delta_signature_minutes: 5
+  allow_mitigation: false
+```
+
+**Current Rule Coverage**:
+- **PowerShell/CMD detection** (6 rules, IDs 100400–100405): Command shell execution detection on Windows hosts
+- **Extensible to other threats**: Future rules can detect network-based threats, log injection patterns, access anomalies, or any event types available in standard Wazuh indices without requiring preprocessing
 
 ### GeoipDetection
 

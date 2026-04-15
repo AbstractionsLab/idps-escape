@@ -388,5 +388,54 @@ class TestMVADPostProcessor(unittest.TestCase):
         self.assertIn("2025-12-30", docs[0]["timestamp"])
 
 
+class TestAlertFilterForwarding(unittest.TestCase):
+    """Tests that alert_filter from FeatureConfig is forwarded to search_alerts."""
+
+    @patch("sonar.wazuh_client.requests.Session")
+    def test_search_alerts_passes_alert_filter_as_query(self, mock_session_cls):
+        """When cfg.features.alert_filter is set, search_alerts receives it as query."""
+        mock_session = MagicMock()
+        mock_session_cls.return_value = mock_session
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"hits": {"hits": []}}
+        mock_session.post.return_value = mock_resp
+
+        cfg = WazuhIndexerConfig()
+        client = WazuhIndexerClient(cfg)
+
+        alert_filter = {"terms": {"rule.groups": ["performance_metric"]}}
+        start = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2026, 1, 1, 1, 0, 0, tzinfo=timezone.utc)
+
+        client.search_alerts(start, end, query=alert_filter)
+
+        call_args = mock_session.post.call_args
+        request_body = call_args[1]["json"]
+        # The query fragment is merged into bool.must
+        self.assertIn("must", request_body["query"]["bool"])
+        must_clauses = request_body["query"]["bool"]["must"]
+        self.assertIn(alert_filter, must_clauses)
+
+    @patch("sonar.wazuh_client.requests.Session")
+    def test_search_alerts_no_must_when_filter_is_none(self, mock_session_cls):
+        """When query=None, no extra must clause is added to the bool query."""
+        mock_session = MagicMock()
+        mock_session_cls.return_value = mock_session
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"hits": {"hits": []}}
+        mock_session.post.return_value = mock_resp
+
+        client = WazuhIndexerClient(WazuhIndexerConfig())
+        start = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2026, 1, 1, 1, 0, 0, tzinfo=timezone.utc)
+
+        client.search_alerts(start, end, query=None)
+
+        call_args = mock_session.post.call_args
+        request_body = call_args[1]["json"]
+        # No must clause should be present when no filter is given
+        self.assertNotIn("must", request_body["query"]["bool"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -8,8 +8,10 @@ RADAR rules are custom Wazuh detection rules designed to identify anomalous beha
 
 ```
 radar/scenarios/rules/
-└── {{ scenario_name }}/
-    └── *.xml
+├── default/           # Baseline command shell execution detection
+├── geoip_detection/   # Geographic access control rules
+├── log_volume/        # OpenSearch AD integration rules
+└── suspicious_login/  # Credential attack detection rules
 ```
 
 Each scenario has its own subdirectory containing XML rule files that are automatically deployed based on the selected scenario.
@@ -17,6 +19,47 @@ Each scenario has its own subdirectory containing XML rule files that are automa
 ---
 
 ## Rule Scenarios
+
+### Default Rules
+
+**Purpose**: Provide low-friction baseline threat detection rules that require **no prerequisite data preparation** (no custom decoders, no radar-helper enrichment, no index schema modifications). The Default scenario establishes a **detection floor** for any RADAR deployment by leveraging existing Wazuh data structures and standard event formats. These rules integrate seamlessly with CTI analysis and automated case creation, enabling rapid threat response without infrastructure investment.
+
+**Rule Coverage**:
+- **PowerShell invocation** (rules 100400–100402): 3 rules detecting PowerShell.exe execution with filtering for legitimate administrative tools
+- **Windows Command Shell** (rules 100403–100405): 3 rules detecting cmd.exe, batch files, VBS scripts, and other shell invocations
+
+**Design Philosophy**: Default rules focus on threat indicators that are already present in standard Wazuh logs (Sysmon events, authentication logs, etc.) without requiring additional log parsers, enrichment layers, or schema modifications. This enables rapid deployment and integration with existing SIEM infrastructure.
+
+**Rules**:
+
+| Rule ID | Level | Description | MITRE ATT&CK | Condition |
+|---------|-------|-------------|--------------|-----------|
+| 100400  | 8     | PowerShell invocation (catch-all) | T1059.001 | Any `powershell.exe` execution |
+| 100401  | 10    | Suspicious PowerShell (command-line) | T1059.001 | PowerShell with command-line NOT from whitelisted processes |
+| 100402  | 10    | Suspicious PowerShell (parent-command) | T1059.001 | PowerShell with parent-command NOT from whitelisted processes |
+| 100403  | 8     | Windows Command Shell invocation (catch-all) | T1059.003 | Any `cmd.exe`, `.bat`, `.cmd`, `.lnk`, `.pif`, `.vbs`, `.vbe`, `.js`, `.wsh` execution |
+| 100404  | 10    | Suspicious Command Shell (command-line) | T1059.003 | Command Shell with command-line NOT from whitelisted processes |
+| 100405  | 10    | Suspicious Command Shell (parent-command) | T1059.003 | Command Shell with parent-command NOT from whitelisted processes |
+
+**Whitelist Mechanism**:
+A variable `$LEGIT_ACTIVITIES` maintains a regex pattern of known-good processes and commands:
+```
+(?i)(ASUSOptimization|Chrome|VisualStudio|WindowsTerminal|svchost|wsl|
+     Microsoft VS Code|Explorer|Lenovo|NVIDIA|Ryzen|...)
+```
+
+Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false positives from legitimate administrative tools, while the base rules (100400/100403) capture all invocations for alert volume tracking.
+
+**Alert Flow**:
+```
+1. Sysmon process creation event (sysmon_event1)
+2. Rule 100400 matches: Any PowerShell invocation (level 8)
+3. Rule 100401 checks: If command-line NOT in whitelist → escalate to level 10 (Suspicious)
+4. Rule 100402 checks: If parent-command NOT in whitelist → escalate to level 10 (Suspicious)
+5. Similar matching flow for rules 100403–100405 (Command Shell)
+```
+
+---
 
 ### 1. Log Volume Growth Detection
 
@@ -136,13 +179,17 @@ Groups Google
 
 ## Scenario rules order
 
+- a0 — Default threat detection
+
+Placed first to ensure baseline security threats (shell execution) are caught earliest. Universal applicability across all Windows deployments makes this a foundational security floor that evaluates before scenario-specific rules.
+
 - a1 — Log volume
 
-Placed first to normalize OpenSearch AD alerts into Wazuh events early, and because it is self-contained (parent + specific child rule in the same pack). 
+Placed second to normalize OpenSearch AD alerts into Wazuh events early, and because it is self-contained (parent + specific child rule in the same pack). 
 
 - a2 — GeoIP detection 
 
-Placed second because it represents a baseline policy violation (“successful auth from non-whitelist country”) and is designed to be the primary classification when multiple geolocation-related conditions could apply.
+Placed third because it represents a baseline policy violation ("successful auth from non-whitelist country") and is designed to be the primary classification when multiple geolocation-related conditions could apply.
 
 - a3 — Suspicious login
 
@@ -152,6 +199,7 @@ Placed third because it contains more advanced behavioral logic (frequency corre
 
 RADAR rules provide scenario-specific threat detection capabilities:
 
+- **default**: Baseline command shell execution detection (PowerShell, CMD.exe, batch scripts)
 - **log_volume**: Anomaly detection via OpenSearch AD integration
 - **geoip_detection**: Geographic access control and policy enforcement
 - **suspicious_login**: Credential attack detection (brute force, impossible travel)

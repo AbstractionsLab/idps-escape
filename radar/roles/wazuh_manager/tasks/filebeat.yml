@@ -147,3 +147,4 @@
     (_archives_pipeline_patched is defined and _archives_pipeline_patched is changed) or
     (_fb_replace_enabled is defined and _fb_replace_enabled.changed | default(false)) or
     (_fb_replace_block is defined and _fb_replace_block.changed | default(false))
+    

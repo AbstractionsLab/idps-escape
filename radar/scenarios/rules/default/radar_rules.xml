@@ -1,0 +1,60 @@
+<var name="LEGIT_ACTIVITIES">(?i)(Chrome|Explorer|intel|Microsoft VS Code|run-c5dec|svchost|sysmonInstaller|VisualStudio|WindowsTerminal|wsl)</var>
+
+<group name="radar_default,">
+<!-- CATCH POWERSHELL INVOCATION -->
+<rule id="100400" level="8">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)powershell\.exe</field>
+    <options>no_full_log</options>
+    <description>POWERSHELL invocation ($(win.eventdata.user))</description>
+    <mitre>
+        <id>T1059.001</id>
+    </mitre>
+</rule>
+
+<!-- EXCEPTION FOR LEGIT ACTIVITIES (by commandLine) -->
+<rule id="100401" level="10">
+    <if_sid>100400</if_sid>
+    <field name="win.eventdata.commandLine" type="pcre2"  negate="yes">$LEGIT_ACTIVITIES</field>
+    <options>no_full_log</options>
+    <description>Suspicious POWERSHELL invocation</description>
+    <mitre>
+        <id>T1059.001</id>
+    </mitre>
+</rule>
+
+<!-- EXCEPTION FOR LEGIT ACTIVITIES (by parentCommandLine) -->
+<rule id="100402" level="10">
+    <if_sid>100400</if_sid>
+    <field name="win.eventdata.parentCommandLine" type="pcre2"  negate="yes">$LEGIT_ACTIVITIES</field>
+    <options>no_full_log</options>
+    <description>Suspicious POWERSHELL invocation</description>
+    <mitre>
+        <id>T1059.001</id>
+    </mitre>
+</rule>
+
+<!-- CATCH WINDOWS COMMAND SHELL INVOCATION -->
+<rule id="100403" level="8">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)\\cmd\.exe|\.(bat|cmd|lnk|pif|vbs|vbe|js|wsh)</field>
+    <options>no_full_log</options>
+    <description>WINDOWS COMMAND SHELL invocation by ($(win.eventdata.user))</description>
+</rule>    
+
+<!-- EXCEPTION FOR LEGIT ACTIVITIES (by commandLine) -->
+<rule id="100404" level="10">
+    <if_sid>100403,92058</if_sid>
+    <field name="win.eventdata.commandLine" type="pcre2"  negate="yes">$LEGIT_ACTIVITIES</field>
+    <options>no_full_log</options>
+    <description>Suspicious WINDOWS COMMAND SHELL invocation</description>
+</rule>
+
+<!-- EXCEPTION FOR LEGIT ACTIVITIES (by parentCommandLine) -->
+<rule id="100405" level="10">
+    <if_sid>100403,92058</if_sid>
+    <field name="win.eventdata.parentCommandLine" type="pcre2"  negate="yes">$LEGIT_ACTIVITIES</field>
+    <options>no_full_log</options>
+    <description>Suspicious WINDOWS COMMAND SHELL invocation</description>
+</rule>
+</group>

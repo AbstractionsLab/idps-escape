@@ -3,7 +3,7 @@ import time
 import subprocess
 from pathlib import Path
 
-from common import load_config
+from common import load_config, get_scenario_simulate
 
 
 def _int(v, default):
@@ -39,14 +39,13 @@ def _schedule_cleanup(file_path: Path, cleanup_minutes: int) -> None:
         return
     seconds = cleanup_minutes * 60
     fp = str(file_path)
-
     cmd = f"(sleep {seconds}; rm -f '{fp}') >/dev/null 2>&1 &"
     subprocess.Popen(["sh", "-lc", cmd], close_fds=True)
 
 
 def main() -> None:
     cfg = load_config()
-    lv = cfg["log_volume"]
+    lv = get_scenario_simulate(cfg, "log_volume")
 
     base_dir = Path(str(lv.get("target_dir", "/var/log")))
     filename = str(lv.get("spike_filename", "ratf_log_volume_spike.log"))
@@ -56,10 +55,9 @@ def main() -> None:
     start_bytes = _int(lv.get("start_bytes", 5 * 1024 * 1024), 5 * 1024 * 1024)
     growth_factor = _float(lv.get("growth_factor", 2.0), 2.0)
     sleep_seconds = _float(lv.get("sleep_seconds", 2.0), 2.0)
-
     max_total_bytes = _int(lv.get("max_total_bytes", 512 * 1024 * 1024), 512 * 1024 * 1024)
     max_step_bytes = _int(lv.get("max_step_bytes", 256 * 1024 * 1024), 256 * 1024 * 1024)
-
+    write_chunk_bytes = _int(lv.get("write_chunk_bytes", 1024 * 1024), 1024 * 1024)
     cleanup_minutes = _int(lv.get("cleanup_minutes", 0), 0)
 
     print("Simulating log_volume (real growth) ...")
@@ -67,7 +65,6 @@ def main() -> None:
     print(f"Spike file: {spike_file}")
 
     _ensure_dir(base_dir)
-
     if not spike_file.exists():
         spike_file.touch()
 
@@ -83,7 +80,7 @@ def main() -> None:
             break
 
         print(f"Step {i+1}/{steps}: appending {add_bytes} bytes")
-        _append_bytes(spike_file, add_bytes)
+        _append_bytes(spike_file, add_bytes, chunk=write_chunk_bytes)
         total_written += add_bytes
 
         size_now = spike_file.stat().st_size

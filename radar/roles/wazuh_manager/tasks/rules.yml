@@ -4,6 +4,21 @@
     path: "{{ _host_rules_dir }}"
     state: directory
 
+- name: rules | Check default rules directory exists on controller
+  delegate_to: localhost
+  become: false
+  ansible.builtin.stat:
+    path: "{{ _scenarios_root }}/rules/default"
+  register: _default_rules_dir_stat
+  changed_when: false
+
+- name: rules | Copy default rules to host volume
+  when: _default_rules_dir_stat.stat.exists and _default_rules_dir_stat.stat.isdir
+  ansible.builtin.copy:
+    src: "{{ _scenarios_root }}/rules/default/"
+    dest: "{{ _host_rules_dir }}/"
+  register: _default_rules_copied
+
 - name: rules | Copy scenario rules to host volume ({{ scenario_name }})
   ansible.builtin.copy:
     src: "{{ item }}"

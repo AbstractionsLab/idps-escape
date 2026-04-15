@@ -1,3 +1,30 @@
+# 0.10 (2026-05-15)
+
+## Added
+
+- **Default rules**: Support for low-friction baseline threat detection framework for rapid RADAR deployment without prerequisite data preparation
+- **SONAR per-bucket max aggregation**: New `max_numeric_fields` configuration key for `FeatureConfig` and scenario YAML files; fields listed there produce an additional `<field>__max` column computed via per-bucket `resample().max()` alongside the existing mean, enabling detection of brief spikes (e.g. a 55-second CPU burst) that bucket averaging would obscure
+- **SONAR alert filter**: New `alert_filter` configuration key for `FeatureConfig` and scenario YAML files; accepts an arbitrary OpenSearch query fragment forwarded as a `bool.must` clause to `search_alerts()`, scoping ingestion to a specific rule group or rule ID set and preventing unrelated alert types from diluting the feature signal
+- **SONAR resource-monitoring derived features**: Five new threshold-based derived features added to `WazuhFeatureBuilder._extract_derived_features()`: `is_cpu_high` (≥ 80 %), `is_cpu_critical` (≥ 95 %), `is_memory_high` (≥ 80 %), `is_memory_critical` (≥ 95 %), and `is_high_load` (`1min_loadAverage` ≥ 4.0); values are averaged per bucket, producing the fraction of alerts in that minute where the threshold was exceeded
+- **SONAR scenario `derived_features` flag**: New `derived_features` boolean field in `TrainingScenario` (default `true`) properly wired from YAML through `cmd_scenario()` into `FeatureConfig`, replacing the previous no-op YAML key
+- **Linux resource monitoring scenario improvements**: Updated `sonar/scenarios/linux_resource_monitoring.yaml` with additional numeric fields (`data.disk_usage_%`, `data.1min_loadAverage`, `data.5min_loadAverage`, `data.15min_loadAverage`), `max_numeric_fields` for CPU and memory spike detection, and `alert_filter` scoped to `rule.groups: performance_metric` matching Wazuh rules 100054–100060
+- **SONAR test coverage**: new unit tests across `test_engine_and_features.py` (`TestMaxAggregation`, `TestResourceDerivedFeatures`), `test_scenario.py` (`TestTrainingScenarioNewFields`), and `test_wazuh_and_pipeline.py` (`TestAlertFilterForwarding`) covering max column generation, all five resource derived feature thresholds, new `TrainingScenario` field defaults, YAML parse/roundtrip, and `alert_filter` forwarding to `search_alerts()`
+- **User interface prototype**: Added UI prototypes for the RADAR web interface, covering four functional screens: scenario binding to active response, AR configuration (weights, tiers, mitigations), manager and agent cluster management, and DECIPHER/Wazuh connector configuration.
+
+## Fixed
+
+- Poetry entrypoint script conflict resolution issue (adbox and sonar)
+
+## Modified
+
+- **Unified configuration files**: Consolidated scenario parameters from three sources into a single `radar/config.yaml` file
+  - Added optional `ingest:` section under applicable scenarios for data ingestion parameters
+  - Added optional `simulate:` section under all scenarios for RADAR test framework simulation parameters
+  - All scenario configuration (detector/monitor, ingestion, and simulation settings) now co-located in `radar/config.yaml` for simplified management
+- **SONAR `TrainingScenario`**: Extended with `derived_features`, `alert_filter`, and `max_numeric_fields` fields; `UseCase.from_yaml()` and `to_yaml()` updated to parse and emit all three
+- **SONAR `cli.py`**: `cmd_scenario()` now propagates `derived_features`, `alert_filter`, and `max_numeric_fields` from the scenario into `cfg.features`; `_execute_training_phase()` and `_run_single_detection()` pass `query=cfg.features.alert_filter` to every `search_alerts()` call
+- **SONAR feature log line**: Updated to report `N numeric + M max + D derived + C categorical = total` columns
+
 # 0.9 (2026-04-01)
 
 ## Added

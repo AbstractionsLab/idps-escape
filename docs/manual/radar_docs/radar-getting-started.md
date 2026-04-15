@@ -192,8 +192,41 @@ If any required mapping is missing, the playbook will fail with a validation err
 
 ### 4. Configure scenario specifications (for ML-based detection)
 
-The **`config.yaml`** file is essential for ML-based (behavior-based) anomaly detection scenarios. It defines how OpenSearch anomaly detectors and monitors are configured for each scenario. If you are using signature-based detection only (e.g., GeoIP detection), this file requires no changes. However, for ML-based scenarios (log volume, suspicious login behavioral, insider threat, DDoS, malware communication), proper configuration is critical.
+The **`config.yaml`** file is the unified configuration source for all scenario parameters. It defines:
 
+- **Detector and monitor configuration** for OpenSearch anomaly detection (for ML-based scenarios)
+- **Data ingestion parameters** (optional) under `ingest:` section
+- **Simulation parameters** (optional) under `simulate:` section for the RADAR test framework
+
+If you are using signature-based detection only (e.g., GeoIP detection), the detector/monitor sections can be skipped. However, for ML-based scenarios (log volume, suspicious login behavioral, insider threat, DDoS, malware communication), proper detector/monitor configuration is critical.
+
+#### Unified structure
+
+Each scenario in `config.yaml` can include three configuration blocks:
+
+```yaml
+scenarios:
+  log_volume:
+    # Detector and monitor configuration (required for ML scenarios)
+    index_prefix: wazuh-ad-log-volume-*
+    detector_interval: 5
+    features: [...]
+    rules: [...]
+    # ... (detector/monitor params)
+    
+    # Data ingestion configuration (optional, for run-radar.sh --ingest true)
+    ingest:
+      agent_id: "001"
+      history_minutes: 240
+      # ... (ingestion-specific params)
+    
+    # Simulation configuration (optional, for simulate-radar.sh)
+    simulate:
+      timezone_offset: "+01:00"
+      hostname: "edge.vm"
+      target_dir: "/var/log"
+      # ... (simulation-specific params)
+```
 
 **Key parameters explained:**
 
@@ -259,8 +292,23 @@ rules:
 - Suppress alerts when actual log volume is extremely low compared to baseline (noise filtering)
 - Ignore minor deviations from baseline (within tolerance bounds)
 
+#### Ingestion and simulation configuration
 
-### 5.Configure active response parameters
+The optional `ingest:` and `simulate:` sections in `config.yaml` configure data generation for testing and training:
+
+- **`ingest:` section** — Parameters for synthetic training data generation via `run-radar.sh --ingest true`
+  - Used to populate OpenSearch with baseline data before detector activation
+  - Example parameters: `agent_id`, `log_path`, `history_minutes`, `baseline_bytes`
+  - See [Run RADAR documentation](./radar-run-ad.md#stage-1-data-ingestion-wazuh_ingestpy) for detailed parameter explanations
+
+- **`simulate:` section** — Parameters for agent-realistic attack simulation via `simulate-radar.sh`
+  - Used by the RADAR test framework to generate realistic security events
+  - Example parameters: `timezone_offset`, `hostname`, `target_dir`, `spike_filename`, `steps`
+  - See [RADAR test framework documentation](../../../radar/radar-test-framework/simulate/README.md) for simulation details
+
+Both sections are optional and can be omitted if you are deploying with existing data or not using the test framework.
+
+### 5. Configure active response parameters
 
 The **`scenarios/active_responses/ar.yaml`** file configures the risk-aware active response system for each scenario. This file is located at the path specified by `AR_RISK_CONFIG` in your `.env` file and should be customized according to your operational requirements and risk tolerance.
 

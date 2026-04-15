@@ -25,3 +25,7 @@ Each of these scenarios is implemented as an isolated module following a consist
 4. **Evaluate**: Analysis of detection outputs against ground truth. This phase is not yet implemented in RATF and is planned for a future release.
 
 The simulation component is orchestrated through `simulate-radar.sh`, which dispatches scenario scripts to local container agents or remote SSH endpoints.
+
+## Configuration
+
+Simulation parameters are unified in `radar/config.yaml` under each scenario's optional `simulate:` section. This consolidates configuration across ingestion, detection setup, and testing workflows. See [Configuration guide](/docs/manual/radar_docs/radar-getting-started.md#4-configure-scenario-specifications-for-ml-based-detection) for details.

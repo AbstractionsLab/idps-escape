@@ -152,6 +152,28 @@ class WazuhFeatureBuilder:
             g in groups for g in ("windows_logon", "windows", "win_logon")
         ) else 0.0
 
+        # Resource utilization thresholds (for linux_resource_monitoring use case).
+        # Values come from the data block decoded by Wazuh's general_health_check decoder.
+        data = alert.get("data", {})
+        try:
+            cpu = float(data.get("cpu_usage_%", 0) or 0)
+        except (TypeError, ValueError):
+            cpu = 0.0
+        try:
+            mem = float(data.get("memory_usage_%", 0) or 0)
+        except (TypeError, ValueError):
+            mem = 0.0
+        try:
+            load1 = float(data.get("1min_loadAverage", 0) or 0)
+        except (TypeError, ValueError):
+            load1 = 0.0
+
+        derived["is_cpu_high"] = 1.0 if cpu >= 80.0 else 0.0
+        derived["is_cpu_critical"] = 1.0 if cpu >= 95.0 else 0.0
+        derived["is_memory_high"] = 1.0 if mem >= 80.0 else 0.0
+        derived["is_memory_critical"] = 1.0 if mem >= 95.0 else 0.0
+        derived["is_high_load"] = 1.0 if load1 >= 4.0 else 0.0
+
         return derived
 
     def _get_nested_field(self, alert: Dict[str, Any], path: str):
@@ -286,11 +308,30 @@ class WazuhFeatureBuilder:
         # For numeric columns, you can choose sum/mean/max — here: mean
         agg_df = numeric_df.resample(rule).mean().sort_index()
 
+        # Per-bucket max columns for fields listed in max_numeric_fields.
+        # Each produces a <field>__max column alongside the default mean.
+        max_cols_added: List[str] = []
+        max_numeric_fields = list(getattr(self.cfg, "max_numeric_fields", []) or [])
+        if max_numeric_fields:
+            valid_max_fields = [f for f in max_numeric_fields if f in numeric_df.columns]
+            if valid_max_fields:
+                max_df = numeric_df[valid_max_fields].resample(rule).max().sort_index()
+                rename_map = {f: f"{f}__max" for f in valid_max_fields}
+                max_df = max_df.rename(columns=rename_map)
+                agg_df = pd.concat([agg_df, max_df], axis=1)
+                max_cols_added = list(rename_map.values())
+                logger.info("Added %d per-bucket max column(s): %s", len(max_cols_added), max_cols_added)
+            else:
+                logger.warning("max_numeric_fields configured but none present in data: %s", max_numeric_fields)
+
         # Collect derived feature columns (those added by _extract_derived_features)
         derived_feature_names = [
             "is_auth_failure", "is_auth_success", "is_brute_force",
             "is_privilege_event", "is_high_severity", "is_critical_severity",
             "is_ssh_event", "is_windows_logon",
+            "is_cpu_high", "is_cpu_critical",
+            "is_memory_high", "is_memory_critical",
+            "is_high_load",
         ]
         derived_cols = [c for c in agg_df.columns if c in derived_feature_names]
 
@@ -299,18 +340,24 @@ class WazuhFeatureBuilder:
             if col not in agg_df.columns:
                 agg_df[col] = 0.0
 
+        # Ensure max columns are present (fill 0.0 if a bucket had no data)
+        for col in max_cols_added:
+            if col not in agg_df.columns:
+                agg_df[col] = 0.0
+
         # Ensure categorical columns present and ordered after numerics
         for col in categorical_cols:
             if col not in agg_df.columns:
                 agg_df[col] = 0.0
 
-        # Build final column order: numeric fields + derived features + categorical columns
-        final_cols = list(self.cfg.numeric_fields) + derived_cols + categorical_cols
+        # Build final column order: numeric fields + max fields + derived features + categorical columns
+        final_cols = list(self.cfg.numeric_fields) + max_cols_added + derived_cols + categorical_cols
         # Only include columns that exist in the DataFrame
         final_cols = [c for c in final_cols if c in agg_df.columns]
         logger.info(
             f"Final feature set: {len(self.cfg.numeric_fields)} numeric + "
-            f"{len(derived_cols)} derived + {len(categorical_cols)} categorical = {len(final_cols)} total"
+            f"{len(max_cols_added)} max + {len(derived_cols)} derived + "
+            f"{len(categorical_cols)} categorical = {len(final_cols)} total"
         )
         agg_df = agg_df[final_cols]
 

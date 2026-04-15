@@ -924,6 +924,9 @@ def cmd_scenario(args: argparse.Namespace) -> int:
         cfg.features.categorical_fields = uc.training.categorical_fields
         cfg.features.categorical_top_k = uc.training.categorical_top_k
         cfg.features.bucket_minutes = uc.training.bucket_minutes
+        cfg.features.derived_features = uc.training.derived_features
+        cfg.features.alert_filter = uc.training.alert_filter
+        cfg.features.max_numeric_fields = uc.training.max_numeric_fields
         cfg.mvad.sliding_window = uc.training.sliding_window
         cfg.mvad.device = uc.training.device
         cfg.mvad.extra_params.update(uc.training.extra_params)
@@ -1039,7 +1042,7 @@ def _execute_training_phase(
         if isinstance(client, LocalDataProvider):
             alerts = client.search_alerts(start, end, ignore_time_range=True)
         else:
-            alerts = client.search_alerts(start, end)
+            alerts = client.search_alerts(start, end, query=cfg.features.alert_filter)
         logger.info("Retrieved %d alerts.", len(alerts))
 
         logger.info("Building feature time series...")
@@ -1190,7 +1193,7 @@ def _run_single_detection(
         if isinstance(client, LocalDataProvider):
             alerts = client.search_alerts(start, end, ignore_time_range=True)
         else:
-            alerts = client.search_alerts(start, end)
+            alerts = client.search_alerts(start, end, query=cfg.features.alert_filter)
         logger.info("Retrieved %d alerts.", len(alerts))
 
         if not alerts:

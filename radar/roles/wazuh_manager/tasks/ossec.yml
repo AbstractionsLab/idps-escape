@@ -1,4 +1,23 @@
 #### ossec.conf (volume-mapped) ####
+
+- name: ossec | Check RADAR default ossec snippet exists on controller
+  delegate_to: localhost
+  become: false
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/../scenarios/ossec/radar-default-ossec-snippet.xml"
+  register: _radar_default_ossec_snip
+  changed_when: false
+
+- name: ossec | Insert RADAR default ossec snippet into host ossec.conf (idempotent)
+  when: _radar_default_ossec_snip.stat.exists
+  ansible.builtin.blockinfile:
+    path: "{{ _host_ossec_conf }}"
+    marker: "<!-- RADAR: default {mark} -->"
+    insertbefore: '</ossec_config>'
+    block: "{{ lookup('file', playbook_dir + '/../scenarios/ossec/radar-default-ossec-snippet.xml') }}"
+    backup: false
+  register: _ossec_default_insert
+
 - name: ossec | Check RADAR ossec snippet exists on controller
   delegate_to: localhost
   become: false
@@ -93,6 +112,7 @@
         (_ossec_logall_json is defined and _ossec_logall_json.changed) or
         (_decoders_copied is defined and _decoders_copied is changed) or
         (_rules_copied is defined and _rules_copied is changed) or
+        (_default_rules_copied is defined and _default_rules_copied is changed) or
         (_wl_list_entry is defined and _wl_list_entry is changed)
       }}
 

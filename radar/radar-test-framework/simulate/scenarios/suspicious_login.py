@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 import datetime as dt
 
-from common import load_config, append_line_authlog, detect_authlog_timestamp_format
+from common import (
+    load_config,
+    get_scenario_simulate,
+    append_line_authlog,
+    detect_authlog_timestamp_format,
+)
 
 
 def main() -> None:
     cfg = load_config()
+    s = get_scenario_simulate(cfg, "suspicious_login")
 
-    common = cfg["common"]
-    s = cfg["suspicious_login"]
-
-    tz = str(common["timezone_offset"])
-    host = str(common["hostname"])
+    tz = str(s["timezone_offset"])
+    host = str(s["hostname"])
 
     auth_path = str(s["log_path"])
     sudo_tee = bool(s.get("sudo_tee", True))
-
     user = str(s["user"])
     sshd_pid = int(s["sshd_pid"])
     fail_port = int(s["fail_port"])
@@ -32,16 +34,24 @@ def main() -> None:
 
     for i, ip in enumerate(ips):
         ts = base + dt.timedelta(seconds=i * step)
+        ts_str = detect_authlog_timestamp_format(
+            ts, tz, auth_path,
+        )
         line = (
-            f"{detect_authlog_timestamp_format(ts, tz, auth_path)} {host} "
-            f"sshd[{sshd_pid}]: Failed password for {user} from {ip} port {fail_port} ssh2: {key_fail}"
+            f"{ts_str} {host} "
+            f"sshd[{sshd_pid}]: Failed password for {user} from {ip} "
+            f"port {fail_port} ssh2: {key_fail}"
         )
         append_line_authlog(line, auth_path, sudo_tee)
 
     ts = base + dt.timedelta(seconds=min(window - 1, len(ips) * step))
+    ts_str = detect_authlog_timestamp_format(
+        ts, tz, auth_path,
+    )
     line = (
-        f"{detect_authlog_timestamp_format(ts, tz, auth_path)} {host} "
-        f"sshd[{sshd_pid}]: Accepted publickey for {user} from {ips[0]} port {success_port} ssh2: {key_ok}"
+        f"{ts_str} {host} "
+        f"sshd[{sshd_pid}]: Accepted publickey for {user} from {ips[0]} "
+        f"port {success_port} ssh2: {key_ok}"
     )
     append_line_authlog(line, auth_path, sudo_tee)
 

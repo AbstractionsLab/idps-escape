@@ -340,5 +340,143 @@ class TestWazuhFeatureBuilder(unittest.TestCase):
         self.assertEqual(list(ts_data.columns), ["rule.level"])
 
 
+class TestMaxAggregation(unittest.TestCase):
+    """Tests for per-bucket max column generation."""
+
+    def _make_alerts(self, cpu_values):
+        """Build minimal resource-monitoring alerts with given CPU values."""
+        alerts = []
+        for i, cpu in enumerate(cpu_values):
+            alerts.append({
+                "timestamp": f"2026-01-01T10:0{i}:00.000Z",
+                "rule": {"level": 3, "groups": ["performance_metric"]},
+                "data": {"cpu_usage_%": cpu, "memory_usage_%": 50.0},
+            })
+        return alerts
+
+    def test_max_column_produced(self):
+        """build_timeseries produces <field>__max when max_numeric_fields is set."""
+        cfg = FeatureConfig(
+            numeric_fields=["data.cpu_usage_%"],
+            bucket_minutes=5,
+            max_numeric_fields=["data.cpu_usage_%"],
+        )
+        builder = WazuhFeatureBuilder(cfg)
+        # Two alerts in the *same* 5-min bucket: values 20 and 90
+        alerts = [
+            {"timestamp": "2026-01-01T10:00:00.000Z", "rule": {"level": 3}, "data": {"cpu_usage_%": 20.0}},
+            {"timestamp": "2026-01-01T10:01:00.000Z", "rule": {"level": 3}, "data": {"cpu_usage_%": 90.0}},
+        ]
+        ts = builder.build_timeseries(alerts)
+        self.assertIn("data.cpu_usage_%__max", ts.columns)
+
+    def test_max_column_value_is_max_not_mean(self):
+        """Max column captures the highest value; mean column captures the average."""
+        cfg = FeatureConfig(
+            numeric_fields=["data.cpu_usage_%"],
+            bucket_minutes=60,  # one bucket for all alerts
+            max_numeric_fields=["data.cpu_usage_%"],
+        )
+        builder = WazuhFeatureBuilder(cfg)
+        alerts = [
+            {"timestamp": "2026-01-01T10:00:00.000Z", "rule": {"level": 3}, "data": {"cpu_usage_%": 20.0}},
+            {"timestamp": "2026-01-01T10:30:00.000Z", "rule": {"level": 3}, "data": {"cpu_usage_%": 90.0}},
+        ]
+        ts = builder.build_timeseries(alerts)
+        # Mean should be 55, max should be 90
+        self.assertAlmostEqual(ts["data.cpu_usage_%"].iloc[0], 55.0, places=1)
+        self.assertAlmostEqual(ts["data.cpu_usage_%__max"].iloc[0], 90.0, places=1)
+
+    def test_max_column_absent_when_not_configured(self):
+        """No __max columns when max_numeric_fields is empty."""
+        cfg = FeatureConfig(
+            numeric_fields=["data.cpu_usage_%"],
+            bucket_minutes=5,
+        )
+        builder = WazuhFeatureBuilder(cfg)
+        alerts = [
+            {"timestamp": "2026-01-01T10:00:00.000Z", "rule": {"level": 3}, "data": {"cpu_usage_%": 80.0}},
+        ]
+        ts = builder.build_timeseries(alerts)
+        self.assertFalse(any(c.endswith("__max") for c in ts.columns))
+
+    def test_max_column_unrecognised_field_skipped(self):
+        """max_numeric_fields entries not in the data produce a warning but no error."""
+        cfg = FeatureConfig(
+            numeric_fields=["data.cpu_usage_%"],
+            bucket_minutes=5,
+            max_numeric_fields=["data.nonexistent_field"],
+        )
+        builder = WazuhFeatureBuilder(cfg)
+        alerts = [
+            {"timestamp": "2026-01-01T10:00:00.000Z", "rule": {"level": 3}, "data": {"cpu_usage_%": 70.0}},
+        ]
+        ts = builder.build_timeseries(alerts)  # must not raise
+        self.assertNotIn("data.nonexistent_field__max", ts.columns)
+
+
+class TestResourceDerivedFeatures(unittest.TestCase):
+    """Tests for resource-specific derived features."""
+
+    def _build_ts(self, cpu=0.0, mem=0.0, load1=0.0):
+        cfg = FeatureConfig(
+            numeric_fields=["rule.level"],
+            bucket_minutes=60,
+            derived_features=True,
+        )
+        builder = WazuhFeatureBuilder(cfg)
+        alerts = [{
+            "timestamp": "2026-01-01T10:00:00.000Z",
+            "rule": {"level": 3, "groups": []},
+            "data": {
+                "cpu_usage_%": cpu,
+                "memory_usage_%": mem,
+                "1min_loadAverage": load1,
+            },
+        }]
+        return builder.build_timeseries(alerts)
+
+    def test_is_cpu_high_when_cpu_over_80(self):
+        ts = self._build_ts(cpu=90.0)
+        self.assertIn("is_cpu_high", ts.columns)
+        self.assertEqual(ts["is_cpu_high"].iloc[0], 1.0)
+
+    def test_is_cpu_high_zero_when_cpu_normal(self):
+        ts = self._build_ts(cpu=50.0)
+        self.assertEqual(ts["is_cpu_high"].iloc[0], 0.0)
+
+    def test_is_cpu_critical_when_cpu_over_95(self):
+        ts = self._build_ts(cpu=97.0)
+        self.assertEqual(ts["is_cpu_critical"].iloc[0], 1.0)
+
+    def test_is_memory_high_when_mem_over_80(self):
+        ts = self._build_ts(mem=85.0)
+        self.assertIn("is_memory_high", ts.columns)
+        self.assertEqual(ts["is_memory_high"].iloc[0], 1.0)
+
+    def test_is_memory_critical_when_mem_over_95(self):
+        ts = self._build_ts(mem=96.0)
+        self.assertEqual(ts["is_memory_critical"].iloc[0], 1.0)
+
+    def test_is_high_load_when_load_over_4(self):
+        ts = self._build_ts(load1=5.0)
+        self.assertIn("is_high_load", ts.columns)
+        self.assertEqual(ts["is_high_load"].iloc[0], 1.0)
+
+    def test_is_high_load_zero_when_load_normal(self):
+        ts = self._build_ts(load1=1.5)
+        self.assertEqual(ts["is_high_load"].iloc[0], 0.0)
+
+    def test_resource_features_absent_when_data_missing(self):
+        """Alerts without data block default to 0.0 for resource features."""
+        cfg = FeatureConfig(numeric_fields=["rule.level"], bucket_minutes=60)
+        builder = WazuhFeatureBuilder(cfg)
+        alerts = [{"timestamp": "2026-01-01T10:00:00.000Z", "rule": {"level": 5}}]
+        ts = builder.build_timeseries(alerts)
+        for col in ("is_cpu_high", "is_memory_high", "is_high_load"):
+            self.assertIn(col, ts.columns)
+            self.assertEqual(ts[col].iloc[0], 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

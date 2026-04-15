@@ -415,6 +415,7 @@ class Registry:
             "geoip_detection": GeoipDetection(logger, os_client),
             "suspicious_login": SuspiciousLogin(logger, os_client),
             "log_volume": LogVolume(logger, os_client),
+            "default": BaseScenario(logger, os_client),
         }
 
     def get(self, scenario_name: str):
@@ -624,6 +625,7 @@ class DecipherClient:
             "suspicious_login": "RADAR: suspicious login attempts",
             "geoip_detection": "RADAR: suspicious geographic access",
             "log_volume": "RADAR: abnormal log volume",
+            "default": "RADAR: security incident detected",
         }
         return titles.get(scenario_name, f"RADAR: {scenario_name}")
 

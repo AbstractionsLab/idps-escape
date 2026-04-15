@@ -59,8 +59,13 @@ The script accepts these scenario names:
 Each supported scenario has its own:
 
 - Ingestion logic (`wazuh_ingest.py` in `/radar/scenarios/ingest_scripts/<scenario>/`)
-- Feature definitions in `config.yaml`
-- Monitor setup configurations in `config.yaml`
+- Feature definitions in `radar/config.yaml`
+- Monitor setup configurations in `radar/config.yaml`
+- Data ingestion configuration in `radar/config.yaml` (optional `ingest:` section)
+- Simulation parameters in `radar/config.yaml` (optional `simulate:` section)
+
+**Key change:** As of the unified configuration update, all scenario parameters (features, detector/monitor settings, ingestion config, and simulation config) are co-located in a single `radar/config.yaml` file under each scenario definition.
+Before, ingestion and simulation parameters were in separate configuration files; now they're integrated into the main scenario definition block.
 
 ### Container execution
 
@@ -100,6 +105,31 @@ Creates and trains detector with synthetic log volume progression data.
 Detector immediately starts analyzing existing OpenSearch data without synthetic ingestion.
 
 ## Stage 1: Data ingestion (`wazuh_ingest.py`)
+
+### Configuration source
+
+Data ingestion parameters are defined in `radar/config.yaml` under each scenario's optional `ingest:` section. The ingestion script (`wazuh_ingest.py`) reads this configuration to control how synthetic training data is generated and injected into OpenSearch.
+
+**Scenarios with `ingest:` configuration:**
+- `log_volume` — parameters like `agent_id`, `agent_name`, `log_path`, `history_minutes`, baseline calculation
+
+Examples:
+
+```yaml
+log_volume:
+  ingest:
+    agent_id: "001"
+    agent_name: "edge.vm"
+    program: "log_volume_metric"
+    log_path: "/var/log"
+    index_prefix: "wazuh-ad-log-volume"
+    history_minutes: 240        # How much historical data to generate
+    step_seconds: 20            # Sampling interval
+    delta_query_window: "now-10m"
+    delta_min_docs: 2
+    fallback_delta: 20000
+    baseline_bytes: 228654752   # Starting baseline for progression
+```
 
 ### Purpose
 

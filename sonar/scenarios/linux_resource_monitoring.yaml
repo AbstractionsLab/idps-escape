@@ -36,7 +36,17 @@ training:
   numeric_fields:
     - "data.cpu_usage_%"
     - "data.memory_usage_%"
+    - "data.disk_usage_%"
+    - "data.1min_loadAverage"
+    - "data.5min_loadAverage"
+    - "data.15min_loadAverage"
     - "rule.level"
+  
+  # Per-bucket max columns alongside the default per-bucket mean.
+  # Captures brief spikes (e.g. a 55-second mining burst) that averaging would hide.
+  max_numeric_fields:
+    - "data.cpu_usage_%"
+    - "data.memory_usage_%"
   
   # Categorical fields for one-hot encoding
   # Capture which systems are affected
@@ -59,6 +69,14 @@ training:
   
   # Enable derived features for enhanced detection
   derived_features: true
+  
+  # Filter ingested alerts to performance_metric events only.
+  # Prevents SSH, FIM, and other alert types from diluting the resource signal.
+  # Matches alerts produced by Wazuh rules 100054-100060 (general_health_check decoder).
+  # alert_filter:
+  #   terms:
+  #     rule.groups:
+  #       - performance_metric
   
   # Training parameters
   device: "cpu"  # Use "cuda" if GPU available

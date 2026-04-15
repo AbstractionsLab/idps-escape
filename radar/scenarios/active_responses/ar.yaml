@@ -1,4 +1,24 @@
 scenarios:
+  default:
+    signature:
+      rule_ids:
+        - "100401"
+        - "100402"
+        - "100404"
+        - "100405"
+    w_ad: 0.0
+    w_sig: 0.7
+    w_cti: 0.3
+    signature_likelihood: 0.6
+    signature_impact: 0.5
+    delta_signature_minutes: 5
+    tiers:
+      tier1_min: 0.0
+      tier1_max: 0.33
+      tier2_max: 0.66
+    allow_mitigation: false
+
+
   geoip_detection:
     ad:
       rule_ids: []
@@ -30,14 +50,16 @@ scenarios:
   
   suspicious_login:
     ad:
-      rule_ids:
-        - "100021"
+      rule_ids: []
     signature:
       rule_ids:
         - "210012"
         - "210013"
         - "210020"
         - "210021"
+        - "210022"
+        - "210030"
+        - "210031"
     w_ad: 0.3
     w_sig: 0.4
     w_cti: 0.3
@@ -45,10 +67,10 @@ scenarios:
     delta_signature_minutes: 1
     signature_impact: 0.7
     signature_likelihood: 
-      - rule_id: [210012, 210013]
-        weight: 0.5
+      - rule_id: [210012, 210013, 210030, 210031]
+        weight: 0.6
       - rule_id: [210020, 210021]
-        weight: 0.5
+        weight: 0.4
     tiers:
       tier1_min: 0.2
       tier1_max: 0.33

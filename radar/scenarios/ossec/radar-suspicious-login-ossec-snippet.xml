@@ -14,5 +14,5 @@
     <disabled>no</disabled>
     <command>radar_ar_suspicious_login</command>
     <location>server</location>
-    <rules_id>210012,210013,210020,210021,210022</rules_id>
+    <rules_id>210012,210013,210020,210021,210022,210030,210031</rules_id>
   </active-response>

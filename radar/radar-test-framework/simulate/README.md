@@ -24,7 +24,6 @@ radar-test-framework/
       geoip_detection.py      # geoip simulation script
       suspicious_login.py     # suspicious login simulation script
       log_volume.py           # log volume simulation script
-      config.yaml             # all scenario parameters
 
 simulate-radar.sh             # entry point
 
@@ -46,36 +45,44 @@ roles/wazuh_agent/
 
 ## Configuration
 
-All simulation parameters are defined in
-`radar-test-framework/simulate/scenarios/config.yaml`.
-No values are hardcoded in the scripts.
+All simulation parameters are defined in `radar/config.yaml` under each scenario's optional `simulate:` section. No values are hardcoded in the scripts.
 
-Before running, ensure the following are set correctly for your environment:
+**Example configuration structure in `radar/config.yaml`:**
+
 ```yaml
-common:
-  timezone_offset: "+01:00"   # adjust to your agent timezone
-  hostname: "edge.vm"         # must match your agent hostname
+scenarios:
+  log_volume:
+    # ... detector/monitor configuration ...
+    simulate:
+      timezone_offset: "+01:00"     # adjust to your agent timezone
+      hostname: "edge.vm"           # must match your agent hostname
+      target_dir: "/var/log"
+      spike_filename: "ratf_log_volume_spike.log"
+      steps: 10
+      start_bytes: 268435456
+      growth_factor: 1.5
+      cleanup_minutes: 5             # set to 0 to disable auto-cleanup
 
-suspicious_login:
-  container_name: "agent.suspicious"   # required for local mode
-  log_path: "/var/log/auth.log"
-  ip_pool:                             # must contain ≥5 entries
-    - "8.8.8.8"
-    - ...
+  suspicious_login:
+    # ... detector/monitor configuration ...
+    simulate:
+      timezone_offset: "+01:00"
+      hostname: "edge.vm"
+      log_path: "/var/log/auth.log"
+      ip_pool:
+        - "8.8.8.8"
+        - "1.0.136.99"
+        # ... (must contain ≥5 entries)
 
-geoip_detection:
-  container_name: "agent.geoip"        # required for local mode
-  ip: "8.8.8.8"                        # must be outside whitelist country
-
-log_volume:
-  container_name: "agent.logvolume"    # required for local mode
-  target_dir: "/var/log"
-  cleanup_minutes: 5                   # set to 0 to disable auto-cleanup
+  geoip_detection:
+    simulate:
+      timezone_offset: "+01:00"
+      hostname: "edge.vm"
+      log_path: "/var/log/auth.log"
+      # ... (other params)
 ```
 
-> **Note:** `container_name` is required under each scenario block for
-> local mode. The current `config.yaml` does not include this key by
-> default; it must be added before running with `--agent local`.
+For complete parameter documentation and examples, see [Run RADAR documentation](../../../docs/manual/radar_docs/radar-run-ad.md) and [Getting Started guide](../../../docs/manual/radar_docs/radar-getting-started.md).
 
 ## Usage
 ```bash
