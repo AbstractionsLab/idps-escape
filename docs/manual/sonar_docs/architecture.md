@@ -91,39 +91,6 @@ Each operation (training, detection) is self-contained:
 
 ## System architecture
 
-### High-level overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLI Layer (cli.py)                       │
-│         Commands: train | detect | scenario | check             │
-├─────────────────────────────────────────────────────────────────┤
-│                   Configuration Layer                           │
-│         config.py (dataclasses) | scenario.py (YAML)           │
-├─────────────────────────────────────────────────────────────────┤
-│                    Data Ingestion Layer                         │
-│      WazuhIndexerClient | LocalDataProvider (debug mode)        │
-├─────────────────────────────────────────────────────────────────┤
-│                  Feature Engineering Layer                      │
-│                    WazuhFeatureBuilder                          │
-│      Timestamp parsing | Bucketing | Aggregation | Encoding     │
-├─────────────────────────────────────────────────────────────────┤
-│                      ML Engine Layer                            │
-│                     MVADModelEngine                             │
-│           Train | Predict | Save | Load operations              │
-├─────────────────────────────────────────────────────────────────┤
-│                   Post-processing Layer                         │
-│                    MVADPostProcessor                            │
-│         Anomaly document generation for Wazuh indexing          │
-├─────────────────────────────────────────────────────────────────┤
-│                    Storage Layer                                │
-│              Wazuh Indexer (OpenSearch REST API)                │
-│         wazuh-alerts-* (read) | wazuh-anomalies-mvad (write)   │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Component interaction
-
 ```mermaid
 flowchart LR
     subgraph Input
@@ -205,7 +172,7 @@ shipper/wazuh_data_shipper.py
 
 ### Shipping module (optional add-on)
 
-The `shipper` module provides **production-grade data streaming** for anomaly results:
+The `shipper` module provides **SIEM-oriented data streaming** for anomaly results:
 
 **Purpose:** Create and manage dedicated OpenSearch data streams for SONAR anomaly results, enabling:
 - Real-time monitoring with scenario-specific indexing
@@ -224,11 +191,6 @@ The `shipper` module provides **production-grade data streaming** for anomaly re
 - CLI invoked with `--ship` flag during training or detection
 - Training: Creates data stream template for scenario
 - Detection: Ships anomalies to scenario-specific stream
-
-**Template hierarchy:**
-1. **Base template**: Common fields for all SONAR anomalies
-2. **Algorithm template**: MVAD-specific fields
-3. **Scenario template**: Feature-specific fields for each trained model
 
 **See:** [data-shipping-guide.md](./data-shipping-guide.md) for complete usage guide.
 
@@ -331,31 +293,6 @@ Indexed to wazuh-anomalies-mvad
 ### Configuration hierarchy
 
 ```
-PipelineConfig (root)
-├── wazuh: WazuhIndexerConfig
-│   ├── base_url: str
----
-
-## Configuration system
-
-### Unified configuration approach
-
-SONAR separates infrastructure configuration from detection logic:
-
-**Config files** (`default_config.yaml`, `resource_monitoring_config.yaml`):
-- Wazuh connection settings
-- Debug mode configuration
-- Model storage paths
-- Default feature extraction parameters
-
-**Scenario files** (`scenarios/*.yaml`):
-- Training parameters (lookback, features, sliding window)
-- Detection parameters (mode, threshold, lookback)
-- Query filters (scenario-specific)
-
-### Configuration hierarchy
-
-```
 PipelineConfig
 ├── wazuh: WazuhIndexerConfig
 │   ├── base_url: str
@@ -373,7 +310,9 @@ PipelineConfig
 │   ├── bucket_minutes: int
 │   ├── categorical_fields: List[str]
 │   ├── categorical_top_k: int
-│   └── derived_features: bool
+│   ├── derived_features: bool
+│   ├── alert_filter: Optional[Dict]
+│   └── max_numeric_fields: Optional[int]
 ├── debug: DebugConfig
 │   ├── enabled: bool
 │   ├── data_dir: str
@@ -435,12 +374,6 @@ description: "Detect authentication attack patterns"
 enabled: true
 model_name: "brute_force_baseline_v1"  # Optional: custom model name
 
-# Optional: Filter specific alerts before processing
-query_filter:
-  bool:
-    should:
-      - match: {"rule.groups": "authentication"}
-
 training:
   lookback_hours: 168
   numeric_fields: ["rule.level"]
@@ -448,6 +381,11 @@ training:
   bucket_minutes: 5
   sliding_window: 200
   device: "cpu"
+  # Optional: restrict which alerts are fetched from OpenSearch
+  alert_filter:
+    bool:
+      should:
+        - match: {"rule.groups": "authentication"}
 
 detection:
   mode: "historical"
@@ -459,41 +397,6 @@ detection:
 ---
 
 ## Scenario-based execution
-
-### Scenario structure
-
-```yaml
-name: "Scenario Name"
-description: "Description of the use case"
-enabled: true
-
-# Optional: Filter specific alerts
-query_filter:
-  bool:
-    should: [...]
-
-training:                    # Optional section
-  lookback_hours: 24
-  numeric_fields: ["rule.level"]
-  categorical_fields: []
-  bucket_minutes: 5
-  sliding_window: 200
-  device: "cpu"
-
-detection:                   # Optional section
-  mode: "batch"              # historical | batch | realtime
-  lookback_minutes: 10
-  threshold: 0.7
-  min_consecutive: 2
-```
-
-### Flexible execution modes
-
-| Scenario sections | Execution behavior | Use case |
-|-------------------|-------------------|----------|
-| `training` + `detection` | Train model → detect anomalies | Full workflow |
-| `training` only | Train and save model (no detection) | Baseline establishment |
-| `detection` only | Load existing model → detect | Ad-hoc investigation |
 
 ### Detection modes
 
@@ -555,11 +458,6 @@ def predict(self, ts_data: pd.DataFrame) -> Any:
         # Reorder to match training
         ts_clean = ts_clean[self.training_columns]
 ```
-
-This ensures:
-- Different categorical values between train/detect are handled
-- No manual intervention required
-- Backward compatibility with old models
 
 ---
 
@@ -693,19 +591,6 @@ Base Template (sonar_stream_template)
         └── Component: scenario features (feature_rule_level, etc.)
 ```
 
-### Anomaly shipping workflow
-
-**During detection with shipping enabled:**
-
-1. **Anomaly detection**: MVAD engine identifies anomalies as normal
-2. **Post-processing**: `MVADPostProcessor.build_wazuh_anomaly_docs()` creates anomaly documents
-3. **Shipping decision**: `_should_ship(cfg, args)` checks configuration
-4. **Streaming**: `_ship_anomalies(cfg, client, anomaly_docs)` is called
-   - Determines target stream: `sonar_anomalies_mvad_{scenario_id}`
-   - Ships each document via `WazuhDataShipper.ship_single()`
-   - Logs success/failure for each document
-5. **Fallback**: If shipping fails, falls back to standard anomaly index
-
 ### Integration with RADAR
 
 **Data flow: SONAR → Data Stream → RADAR**
@@ -758,7 +643,7 @@ monitors:
 ```
 Detection completes
         │
-        ├─ shipping.enabled=true AND --ship flag? ────► No ──► Standard indexing
+        ├─ shipping.enabled=true OR --ship flag? ─────► No ──► Standard indexing
         │                                                        to wazuh-anomalies-mvad
         └─ Yes
             │
@@ -772,16 +657,6 @@ Detection completes
                     │
                     └─ Failure ──────────────► Fall back to standard indexing
 ```
-
-### Key components
-
-| Module | Role |
-|--------|------|
-| `cli.py` | `_should_ship()`, `_create_scenario_stream()`, `_ship_anomalies()` helper functions |
-| `shipper/wazuh_data_shipper.py` | `WazuhDataShipper` class for index template management and document shipping |
-| `shipper/wazuh_base_template.py` | Base template definitions for MVAD data streams |
-| `config.py` | `ShippingConfig` dataclass |
-| `scenario.py` | Scenario YAML support for `shipping` section |
 
 ### Configuration methods
 
@@ -801,13 +676,6 @@ poetry run sonar train --scenario my_scenario.yaml --ship
 poetry run sonar detect --scenario my_scenario.yaml --ship
 ```
 
-### Benefits
-
-- **Scenario isolation**: Each trained model gets its own data stream
-- **Template-based indexing**: Automatic field typing and validation
-- **RADAR integration**: Enables automated incident response
-- **Production monitoring**: Dedicated streams for real-time alerting
-
 For complete usage guide, see [data-shipping-guide.md](./data-shipping-guide.md).
 
 ---
@@ -822,15 +690,3 @@ For detailed UML diagrams including:
 - Deployment diagram for production setup
 
 See [uml-diagrams.md](./uml-diagrams.md).
-
----
-
-## Related documentation
-
-| Document | Description |
-|----------|-------------|
-| [README.md](./README.md) | Documentation index and quick reference |
-| [setup-guide.md](./setup-guide.md) | Installation, configuration, and usage |
-| [scenario-guide.md](./scenario-guide.md) | Complete scenario system guide |
-| [troubleshooting.md](./troubleshooting.md) | Error solutions and diagnostics |
-| [uml-diagrams.md](./uml-diagrams.md) | Visual system design diagrams |

@@ -94,7 +94,7 @@ We distinguish between:
 
 #### Agent-side setup
 
-1. Copy `/radar/radar-helper.py` to the target host into `/opt/radar/radar-helper.py`:
+1. Copy `/radar/radar-helper/radar-helper.py` to the target host into `/opt/radar/radar-helper.py`:
 ```bash
 mkdir -p /opt/radar
 mkdir -p /opt/radar/venv
@@ -611,53 +611,23 @@ The dataset originates from [Kaggle - RBA-dataset](https://www.kaggle.com/datase
 
 ### Generalizing Suspicious Login Detection Beyond Keycloak
 
-While this setup uses **Keycloak** as the default SSO provider for demonstration purposes, the detection logic is **fully generalizable** to other authentication systems such as:
-
-- **SSH login events** (e.g., `/var/log/auth.log`)
-- **Azure Active Directory sign-ins**
-- **Google Workspace / Okta / SAML-based SSO providers**
-
-The anomaly detection system is designed to be **identity provider–agnostic**, relying only on normalized login event data.
-
----
-
-#### Key Concepts for Generalization
-
-| Component          | Adaptation Notes                                                                 |
-|-------------------|-----------------------------------------------------------------------------------|
-| **Log Source**     | Replace or augment Keycloak logs with logs from SSH, Azure AD, Okta, etc.        |
-| **Ingest Format**  | Normalize logs to include fields like `User ID`, `timestamp`, `Country`, `IP`.   |
-| **Anomaly Features** | Maintain behavior-based indicators (geo changes, login hours, frequency).       |
-| **Categorical Field** | Always slice data per user (e.g., `User ID.keyword`, `username.keyword`).     |
-
----
-
-#### Feature Mapping for Other Authentication Systems
-
-| Common Field   | SSH                    | Azure AD / Okta         |
-|----------------|------------------------|--------------------------|
-| **User ID**     | `username`             | `userPrincipalName`      |
-| **Timestamp**   | `timestamp`            | `createdDateTime`        |
-| **IP Address**  | `src_ip`               | `ipAddress`              |
-| **Country**     | Derived from `src_ip`  | Derived from `ipAddress` |
-| **Login Time**  | Derived from timestamp | Derived from timestamp   |
-
-Use Logstash, Filebeat modules, or ingestion scripts to transform and map fields before indexing to OpenSearch.
+While this setup uses **Keycloak** as the default SSO provider for demonstration purposes, the detection logic is **identity provider–agnostic** and can be adapted to SSH (`/var/log/auth.log`), Azure Active Directory, Okta, or any SAML-based SSO provider. The key is normalizing logs to include `User ID`, `timestamp`, `Country`, and `IP` fields and indexing them to OpenSearch before configuring the detector. For a full protocol-extension guide including field mapping tables, decoder templates, and rule examples, see the [Suspicious login extensibility guide](./suspicious-login-extensibility-guide.md).
 
 ### Risk Analysis
- In the case of suspicious login activity,such as a user accessing the system at 03:00 from a foreign IP or from multiple countries in a short timeframe, the associated risk is again modelled using:
 
-```
-R = C × I
-```
+In the case of suspicious login activity, such as a user accessing the system at 03:00 from a foreign IP or from multiple countries within a short timeframe, risk is computed by the RADAR unified risk engine:
 
-Here, `C` represents the confidence score output by the anomaly detection system, reflecting the likelihood that the login behavior deviates from established user-specific baselines. This use of model confidence as a proxy for likelihood is standard in behavior-based intrusion detection systems. The impact score `I` is derived from CVSS, adapted to represent behavioral anomalies such as unauthorized or suspicious access events.
+$$
+R = w_A \cdot A + w_S \cdot S + w_T \cdot T
+$$
+
+where **A** = anomaly intensity (grade × confidence from the OpenSearch AD detector), **S** = signature-based risk (likelihood × impact from configured rules), and **T** = CTI score from DECIPHER. For `suspicious_login`, default weights are `w_A=0.3, w_S=0.4, w_T=0.3`. See [radar-risk-math.md](../radar-risk-math.md) for the full mathematical specification and [ar.yaml](../../../../radar/scenarios/active_responses/ar.yaml) for scenario weight configuration.
 
 In this context, potential consequences include **moderate confidentiality loss** (e.g., exposure of personal or customer data), but typically **no direct integrity or availability compromise**, assuming the attacker has not escalated privileges or performed destructive actions.
 
-According to our tiered thresholding automated response mechanism, we set:
+According to our tiered thresholding automated response mechanism:
 
 - **Tier 2** → investigate suspicious login
 - **Tier 3** → contain or lock account
 
-This framework ensures that anomalous login behavior is escalated only when both the confidence is high and the potential business impact is non-trivial. It also allows for consistent application of response policies across users and login patterns, making the model robust for account compromise detection.
+This framework ensures that anomalous login behavior is escalated only when both the confidence is high and the potential business impact is non-trivial.

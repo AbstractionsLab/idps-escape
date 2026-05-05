@@ -116,7 +116,7 @@ if [[ "$MANAGER_MODE" == "remote" || "$AGENT_MODE" == "remote" ]]; then
     ssh-add -l | grep -q "$(ssh-keygen -lf "$KEY" | awk '{print $2}')" || ssh-add "$KEY"
   fi
 
-  ANSIBLE_VAULT_FLAG="--ask-vault-pass"
+  if [[ "${RADAR_NONINTERACTIVE:-}" == "1" ]]; then ANSIBLE_VAULT_FLAG=""; else ANSIBLE_VAULT_FLAG="--ask-vault-pass"; fi
 fi
 
 

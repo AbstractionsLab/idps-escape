@@ -2,7 +2,8 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_ROOT_USER_ACTION=ignore
+    PIP_ROOT_USER_ACTION=ignore \
+    PIP_NO_CACHE_DIR=1
 
 RUN apt-get update -y \
  && apt-get install -y --no-install-recommends ca-certificates \
@@ -16,13 +17,14 @@ RUN mkdir -p /app \
  && mkdir -p /app/suspicious_login \
  && useradd -r -u 999 -g root -d /nonexistent -s /usr/sbin/nologin appuser \
  && chown -R appuser:root /app \
+ && chmod -R 550 /app \
  && pip install --no-cache-dir requests PyYAML
 
 WORKDIR /app
 
-COPY anomaly_detector/detector.py anomaly_detector/monitor.py anomaly_detector/webhook.py config.yaml ./
-COPY scenarios/ingest_scripts/suspicious_login/wazuh_ingest.py ./suspicious_login/
-COPY scenarios/ingest_scripts/log_volume/wazuh_ingest.py ./log_volume/
+COPY --chown=appuser:root --chmod=440 anomaly_detector/detector.py anomaly_detector/monitor.py anomaly_detector/webhook.py config.yaml ./
+COPY --chown=appuser:root --chmod=440 scenarios/ingest_scripts/suspicious_login/wazuh_ingest.py ./suspicious_login/
+COPY --chown=appuser:root --chmod=440 scenarios/ingest_scripts/log_volume/wazuh_ingest.py ./log_volume/
 
 USER appuser
 

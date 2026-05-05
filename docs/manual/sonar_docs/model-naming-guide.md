@@ -159,116 +159,9 @@ sonar/
 └── ...
 ```
 
-## Use Cases
-
-### Version Control of Models
-
-Track model improvements over time:
-```yaml
-# scenarios/brute_force_v1.yaml
-name: "Brute Force Detection"
-model_name: "brute_force_v1"
-training:
-  lookback_hours: 24
-  numeric_fields: ["rule.level"]
-```
-
-```yaml
-# scenarios/brute_force_v2.yaml
-name: "Brute Force Detection"
-model_name: "brute_force_v2"  # New version
-training:
-  lookback_hours: 168  # Improved: 7 days instead of 24h
-  numeric_fields: ["rule.level", "data.srcip"]  # More features
-```
-
-### Experiment Tracking
-
-Use timestamps for experiments:
-```bash
-# Let SONAR auto-generate with timestamp
-poetry run sonar train --scenario scenarios/experiment.yaml
-# Creates: experiment_20260112_100000.pkl
-
-# Run again with different parameters
-poetry run sonar train --scenario scenarios/experiment.yaml
-# Creates: experiment_20260112_110000.pkl
-
-# Both models preserved for comparison
-```
-
-### Production Deployment
-
-Use stable names in production:
-```yaml
-# scenarios/production_monitor.yaml
-name: "Production Resource Monitor"
-model_name: "prod_resource_monitor"  # Stable name
-
-training:
-  lookback_hours: 168
-  # ... production config
-```
-
-Update model by retraining:
-```bash
-# Overwrites existing model with same name
-poetry run sonar train --scenario scenarios/production_monitor.yaml
-```
-
-### A/B Testing
-
-Compare different models:
-```bash
-# Model A: Basic features
-poetry run sonar train --scenario scenarios/basic.yaml --model-name comparison_basic
-
-# Model B: Advanced features
-poetry run sonar train --scenario scenarios/advanced.yaml --model-name comparison_advanced
-
-# Test both
-poetry run sonar detect --scenario scenarios/basic.yaml     # Uses comparison_basic
-poetry run sonar detect --scenario scenarios/advanced.yaml  # Uses comparison_advanced
-```
-
 ## Best Practices
 
-### 1. Use Semantic Names in Production
-```yaml
-# Good: Clear, versioned
-model_name: "brute_force_v2"
-
-# Avoid: Generic or unclear
-model_name: "model1"
-```
-
-### 2. Include Version Numbers
-```yaml
-# Good: Enables tracking improvements
-model_name: "linux_monitor_v1"
-model_name: "linux_monitor_v2"
-
-# Avoid: No versioning
-model_name: "linux_monitor"  # Hard to track changes
-```
-
-### 3. Use Descriptive Names
-```yaml
-# Good: Describes purpose
-model_name: "ssh_brute_force_detector"
-
-# Avoid: Vague
-model_name: "detector"
-```
-
-### 4. Let Auto-Generation Work for Experiments
-```bash
-# For experiments, auto-generation is fine (includes timestamp)
-poetry run sonar train --scenario scenarios/test_experiment.yaml
-# Creates: test_experiment_20260112_143022.pkl
-```
-
-### 5. Document Model Configurations
+### Document model configurations
 Keep a log of what each model version includes:
 ```
 brute_force_v1: 24h lookback, rule.level only
@@ -360,34 +253,6 @@ poetry run sonar train --scenario scenarios/my_scenario.yaml
 poetry run sonar detect --scenario scenarios/my_scenario.yaml
 ```
 
-## CLI Reference
-
-### Train Command
-```bash
-sonar train [--scenario YAML] [--model-name NAME] [options]
-
---scenario PATH       Use scenario YAML file
---model-name NAME     Explicit model name (overrides scenario)
---config PATH         Base configuration file
---lookback-hours N    Hours of historical data
-```
-
-### Scenario Command
-```bash
-sonar scenario --use-case YAML [options]
-
-# Model name determined by:
-# 1. model_name field in YAML
-# 2. Auto-generated from scenario name + timestamp
-```
-
-### Detect Command
-```bash
-sonar detect [--scenario YAML] [options]
-
---scenario PATH       Use scenario YAML file (loads associated model)
-```
-
 ## Examples
 
 ### Example 1: Production Model with Stable Name
@@ -441,12 +306,3 @@ poetry run sonar train --scenario scenarios/experiment.yaml
 
 # Both preserved for comparison
 ```
-
-## Summary
-
-- **Model naming** ensures unique identification of trained models
-- **Three sources**: CLI flag, YAML field, or auto-generation
-- **Priority**: CLI > YAML > Auto-generated
-- **Storage**: All models in `./sonar/models/` directory
-- **Best practice**: Use semantic versioned names for production (`model_v1`, `model_v2`)
-- **Experiments**: Let auto-generation add timestamps for uniqueness

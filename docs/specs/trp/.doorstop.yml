@@ -4,59 +4,79 @@ settings:
   parent: TST
   prefix: TRP
   sep: '-'
-
 attributes:
   defaults:
-    test-date: 'yyyy-mm-dd'
+    test-date: yyyy-mm-dd
     tester: ''
-    defect-category: '0 = flawless; 1 = insignificant defect; 2 = minor defect; 3 = major defect; 4 = critical defect'
+    defect-category: 0 = flawless; 1 = insignificant defect; 2 = minor defect; 3 =
+      major defect; 4 = critical defect
     passed-steps: '0'
     failed-steps: '0'
     not-executed-steps: '0'
     release-version: ''
-    verification-method: 'T'
+    verification-method: T
     references:
-      - path: docs/specs/SpecEngine/c5-keyword.py
-        type: file
-    header: |
-      Add a short description here
-    text: |
-      ## Relevant test environment and configuration details
+    - path: docs/specs/SpecEngine/c5-keyword.py
+      type: file
+    header: 'Add a short description here
+
+      '
+    text: '## Relevant test environment and configuration details
+
 
       - Software deviations: aligned with test case specification, N/A
+
       - Hardware deviations: aligned with test case specification, N/A
+
 
       ## Test execution results
 
-      Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.
+
+      Here we report the results in terms of step-wise alignments or deviations with
+      respect to the expected outcome of the covered test case.
+
 
       **Test case step 1**: Verify that...
 
+
       - ?c5-defect-0 OR ?c5-defect-1 OR ?c5-defect-2 OR ?c5-defect-3 OR ?c5-defect-4
+
 
       ### Defect summary description
 
-      Defect-free test execution, i.e., defect category: ?c5-defect-0 OR ?c5-defect-1 OR ?c5-defect-2 OR ?c5-defect-3 OR ?c5-defect-4
+
+      Defect-free test execution, i.e., defect category: ?c5-defect-0 OR ?c5-defect-1
+      OR ?c5-defect-2 OR ?c5-defect-3 OR ?c5-defect-4
+
 
       ### Text execution evidence
 
+
       See linked files (if any), e.g., screenshots, logs, etc.
+
 
       ### Comments
 
+
       Any additional informative details not fitting in the above sections.
+
 
       ## Guide
 
-      - Defect category: ?c5-defect-0; ?c5-defect-1; ?c5-defect-2; ?c5-defect-3; ?c5-defect-4
-      - Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)
 
+      - Defect category: ?c5-defect-0; ?c5-defect-1; ?c5-defect-2; ?c5-defect-3; ?c5-defect-4
+
+      - Verification method (VM): Test (T), Review of design (R), Inspection (I),
+      Analysis (A)
+
+      '
+    references_content_fingerprint: {}
   publish:
-    - test-date
-    - tester
-    - defect-category
-    - passed-steps
-    - failed-steps
-    - not-executed-steps
-    - release-version
-    - verification-method
+  - test-date
+  - tester
+  - defect-category
+  - passed-steps
+  - failed-steps
+  - not-executed-steps
+  - release-version
+  - verification-method

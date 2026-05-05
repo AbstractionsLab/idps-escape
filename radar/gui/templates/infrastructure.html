@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% block title %}Infrastructure{% endblock %}
+
+{% block page_title %}Infrastructure{% endblock %}
+{% block page_subtitle %}
+  <p class="page-header__subtitle">
+    {{ summary.manager_count }} manager{{ 's' if summary.manager_count != 1 }},
+    {{ summary.agent_count }} agent{{ 's' if summary.agent_count != 1 }}
+  </p>
+{% endblock %}
+
+{% block page_actions %}
+  <button class="btn btn--primary" onclick="openAddManager()">+ Manager</button>
+  <button class="btn" onclick="openAddAgent()">+ Agent</button>
+{% endblock %}
+
+{% block content %}
+
+<div id="vault-banner" style="display:none" class="strip strip--amber" style="margin-bottom:20px;flex-wrap:wrap;gap:10px">
+  <div id="vault-banner-msg"></div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <button class="btn btn--sm" id="vault-banner-btn-unlock" onclick="RADAR.promptVaultUnlock()" style="display:none">Unlock vault</button>
+    <button class="btn btn--sm" id="vault-banner-btn-create" onclick="openVaultCreate()" style="display:none">Create vault</button>
+  </div>
+</div>
+
+{% if summary.get('error') %}
+<div class="strip strip--red" style="margin-bottom:20px">
+  <strong>Could not read inventory.yaml:</strong> {{ summary.error }}
+</div>
+{% endif %}
+
+<div class="section-header">
+  <div>
+    <div class="section-header__title">Wazuh Manager</div>
+  </div>
+</div>
+
+<div class="infra-grid" id="managers-grid" style="margin-bottom:32px">
+{% for mgr in summary.managers %}
+<div class="infra-card infra-card--manager" id="card-mgr-{{ mgr.name | replace('.', '-') }}"
+     data-name="{{ mgr.name }}"
+     data-ui-kind="{{ mgr.ui_kind }}"
+     data-manager-mode="{{ mgr.manager_mode }}"
+     data-connection="{{ mgr.connection }}"
+     data-ip="{{ mgr.ip }}"
+     data-container="{{ mgr.container }}"
+     data-service="{{ mgr.service }}"
+     data-user="{{ mgr.ansible_user }}"
+     data-port="{{ mgr.ansible_port }}">
+  <div class="infra-card__header">
+    {% if mgr.connection == 'local' %}<span class="badge badge--green">Local</span>
+    {% else %}<span class="badge badge--blue">Remote SSH</span>{% endif %}
+    {% if mgr.ui_kind == 'docker' %}<span class="badge badge--gray">docker</span>
+    {% else %}<span class="badge badge--gray">host</span>{% endif %}
+  </div>
+  <div class="infra-card__name">{{ mgr.name }}</div>
+  <table class="infra-table">
+    <tr><td class="infra-table__label">IP / host</td><td class="infra-table__value mono">{{ mgr.ip or '—' }}</td></tr>
+    {% if mgr.ui_kind == 'docker' %}
+    <tr><td class="infra-table__label">Container</td><td class="infra-table__value mono">{{ mgr.container }}</td></tr>
+    <tr><td class="infra-table__label">Service</td><td class="infra-table__value mono">{{ mgr.service }}</td></tr>
+    {% endif %}
+    {% if mgr.connection == 'remote' %}
+    <tr><td class="infra-table__label">SSH user</td><td class="infra-table__value mono">{{ mgr.ansible_user or '—' }}</td></tr>
+    <tr><td class="infra-table__label">SSH port</td><td class="infra-table__value mono">{{ mgr.ansible_port }}</td></tr>
+    {% endif %}
+  </table>
+  <div class="infra-card__deploy-note">
+    {% if mgr.manager_mode == 'docker_local' %}Deploy targets container on <strong>localhost</strong> — no SSH.
+    {% elif mgr.manager_mode == 'docker_remote' %}Deploy SSHes into <code>{{ mgr.ip }}</code>, writes to container bind-mounts.
+    {% elif mgr.manager_mode == 'host_remote' %}Deploy SSHes into <code>{{ mgr.ip }}</code>, writes to <code>/var/ossec/</code>.{% endif %}
+  </div>
+  <div class="infra-card__actions">
+    <button class="btn btn--sm" onclick="runHealthCheck('manager','{{ mgr.name }}')">Health</button>
+    <button class="btn btn--sm" onclick="openEditManager('{{ mgr.name }}')">Edit</button>
+    <button class="btn btn--sm" onclick="openCredModal('{{ mgr.name }}','manager', {{ 'true' if mgr.has_credential else 'false' }})">
+      {% if mgr.has_credential %}Change credential{% else %}Set credential{% endif %}
+    </button>
+    <button class="btn btn--sm btn--danger" onclick="deleteNode('manager','{{ mgr.name }}')">Delete</button>
+  </div>
+  <div class="health-panel" id="health-mgr-{{ mgr.name | replace('.', '-') }}" style="display:none"></div>
+</div>
+{% else %}
+<div class="strip strip--amber" style="margin-bottom:32px">No managers in inventory.yaml. Use <strong>+ Manager</strong> to add one.</div>
+{% endfor %}
+</div>
+
+<div class="section-header">
+  <div>
+    <div class="section-header__title">Agents
+      <span style="font-weight:400;font-size:13px;color:var(--text-muted);margin-left:8px">
+        {{ summary.agent_count }} total · {{ summary.container_agents|length }} container · {{ summary.ssh_agents|length }} SSH
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="infra-grid infra-grid--agents" id="agents-grid">
+{% for agent in summary.agents %}
+<div class="infra-card infra-card--agent" id="card-agent-{{ agent.name | replace('.', '-') }}"
+     data-name="{{ agent.name }}"
+     data-agent-mode="{{ agent.agent_mode }}"
+     data-ip="{{ agent.ip }}"
+     data-container="{{ agent.container }}"
+     data-user="{{ agent.ansible_user }}"
+     data-port="{{ agent.ansible_port }}">
+  <div class="infra-card__header">
+    {% if agent.agent_mode == 'container' %}<span class="badge badge--green">Container</span>
+    {% else %}<span class="badge badge--blue">SSH</span>{% endif %}
+  </div>
+  <div class="infra-card__name">{{ agent.name }}</div>
+  <table class="infra-table">
+    {% if agent.agent_mode == 'container' %}
+    <tr><td class="infra-table__label">Container</td><td class="infra-table__value mono">{{ agent.container }}</td></tr>
+    <tr><td class="infra-table__label">Defined in</td><td class="infra-table__value mono">docker-compose.agents.yml</td></tr>
+    {% else %}
+    <tr><td class="infra-table__label">IP / host</td><td class="infra-table__value mono">{{ agent.ip or '—' }}</td></tr>
+    <tr><td class="infra-table__label">SSH user</td><td class="infra-table__value mono">{{ agent.ansible_user or '—' }}</td></tr>
+    <tr><td class="infra-table__label">SSH port</td><td class="infra-table__value mono">{{ agent.ansible_port }}</td></tr>
+    {% endif %}
+  </table>
+  <div class="infra-card__actions">
+    <button class="btn btn--sm" onclick="runHealthCheck('agent','{{ agent.name }}')">Health</button>
+    <button class="btn btn--sm" onclick="openEditAgent('{{ agent.name }}')">Edit</button>
+    {% if agent.agent_mode == 'ssh' %}
+    <button class="btn btn--sm" onclick="openCredModal('{{ agent.name }}','agent', {{ 'true' if agent.has_credential else 'false' }})">
+      {% if agent.has_credential %}Change credential{% else %}Set credential{% endif %}
+    </button>
+    {% endif %}
+    <button class="btn btn--sm btn--danger" onclick="deleteNode('agent','{{ agent.name }}')">Delete</button>
+  </div>
+  <div class="health-panel" id="health-agent-{{ agent.name | replace('.', '-') }}" style="display:none"></div>
+</div>
+{% else %}
+<div class="strip strip--amber">No agents in inventory.yaml. Use <strong>+ Agent</strong> to add one.</div>
+{% endfor %}
+</div>
+
+
+<div class="modal-backdrop" id="mgr-modal" style="display:none" onclick="closeModal(event,'mgr-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="mgr-modal-title">Add Manager</div>
+    <input type="hidden" id="mgr-edit-original-name">
+    <div class="form-group">
+      <label class="form-label">Inventory hostname *</label>
+      <input class="form-input" id="mgr-name" placeholder="wazuh.manager">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kind *</label>
+      <select class="form-input" id="mgr-kind" onchange="toggleMgrFields()">
+        <option value="docker">docker — manager runs in a container</option>
+        <option value="host">host — manager runs bare-metal on a remote machine</option>
+      </select>
+      <div class="form-hint" style="margin-top:6px;font-size:11px;color:var(--text-muted)">
+        Local vs remote is inferred from the "This machine" checkbox below.
+      </div>
+    </div>
+    <div class="form-group" id="mgr-local-toggle-wrap">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+        <input type="checkbox" id="mgr-is-local" onchange="toggleMgrFields()">
+        <span>This machine (no SSH needed)</span>
+      </label>
+    </div>
+    <div id="mgr-remote-fields">
+      <div class="form-group"><label class="form-label">IP address *</label><input class="form-input mono" id="mgr-ip" placeholder="192.168.1.10"></div>
+      <div class="form-group"><label class="form-label">SSH user *</label><input class="form-input mono" id="mgr-user" placeholder="linuxuser"></div>
+      <div class="form-group"><label class="form-label">SSH port</label><input class="form-input mono" id="mgr-port" type="number" value="22"></div>
+    </div>
+    <div id="mgr-docker-fields">
+      <div class="form-group">
+        <label class="form-label">Container name *</label>
+        <input class="form-input mono" id="mgr-container" placeholder="wazuh.manager">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service name</label>
+        <input class="form-input mono" id="mgr-service" placeholder="wazuh.manager">
+        <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+          The docker-compose service key. Leave blank to reuse container name.
+        </div>
+      </div>
+    </div>
+    <div class="form-group" id="mgr-pw-wrap">
+      <label class="form-label">Sudo password</label>
+      <input class="form-input" id="mgr-pw" type="password" placeholder="Leave blank to set later">
+      <div class="form-hint" id="mgr-vault-hint" style="margin-top:4px;font-size:11px;color:var(--amber-text);display:none">
+        A vault password is needed to encrypt this credential. You will be prompted when saving.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal(null,'mgr-modal')">Cancel</button>
+      <button class="btn btn--primary" id="mgr-submit-btn" onclick="submitManager()">Add manager</button>
+    </div>
+    <div class="modal-error" id="mgr-error"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="agent-modal" style="display:none" onclick="closeModal(event,'agent-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title" id="agent-modal-title">Add Agent</div>
+    <input type="hidden" id="agent-edit-original-name">
+    <div class="form-group"><label class="form-label">Inventory hostname *</label><input class="form-input" id="agent-name" placeholder="edge.vm"></div>
+    <div class="form-group">
+      <label class="form-label">Agent mode *</label>
+      <select class="form-input" id="agent-mode" onchange="toggleAgentFields()">
+        <option value="ssh">SSH — remote host</option>
+        <option value="container">Container — local Docker</option>
+      </select>
+    </div>
+    <div id="agent-ssh-fields">
+      <div class="form-group"><label class="form-label">IP address *</label><input class="form-input mono" id="agent-ip" placeholder="192.168.1.20"></div>
+      <div class="form-group"><label class="form-label">SSH user *</label><input class="form-input mono" id="agent-user" placeholder="linuxuser"></div>
+      <div class="form-group"><label class="form-label">SSH port</label><input class="form-input mono" id="agent-port" type="number" value="22"></div>
+      <div class="form-group" id="agent-pw-wrap">
+        <label class="form-label">Sudo password <span class="form-hint-inline">(saved to host_vars/)</span></label>
+        <input class="form-input" id="agent-pw" type="password" placeholder="Leave blank to set later">
+        <div class="form-hint" id="agent-vault-hint" style="margin-top:4px;font-size:11px;color:var(--amber-text);display:none">
+          A vault password is needed to encrypt this credential. You will be prompted when saving.
+        </div>
+      </div>
+    </div>
+    <div id="agent-container-fields" style="display:none">
+      <div class="form-group"><label class="form-label">Docker container name *</label><input class="form-input mono" id="agent-container" placeholder="agent.custom"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal(null,'agent-modal')">Cancel</button>
+      <button class="btn btn--primary" id="agent-submit-btn" onclick="submitAgent()">Add agent</button>
+    </div>
+    <div class="modal-error" id="agent-error"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="cred-modal" style="display:none" onclick="closeModal(event,'cred-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Set sudo password</div>
+    <div class="modal-sub" id="cred-modal-sub"></div>
+    <input type="hidden" id="cred-node-name">
+    <input type="hidden" id="cred-node-type">
+    <div class="form-group" style="margin-top:14px">
+      <label class="form-label">Sudo / become password</label>
+      <input class="form-input" id="cred-pw" type="password" placeholder="Enter password">
+      <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">Saved to <code>host_vars/&lt;name&gt;.yml</code> chmod 0600, encrypted with the vault password.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cred-delete-btn" onclick="deleteCredential()" style="display:none;margin-right:auto">Remove stored</button>
+      <button class="btn" onclick="closeModal(null,'cred-modal')">Cancel</button>
+      <button class="btn btn--primary" onclick="saveCredential()">Save</button>
+    </div>
+    <div class="modal-error" id="cred-error"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="vault-create-modal" style="display:none" onclick="closeModal(event,'vault-create-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">Set vault password</div>
+    <div class="modal-sub">
+      This password encrypts all sudo credentials stored in <code>host_vars/</code>.
+      A single vault password covers all remote endpoints — you unlock it once per session.
+    </div>
+    <div class="form-group" style="margin-top:14px">
+      <label class="form-label">Vault password</label>
+      <input class="form-input" id="vault-create-pw" type="password" placeholder="Choose a strong password"
+             onkeydown="if(event.key==='Enter') submitVaultCreate()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Confirm password</label>
+      <input class="form-input" id="vault-create-pw2" type="password" placeholder="Repeat password"
+             onkeydown="if(event.key==='Enter') submitVaultCreate()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal(null,'vault-create-modal')">Cancel</button>
+      <button class="btn btn--primary" onclick="submitVaultCreate()">Set vault password</button>
+    </div>
+    <div class="modal-error" id="vault-create-error"></div>
+  </div>
+</div>
+
+<div id="toast-host" class="toast-host"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/infrastructure.js') }}"></script>
+{% endblock %}

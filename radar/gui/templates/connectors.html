@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}Connectors{% endblock %}
+
+{% block page_title %}Connectors{% endblock %}
+
+{% block page_actions %}
+  <button class="btn btn--primary" onclick="testAllConnectors()">Test all</button>
+{% endblock %}
+
+{% block head %}
+<style>
+  .cert-wrap { display: none; margin-top: 6px; }
+  .cert-wrap--visible { display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="connectors-grid">
+
+  <div class="connector-card" id="card-opensearch">
+    <div class="connector-card__header">
+      <div class="connector-card__icon connector-card__icon--blue">OS</div>
+      <div>
+        <div class="connector-card__title">OpenSearch / Wazuh Indexer</div>
+        <div class="connector-card__sub">Anomaly detection, log queries, context correlation</div>
+      </div>
+      <div class="connector-card__status" id="status-opensearch">
+        <span class="status-dot status-dot--gray"></span>
+        <span class="status-text">Not tested</span>
+      </div>
+    </div>
+    <div class="connector-fields">
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">URL</label>
+          <input class="ar-input mono" id="os-url" type="text" placeholder="https://192.168.0.28:9200"
+                 value="{{ env.get('OS_URL', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">User</label>
+          <input class="ar-input mono" id="os-user" type="text" placeholder="admin"
+                 value="{{ env.get('OS_USER', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Password</label>
+          <div class="pw-wrap">
+            <input class="ar-input mono" id="os-pass" type="password"
+                   placeholder="{% if connector_status.get('os-pass') %}&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;{% else %}Enter password{% endif %}"
+                   autocomplete="new-password">
+            {% if connector_status.get('os-pass') %}
+            <button class="pw-reveal-btn" onclick="revealPw('os-pass', 'OS_PASS', this)" type="button">Show</button>
+            {% endif %}
+          </div>
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">SSL verification</label>
+          <label class="ssl-toggle-label">
+            <input type="checkbox" id="os-ssl-enabled"
+                   {% if env.get('OS_VERIFY_SSL','false').lower() not in ('false','0','') %}checked{% endif %}
+                   onchange="toggleSslCert('os')">
+            <span>Verify SSL</span>
+          </label>
+          <div id="os-cert-wrap" class="cert-wrap{% if env.get('OS_VERIFY_SSL','false').lower() not in ('false','0','') %} cert-wrap--visible{% endif %}">
+            <input type="file" class="cert-file-input" id="os-cert-file" accept=".pem,.crt,.cer">
+            <div class="ar-hint-field">Upload CA certificate (.pem / .crt)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick="testConnector('opensearch')">Test connection</button>
+      <button class="btn btn--sm btn--primary" onclick="saveConnector('opensearch')">Save</button>
+    </div>
+    <div class="connector-result" id="result-opensearch"></div>
+  </div>
+
+  <div class="connector-card" id="card-wazuh-api">
+    <div class="connector-card__header">
+      <div class="connector-card__icon connector-card__icon--purple">WZ</div>
+      <div>
+        <div class="connector-card__title">Wazuh API</div>
+        <div class="connector-card__sub">Agent management, rule queries, active response dispatch</div>
+      </div>
+      <div class="connector-card__status" id="status-wazuh-api">
+        <span class="status-dot status-dot--gray"></span>
+        <span class="status-text">Not tested</span>
+      </div>
+    </div>
+    <div class="connector-fields">
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">API URL</label>
+          <input class="ar-input mono" id="wazuh-url" type="text" placeholder="https://192.168.0.28:55000"
+                 value="{{ env.get('WAZUH_API_URL', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Manager address</label>
+          <input class="ar-input mono" id="wazuh-manager" type="text" placeholder="192.168.0.28"
+                 value="{{ env.get('WAZUH_MANAGER_ADDRESS', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Auth user</label>
+          <input class="ar-input mono" id="wazuh-user" type="text" placeholder="wazuh-wui"
+                 value="{{ env.get('WAZUH_AUTH_USER', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Auth password</label>
+          <div class="pw-wrap">
+            <input class="ar-input mono" id="wazuh-pass" type="password"
+                   placeholder="{% if connector_status.get('wazuh-pass') %}&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;{% else %}Enter password{% endif %}"
+                   autocomplete="new-password">
+            {% if connector_status.get('wazuh-pass') %}
+            <button class="pw-reveal-btn" onclick="revealPw('wazuh-pass', 'WAZUH_AUTH_PASS', this)" type="button">Show</button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick="testConnector('wazuh-api')">Test connection</button>
+      <button class="btn btn--sm btn--primary" onclick="saveConnector('wazuh-api')">Save</button>
+    </div>
+    <div class="connector-result" id="result-wazuh-api"></div>
+  </div>
+
+  <div class="connector-card" id="card-dashboard">
+    <div class="connector-card__header">
+      <div class="connector-card__icon connector-card__icon--blue">DB</div>
+      <div>
+        <div class="connector-card__title">OpenSearch Dashboards</div>
+        <div class="connector-card__sub">Dashboard access and anomaly detector management UI</div>
+      </div>
+      <div class="connector-card__status" id="status-dashboard">
+        <span class="status-dot status-dot--gray"></span>
+        <span class="status-text">Not tested</span>
+      </div>
+    </div>
+    <div class="connector-fields">
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">URL</label>
+          <input class="ar-input mono" id="dashboard-url" type="text" placeholder="https://192.168.0.28"
+                 value="{{ env.get('DASHBOARD_URL', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">User</label>
+          <input class="ar-input mono" id="dashboard-user" type="text" placeholder="admin"
+                 value="{{ env.get('DASHBOARD_USER', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Password</label>
+          <div class="pw-wrap">
+            <input class="ar-input mono" id="dashboard-pass" type="password"
+                   placeholder="{% if connector_status.get('dashboard-pass') %}&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;{% else %}Enter password{% endif %}"
+                   autocomplete="new-password">
+            {% if connector_status.get('dashboard-pass') %}
+            <button class="pw-reveal-btn" onclick="revealPw('dashboard-pass', 'DASHBOARD_PASS', this)" type="button">Show</button>
+            {% endif %}
+          </div>
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">SSL verification</label>
+          <label class="ssl-toggle-label">
+            <input type="checkbox" id="dashboard-ssl-enabled"
+                   {% if env.get('DASHBOARD_VERIFY_SSL','false').lower() not in ('false','0','') %}checked{% endif %}
+                   onchange="toggleSslCert('dashboard')">
+            <span>Verify SSL</span>
+          </label>
+          <div id="dashboard-cert-wrap" class="cert-wrap{% if env.get('DASHBOARD_VERIFY_SSL','false').lower() not in ('false','0','') %} cert-wrap--visible{% endif %}">
+            <input type="file" class="cert-file-input" id="dashboard-cert-file" accept=".pem,.crt,.cer">
+            <div class="ar-hint-field">Upload CA certificate (.pem / .crt)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick="testConnector('dashboard')">Test connection</button>
+      <button class="btn btn--sm btn--primary" onclick="saveConnector('dashboard')">Save</button>
+    </div>
+    <div class="connector-result" id="result-dashboard"></div>
+  </div>
+
+  <div class="connector-card" id="card-smtp">
+    <div class="connector-card__header">
+      <div class="connector-card__icon connector-card__icon--amber">SM</div>
+      <div>
+        <div class="connector-card__title">SMTP / Email</div>
+        <div class="connector-card__sub">Tier-1+ email notifications to security team</div>
+      </div>
+      <div class="connector-card__status" id="status-smtp">
+        <span class="status-dot status-dot--gray"></span>
+        <span class="status-text">Not tested</span>
+      </div>
+    </div>
+    <div class="connector-fields">
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">SMTP host</label>
+          <input class="ar-input mono" id="smtp-host" type="text" placeholder="smtp.office365.com"
+                 value="{{ env.get('SMTP_HOST', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Port</label>
+          <input class="ar-input mono" id="smtp-port" type="number" placeholder="587"
+                 value="{{ env.get('SMTP_PORT', '587') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">SMTP user</label>
+          <input class="ar-input mono" id="smtp-user" type="text" placeholder="no-reply@example.com"
+                 value="{{ env.get('SMTP_USER', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">SMTP password</label>
+          <div class="pw-wrap">
+            <input class="ar-input mono" id="smtp-pass" type="password"
+                   placeholder="{% if connector_status.get('smtp-pass') %}&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;{% else %}Enter password{% endif %}"
+                   autocomplete="new-password">
+            {% if connector_status.get('smtp-pass') %}
+            <button class="pw-reveal-btn" onclick="revealPw('smtp-pass', 'SMTP_PASS', this)" type="button">Show</button>
+            {% endif %}
+          </div>
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Recipient (EMAIL_TO)</label>
+          <input class="ar-input mono" id="smtp-to" type="text" placeholder="soc@example.com"
+                 value="{{ env.get('EMAIL_TO', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">STARTTLS</label>
+          <select class="ar-input" id="smtp-starttls">
+            <option value="yes" {% if env.get('SMTP_STARTTLS','yes') == 'yes' %}selected{% endif %}>Enabled</option>
+            <option value="no" {% if env.get('SMTP_STARTTLS','') == 'no' %}selected{% endif %}>Disabled</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick="testConnector('smtp')">Send test email</button>
+      <button class="btn btn--sm btn--primary" onclick="saveConnector('smtp')">Save</button>
+    </div>
+    <div class="connector-result" id="result-smtp"></div>
+  </div>
+
+  <div class="connector-card" id="card-decipher">
+    <div class="connector-card__header">
+      <div class="connector-card__icon connector-card__icon--green">DC</div>
+      <div>
+        <div class="connector-card__title">DECIPHER</div>
+        <div class="connector-card__sub">Tier-2+ incident case creation and investigation tracking</div>
+      </div>
+      <div class="connector-card__status" id="status-decipher">
+        <span class="status-dot status-dot--gray"></span>
+        <span class="status-text">Not tested</span>
+      </div>
+    </div>
+    <div class="connector-fields">
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">Base URL</label>
+          <input class="ar-input mono" id="decipher-url" type="text" placeholder="http://decipher.example.com"
+                 value="{{ env.get('DECIPHER_BASE_URL', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">SSL verification</label>
+          <label class="ssl-toggle-label">
+            <input type="checkbox" id="decipher-ssl-enabled"
+                   {% if env.get('DECIPHER_VERIFY_SSL','false').lower() not in ('false','0','') %}checked{% endif %}
+                   onchange="toggleSslCert('decipher')">
+            <span>Verify SSL</span>
+          </label>
+          <div id="decipher-cert-wrap" class="cert-wrap{% if env.get('DECIPHER_VERIFY_SSL','false').lower() not in ('false','0','') %} cert-wrap--visible{% endif %}">
+            <input type="file" class="cert-file-input" id="decipher-cert-file" accept=".pem,.crt,.cer">
+            <div class="ar-hint-field">Upload CA certificate (.pem / .crt)</div>
+          </div>
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Timeout (seconds)</label>
+          <input class="ar-input mono" id="decipher-timeout" type="number" placeholder="30"
+                 value="{{ env.get('DECIPHER_TIMEOUT_SEC', '30') }}">
+        </div>
+      </div>
+    </div>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick="testConnector('decipher')">Test connection</button>
+      <button class="btn btn--sm btn--primary" onclick="saveConnector('decipher')">Save</button>
+    </div>
+    <div class="connector-result" id="result-decipher"></div>
+  </div>
+
+  <div class="connector-card" id="card-webhook">
+    <div class="connector-card__header">
+      <div class="connector-card__icon connector-card__icon--gray">WH</div>
+      <div>
+        <div class="connector-card__title">Webhook</div>
+        <div class="connector-card__sub">OpenSearch monitor alert receiver — bridges AD monitors to the AR pipeline</div>
+      </div>
+      <div class="connector-card__status" id="status-webhook">
+        <span class="status-dot status-dot--gray"></span>
+        <span class="status-text">Not tested</span>
+      </div>
+    </div>
+    <div class="connector-fields">
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">Webhook name</label>
+          <input class="ar-input mono" id="webhook-name" type="text" placeholder="RADARWebhook"
+                 value="{{ env.get('WEBHOOK_NAME', '') }}">
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">Webhook URL</label>
+          <input class="ar-input mono" id="webhook-url" type="text" placeholder="http://192.168.0.28:8080/notify"
+                 value="{{ env.get('WEBHOOK_URL', '') }}">
+        </div>
+      </div>
+    </div>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick="testConnector('webhook')">Send ping</button>
+      <button class="btn btn--sm btn--primary" onclick="saveConnector('webhook')">Save</button>
+    </div>
+    <div class="connector-result" id="result-webhook"></div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/connectors.js') }}"></script>
+{% endblock %}

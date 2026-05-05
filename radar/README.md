@@ -21,6 +21,7 @@ We leverage [OpenSearch's latest advances](https://opensearch.org/anomaly-detect
 | [Webhook](/radar/webhook/README.md) | Webhook service deployment and configuration |
 | [Active Response](/docs/manual/radar_docs/radar-active-response.md) | Active Response logic flow |
 | [Health check](/docs/manual/radar_docs/radar-health-check.md) | Detailed documentation of RADAR health check |
+| [Web Interface User Manual](/docs/manual/radar_docs/radar-gui-user-manual.md) | User manual of RADAR Web Interface |
 
 ## RADAR scenarios
 
@@ -57,10 +58,10 @@ Current rule set focuses on command shell execution detection (PowerShell, CMD.e
 
 Here we provide a screenshot of a successful run of the Suspicious Login detection RADAR scenario:
 
-![Wazuh Dashboard Discover RADAR geo IP detection](/docs/manual/_figures/RADAR-v0.8-wazuh-dashboard.png "Wazuh Dashboard Discover RADAR Geo IP detection")
+![Wazuh Dashboard Discover RADAR geo IP detection](/docs/manual/_figures/RADAR-wazuh-dashboard.png "Wazuh Dashboard Discover RADAR Geo IP detection")
 
 The currently implemented active response sends an email to a designated recipient.
-![](/docs/manual/_figures/RADAR-v0.8-email-suspicious-login.png)
+![](/docs/manual/_figures/RADAR-email-suspicious-login.png)
 
 Additionally, the active response component creates a case in FlowIntel on high risk alerts via the DECIPHER service.
 
@@ -68,7 +69,17 @@ To compute the threat context for that response, RADAR calls DECIPHER's dedicate
 
 ![RADAR DECIPHER MISP lookup — ip-src event in MISP](/docs/manual/_figures/RADAR-DECIPHER-MISP-lookup.png "MISP event consulted by DECIPHER during CTI scoring for a RADAR scenario")
 
-![FlowIntel case created by RADAR via DECIPHER](/docs/manual/_figures/RADAR-v0.8-FlowIntel-case.png)
+![FlowIntel case created by RADAR via DECIPHER](/docs/manual/_figures/RADAR-FlowIntel-case.png)
+
+The RADAR GUI provides a browser-based control panel for the full operational lifecycle - deploying scenarios, managing infrastructure, tuning active response parameters, and monitoring health.
+
+![RADAR GUI - RADAR Scenarios page](/docs/website/assets/RADAR_GUI_RADAR_Scenarios.png "RADAR GUI RADAR Scenarios page showing risk weight configuration and tier thresholds")
+
+![RADAR GUI - Deploy page](/docs/website/assets/RADAR_GUI_Deploy.png "RADAR GUI Deploy page: scenario selection and live Ansible output streaming")
+
+![RADAR GUI — Infrastructure page](/docs/website/assets/RADAR_GUI_Infrastructure.png "RADAR GUI Infrastructure page: Wazuh manager and agent inventory management")
+
+![RADAR Demonstration](/docs/manual/_figures/RADAR_GUI.gif)
 
 ---
 

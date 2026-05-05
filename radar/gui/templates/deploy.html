@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Deploy{% endblock %}
+
+{% block page_title %}Deploy{% endblock %}
+
+{% block subnav %}
+<div class="subnav">
+  <div class="subnav__item subnav__item--active" data-tab="build" onclick="switchTab('build')">Build &amp; deploy</div>
+  <div class="subnav__item" data-tab="run" onclick="switchTab('run')">Run Anomaly Detector</div>
+  <div class="subnav__item" data-tab="health" onclick="switchTab('health')">Status</div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% if summary.get('error') %}
+<div class="strip strip--red" style="margin-bottom:20px">
+  <strong>Inventory unreadable:</strong> {{ summary.error }}
+</div>
+{% endif %}
+
+<div class="deploy-layout">
+
+  <div class="deploy-panel" id="tab-build">
+    <div class="card">
+      <div class="card__title">Build &amp; deploy a scenario</div>
+      <hr class="divider">
+
+      <div class="form-group">
+        <label class="form-label">Scenario *</label>
+        <select class="form-input" id="b-scenario">
+          {% for s in scenarios %}
+          <option value="{{ s.id }}">{{ s.name }}{% if s.id in bound_scenarios %} — bound{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Manager location *</label>
+          <select class="form-input" id="b-manager">
+            <option value=""></option>
+            <option value="local">local — docker-compose.core.yml on this host</option>
+            <option value="remote">remote — SSH to a Wazuh manager/worker</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Agents location *</label>
+          <select class="form-input" id="b-agent">
+            <option value=""></option>
+            <option value="local">local — container agents via docker-compose</option>
+            <option value="remote">remote — SSH-managed agents</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="b-manager-exists" checked>
+          <span>Manager already exists at that location (skip bootstrap)</span>
+        </label>
+        <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+          Uncheck to bootstrap: <code>docker compose up</code> locally, or let Ansible stand up a remote manager.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">SSH private key (optional)</label>
+        <input class="form-input mono" id="b-ssh-key" placeholder="~/.ssh/id_ed25519">
+        <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+          Only used when manager or agents are remote. Defaults to <code>~/.ssh/id_ed25519</code> on the server.
+        </div>
+      </div>
+
+      <div id="b-agent-select-wrap" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Target agents <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">(optional — leave all unchecked to target all)</span></label>
+          <div class="agent-select-list" id="b-agent-list-local">
+            {% for agent in summary.container_agents %}
+            <label class="agent-select-item">
+              <input type="checkbox" class="agent-select-cb" value="{{ agent.name }}">
+              <span class="agent-select-name mono">{{ agent.name }}</span>
+              <span class="badge badge--green" style="font-size:10px">container</span>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="agent-select-list" id="b-agent-list-remote" style="display:none">
+            {% for agent in summary.ssh_agents %}
+            <label class="agent-select-item">
+              <input type="checkbox" class="agent-select-cb" value="{{ agent.name }}">
+              <span class="agent-select-name mono">{{ agent.name }}</span>
+              <span class="badge badge--blue" style="font-size:10px">ssh</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="deploy-preview" id="b-preview"></div>
+
+      <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+        <button class="btn" onclick="previewCmd('build')">Preview command</button>
+        <button class="btn btn--primary" onclick="runAction('build')" id="b-run-btn">Deploy</button>
+        <button class="btn" onclick="stopStream()" id="b-stop-btn" style="display:none">Stop streaming</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="deploy-panel" id="tab-run" style="display:none">
+    <div class="card">
+      <div class="card__title">Run Anomaly Detector</div>
+      <hr class="divider">
+
+      <div class="form-group">
+        <label class="form-label">Scenario *</label>
+        <select class="form-input" id="r-scenario">
+          {% for s in scenarios if s.type in ('hybrid', 'anomaly') %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="r-ingest">
+          <span>Ingest training dataset (populates Wazuh indexer)</span>
+        </label>
+      </div>
+
+      <div class="deploy-preview" id="r-preview"></div>
+
+      <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+        <button class="btn" onclick="previewCmd('run')">Preview command</button>
+        <button class="btn btn--primary" onclick="runAction('run')" id="r-run-btn">Run</button>
+        <button class="btn" onclick="stopStream()" id="r-stop-btn" style="display:none">Stop streaming</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="deploy-panel" id="tab-health" style="display:none">
+    <div class="card">
+      <div class="card__title">Infrastructure health check</div>
+      <hr class="divider">
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Manager location *</label>
+          <select class="form-input" id="h-manager">
+            <option value="local">local</option>
+            <option value="remote">remote</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Agents location *</label>
+          <select class="form-input" id="h-agent">
+            <option value="local">local</option>
+            <option value="remote">remote</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Scenario filter</label>
+        <select class="form-input" id="h-scenario">
+          <option value="all">all (every bound scenario)</option>
+          {% for s in scenarios %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">SSH private key (optional)</label>
+        <input class="form-input mono" id="h-ssh-key" placeholder="~/.ssh/id_ed25519">
+      </div>
+
+      <div class="deploy-preview" id="h-preview"></div>
+
+      <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+        <button class="btn" onclick="previewCmd('health')">Preview command</button>
+        <button class="btn btn--primary" onclick="runAction('health')" id="h-run-btn">Run health check</button>
+        <button class="btn" onclick="stopStream()" id="h-stop-btn" style="display:none">Stop streaming</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card deploy-log-card" id="deploy-log-card">
+    <div class="card__title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Output</span>
+      <span>
+        <button class="btn btn--sm" onclick="clearLog()">Clear</button>
+        <button class="btn btn--sm" onclick="copyLog()">Copy</button>
+      </span>
+    </div>
+    <pre class="deploy-log" id="deploy-log">Ready.</pre>
+  </div>
+
+</div>
+
+<div id="toast-host" class="toast-host"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/deploy.js') }}"></script>
+{% endblock %}

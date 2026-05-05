@@ -104,6 +104,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 |---------|-------|-------------|-------------------|
 | `100900` | 10 | Connection from non-whitelist country | Authentication success + `radar_country` field not in whitelist |
 | `100901` | 10 | Connection from non-whitelist country | Authentication success + source GeoIP not in EU Greater Region |
+| `100903` | 12 | High number of connections from non-whitelist countries | 300+ auth events from non-whitelisted countries within 300 seconds |
 
 **Alert Flow**:
 ```
@@ -111,12 +112,18 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 2. Custom decoder extracts `radar_country` field
 3. Rule 100900 checks against whitelist_countries list
 4. Rule 100901 checks against hardcoded countries
-5. Alert if country not whitelisted
+5. Alert if country not whitelisted (level 10)
+6. Rule 100903 detects frequency: if ≥300 alerts in 300 seconds → escalate to level 12 (high-frequency anomaly)
 ```
 
 **Whitelist mechanism**:
 - **List-based** (Rule 100900): Dynamic whitelist in `etc/lists/whitelist_countries`
 - **Hardcoded** (Rule 100901): Fallback to countries using `srcgeoip` field
+
+**Frequency escalation** (Rule 100903):
+- Triggers when 300+ non-whitelisted country alerts occur within 300 seconds
+- Indicates coordinated or sustained geographic anomaly attack
+- Escalated to level 12 for higher-priority response
 
 **Note**: The country list is subject for change according to needs.
 
@@ -137,8 +144,11 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 |---------|-------|-------------|-------------------|-----------|
 | `210012` | 8 | Failed-burst brute force | ≥5 failed SSH logins from same source user | 60 seconds |
 | `210013` | 8 | Failed-burst brute force | ≥5 failed SSH logins from same destination user | 60 seconds |
-| `210020` | 10 | Impossible travel (with success) | Auth success + velocity ≥900 km/h | N/A |
-| `210021` | 10 | Impossible travel (with failure) | Auth failure + velocity ≥900 km/h | N/A |
+| `210020` | 10 | Impossible travel (with failure) | Auth failure + country change + velocity ≥900 km/h | N/A |
+| `210021` | 10 | Impossible travel (with success) | Auth success + country change + velocity ≥900 km/h | N/A |
+| `210022` | 12 | Credential compromise (composite) | Failed-burst + impossible travel for same user | 300 seconds |
+| `210030` | 5  | O365 login failure | Single Microsoft 365 authentication failure | N/A |
+| `210031` | 10 | O365 brute force | ≥3 O365 login failures for same user | 300 seconds |
 
 **Alert Flow - Brute Force**:
 ```
@@ -193,7 +203,7 @@ Placed third because it represents a baseline policy violation ("successful auth
 
 - a3 — Suspicious login
 
-Placed third because it contains more advanced behavioral logic (frequency correlation and enriched geo-velocity conditions). It is intentionally evaluated after baseline policy checks to avoid duplicate or competing alerts for the same authentication event.
+Placed fourth because it contains more advanced behavioral logic (frequency correlation and enriched geo-velocity conditions). It is intentionally evaluated after baseline policy checks to avoid duplicate or competing alerts for the same authentication event.
 
 # Summary
 

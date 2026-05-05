@@ -62,6 +62,10 @@
 <li><a href="#TRP-038">2.9 TCER: RADAR deployment integrity verification</a></li>
 </ul>
 </li>
+<li><a href="#TRP-039">3.0 SONAR test case execution results</a><ul>
+<li><a href="#TRP-040">3.1 TCER: Linux resource usage monitoring scenario</a></li>
+</ul>
+</li>
 </ul>
           </nav>
       </div>
@@ -2692,15 +2696,11 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 <tr>
 <td>defect-category</td>
-<td>0 = flawless; 1 = insignificant defect; 2 = minor defect; 3 = major defect; 4 = critical defect</td>
-</tr>
-<tr>
-<td></td>
-<td></td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
 </tr>
 <tr>
 <td>passed-steps</td>
-<td>0</td>
+<td>4</td>
 </tr>
 <tr>
 <td>failed-steps</td>
@@ -2709,6 +2709,82 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <tr>
 <td>not-executed-steps</td>
 <td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>0.8.1</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TRP-039">3.0 SONAR test case execution results</h1>
+<h2 id="TRP-040">3.1 TCER: Linux resource usage monitoring scenario <small><a href="TRP.html#TRP-040">TRP-040</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, N/A</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: dev container (Debian GNU/Linux 12, Dockerized C5-DEC development environment)</li>
+<li>SONAR version: as checked out in current repository branch</li>
+<li>Debug mode: enabled; no live Wazuh indexer connection required</li>
+<li>Test data: <code>sonar/test_data/resource_monitoring/resource_monitoring_training-2.json</code>, <code>sonar/test_data/resource_monitoring/resource_monitoring_detection.json</code></li>
+</ul>
+<h2>Test execution results</h2>
+<p><strong>Test case step 1</strong>: Train the SONAR model using <code>poetry run sonar train --scenario sonar/scenarios/linux_resource_monitoring.yaml --debug</code> — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Verify model artefact <code>linux_resource_monitoring_20260112_230114</code> persisted under <code>sonar/models/</code> — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: Run detection using <code>poetry run sonar detect --scenario sonar/scenarios/linux_resource_monitoring.yaml --debug</code> — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 4</strong>: Verify at least one anomaly flagged in the detection output with score exceeding <code>0.75</code> — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 5</strong>: Verify at least three consecutive anomalous 1-minute buckets reported, satisfying <code>min_consecutive: 3</code> — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 6</strong>: Verify derived feature Boolean values (<code>is_cpu_high</code>, <code>is_memory_high</code>, <code>is_high_load</code>) consistent with the raw metric thresholds in the detection data — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>Test executed in debug mode using pre-recorded resource monitoring data. No live Wazuh indexer connection required. All training and detection steps completed successfully within the expected runtime.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-050">TST-050 Linux resource usage monitoring scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-05-04</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>6</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>1.0</td>
 </tr>
 <tr>
 <td>verification-method</td>

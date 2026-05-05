@@ -40,6 +40,7 @@
 <li><a href="#MRS-023">2.3 MITRE ATT&amp;CK Mapping</a></li>
 <li><a href="#MRS-024">2.4 TIP API Integration</a></li>
 <li><a href="#MRS-025">2.5 Threat Detection API</a></li>
+<li><a href="#MRS-043">2.6 Detection as Code</a></li>
 </ul>
 </li>
 <li><a href="#MRS-ADBox">3.0 ADBox v1 Mission Requirements (Maintenance)</a></li>
@@ -680,6 +681,43 @@
 <tr>
 <td>urgency</td>
 <td>4</td>
+</tr>
+<tr>
+<td>vm</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h2 id="MRS-043">2.6 Detection as Code <small><a href="MRS.html#MRS-043">MRS-043</a></small></h2>
+<p>RADAR detection logic shall be managed as versioned code artifacts under Git, with changes developed, reviewed, and deployed through a CI/CD pipeline.</p>
+<h3>Rationale</h3>
+<p>To ensure the following properties: full audit trail of every ruleset change through version history, peer review and quality gates via pull requests, automated conflict detection preventing rule ID collisions, consistent and reproducible deployments without direct server access, rollback capability through standard git revert, and collaborative detection engineering across distributed teams.</p>
+<h3>Acceptance criteria</h3>
+<p>Successful validation according to the corresponding test case specification</p>
+<p><em>Child links:</em> <a href="SRS.html#SRS-065">SRS-065 RADAR Ruleset-as-Code</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>importance</td>
+<td>5</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
 </tr>
 <tr>
 <td>vm</td>

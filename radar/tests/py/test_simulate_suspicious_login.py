@@ -20,6 +20,8 @@ def test_suspicious_login_writes_failed_and_success_lines(tmp_path):
     common.load_config = lambda: {
         "common": {"timezone_offset": "+01:00", "hostname": "edge.vm"},
         "suspicious_login": {
+            "timezone_offset": "+01:00",
+            "hostname": "edge.vm",
             "log_path": str(tmp_path / "auth.log"),
             "sudo_tee": False,
             "user": "test01",
@@ -32,6 +34,7 @@ def test_suspicious_login_writes_failed_and_success_lines(tmp_path):
             "window_seconds": 60,
         },
     }
+    common.get_scenario_simulate = lambda cfg, scenario: cfg[scenario]
     common.detect_authlog_timestamp_format = lambda ts, tz, auth_path: "Feb 17 12:00:04"
     common.append_line_authlog = lambda line, path, sudo_tee: calls.append((line, path, sudo_tee))
 

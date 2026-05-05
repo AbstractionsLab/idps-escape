@@ -164,17 +164,18 @@ The orchestration is centralized in `main.yml`, which acts as a control plane, n
 
 Common task modules (`roles/wazuh_manager/tasks/`):
 
-| Task file          | Responsibility                         | Modified resources                         |
-| ------------------ | -------------------------------------- | ------------------------------------------ |
-| `responses.yml`    | Active response scripts & env          | `/var/ossec/active-response/bin`           |
-| `lists.yml`        | Whitelists / lists                     | `/var/ossec/etc/lists`, `ossec.conf`       |
-| `decoders.yml`     | Custom decoders                        | `local_decoder.xml`, SSH overrides         |
-| `rules.yml`        | Custom rules                           | `local_rules.xml`                          |
-| `ossec.yml`        | Core manager configuration             | `ossec.conf`                               |
-| `filebeat.yml`     | Ingest & indexing logic                | Filebeat config, pipelines                 |
-| `bootstrap.yml`    | Manager / webhook bootstrap            | Docker Compose stack                       |
-| `bootstrap_webhook.yml`| Webhook container deployment           | Webhook Docker Compose stack               |
-| `agent_config.yml` | Centralized agent configuration        | `/var/ossec/etc/shared/<group>/agent.conf` |
+| Task file               | Responsibility                                    | Modified resources                                        |
+| ----------------------- | ------------------------------------------------- | --------------------------------------------------------- |
+| `responses.yml`         | Active response scripts, env, Python deps         | `/var/ossec/active-response/bin`                          |
+| `lists.yml`             | Whitelists / lists                                | `/var/ossec/etc/lists`, `ossec.conf`                      |
+| `decoders.yml`          | Custom decoders                                   | `/var/ossec/etc/decoders/`                                |
+| `rules.yml`             | Custom rules (default + scenario)                 | `/var/ossec/etc/rules/`                                   |
+| `ossec.yml`             | Core manager configuration, decoder excludes, restart | `ossec.conf`                                          |
+| `filebeat.yml`          | Ingest & indexing logic, log_volume template/pipeline | Filebeat config, `pipeline.json`, OpenSearch templates |
+| `bootstrap.yml`         | Manager bootstrap                                 | Docker Compose stack                                      |
+| `bootstrap_webhook.yml` | Webhook container deployment (start or fresh)     | Webhook Docker Compose stack                              |
+| `agent_config.yml`      | Centralized agent configuration + validation      | `/var/ossec/etc/shared/<group>/agent.conf`                |
+| `host.yml`              | All-in-one handler for `host_remote` mode         | All Wazuh host files directly                             |
 
 Each task file:
 
@@ -512,24 +513,33 @@ Establish common variables used across all blocks.
 | `_scenario_path` | Ansible fact (derived) | Resolved per-scenario artifact paths across the new structure (ossec/decoders/rules/lists/filebeat) |
 | `_mgr_mode` | Inventory host var | Deployment mode: `docker_local`, `docker_remote`, or `host_remote` |
 | `_mgr_container` | Inventory (default: `wazuh.manager`) | Docker container name |
+| `_mgr_service` | Inventory (default: `_mgr_container`) | Docker Compose service name used to look up volumes in `volumes.yml` |
+| `_scenario_slug` | Derived from `scenario_name` | Hyphenated form of the scenario name (e.g., `suspicious-login`) |
+| `_agent_group` | Inventory (default: `default`) | Wazuh agent group for `agent.conf` deployment |
+| `_agentconf_marker` | Derived | Idempotency marker for `agent.conf` block insertion |
 | `_list_marker` | Hardcoded | Marker for geoip whitelist insertion |
 | `_radar_ar_dest` | Hardcoded | Container path to the generalized active response script (`radar_ar.py`) |
 | `_lists_dir` | Hardcoded | Container path to Wazuh lists directory |
 | `_host_ossec_conf` | Derived from `volumes.yml` | Host bind-mount path for `ossec.conf` (e.g., `/radar-srv/wazuh/manager/etc/ossec.conf`) |
-| `_host_decoders_dir` | Derived from `volumes.yml` | Host bind-mount dir for decoders (e.g., `/radar-srv/wazuh/manager/etc/decoders`)                                                   |
+| `_host_decoders_dir` | Derived from `volumes.yml` | Host bind-mount dir for decoders (e.g., `/radar-srv/wazuh/manager/etc/decoders`) |
 | `_host_rules_dir` | Derived from `volumes.yml` | Host bind-mount dir for rules (e.g., `/radar-srv/wazuh/manager/etc/rules`) |
 | `_host_active_response_bin` | Derived from `volumes.yml` | Host bind-mount dir for active responses (e.g., `/radar-srv/wazuh/manager/active-response/bin`) |
 | `_host_filebeat_yml` | Derived from `volumes.yml` | Host bind-mount path for `filebeat.yml` (e.g., `/radar-srv/wazuh/manager/filebeat/etc/filebeat.yml`) |
+| `_host_filebeat_modules_dir` | Derived from `volumes.yml` | Host bind-mount dir for `/usr/share/filebeat/module` |
+| `_host_pipeline_json` | Derived from `volumes.yml` | Host bind-mount path for filebeat archives pipeline (e.g., `/radar-srv/wazuh/manager/filebeat/modules/wazuh/archives/ingest/pipeline.json`) |
+| `_host_shared_group_dir` | Derived | `_host_ossec_etc/shared/<_agent_group>` — target dir for `agent.conf` |
 
 
 ### Logic
 ```yaml
-- Check .env file existence on controller (for active response env vars)
-- Set scenario paths and destination paths
-- Load volumes.yml from controller
-- Parse volumes.yml to extract volume mappings
-- Derive host paths from volume mappings
-- Validate required volume mappings exist
+- Resolve manager mode, container name, service name, scenario slug, agent group, and marker variables
+- Resolve scenario-derived source paths (radar_ar_src, ar_config_src, whitelist_src, decoders_src_dir, etc.)
+- Load volumes.yml from controller (slurp + b64decode + from_yaml)
+- Extract volumes list for the target manager service (_mgr_service)
+- Validate volumes list is non-empty (assert)
+- Resolve bind-mount host paths using regex against the volumes list
+- Derive concrete host destinations (conf, decoders dir, rules dir, shared group dir, pipeline json, etc.)
+- Validate required volume mappings exist (assert)
 - Debug output current manager mode
 ```
 
@@ -563,27 +573,27 @@ Transfers scenario-specific files into container via volume-mapped directories:
 | File | Source | Destination | Purpose |
 |------|--------|-------------|---------|
 | `.env` | Controller | `{host_active_response_bin}/active_responses.env` | Active response environment vars |
-| `whitelist_countries` | Scenario dir | `{host_lists_dir}/whitelist_countries` | IP whitelist for geoip scenario |
 | `radar_ar.py` | Scenario dir | `{host_active_response_bin}/radar_ar.py` | Unified active response script |
 | `ar.yaml` | Scenario dir | `{host_active_response_bin}/ar.yaml` | Risk config for radar_ar |
-| `pyflowintel` | Controller | `{host_active_response_bin}/pyflowintel/` | FlowIntel wrapper |
 
 **What**: Copy scenario configuration files to volume-mapped host directories  
 **How**: Ansible `copy` module to host paths, then fix permissions via container exec  
 **Why**: Volume mapping makes files immediately visible to container without `docker cp`  
 **When**: Files only copied if source exists
 
+**Python dependencies installed inside the container** (via `dnf`, idempotent, `changed_when: false`):
+- `python3-pyyaml` — required by `radar_ar.py` to parse `ar.yaml`
+- `python3-requests` — required for OpenSearch and FlowIntel HTTP calls
+
 **Idempotency**: 
-- Files only copied if source exists or checksum differs
-- Ownership/perms set correctly (root:wazuh, 0640/0750)
+- Files only copied if source exists or content differs
+- Ownership/perms set only when at least one file was copied (`active_responses.env`: `root:wazuh 0660`; `radar_ar.py`: `root:wazuh 0750`; `ar.yaml`: `root:wazuh 0640`)
 - Whitelist insertion checks for duplicate marker before adding
 
 **Key changes**: 
 - Active response consolidated from `radar_ar.py` and `ad_context_*.py` to single `radar_ar.py` script
 - `radar_ar.py` expects `ar.yaml` in the same directory for risk configuration
-- `pyflowintel` is vendored under active-response/bin for FlowIntel case creation
-- `PYFLOWINTEL_PATH` environment variable points to `/var/ossec/active-response/bin/pyflowintel`
-- No pip install needed for pyflowintel itself (vendored); only runtime dependencies required in container/host Python: `yaml` (PyYAML) and `requests` (for OpenSearch and FlowIntel HTTP operations)
+- Python runtime dependencies (`pyyaml`, `requests`) installed via `dnf` inside the container — no pip install or vendored libraries needed
 
 ---
 
@@ -608,7 +618,7 @@ Transfers scenario-specific files into container via volume-mapped directories:
 #### 2.4 Rules insertion
 **What**: Copy scenario rules as files into `/var/ossec/etc/rules/` via volume
 
-**How**: Identical to decoders, but for rules directory
+**How**: Identical to decoders, but for rules directory. Default rules shared across all scenarios are copied first from `scenarios/rules/default/`, then scenario-specific rules are copied on top.
 
 **Why**: Same volume-mapping benefits as decoders
 
@@ -626,16 +636,20 @@ Transfers scenario-specific files into container via volume-mapped directories:
 
 **Complex multi-step process**:
 
-1. **Verify snippet exists**: Check scenario ossec snippet file on controller
-2. **Ensure file exists**: Validate `{host_ossec_conf}` exists on host
-3. **Insert RADAR snippet**: Use `blockinfile` with scenario-specific markers (idempotent) 
-4. **Check for custom SSH decoder**: Use Ansible `stat` on `{host_decoders_dir}/0310-ssh.xml` (host filesystem check — **not** `docker exec`)
-5. **Add SSH decoder exclusion**: Insert `<decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>` if decoder file present
-6. **Check for custom web-accesslog decoder**: Use Ansible `stat` on `{host_decoders_dir}/0375-web-accesslog.xml`
-7. **Add web-accesslog decoder exclusion**: Insert `<decoder_exclude>0375-web-accesslog_decoders.xml</decoder_exclude>` if decoder file present
-8. **Ensure logging**: Set `<logall>yes</logall>` and `<logall_json>yes</logall_json>`
-9. **Fix perms**: Execute in container to set root:wazuh ownership, 0640 mode
-10. **Track changes**: Register all modification tasks
+1. **Check RADAR default snippet**: Stat `scenarios/ossec/radar-default-ossec-snippet.xml` on controller
+2. **Insert RADAR default snippet** (if exists): `blockinfile` with marker `RADAR: default` before `</ossec_config>`
+3. **Check scenario snippet**: Stat `radar_snippet_src` on controller
+4. **Ensure ossec.conf exists**: Validate `{host_ossec_conf}` exists on host (`state: file`)
+5. **Insert RADAR scenario snippet** (if exists): `blockinfile` with scenario-specific markers before `</ossec_config>`
+6. **Check for custom SSH decoder**: Use Ansible `stat` on `{host_decoders_dir}/0310-ssh.xml` (host filesystem check — **not** `docker exec`)
+7. **Add SSH decoder exclusion**: Insert `<decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>` if decoder file present
+8. **Check for custom web-accesslog decoder**: Use Ansible `stat` on `{host_decoders_dir}/0375-web-accesslog.xml`
+9. **Add web-accesslog decoder exclusion**: Insert `<decoder_exclude>0375-web-accesslog_decoders.xml</decoder_exclude>` if decoder file present
+10. **Ensure logging**: Set `<logall>yes</logall>` and `<logall_json>yes</logall_json>` via `ansible.builtin.replace` (regex, idempotent)
+11. **Fix perms**: Execute in container to set root:wazuh ownership, 0640 mode
+12. **Decide restart**: Aggregate changed status from scenario ossec insert, SSH decoder exclude, web-accesslog decoder exclude, logall, logall_json, decoder copies, rules copies, default rules copies, and whitelist entry — restart issued here via `wazuh-control restart`
+
+> **Note**: The default snippet insert (`_ossec_default_insert`) is **not** included in the restart decision. Only the scenario snippet insert and subsequent changes trigger a restart.
 
 **Idempotency**: 
 - `blockinfile` with markers prevents duplicates
@@ -648,33 +662,35 @@ Transfers scenario-specific files into container via volume-mapped directories:
 **What**: Restart Wazuh service if configuration changed  
 **How**: `docker exec wazuh.manager /var/ossec/bin/wazuh-control restart`  
 **Why**: Apply configuration changes without full container restart  
-**When**: If any of these changed:
-- ossec.conf modifications
+**When**: Decided and executed inside `ossec.yml` — if any of these changed:
+- ossec.conf modifications (default snippet, scenario snippet, decoder excludes, logall)
 - Decoders
 - Rules
-- Active response scripts
-- Whitelist insertion
+- Whitelist list entry
 
 ---
 
 #### 2.7 Filebeat configuration
 **What**: Enable archives in filebeat.yml for log collection
 
+**How**: Direct manipulation of volume-mapped filebeat configuration files
+
 **Steps**:
-1. Edit `/etc/filebeat/filebeat.yml` via volume-mapped file
-2. Modify to enable archives and set paths
-3. Restart container if needed
+1. Edit `/etc/filebeat/filebeat.yml` via volume-mapped file at `{{ _host_filebeat_yml }}`
+2. Replace `enabled: <any value>` with `enabled: true` in archives section (regex replace — not limited to `false`)
+3. Set `var.paths` to point to `/var/ossec/logs/archives/archives.json`
+4. Restart container only if changes detected
 
 **Idempotency**: 
-- Check if file exists before modification
+- Uses `ansible.builtin.replace` module (idempotent by default)
 - Conditional restart only on changes
-- Markers in regex replacements
+- Check if file exists before modification
 
 ---
 
 #### 2.8 OpenSearch template upload
-**What**: Upload wazuh-ad-log-volume index template to OpenSearch  
-**How**: HTTP PUT request to `/_index_template/wazuh-ad-log-volume-*`  
+**What**: Upload RADAR log-volume index template to OpenSearch  
+**How**: HTTP PUT request to `/_index_template/radar-log-volume`  
 **When**:  Only for scenario_name == 'log_volume'
 **Idempotency**: Check HTTP status (200/201 = success)  
 **TLS**: `validate_certs: no` (handles self-signed certs)
@@ -685,22 +701,24 @@ Transfers scenario-specific files into container via volume-mapped directories:
 #### 2.9 RADAR log_volume index template & archives pipeline routing
 **What**: Configures dedicated OpenSearch index and routes `log_volume_metric` events via Wazuh archives ingest pipeline
 
-**How**: Pull pipeline.json from container, patch with routing logic, push back
+**How**: Directly modify volume-mapped pipeline.json with routing logic
 
 **When**: Only for `scenario_name == 'log_volume'`
 
 **Why**: This isolates the log volume metrics into a RADAR-controlled index with correct mappings (e.g., `data.log_bytes` as numeric), without changing the global `wazuh-archives-*` schema or impacting existing dashboards. Any future events from the `log_volume_metric` program are now indexed into the dedicated `wazuh-ad-log-volume-*` indices, while all other archives events remain under the standard Wazuh index pattern.
 
 **Steps**:
-1. Pull `/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json` via `docker cp`
-2. Read routing snippet from `scenarios/pipelines/log_volume/radar-pipeline.txt`
-3. Replace single `date_index_name` processor with two-branch conditional:
-   - If `predecoder.program_name == "log_volume_metric"` → index prefix `wazuh-ad-log-volume-*`
-   - Else → fallback to `{{fields.index_prefix}}` (standard `wazuh-archives-*`)
-4. Push patched pipeline back via `docker cp`
-5. Reload Filebeat pipelines
+1. Ensure host pipeline directory exists: `{{ _host_pipeline_json | dirname }}`
+2. Stat host pipeline file to verify existence (idempotent check)
+3. Read routing snippet from `scenarios/pipelines/log_volume/radar-pipeline.txt`
+4. Replace the existing `date_index_name` processor block in the volume-mapped `pipeline.json` with the contents of the routing snippet, using a regex match on the processor structure
+5. Reload Filebeat pipelines via `filebeat setup --pipelines`
 
-**Note**: Pipeline.json not volume-mapped, requires `docker cp` operations
+**Benefits of volume-mapped approach**: 
+- Direct host-side file manipulation (no docker cp overhead)
+- Idempotent by design (ansible.builtin.replace with when clause)
+- Changes visible immediately to container via volume mount
+- Consistent with volume-first architecture
 
 ---
 
@@ -708,15 +726,16 @@ Transfers scenario-specific files into container via volume-mapped directories:
 
 **What**: Deploys agent-side settings centrally from the manager using Wazuh Centralized Configuration (`agent.conf`)
 
-**How**: Append a scenario-scoped `<agent_config ...>` block into `/var/ossec/etc/shared/default/agent.conf` (volume-mapped via `/var/ossec/etc`), validate with `verify-agent-conf`
+**How**: Append a scenario-scoped `<agent_config ...>` block into `/var/ossec/etc/shared/{{ _agent_group }}/agent.conf` (volume-mapped via `/var/ossec/etc`), validate with `verify-agent-conf`
 
 **When**: For scenarios that require agent-side log collection
 
 **Steps**:
-1. Ensure directory and file exist: {{ host_ossec_etc }}/shared/default/agent.conf
+1. Ensure directory and file exist: `{{ _host_shared_group_dir }}/agent.conf`
 2. Read scenario snippet from `scenarios/agent_configs/{{ scenario_name }}/radar-{{ scenario_slug }}-agent-snippet.xml` (must contain a complete `<agent_config ...>...</agent_config>` block)
 3. Insert block in `agent.conf` using a stable marker `RADAR: {{ scenario_name }} agent_config`
-4. Validate using `verify-agent-conf`
+4. Normalize ownership/mode in container (`root:wazuh 0660`) via `docker exec`
+5. Validate using `docker exec /var/ossec/bin/verify-agent-conf`
 
 ---
 
@@ -757,13 +776,16 @@ _stage.path = /tmp/radar_mgr_XXXXX/
 ---
 
 #### 3.3 Webhook bootstrap
-**What**: Deploy webhook container alongside manager  
-**How**: Separate Docker Compose stack  
+**What**: Ensure the `ad-webhook` container is running alongside the manager  
+**How**: Separate Docker Compose stack, with logic to start a stopped container before attempting a fresh deploy  
 **Why**: Enables Anomaly Detector rule triggers  
-**When**: Always executed in `docker_remote` block (idempotent, skips if already running)
+**When**: Always executed at the **end** of the `docker_remote` block (idempotent)
 
-**Purpose**: Deploy webhook container alongside manager  
-**Scope**: Separate from manager configuration
+**Steps**:
+1. Check if `ad-webhook` container exists (running **or** stopped) via `docker ps -a`
+2. Check if `ad-webhook` container is currently running via `docker ps`
+3. **If exists and stopped**: `docker start ad-webhook`
+4. **If does not exist**: stage webhook files to a temp dir, copy `webhook/`, `docker-compose.webhook.yml`, and `.env`, then run `docker compose up -d` and wait for readiness (20 retries, 3sec delay)
 
 ---
 
@@ -790,11 +812,8 @@ _stage.path = /tmp/radar_mgr_XXXXX/
 
 ---
 
-#### 3.6 Active response artifact transfer (pyflowintel)
-
-- `docker_local`: copy directly to controller bind-mount path.
-- `docker_remote`: stage to /tmp/pyflowintel/, then privileged copy into bind mount.
-- Do not rsync directly into bind mount unless permissions are guaranteed.
+#### 3.6 Lists behaviour in docker_remote
+Unlike `docker_local` (where `main.yml` guards the lists task to `geoip_detection` only), the `docker_remote` block runs `lists.yml` **unconditionally** for all scenarios. The task skips cleanly for scenarios without a whitelist source because `lists.yml` stat-checks the source file first and short-circuits all subsequent steps when it is absent.
 
 ---
 
@@ -806,7 +825,7 @@ when: _mgr_mode == 'host_remote'
 ```
 
 ### Purpose
-Deploy to **bare-metal Wazuh Manager** on remote host (no Docker).
+Deploy to **bare-metal Wazuh Manager** on remote host (no Docker). Delegates entirely to `host.yml`.
 
 ### Key differences
 
@@ -817,11 +836,13 @@ No Docker intermediate → modify host files directly:
 - `/var/ossec/etc/rules/local_rules.xml`
 
 #### 4.2 Directory validation
-Ensures target directories exist (parent creation):
+Ensures target directories exist with `root:wazuh 0750` ownership:
 ```bash
 /var/ossec
 /var/ossec/etc
-/var/ossec/etc/lists
+/var/ossec/etc/decoders
+/var/ossec/etc/rules
+/var/ossec/active-response
 /var/ossec/active-response/bin
 ```
 
@@ -940,6 +961,8 @@ controller:/home/user/radar/scenarios/
 │   └── {{ scenario_name }}/
 │       └── *.xml
 ├── rules/
+│   ├── default/
+│   │   └── *.xml
 │   └── {{ scenario_name }}/
 │       └── *.xml
 ├── templates/
@@ -956,9 +979,11 @@ controller:/home/user/radar/scenarios/
 ### Conditional blocks
 | Scenario | Conditional Block |
 |----------|------------------|
-| `suspicious_login`, `geoip_detection` | 0310 SSH decoder override |
+| `suspicious_login`, `geoip_detection` | SSH decoder exclude (`0310-ssh_decoders.xml`) |
+| Any scenario with `0375-web-accesslog.xml` in decoders dir | Web-accesslog decoder exclude |
+| `geoip_detection` | Lists task (docker_local guard in `main.yml`; docker_remote runs lists unconditionally) |
 | `log_volume` | Index template upload + archives pipeline routing + filebeat setup |
-| All | Decoders + Rules + ossec.conf modifications |
+| All | Decoders + Rules + ossec.conf modifications + agent_config |
 
 ---
 

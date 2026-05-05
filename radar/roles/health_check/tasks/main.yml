@@ -47,3 +47,28 @@
       ║  FAIL : {{ _sf | length }}   WARN : {{ _sw | length }}   OK : {{ _so }}
       ╚══════════════════════════════════════════════════════════════════╝
   delegate_to: localhost
+
+- name: health | write manager JSON result
+  when: gui_json_output | default(false) | bool
+  vars:
+    _json_checks: >-
+      {{
+        _health_report | map('regex_replace', '^(OK|WARN|FAIL) - ', '') | list
+        | zip(_health_report | map('regex_search', '^(OK|WARN|FAIL)') | list)
+        | map('list') | list
+      }}
+  copy:
+    dest: "{{ gui_json_file | default('/tmp/radar_health_gui.json') }}"
+    content: |
+      {
+        "host": "{{ inventory_hostname }}",
+        "type": "manager",
+        "mode": "{{ _mgr_mode }}",
+        "scenario": "{{ _scenario }}",
+        "ok":   {{ _so | int }},
+        "warn": {{ _sw | length }},
+        "fail": {{ _sf | length }},
+        "overall": "{{ 'fail' if _sf | length > 0 else ('warn' if _sw | length > 0 else 'ok') }}",
+        "checks": {{ _health_report | to_json }}
+      }
+  delegate_to: localhost

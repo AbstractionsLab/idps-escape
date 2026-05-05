@@ -1,21 +1,12 @@
 # SONAR: Developer API Reference and Quickstart
 
-SONAR (SIEM-Oriented Neural Anomaly Recognition) is a multivariate time-series anomaly detection subsystem for IDPS-ESCAPE that leverages Microsoft's [time-series-anomaly-detector](https://pypi.org/project/time-series-anomaly-detector/) library. It replaces the MTAD-GAT deep learning approach with a production-grade, performant solution optimized for Wazuh integration.
+SONAR (SIEM-Oriented Neural Anomaly Recognition) is a multivariate time-series anomaly detection subsystem for IDPS-ESCAPE that leverages Microsoft's [time-series-anomaly-detector](https://pypi.org/project/time-series-anomaly-detector/) library. It replaces the MTAD-GAT deep learning approach with a redesigned and more performant solution optimized for Wazuh integration.
 
 > ⚠️ **All commands should be run from project root** (`/home/alab/soar`)
 
 > **Quick demo**: `poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml --debug`
 
 > **For comprehensive documentation**: See [docs/manual/sonar_docs/](../docs/manual/sonar_docs/) for setup guides, scenario tutorials, troubleshooting, and architecture documentation.
-
-## Key features
-
-- **Multivariate anomaly detection** using Microsoft MVAD algorithm
-- **Scenario-based workflows** with YAML configuration files
-- **Debug mode** for testing without Wazuh infrastructure
-- **Real-time detection** with continuous monitoring
-- **Data shipping** (optional) for production: Stream anomalies to dedicated Wazuh data streams for RADAR integration
-- **Flexible CLI** for training, detection, and scenario execution
 
 ## Architecture
 
@@ -86,19 +77,38 @@ Create a file `my_scenario.yaml` to define training and detection parameters:
 name: "My AD Scenario"
 description: "Detect anomalies in authentication logs"
 enabled: true
+model_name: "my_model"  # Optional: auto-generated from scenario name if omitted
 
 training:
   lookback_hours: 48
   numeric_fields:
     - "rule.level"
+  categorical_fields: []       # Optional: fields to one-hot encode
+  categorical_top_k: 10
   bucket_minutes: 5
   sliding_window: 200
   device: "cpu"
+  derived_features: true       # Compute security/resource derived features
+  fill_with_synthetic: false   # Auto-fill sparse history with synthetic alerts
+  synthetic_count: 100
+  synthetic_mode: "random"     # constant, random, or copy
 
 detection:
   mode: "realtime"  # historical, batch, or realtime
   lookback_minutes: 10
   polling_interval_seconds: 300
+  threshold: 0.85              # Anomaly score threshold (0.0–1.0)
+  min_consecutive: 1           # Min consecutive anomalous buckets required
+
+shipping:                      # Optional: enable for RADAR integration
+  enabled: false
+  scenario_id: null            # Auto-generated from model path if null
+
+debug:                         # Optional: offline testing without Wazuh
+  enabled: false
+  data_dir: "./sonar/test_data/synthetic_alerts"
+  training_data_file: "normal_baseline.json"
+  detection_data_file: "with_anomalies.json"
 ```
 
 See [example_scenario.yaml](./scenarios/example_scenario.yaml) for a complete template.
@@ -116,11 +126,6 @@ poetry run sonar scenario --use-case my_scenario.yaml --mode batch
 poetry run sonar scenario --use-case my_scenario.yaml --mode realtime
 ```
 
-**Detection modes:**
-- `historical` : One-shot detection on recent data; assumes model pre-trained
-- `batch` : Train model first, then run one-shot detection
-- `realtime` : Continuous polling loop; stops on Ctrl+C
-
 #### 3. Check Wazuh connection
 
 ```bash
@@ -135,8 +140,6 @@ poetry run sonar train [--config CONFIG_YAML] [--lookback-hours HOURS] [--ship]
 
 Train the MVAD model on historical Wazuh alerts. Defaults to 24 hours of history.
 
-**New:** Add `--ship` flag to create a data stream for future anomaly results (production feature).
-
 #### 5. Run detection
 
 ```bash
@@ -144,8 +147,6 @@ poetry run sonar detect [--config CONFIG_YAML] [--lookback-minutes MINUTES] [--s
 ```
 
 Execute anomaly detection on recent Wazuh alerts and index results back into Wazuh.
-
-**New:** Add `--ship` flag to send anomalies to data stream instead of standard anomaly index (enables RADAR integration).
 
 #### 6. CLI flags reference
 
@@ -160,14 +161,17 @@ Comprehensive list of available flags:
 | All | `--payload-dir DIR` | Directory to save payload inspection files |
 | `train` | `--lookback-hours HOURS` | Hours of historical data for training (default: 24) |
 | `train` | `--scenario YAML` | Use scenario file for training configuration |
+| `train` | `--model-name NAME` | Model name for saving trained model (auto-generated if omitted) |
 | `train` | `--ship` | Create data stream for anomaly shipping (production feature) |
-| `train` | `--synthetic-count N` | Inject N synthetic alerts for testing |
-| `train` | `--synthetic-mode MODE` | Synthetic data mode: `append`, `prepend`, or `only` |
-| `train` | `--synthetic-level LEVEL` | Alert severity level for synthetic data (default: 5) |
-| `train` | `--synthetic-srcip IP` | Source IP for synthetic alerts |
+| `train` | `--fill-with-synthetic` | Auto-fill sparse training data with synthetic alerts |
+| `train` | `--synthetic-count N` | Number of synthetic alerts to generate (default: minimal required) |
+| `train` | `--synthetic-mode MODE` | Synthetic data mode: `constant`, `random`, or `copy` |
+| `train` | `--synthetic-level LEVEL` | Alert severity level for `constant` mode (default: 5) |
+| `train` | `--synthetic-srcip IP` | Source IP for synthetic alerts in `constant` mode |
 | `detect` | `--lookback-minutes MIN` | Minutes of recent data for detection (default: 10) |
 | `detect` | `--scenario YAML` | Use scenario file for detection configuration |
 | `detect` | `--ship` | Ship anomalies to data stream instead of standard index |
+| `detect` | `--fill-with-synthetic` | Auto-fill sparse detection data with synthetic alerts |
 | `detect` | `--synthetic-*` | Same synthetic data flags as `train` command |
 | `scenario` | `--use-case YAML` | Path to scenario YAML file (required) |
 | `scenario` | `--mode MODE` | Override scenario mode: `historical`, `batch`, or `realtime` |
@@ -187,27 +191,7 @@ poetry run sonar detect --dry-run --print-payloads --payload-dir ./debug
 poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml --ship
 ```
 
-#### 7. Data shipping (production feature)
-
-Enable anomaly streaming to Wazuh data streams for real-time monitoring:
-
-```bash
-# Step 1: Train with shipping (creates data stream)
-poetry run sonar train --config config.yaml --ship
-
-# Step 2: Detect with shipping (streams anomalies)
-poetry run sonar detect --config config.yaml --ship
-
-# Or use scenarios with shipping
-poetry run sonar scenario --use-case scenarios/brute_force_detection.yaml --ship
-```
-
-**Benefits:**
-- Scenario-specific data streams for isolation
-- Real-time RADAR integration for automated responses
-- Data lifecycle management with rollover policies
-
-**See:** [docs/data-shipping-guide.md](./docs/data-shipping-guide.md) for complete guide.
+For complete data shipping setup, see [data-shipping-guide.md](./docs/data-shipping-guide.md).
 
 ## Python API
 
@@ -264,7 +248,7 @@ cfg = WazuhIndexerConfig(
     password="admin"
 )
 # You can enable payload inspection/dry-run when instantiating the client:
-# Client = wazuhindexerclient(cfg, print_payloads=true, dry_run=true, payload_dir="./payloads")
+# client = WazuhIndexerClient(cfg, print_payloads=True, dry_run=True, payload_dir="./payloads")
 client = WazuhIndexerClient(cfg)
 
 # Check connection
@@ -380,6 +364,11 @@ Test files in `tests/sonartests/`:
 |-----------|---------|-------------|
 | `numeric_fields` | `["rule.level"]` | Wazuh fields to extract as features |
 | `bucket_minutes` | `5` | Time-series aggregation bucket size |
+| `categorical_fields` | `[]` | Wazuh fields to one-hot encode (dot-notation paths) |
+| `categorical_top_k` | `10` | Keep top-k categories; group rest into `__other` |
+| `derived_features` | `true` | Compute derived security/resource features (auth failures, severity flags, etc.) |
+| `alert_filter` | `null` | Optional OpenSearch query fragment to filter alerts on ingestion |
+| `max_numeric_fields` | `[]` | Numeric fields for which a per-bucket `<field>__max` column is also computed |
 
 ## Troubleshooting
 
@@ -415,11 +404,9 @@ Set `device: "cuda"` in `MVADConfig` if you have a compatible GPU. Ensure `torch
 | Aspect | v1 (ADBox) | v2 (SONAR) |
 |--------|---------------|----------|
 | Algorithm | Research-oriented implementation of slightly modified MTAD-GAT | MTAD-GAT |
-| Training Time | ~5-10 min | < 1 min |
 | GPU Required | Yes | Optional (works on CPU) |
-| Memory Usage | High (GB) | Low (MB) |
 | Dependencies | PyTorch, TensorBoard | Microsoft MVAD library only |
-| Production Readiness | Research | Production-grade |
+| Production Readiness | Research | TRL 6 |
 
 ## Contributing
 
@@ -432,5 +419,4 @@ To extend SONAR:
 ## References
 
 - [Microsoft Anomaly Detector](https://pypi.org/project/time-series-anomaly-detector/)
-- [OpenSearch Documentation](https://opensearch.org/docs/)
 - [IDPS-ESCAPE README](../README.md)

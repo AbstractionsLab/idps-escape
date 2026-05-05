@@ -59,6 +59,7 @@
 <li><a href="#SRS-062">2.14 RADAR scenario: off-hour login detection</a></li>
 <li><a href="#SRS-063">2.15 RADAR SOAR Web Interface - REST API</a></li>
 <li><a href="#SRS-064">2.16 RADAR SOAR Web Interface - Frontend</a></li>
+<li><a href="#SRS-065">2.17 RADAR Ruleset-as-Code</a></li>
 </ul>
 </li>
 <li><a href="#SRS-ADBox">3.0 ADBox v1 System Requirements (Maintenance)</a></li>
@@ -890,7 +891,7 @@ I want to train a base detector using default parameters.</p>
 <h3>Acceptance criteria</h3>
 <p>Successful validation according to the corresponding test case specification</p>
 <p><em>Parent links:</em> <a href="MRS.html#MRS-030">MRS-030 Deep Learning Technique</a></p>
-<p><em>Child links:</em> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a>, <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a>, <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a></p>
+<p><em>Child links:</em> <a href="LARC.html#LARC-019">LARC-019 SONAR training pipeline sequence</a>, <a href="TST.html#TST-005">TST-005 Run ADBox in default mode with a Wazuh connection</a>, <a href="TST.html#TST-006">TST-006 Run ADBox in default mode without a Wazuh connection</a>, <a href="TST.html#TST-050">TST-050 Linux resource usage monitoring scenario</a></p>
 <table>
 <thead>
 <tr>
@@ -3663,6 +3664,120 @@ I want a browser-based SOAR management interface for RADAR that lets me inspect,
 <tr>
 <td>version</td>
 <td>0.8</td>
+</tr>
+</tbody>
+</table>
+<h2 id="SRS-065">2.17 RADAR Ruleset-as-Code <small><a href="SRS.html#SRS-065">SRS-065</a></small></h2>
+<p>As a security engineer,
+I want to develop, review, and deploy Wazuh detection rules and decoders through a Git-based CI/CD workflow, so that ruleset changes are version-controlled, peer-reviewed, and automatically applied to the Wazuh manager without requiring direct server access.</p>
+<h2>Scope</h2>
+<p><strong>Deployment mode</strong>: This requirement defines a second, parallel deployment mode for RADAR detection logic, complementing the existing Ansible-powered approach. It does not replace Ansible; Ansible remains the mechanism for full scenario rollouts, initial bring-up, and infrastructure-level configuration. RaC covers day-to-day rule and decoder iteration only.</p>
+<p><strong>Covered artefacts</strong>: The RaC pipeline governs all XML rule files under <code>radar/scenarios/rules/&lt;scenario&gt;/</code> and all XML decoder files under <code>radar/scenarios/decoders/&lt;scenario&gt;/</code>.</p>
+<p><strong>CI/CD platform</strong>: The reference implementation uses GitHub Actions. The server-side apply script is platform-agnostic and may be reused with other CI/CD systems without modification.</p>
+<p><strong>Target environment</strong>: The Wazuh manager is assumed to run inside a Docker container on the deployment host. The pipeline interacts with the manager via the host's Docker daemon.</p>
+<h2>Requirements</h2>
+<ol>
+<li>The repository shall provide a GitHub Actions workflow that automatically validates rule files on every pull request targeting <code>main</code>:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> The workflow shall trigger on <code>pull_request</code> events where the target branch is <code>main</code>.</p>
+</li>
+<li>
+<p><strong>(ii)</strong> Validation shall be performed by <code>ci/check_rule_ids.py</code>, which shall be the sole validation entry point invoked by the workflow.</p>
+</li>
+<li>
+<p><strong>(iii)</strong> The workflow shall fail the pull request check if any of the following conditions are detected:</p>
+<ul>
+<li>Two or more rules share the same <code>id</code> attribute within a single changed file.</li>
+<li>A rule <code>id</code> introduced in a new file already exists in any file on <code>main</code>.</li>
+<li>A rule <code>id</code> introduced in a modified file is new (not present in the <code>main</code> version of that file) and already exists in a different file on <code>main</code>.</li>
+</ul>
+</li>
+<li>
+<p><strong>(iv)</strong> The workflow shall pass without error if no rule files are changed in the pull request.</p>
+</li>
+</ul>
+<ol start="2">
+<li>The server-side deploy script (<code>ci/deploy_rulesets.sh</code>) shall apply the uploaded payload to the Wazuh manager:</li>
+</ol>
+<ul>
+<li>
+<p><strong>(i)</strong> The script shall copy rule XMLs from the staging payload into <code>RAC_HOST_RULES_DIR</code> and decoder XMLs into <code>RAC_HOST_DECODERS_DIR</code>, where both variables correspond to the host-side bind-mount paths of <code>/var/ossec/etc/rules</code> and <code>/var/ossec/etc/decoders</code> inside the container.</p>
+</li>
+<li>
+<p><strong>(ii)</strong> After copying, the script shall set ownership <code>root:wazuh</code> and mode <code>0640</code> on all deployed XML files inside the container, consistent with the existing RADAR Ansible convention.</p>
+</li>
+<li>
+<p><strong>(iii)</strong> The script shall restart the Wazuh manager using <code>/var/ossec/bin/wazuh-control restart</code> executed inside the container via <code>docker exec</code>.</p>
+</li>
+<li>
+<p><strong>(iv)</strong> The script shall emit a clear success or failure message after the restart attempt and shall exit with a non-zero status code on failure, causing the CI job to fail.</p>
+</li>
+<li>
+<p><strong>(v)</strong> The script shall abort with a non-zero exit code and a diagnostic message if the target container is not running at the time of invocation.</p>
+</li>
+</ul>
+<ol start="3">
+<li>The following GitHub repository secrets shall be required for the deploy workflow to function:</li>
+</ol>
+<ul>
+<li><strong>(i)</strong> <code>RAC_SSH_HOST</code>: IP address or DNS name of the Wazuh manager host.</li>
+<li><strong>(ii)</strong> <code>RAC_SSH_USER</code>: SSH username on the manager host; the user must have passwordless sudo.</li>
+<li><strong>(iii)</strong> <code>RAC_SSH_PORT</code>: SSH port on the manager host.</li>
+<li><strong>(iv)</strong> <code>RAC_SSH_KEY</code>: PEM-encoded private key for SSH authentication, without passphrase.</li>
+<li><strong>(v)</strong> <code>RAC_MGR_CONTAINER</code>: Name of the Docker container running the Wazuh manager.</li>
+<li><strong>(vi)</strong> <code>RAC_HOST_RULES_DIR</code>: Absolute path on the host that is bind-mounted to <code>/var/ossec/etc/rules</code> inside the container.</li>
+<li><strong>(vii)</strong> <code>RAC_HOST_DECODERS_DIR</code>: Absolute path on the host that is bind-mounted to <code>/var/ossec/etc/decoders</code> inside the container.</li>
+</ul>
+<ol start="4">
+<li>The repository shall enforce branch protection on <code>main</code> such that:</li>
+</ol>
+<ul>
+<li><strong>(i)</strong> Direct pushes to <code>main</code> are disallowed; all changes must arrive via pull request.</li>
+<li><strong>(ii)</strong> The <code>check_rule_ids</code> status check is required to pass before a pull request may be merged.</li>
+</ul>
+<h2>Rationale</h2>
+<p>RADAR's detection logic currently changes only through the Ansible-powered deployment path, which requires a full playbook run for any rule edit. Applying version control, peer review via pull requests, automated conflict detection, and CI/CD deployment reduces operational risk, shortens the feedback loop for detection engineers, and produces a complete audit trail of every ruleset change through git history, without requiring direct access to the Wazuh manager.</p>
+<h2>Acceptance criteria</h2>
+<p>Successful validation according to test case specification, which shall verify:</p>
+<ol>
+<li>Open a pull request containing a new rule file with a unique rule ID in the valid custom range - <code>check_rule_ids</code> passes.</li>
+<li>Open a pull request containing a rule file with two rules sharing the same ID - <code>check_rule_ids</code> fails and the pull request is blocked from merging.</li>
+<li>Merge a pull request that modifies a rule XML - <code>integrate_rulesets</code> workflow triggers automatically.</li>
+<li>Merge a pull request that modifies only non-XML files - <code>integrate_rulesets</code> workflow does not trigger.</li>
+<li>After a successful deploy run, verify the deployed XML files are present in <code>RAC_HOST_RULES_DIR</code> and <code>RAC_HOST_DECODERS_DIR</code> on the manager host.</li>
+<li>Verify deployed XML files inside the container have ownership <code>root:wazuh</code> and mode <code>0640</code>.</li>
+<li>Verify <code>wazuh-control status</code> reports the manager as running after the deploy completes.</li>
+</ol>
+<p><em>Parent links:</em> <a href="MRS.html#MRS-043">MRS-043 Detection as Code</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>importance</td>
+<td>2</td>
+</tr>
+<tr>
+<td>urgency</td>
+<td>3</td>
+</tr>
+<tr>
+<td>risk</td>
+<td>2</td>
+</tr>
+<tr>
+<td>type</td>
+<td>F</td>
+</tr>
+<tr>
+<td>version</td>
+<td>1.0</td>
 </tr>
 </tbody>
 </table>

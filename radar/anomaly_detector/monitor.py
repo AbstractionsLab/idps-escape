@@ -43,7 +43,28 @@ def pick_scenario(cfg: Dict[str, Any], arg_name: Optional[str]) -> Tuple[str, Di
         die(f"Scenario '{name}' not found in config.yaml")
     return name, scenarios[name]
 
-def find_monitor_id(session: requests.Session, opensearch_base: str, name: str, verify: bool) -> Optional[str]:
+def _extract_detector_id(mon: Dict[str, Any]) -> Optional[str]:
+    try:
+        for inp in (mon.get("inputs") or []):
+            search = inp.get("search") or inp
+            bool_clause = (search.get("query") or {}).get("bool") or {}
+            clauses = []
+            for key in ("filter", "must", "should"):
+                val = bool_clause.get(key)
+                if isinstance(val, list):
+                    clauses.extend(val)
+                elif isinstance(val, dict):
+                    clauses.append(val)
+            for clause in clauses:
+                term = clause.get("term") or {}
+                if "detector_id" in term:
+                    val = term["detector_id"]
+                    return val["value"] if isinstance(val, dict) else val
+    except (KeyError, IndexError, TypeError, AttributeError):
+        pass
+    return None
+
+def find_monitor(session: requests.Session, opensearch_base: str, name: str, verify: bool) -> Optional[Tuple[str, Optional[str]]]:
     url = f"{opensearch_base.rstrip('/')}/_plugins/_alerting/monitors/_search"
     body = {"query": {"match": {"monitor.name": name}}}
     r = session.post(url, json=body, verify=verify)
@@ -55,7 +76,7 @@ def find_monitor_id(session: requests.Session, opensearch_base: str, name: str, 
         src = hit.get("_source") or {}
         mon = src.get("monitor") or src
         if mon.get("name") == name:
-            return hit.get("_id")
+            return hit.get("_id"), _extract_detector_id(mon)
     return None
 
 def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, destination_id: str) -> Dict[str, Any]:
@@ -178,6 +199,12 @@ def create_monitor(session: requests.Session, opensearch_base: str, payload: Dic
         die(f"Monitor create succeeded but no id returned: {r.text}")
     return mid
 
+def update_monitor(session: requests.Session, opensearch_base: str, monitor_id: str, payload: Dict[str, Any], verify: bool) -> None:
+    url = f"{opensearch_base.rstrip('/')}/_plugins/_alerting/monitors/{monitor_id}"
+    r = session.put(url, json=payload, verify=verify)
+    if r.status_code not in (200, 201):
+        die(f"Monitor update failed: {r.status_code} {r.text}")
+
 def main() -> None:
     if len(sys.argv) < 3:
         die("Usage: monitor.py <SCENARIO> <DETECTOR_ID>")
@@ -205,9 +232,13 @@ def main() -> None:
     destination_id = ensure_webhook(opensearch_base, os_user, os_pass, os_verify, webhook_name, webhook_url)
 
     mon_name = scn.get("monitor_name", f"{scenario_name}-monitor")
-    existing = find_monitor_id(session, opensearch_base, mon_name, os_verify)
+    existing = find_monitor(session, opensearch_base, mon_name, os_verify)
     if existing:
-        print(existing)
+        monitor_id, linked_detector_id = existing
+        if linked_detector_id != detector_id:
+            payload = monitor_payload(scenario_name, scn, detector_id, destination_id)
+            update_monitor(session, opensearch_base, monitor_id, payload, os_verify)
+        print(monitor_id)
         return
 
     payload = monitor_payload(scenario_name, scn, detector_id, destination_id)

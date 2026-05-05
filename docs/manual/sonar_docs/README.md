@@ -57,7 +57,6 @@ Check [troubleshooting.md](./troubleshooting.md) for:
 For developers extending the system:
 1. Read [architecture.md](./architecture.md) - design principles and module structure
 2. Review [uml-diagrams.md](./uml-diagrams.md) - class and sequence diagrams
-3. Examine source code in `../` with architecture context
 
 ## Quick reference by task
 
@@ -210,38 +209,6 @@ sonar/
 └── local_data_provider.py     # Debug mode data provider
 ```
 
-## Contributing
-
-When extending SONAR:
-
-1. Follow existing patterns in [architecture.md](./architecture.md)
-2. Add tests for new features
-3. Update relevant documentation
-4. Test with debug mode before production
-
-## Documentation conventions
-
-- **Lowercase filenames**: `setup-guide.md`, not `Setup-Guide.md`
-- **Sentence case headings**: "## Getting started", not "## Getting Started"
-- **Code examples**: Include complete, runnable examples
-- **Internal links**: Use relative paths: `[file](./file.md)`
-
-## Documentation standards
-
-All documentation in this folder follows these standards:
-
-- **Markdown format** (.md files)
-- **Cross-linked** - Files reference each other with relative paths
-- **Versioned** - Last updated dates in file headers (when applicable)
-- **Indexed** - This README provides central navigation
-- **Verified** - All links tested and working
-
-### Link format
-
-- Same folder: `[File.md](./File.md)`
-- Parent folder: `[file.md](../file.md)`
-- Root level: `[file.md](../../../file.md)`
-
 ---
 
 ## Quick reference
@@ -257,25 +224,3 @@ poetry run pytest tests/sonartests/ -v
 # From project root (/home/alab/soar)
 poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml
 ```
-
-### View documentation
-```bash
-# From project root (/home/alab/soar)
-cat docs/manual/sonar_docs/setup-guide.md
-cat docs/manual/sonar_docs/scenario-guide.md
-cat docs/manual/sonar_docs/architecture.md
-```
-
----
-
-## Support
-
-For help with specific topics:
-
-- **Getting started**: [setup-guide.md](./setup-guide.md)
-- **Creating scenarios**: [scenario-guide.md](./scenario-guide.md)
-- **Testing and debugging**: [data-injection-guide.md](./data-injection-guide.md)
-- **Production deployment**: [data-shipping-guide.md](./data-shipping-guide.md)
-- **Errors and issues**: [troubleshooting.md](./troubleshooting.md)
-- **System design**: [architecture.md](./architecture.md)
-- **Python API**: [sonar/README.md](../../../sonar/README.md)

@@ -637,6 +637,15 @@
               <span class="chip">Reproducible</span>
             </div>
           </article>
+          <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/README.md">RADAR GUI</a> — web-based SOAR control panel</h3>
+            <p>Browser-based Flask interface for the full RADAR operational lifecycle: configure connectors, manage Wazuh inventory, tune risk weights and tier thresholds per scenario, deploy via Ansible, and monitor infrastructure health — all without touching configuration files directly.</p>
+            <div class="stack">
+              <span class="chip">Flask</span>
+              <span class="chip">Ansible Vault</span>
+              <span class="chip">Real-time streaming</span>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -688,6 +697,44 @@
               <img src="assets/IDPS-ESCAPE-context-diagram.png" alt="IDPS-ESCAPE full system context diagram">
             </button>
             <figcaption>Full system context diagram: SONAR, RADAR, DECIPHER/SATRAP-DL, MISP, Flowintel, Wazuh SIEM&amp;XDR, NIDS capture points, and external CTI tools.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="radar-gui">
+      <div class="container">
+        <div class="section-head">
+          <h2>RADAR GUI - SOAR control panel</h2>
+          <div class="section-kicker">Full operational lifecycle in the browser</div>
+        </div>
+        <div class="showcase">
+          <figure class="shot">
+            <button data-full="assets/RADAR_GUI_RADAR_Scenarios.png" data-caption="RADAR GUI — RADAR Scenarios page">
+              <img src="assets/RADAR_GUI_RADAR_Scenarios.png" alt="RADAR GUI RADAR Scenarios page showing risk weight configuration and tier thresholds">
+            </button>
+            <figcaption>RADAR Scenarios page: per-scenario tuning of risk weights, signature and anomaly detection scoring, tier boundaries, and mitigation actions.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR_GUI_Infrastructure.png" data-caption="RADAR GUI — Infrastructure page">
+              <img src="assets/RADAR_GUI_Infrastructure.png" alt="RADAR GUI Infrastructure page showing Wazuh manager and agent inventory cards">
+            </button>
+            <figcaption>Infrastructure page: Ansible inventory management for Wazuh managers and agents, with connection type badges, Vault-encrypted credential storage, and per-node health checks.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR_GUI_Connectors.png" data-caption="RADAR GUI — Connectors page">
+              <img src="assets/RADAR_GUI_Connectors.png" alt="RADAR GUI Connectors page with credential fields and live test buttons for all external services">
+            </button>
+            <figcaption>Connectors page: credential and URL management for OpenSearch, Wazuh API, SMTP, and DECIPHER.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR_GUI_Deploy.png" data-caption="RADAR GUI — Deploy page">
+              <img src="assets/RADAR_GUI_Deploy.png" alt="RADAR GUI Deploy page with scenario selection, mode options, and real-time Ansible output streaming">
+            </button>
+            <figcaption>Deploy page: build and deploy scenarios via Ansible, run OpenSearch anomaly detectors, and check infrastructure health.</figcaption>
           </figure>
         </div>
       </div>

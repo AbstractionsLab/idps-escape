@@ -5,6 +5,8 @@ RADAR orchestrates risk-aware anomaly detection (OpenSearch AD) and automated re
 - `build-radar.sh` – prepares the environment (Wazuh core stack + agents + RADAR dependencies), runs Ansible pipelines for the chosen scenario, and builds various Docker containers.
 - `run-radar.sh` – ingests a scenario dataset, ensures/starts an AD detector, and ensures a monitor with a webhook (prints `DET_ID`/`MON_ID`).
 
+RADAR also provides a **Web GUI** - a browser-based control panel that covers the full deployment and configuration workflow without requiring direct use of the command-line scripts. See the [RADAR Web GUI User Manual](/docs/manual/radar_docs/radar-gui-user-manual.md) for a complete reference. The sections below describe both the CLI-based workflow and the equivalent GUI actions where applicable.
+
 Below, we explain the pre-requisites and steps for bringing a scenario to life. At the end you will find a script for testing via a lightweight Docker runner.
 
 For a very detailed breakdown of the Ansible playbook providing the automation pipeline for deploying and setting up the Wazuh manager, see our dedicated [page describing our approach to the automated manager deployment via an Ansible playbook](/docs/manual/radar_docs/radar-manager-ansible-playbook.md).
@@ -76,6 +78,8 @@ ansible --version    # Should be 2.15+
 
 ## Setup
 
+> **GUI alternative:** All steps in this section can be performed through the RADAR Web GUI instead of the CLI. Open the GUI and follow the [First-time setup checklist](/docs/manual/radar_docs/radar-gui-user-manual.md#first-time-setup-checklist) in the user manual to complete the equivalent steps via browser.
+
 ### 1. Setup connection and authorization variables
 
 Create a **`.env`** file at `idps-escape/radar/` with endpoint URLs, credentials, and SSL flags. This file is read by `detector.py` and `monitor.py` inside the `radar-cli` container.
@@ -114,6 +118,8 @@ DECIPHER_TIMEOUT_SEC=30                  # Change accordingly
 
 See the [complete .env template](/radar/env.example) for all available configuration options including logging, DECIPHER, and advanced settings.
 
+> **GUI alternative:** Connector settings (OpenSearch, Wazuh API, SMTP, DECIPHER, Webhook) can be entered and tested on the **Connectors** page of the RADAR Web GUI. The GUI writes the values directly to `.env` and provides a **Test connection** / **Send test email** button for each connector. See [Connectors](/docs/manual/radar_docs/radar-gui-user-manual.md#connectors) in the user manual.
+
 ### 2. Configure users in remote endpoints
 
 If either the manager or the agent are set to be remote:
@@ -142,6 +148,8 @@ In this step:
 ```
 ansible_become_password: <sudo-password>
 ```
+
+> **GUI alternative:** Manager and agent inventory entries can be created on the **Infrastructure** page of the RADAR Web GUI using the **+ Manager** and **+ Agent** buttons. Sudo credentials are stored via **Set credential** on each node card, which encrypts them into the Ansible Vault automatically. The vault password is managed through the vault badge in the top-right corner of the GUI. See [Infrastructure](/docs/manual/radar_docs/radar-gui-user-manual.md#infrastructure) and [Vault and credentials](/docs/manual/radar_docs/radar-gui-user-manual.md#vault-and-credentials) in the user manual.
 
 ### 3. Configure volume mappings
 
@@ -310,35 +318,18 @@ Both sections are optional and can be omitted if you are deploying with existing
 
 ### 5. Configure active response parameters
 
-The **`scenarios/active_responses/ar.yaml`** file configures the risk-aware active response system for each scenario. This file is located at the path specified by `AR_RISK_CONFIG` in your `.env` file and should be customized according to your operational requirements and risk tolerance.
+The **`scenarios/active_responses/ar.yaml`** file configures the risk-aware active response system for each scenario. This file is located at the path specified by `AR_RISK_CONFIG` in your `.env` file.
 
-**Key parameters explained:**
+Key configuration areas per scenario:
+- **Risk weights** (`w_ad`, `w_sig`, `w_cti`) — must sum to 1.0; adjust based on confidence in each detection source
+- **Signature risk** (`signature_likelihood`, `signature_impact`) — scalar or per-rule-ID weights
+- **Time windows** (`delta_ad_minutes`, `delta_signature_minutes`) — lookback for correlated event queries
+- **Tier boundaries** (`tiers.tier1_min`, `tiers.tier1_max`, `tiers.tier2_max`) — risk score cut-offs for response escalation
+- **Mitigations** (`mitigations_tier2`, `mitigations_tier3`, `allow_mitigation`) — automated action lists per tier; set `allow_mitigation: false` for alert-only mode
 
-| Parameter | Description | Example Values |
-|-----------|-------------|----------------|
-| `ad.rule_ids` | Rule IDs from ML-based anomaly detection | `["100021", "100309"]` |
-| `signature.rule_ids` | Rule IDs from signature-based detection | `["210012", "210013"]` |
-| `w_ad` | Weight for anomaly detection in risk score (0.0-1.0) | `0.3` for 30% weight |
-| `w_sig` | Weight for signature-based detection in risk score (0.0-1.0) | `0.4` for 40% weight |
-| `w_cti` | Weight for cyber threat intelligence in risk score (0.0-1.0) | `0.3` for 30% weight |
-| `delta_ad_minutes` | Time window for AD alerts correlation (minutes) | `10` |
-| `delta_signature_minutes` | Time window for signature alerts correlation (minutes) | `1` |
-| `signature_impact` | Impact score for signature detections (0.0-1.0) | `0.7` |
-| `signature_likelihood` | Likelihood score for signature detections (0.0-1.0) or weighted rules | `0.8` or rule-specific weights |
-| `tiers.tier1_min` | Minimum risk score to enter Tier 1; scores below fall into Tier 0 (0.0-1.0) | `0.0` |
-| `tiers.tier1_max` | Maximum risk score for Tier 1 (0.0-1.0) | `0.33` |
-| `tiers.tier2_max` | Maximum risk score for Tier 2 (0.0-1.0) | `0.66` |
-| `mitigations_tier2` | List of mild/reversible active response actions executed at Tier 2 | `["firewall-drop"]` |
-| `mitigations_tier3` | List of harsh/permanent active response actions executed at Tier 3 | `["firewall-drop", "lock_user_linux.sh"]` |
-| `allow_mitigation` | Whether to execute automated mitigations at Tier 2 and Tier 3 | `true` or `false` |
+For the complete parameter reference, configuration examples, and tuning guidance, see [Active response - Configuration](./radar-active-response.md#configuration).
 
-**Tuning recommendations:**
-
-- **Adjust weights** (`w_ad`, `w_sig`, `w_cti`) based on confidence in each detection method - they must sum to 1.0
-- **Lower `risk_threshold`** for more aggressive automated response
-- **Set `allow_mitigation: false`** for alert-only mode without automated actions
-- **Configure tier boundaries** to match your organization's risk strategy
-- **Use rule-specific likelihood weights** when different signature rules have varying confidence levels
+> **GUI alternative:** Active response parameters are configured on the **RADAR Scenarios** page of the RADAR Web GUI. The page lists all bound scenarios in a sidebar; click a scenario tab to edit its risk weights, time windows, tier thresholds, and per-tier mitigation actions. Changes take effect immediately on **Save**. See [RADAR Scenarios](/docs/manual/radar_docs/radar-gui-user-manual.md#radar-scenarios) in the user manual.
 
 
 ### 6. Configure DECIPHER
@@ -351,6 +342,8 @@ RADAR can optionally create cases/tasks and push investigation context to a Flow
 ## 1) Deploy the RADAR infrastructure
 
 Run `build-radar.sh` to bring up core services, optionally agent containers, run the Ansible playbook limited to the manager + agent group for the selected scenario, and build docker containers.
+
+> **GUI alternative:** The **Deploy** page, **Build & deploy** tab of the RADAR Web GUI provides a form-based interface to configure and launch `build-radar.sh`. Select the scenario, manager and agent locations, and whether the manager already exists, then click **Deploy** to stream Ansible output in real time. See [Deploy](/docs/manual/radar_docs/radar-gui-user-manual.md#deploy) in the user manual.
 
 **Usage:**
 ```bash
@@ -395,3 +388,4 @@ Flags:
 
 This script ingests the scenario dataset, then ensures/starts an AD **detector** (prints `DET_ID`), and finally sets up a **monitor** with a webhook (prints `MON_ID`).
 
+> **GUI alternative:** The **Deploy** page, **Run Anomaly Detector** tab of the RADAR Web GUI runs `run-radar.sh` for Hybrid and Anomaly ML scenarios. Select the scenario, optionally enable training dataset ingestion, and click **Run** to stream output. Infrastructure health can be checked at any time from the **Status** tab. See [Deploy](/docs/manual/radar_docs/radar-gui-user-manual.md#deploy) in the user manual.

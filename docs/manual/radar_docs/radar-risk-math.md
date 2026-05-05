@@ -53,23 +53,7 @@ The DECIPHER subsystem of SATRAP-DL will provide RADAR with boolean indicators s
 
 Each boolean can be mapped to a weight or severity multiplier.
 
-Let $T \in [0,1]$ denote our CTI score, defined as follows:  
-
-Example mapping:
-
-| CTI flag                | Weight |
-| ----------------------- | ------ |
-| Blacklisted IP          | 0.6    |
-| Known malicious hash    | 0.7    |
-| Domain in threat feed   | 0.4    |
-| User flagged suspicious | 0.5    |
-
-We define a simple aggregator over $n$ CTI indicator weights: 
-$$
-T = 1 − \prod_i^n (1 − w_i)
-$$
-
-This produces 0 if no CTI hits, and approaches 1 as more indicators pile up.
+Let $T \in [0,1]$ denote our CTI score, computed as specified in the system requirement specification [SRS-053](https://abstractionslab.github.io/satrap-dl/traceability/SRS.html#SRS-053) and the functional architecture scoring data flow diagram in [ARC-10](https://abstractionslab.github.io/satrap-dl/traceability/ARC.html#ARC-010) of the DECIPHER subsystem of [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl).
 
 ## A practical combined risk formula
 
@@ -115,37 +99,6 @@ The tiering mechanism in RADAR revolves around our risk score, which can be empi
     → Notifications + case + strong action (block, isolate, disable credential)
 
 These thresholds can also be calibrated using historical logs and adjusted in the `ar.yaml` file.
-
-## Concrete example calculation
-
-Suppose:
-
-* $G = 0.62$, $C = 0.74$ → $A = 0.4588$
-* Likelihood $L = 0.4$, Impact $I = 0.9$ → $S = 0.36$
-* CTI hits:
-  * Blacklisted IP (0.6)
-  * Suspicious domain (0.4)
-
-Then:
-
-$$
-T = 1 - (1 - 0.6)(1 - 0.4) = 1 - 0.4 \times 0.6 = 1 - 0.24 = 0.76
-$$
-
-Finally:
-
-$$
-R = 0.4 A + 0.4 S + 0.2 T  
-= 0.4 (0.4588) + 0.4 (0.36) + 0.2 (0.76)
-$$
-
-$$
-= 0.1835 + 0.144 + 0.152 = 0.4795
-$$
-
-which allows to determine the **risk tier** as **medium**.
-
-System response → email + case + light containment.
 
 ## Summary
 

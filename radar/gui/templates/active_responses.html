@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}RADAR Scenarios{% endblock %}
+{% block page_title %}RADAR Scenarios{% endblock %}
+
+{% block content %}
+{% if not bound_scenarios %}
+<div class="ar-empty">
+  <div class="ar-empty__icon">&#9889;</div>
+  <div class="ar-empty__title">No scenarios bound</div>
+  <div class="ar-empty__desc">
+    No scenarios are currently bound. Bind at least one scenario in <code>ar.yaml</code> before configuring active responses.
+  </div>
+</div>
+{% else %}
+
+<div class="ar-layout">
+  <div class="ar-sidebar">
+    {% for s in bound_scenarios %}
+    <a class="ar-tab {% if active_id == s.id %}ar-tab--active{% endif %}"
+       href="{{ url_for('active_responses', scenario_id=s.id) }}">
+      <div class="ar-tab__name">{{ s.name }}</div>
+      <div class="ar-tab__badges">
+        {% if s.type == 'signature' %}<span class="badge badge--blue" style="font-size:10px">Signature</span>
+        {% elif s.type == 'anomaly' %}<span class="badge badge--gray" style="font-size:10px">AD</span>
+        {% elif s.type == 'hybrid' %}<span class="badge badge--purple" style="font-size:10px">Hybrid</span>{% endif %}
+        {% if active_id == s.id and cfg.get('allow_mitigation') %}
+          <span class="badge badge--green" style="font-size:10px">Mitigations ON</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="ar-panel">
+    {% if active_scenario and cfg is not none %}
+    <input type="hidden" id="active-scenario-id" value="{{ active_id }}">
+
+    <div class="ar-panel__header">
+      <div class="ar-panel__title">{{ active_scenario.name }}</div>
+      <div class="ar-panel__sub">{{ active_scenario.description }}</div>
+    </div>
+
+    <div class="ar-section">
+      <div class="ar-section__title">
+        Risk weights
+        <span class="ar-hint">w_ad + w_sig + w_cti must equal 1.0</span>
+      </div>
+      <div class="weight-row">
+        <div class="weight-col">
+          <label class="weight-label">w_ad<span class="weight-sub">Anomaly detector</span></label>
+          <input type="number" class="weight-input" id="w_ad" min="0" max="1" step="0.05"
+                 value="{{ cfg.get('w_ad', 0) }}" oninput="updateWeightTotal()">
+        </div>
+        <div class="weight-op">+</div>
+        <div class="weight-col">
+          <label class="weight-label">w_sig<span class="weight-sub">Signature</span></label>
+          <input type="number" class="weight-input" id="w_sig" min="0" max="1" step="0.05"
+                 value="{{ cfg.get('w_sig', 0) }}" oninput="updateWeightTotal()">
+        </div>
+        <div class="weight-op">+</div>
+        <div class="weight-col">
+          <label class="weight-label">w_cti<span class="weight-sub">CTI</span></label>
+          <input type="number" class="weight-input" id="w_cti" min="0" max="1" step="0.05"
+                 value="{{ cfg.get('w_cti', 0) }}" oninput="updateWeightTotal()">
+        </div>
+        <div class="weight-op">=</div>
+        <div class="weight-total" id="weight-total">
+          {{ ((cfg.get('w_ad') or 0) + (cfg.get('w_sig') or 0) + (cfg.get('w_cti') or 0)) | round(2) }}
+        </div>
+      </div>
+      <div class="weight-warn" id="weight-warn" style="display:none">Weights do not sum to 1.0 — save will be blocked.</div>
+    </div>
+
+    {% set stype = active_scenario.type %}
+
+    {% if stype == 'signature' %}
+    <div class="ar-section">
+      <div class="ar-section__title">Signature scoring</div>
+      <div class="ar-grid-2" style="margin-top:4px">
+        <div class="ar-field">
+          <label class="ar-label">signature_impact</label>
+          <input type="number" class="ar-input" id="signature_impact" min="0" max="1" step="0.05"
+                 value="{{ cfg.get('signature_impact', 0.5) }}">
+          <div class="ar-hint-field">Severity weight assigned to this signature rule (0–1)</div>
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">signature_likelihood</label>
+          <input type="number" class="ar-input" id="signature_likelihood" min="0" max="1" step="0.05"
+                 value="{{ cfg.get('signature_likelihood', 0.5) }}">
+          <div class="ar-hint-field">Estimated likelihood that the rule fire is a true positive (0–1)</div>
+        </div>
+      </div>
+    </div>
+
+    {% elif stype == 'anomaly' %}
+    <div class="ar-section">
+      <div class="ar-section__title">Anomaly detection scoring</div>
+      <div class="ar-section__desc">
+        These values are provided at runtime by the anomaly detector and are not configurable here.
+        The AD component contributes via <code>anomaly_grade</code> and <code>confidence</code> to the risk formula.
+      </div>
+      <div class="ar-grid-2" style="margin-top:12px">
+        <div class="ar-field ar-field--readonly">
+          <label class="ar-label">anomaly_grade</label>
+          <div class="ar-readonly-value mono">runtime · from AD</div>
+          <div class="ar-hint-field">Anomaly severity score emitted by the detector (0–1)</div>
+        </div>
+        <div class="ar-field ar-field--readonly">
+          <label class="ar-label">confidence</label>
+          <div class="ar-readonly-value mono">runtime · from AD</div>
+          <div class="ar-hint-field">Detector confidence in the anomaly classification (0–1)</div>
+        </div>
+      </div>
+    </div>
+
+    {% elif stype == 'hybrid' %}
+    <div class="ar-section">
+      <div class="ar-section__title">Signature scoring</div>
+      <div class="ar-grid-2" style="margin-top:4px">
+        <div class="ar-field">
+          <label class="ar-label">signature_impact</label>
+          <input type="number" class="ar-input" id="signature_impact" min="0" max="1" step="0.05"
+                 value="{{ cfg.get('signature_impact', 0.5) }}">
+          <div class="ar-hint-field">Severity weight assigned to this signature rule (0–1)</div>
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">signature_likelihood</label>
+          <input type="number" class="ar-input" id="signature_likelihood" min="0" max="1" step="0.05"
+                 value="{{ cfg.get('signature_likelihood', 0.5) }}">
+          <div class="ar-hint-field">Estimated likelihood that the rule fire is a true positive (0–1)</div>
+        </div>
+      </div>
+    </div>
+    <div class="ar-section">
+      <div class="ar-section__title">Anomaly detection scoring</div>
+      <div class="ar-section__desc">
+        These values are provided at runtime by the anomaly detector and are not configurable here.
+        The AD component contributes via <code>anomaly_grade</code> and <code>confidence</code> to the risk formula.
+      </div>
+      <div class="ar-grid-2" style="margin-top:12px">
+        <div class="ar-field ar-field--readonly">
+          <label class="ar-label">anomaly_grade</label>
+          <div class="ar-readonly-value mono">runtime · from AD</div>
+          <div class="ar-hint-field">Anomaly severity score emitted by the detector (0–1)</div>
+        </div>
+        <div class="ar-field ar-field--readonly">
+          <label class="ar-label">confidence</label>
+          <div class="ar-readonly-value mono">runtime · from AD</div>
+          <div class="ar-hint-field">Detector confidence in the anomaly classification (0–1)</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="ar-section">
+      <div class="ar-section__title">Time windows</div>
+      <div class="ar-panel__sub">
+        Defines how far back (in minutes) each correlation source looks when an alert fires. RADAR queries the CTI tool for threat intelligence hits on the alerting entity within that many minutes.
+      </div>
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">delta_ad_minutes</label>
+          <input type="number" class="ar-input" id="delta_ad_minutes" min="1" step="1"
+                 value="{{ cfg.get('delta_ad_minutes', 10) }}">
+          <div class="ar-hint-field">Look-back window for AD event correlation</div>
+        </div>
+        <div class="ar-field">
+          <label class="ar-label">delta_signature_minutes</label>
+          <input type="number" class="ar-input" id="delta_signature_minutes" min="1" step="1"
+                 value="{{ cfg.get('delta_signature_minutes', 1) }}">
+          <div class="ar-hint-field">Look-back window for signature event correlation</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ar-section">
+      <div class="ar-section__title">
+        Risk tiers &amp; thresholds
+        <span class="ar-hint">score boundaries [0–1]</span>
+      </div>
+      {% set tiers = cfg.get('tiers', {}) %}
+      <div class="tier-stack">
+        <div class="tier-row tier-row--1">
+          <div class="tier-badge tier-badge--1">T1</div>
+          <div class="tier-row__body">
+            <div class="tier-row__label">Alert only — email notification</div>
+            <div class="tier-row__range">
+              <span class="tier-bound">0.0</span><span class="tier-arrow">&#8594;</span>
+              <input type="number" class="tier-input" id="tier1_max" min="0" max="1" step="0.01"
+                     value="{{ tiers.get('tier1_max', 0.33) }}" oninput="validateTiers()">
+            </div>
+          </div>
+        </div>
+        <div class="tier-row tier-row--2">
+          <div class="tier-badge tier-badge--2">T2</div>
+          <div class="tier-row__body">
+            <div class="tier-row__label">Escalate — email + Flowintel case + tier-2 mitigations</div>
+            <div class="tier-row__range">
+              <span class="tier-bound">T1 max</span><span class="tier-arrow">&#8594;</span>
+              <input type="number" class="tier-input" id="tier2_max" min="0" max="1" step="0.01"
+                     value="{{ tiers.get('tier2_max', 0.66) }}" oninput="validateTiers()">
+            </div>
+          </div>
+        </div>
+        <div class="tier-row tier-row--3">
+          <div class="tier-badge tier-badge--3">T3</div>
+          <div class="tier-row__body">
+            <div class="tier-row__label">High risk — full response + tier-3 mitigations</div>
+            <div class="tier-row__range">
+              <span class="tier-bound">T2 max</span><span class="tier-arrow">&#8594;</span>
+              <input type="number" class="tier-input" id="tier3_max" min="0" max="1" step="0.01"
+                     value="{{ tiers.get('tier3_max', 0.85) }}" oninput="validateTiers()">
+            </div>
+          </div>
+        </div>
+        <div class="tier-row tier-row--4">
+          <div class="tier-badge tier-badge--4">T4</div>
+          <div class="tier-row__body">
+            <div class="tier-row__label">Critical — immediate containment + tier-4 mitigations</div>
+            <div class="tier-row__range">
+              <span class="tier-bound">T3 max</span><span class="tier-arrow">&#8594;</span>
+              <span class="tier-bound">1.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tier-warn" id="tier-warn" style="display:none">Tier thresholds must be strictly increasing.</div>
+    </div>
+
+    <div class="ar-section">
+      <div class="ar-section__title">
+        Mitigations per tier
+        <span class="ar-hint">actions executed when tier is reached and allow_mitigation is enabled</span>
+      </div>
+
+      {% set mit2 = cfg.get('mitigations_tier2') or [] %}
+      {% set mit3 = cfg.get('mitigations_tier3') or [] %}
+      {% set mit4 = cfg.get('mitigations_tier4') or [] %}
+
+      <div class="mit-picker-grid">
+
+        <div class="mit-picker-col">
+          <div class="mit-picker-header"><span class="tier-dot tier-dot--1"></span> Tier 1</div>
+          <div class="mit-picker-note">Email notification only</div>
+        </div>
+
+        <div class="mit-picker-col">
+          <div class="mit-picker-header"><span class="tier-dot tier-dot--2"></span> Tier 2</div>
+          <div class="mit-tag-list" id="mit-tags-2">
+            {% for m in mit2 %}
+            <span class="mit-tag" data-value="{{ m }}">{{ m }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% endfor %}
+          </div>
+          <select class="mit-picker-select" onchange="addMitTag(this, 'mit-tags-2')">
+            <option value="">+ Add action</option>
+            {% for m in known_mitigations %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mit-picker-col">
+          <div class="mit-picker-header"><span class="tier-dot tier-dot--3"></span> Tier 3</div>
+          <div class="mit-tag-list" id="mit-tags-3">
+            {% for m in mit3 %}
+            <span class="mit-tag" data-value="{{ m }}">{{ m }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% endfor %}
+          </div>
+          <select class="mit-picker-select" onchange="addMitTag(this, 'mit-tags-3')">
+            <option value="">+ Add action</option>
+            {% for m in known_mitigations %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mit-picker-col">
+          <div class="mit-picker-header"><span class="tier-dot tier-dot--4"></span> Tier 4</div>
+          <div class="mit-tag-list" id="mit-tags-4">
+            {% for m in mit4 %}
+            <span class="mit-tag" data-value="{{ m }}">{{ m }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% endfor %}
+          </div>
+          <select class="mit-picker-select" onchange="addMitTag(this, 'mit-tags-4')">
+            <option value="">+ Add action</option>
+            {% for m in known_mitigations %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+
+      <div class="mit-execution-row" style="margin-top:16px">
+        <label class="mit-check">
+          <input type="checkbox" id="allow_mitigation"
+                 {% if cfg.get('allow_mitigation') %}checked{% endif %}>
+          <span>Allow automatic mitigation execution</span>
+        </label>
+        <div class="ar-hint-field" style="margin-top:6px">
+          When disabled, mitigations are planned and logged but not executed. Enable only after testing.
+        </div>
+      </div>
+    </div>
+
+    <div class="ar-section ar-section--rules">
+      <div class="ar-section__title">Bound rule IDs <span class="ar-hint">read-only</span></div>
+      <div class="rule-cols">
+        <div>
+          <div class="rule-col-label">AD rules</div>
+          <div class="mono" style="color:var(--text-muted)">
+            {% set adr = cfg.get('ad', {}).get('rule_ids', []) %}
+            {{ adr | join(', ') if adr else '—' }}
+          </div>
+        </div>
+        <div>
+          <div class="rule-col-label">Signature rules</div>
+          <div class="mono" style="color:var(--text-muted)">
+            {% set sigr = cfg.get('signature', {}).get('rule_ids', []) %}
+            {{ sigr | join(', ') if sigr else '—' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ar-footer">
+      <div class="ar-footer__msg" id="save-msg"></div>
+      <button class="btn btn--primary" onclick="saveConfig()">Save</button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/active_responses.js') }}"></script>
+{% endblock %}

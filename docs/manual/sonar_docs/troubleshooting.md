@@ -100,7 +100,7 @@ poetry run sonar train --lookback-hours 168  # 1 week instead of 24h
 # 2. Check alert count in Wazuh
 curl -u admin:admin "https://localhost:9200/wazuh-alerts-*/_count"
 
-# 3. Remove or adjust query_filter in scenario
+# 3. Remove or adjust alert_filter under training: in scenario
 ```
 
 **Scenario fix:**
@@ -108,7 +108,7 @@ curl -u admin:admin "https://localhost:9200/wazuh-alerts-*/_count"
 ```yaml
 training:
   lookback_hours: 168  # Increase from 24
-  # Remove restrictive query_filter temporarily
+  # Remove or simplify restrictive alert_filter temporarily
 ```
 
 ### Error: Insufficient data for sliding window
@@ -151,38 +151,11 @@ cd /home/alab/soar
 git log -1 sonar/engine.py | head -5
 
 # 2. Retrain model
-rm model/mvad_model.pkl
+rm ./sonar/models/<model_name>.pkl
 poetry run sonar train --lookback-hours 24
 
 # 3. Verify alignment in logs
 poetry run sonar detect --lookback-minutes 10  # Check for "Aligning columns" message
-```
-
-### Error: Data format not recognized (debug mode)
-
-```
-ValueError: Unexpected JSON type in test_data.json
-```
-
-**Cause**: Invalid JSON format or unsupported structure in debug mode.
-
-**Solutions**:
-
-```bash
-# 1. Validate JSON syntax
-jq . test_data.json  # Should pretty-print without errors
-
-# 2. Check supported formats
-# LocalDataProvider accepts:
-# - JSON array: [{...}, {...}]
-# - Single object: {...}
-# - OpenSearch response: {hits: {hits: [{_source: {...}}]}}
-
-# 3. If using OpenSearch export, ensure it has the hits structure
-cat test_data.json | jq '.hits.hits[0]._source' | head
-
-# 4. Convert array to OpenSearch format if needed
-cat array.json | jq '{hits: {hits: [.[] | {_source: .}]}}' > opensearch_format.json
 ```
 
 ### Warning: Query filter returns no results
@@ -191,12 +164,12 @@ cat array.json | jq '{hits: {hits: [.[] | {_source: .}]}}' > opensearch_format.j
 WARNING: Query filter returned 0 alerts. Check filter syntax.
 ```
 
-**Cause**: OpenSearch query filter in scenario is too restrictive.
+**Cause**: OpenSearch `alert_filter` in scenario's `training:` section is too restrictive.
 
 **Solutions**:
 
 ```yaml
-# 1. Test query filter directly in OpenSearch
+# 1. Test the query filter directly in OpenSearch
 # Use Wazuh Dev Tools or curl:
 GET wazuh-alerts-*/_search
 {
@@ -210,16 +183,18 @@ GET wazuh-alerts-*/_search
 # Check "hits.total.value" - should be > 0
 
 # 2. Simplify filter temporarily
-query_filter:
-  match_all: {}  # Remove all filters to test
+training:
+  alert_filter:
+    match_all: {}  # Remove all filters to test
 
 # 3. Use should instead of must for broader matching
-query_filter:
-  bool:
-    should:  # At least one must match (OR logic)
-      - match: {"rule.groups": "authentication"}
-      - match: {"rule.groups": "sudo"}
-    minimum_should_match: 1
+training:
+  alert_filter:
+    bool:
+      should:  # At least one must match (OR logic)
+        - match: {"rule.groups": "authentication"}
+        - match: {"rule.groups": "sudo"}
+      minimum_should_match: 1
 
 # 4. Check field names match your alert structure
 # View sample alert:
@@ -257,26 +232,18 @@ training:
 
 ### Error: Model name conflict
 
-```
-FileExistsError: Model file already exists: ./models/my_model_v1.pkl
-```
+**Note:** SONAR does **not** raise an error on model name conflicts. `engine.save()` silently overwrites any existing model file with the same name.
 
-**Cause**: Attempting to overwrite existing model with same name.
-
-**Solutions**:
+If you want to preserve previous model versions:
 
 ```bash
 # 1. Use versioned model names in scenario
 model_name: "my_model_v2_20260125"  # Include version and date
 
-# 2. Remove old model if intentional overwrite
-rm ./models/my_model_v1.pkl
-poetry run sonar train --scenario my_scenario.yaml
-
-# 3. Use auto-generated names (omit model_name)
+# 2. Use auto-generated names (omit model_name)
 # SONAR generates unique names with timestamps
 
-# 4. Organize by environment
+# 3. Organize by environment
 model_name: "brute_force_production_baseline"
 model_name: "brute_force_staging_baseline"
 ```
@@ -314,9 +281,8 @@ INFO: Training on 5 features (expected more with derived_features=true)
 ```
 
 **Possible causes**:
-1. Derived features module not fully implemented yet
-2. Insufficient data for pattern detection
-3. Feature builder configuration
+1. Insufficient alerts matching the derived feature conditions in the training window
+2. `derived_features` disabled in configuration
 
 **Solutions**:
 
@@ -325,10 +291,9 @@ INFO: Training on 5 features (expected more with derived_features=true)
 training:
   derived_features: true  # Should be in training section
 
-# 2. Check if sufficient alerts for pattern detection
-# Derived features need minimum alert volume:
-# - At least 100+ alerts per bucket for diversity metrics
-# - Multiple agents/sources for cardinality features
+# 2. Check if sufficient alerts with matching rule groups
+# Derived features are boolean flags computed from rule.groups and numeric fields
+# (e.g., is_brute_force requires alerts with rule.groups containing 'brute_force')
 
 # 3. Explicitly disable if not needed
 training:
@@ -358,7 +323,7 @@ poetry run sonar train --lookback-hours 24
 poetry run sonar scenario --use-case scenarios/brute_force_detection.yaml
 
 # 3. Check model file exists
-ls -lh model/mvad_model.pkl
+ls -lh sonar/models/
 ```
 
 ### Error: No anomalies detected
@@ -518,12 +483,14 @@ training:
     - "rule.level"
 
 # Missing quotes around special characters
-query_filter:
-  match: {rule.groups: web}
+training:
+  alert_filter:
+    match: {rule.groups: web}
 
 # Quotes around field names
-query_filter:
-  match: {"rule.groups": "web"}
+training:
+  alert_filter:
+    match: {"rule.groups": "web"}
 ```
 
 **Validation:**
@@ -572,19 +539,7 @@ training:
 
 ### Issue: High memory usage
 
-**Solutions:**
-
-```yaml
-training:
-  # Reduce feature count
-  categorical_fields: []  # Start with none
-
-  # Use larger buckets
-  bucket_minutes: 15
-
-  # Shorter lookback
-  lookback_hours: 24  # Instead of 168
-```
+See [Error: Memory exhausted](#error-memory-exhausted) for parameter tuning.
 
 **Monitor:**
 
@@ -617,29 +572,35 @@ vim default_config.yaml  # Fix data_dir path
 ### Error: Test data has wrong format
 
 ```
-ValueError: Expected array of alerts, got single object
+ValueError: Unexpected JSON type in test_data.json
 ```
 
-**Cause:** Test data must be JSON array:
+**Cause:** Invalid JSON format or unrecognized structure.
+
+`LocalDataProvider` supports three formats automatically:
 
 ```json
-// Correct format
+// Format 1: JSON array (recommended)
 [
   {"timestamp": "...", "rule": {...}},
   {"timestamp": "...", "rule": {...}}
 ]
 
-// Wrong format
+// Format 2: Single object — also supported natively
 {"timestamp": "...", "rule": {...}}
+
+// Format 3: OpenSearch API response
+{"hits": {"hits": [{"_source": {"timestamp": "...", "rule": {...}}}]}}
 ```
 
-**Fix:**
+**Fix**: If you see this error, the file contains invalid JSON or a completely unrecognized structure:
 
-```json
-// Wrap single object in array
-[
-  {"timestamp": "...", "rule": {...}}
-]
+```bash
+# 1. Validate JSON syntax
+jq . test_data.json  # Should pretty-print without errors
+
+# 2. Inspect the structure
+cat test_data.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(type(d))"
 ```
 
 ## Getting help
@@ -682,13 +643,13 @@ poetry run sonar train --debug 2>&1 | tee debug.log
 
 ```bash
 # Run all tests
-poetry run pytest tests/ -v
+poetry run pytest tests/sonartests/ -v
 
 # Run specific test
-poetry run pytest tests/engine_test.py -v
+poetry run pytest tests/sonartests/test_engine_and_features.py -v
 
 # Check for regressions
-poetry run pytest tests/ --tb=short
+poetry run pytest tests/sonartests/ --tb=short
 ```
 
 ### Common log messages

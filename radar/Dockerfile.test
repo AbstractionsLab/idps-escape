@@ -3,11 +3,18 @@ FROM python:3.12-slim
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends bash ca-certificates bats  \
  && pip install --no-cache-dir pytest responses pyyaml requests \
+ && useradd -r -m -s /bin/bash testuser \
+ && mkdir -p /workspace \
+ && chown testuser:testuser /workspace \
+ && chmod 750 /workspace \
  && rm -rf /var/lib/apt/lists/*
+
+USER testuser
 
 WORKDIR /workspace
 ENTRYPOINT ["/bin/bash","-lc"]

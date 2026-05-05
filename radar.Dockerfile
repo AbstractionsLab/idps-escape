@@ -1,5 +1,4 @@
-
-FROM python:3.10.12
+FROM python:3.10.12-slim
 
 ARG MY_ENV
 
@@ -16,17 +15,17 @@ ENV user=alab
 ENV RADAR_FOLDAR=soar-radar
 
 # Update and install depencencies + Create a non-root user
-RUN apt update --fix-missing \
-  && apt-get install -y git graphviz \
-  && useradd -ms /bin/bash ${user} && echo '${user} ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers \
+RUN apt-get update --fix-missing \
+  && apt-get install -y --no-install-recommends git graphviz build-essential python3-dev \
+  && useradd -r -m -s /bin/bash ${user} \
   && rm -rf /var/lib/apt/lists/*
 
 # Install pipx
 # RUN pip3 install pipenv
 # Install Doorstop
-RUN python3 -m pip install pipx \
+RUN python3 -m pip install --no-cache-dir pipx \
   && python3 -m pipx ensurepath \
-  && pip3 install poetry=="${POETRY_VERSION}" \
+  && pip3 install --no-cache-dir poetry=="${POETRY_VERSION}" \
   && pipx install doorstop==3.0b10
 
 # Add location where pip is installed to the PATH variable
@@ -40,10 +39,10 @@ RUN pwd
 COPY --chown=${user}:${user} poetry.lock pyproject.toml /home/${user}/${RADAR_FOLDAR}/
 
 # Project initialization
-RUN poetry install --only radar
+RUN poetry install --only radar --no-root
 
 # Creating folders, and files for a project
-COPY . /home/${user}/${RADAR_FOLDAR}
+COPY --chown=${user}:${user} . /home/${user}/${RADAR_FOLDAR}
 
 # Set the container starting point, running the project as the user
 CMD ["poetry", "shell"]

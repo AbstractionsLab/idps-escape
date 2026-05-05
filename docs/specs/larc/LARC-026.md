@@ -275,8 +275,6 @@ else Action: User Lockout
   SYS --> SC: Success/Failure
 end
 
-SC -> OS: Log action to .radar-actions index
-
 SC --> AR: ActionResult(success, details)
 deactivate SC
 

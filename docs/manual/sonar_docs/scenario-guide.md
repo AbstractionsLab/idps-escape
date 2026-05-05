@@ -6,13 +6,6 @@ Complete guide to scenario-based anomaly detection with SONAR (SIEM-Oriented Neu
 
 SONAR uses **YAML-based scenarios** to define complete anomaly detection workflows. Each scenario specifies what data to analyze, how to train models, and how to detect anomalies.
 
-### Key benefits
-
-- **Reproducible**: Version control scenario definitions
-- **Flexible**: Training-only, detection-only, or combined workflows
-- **Reusable**: Share scenarios across teams and environments
-- **Maintainable**: Centralized detection logic
-
 ## Scenario structure
 
 ### Complete scenario template
@@ -24,15 +17,6 @@ enabled: true
 
 # Optional: Custom model name for saving/loading
 model_name: "my_scenario_baseline_v1"  # Auto-generated if omitted
-
-# Optional: OpenSearch query filter to limit processed alerts
-# NOTE: This feature is planned but not yet implemented
-# query_filter:
-#   bool:
-#     should:
-#       - match: {"rule.groups": "authentication"}
-#       - match: {"rule.groups": "sudo"}
-#     # Also supports: must, must_not, filter for complex queries
 
 # Training phase (optional)
 training:
@@ -49,6 +33,12 @@ training:
   device: "cpu"
   derived_features: true  # Enable computed security features
   extra_params: {}
+  # Optional: restrict which alerts are fetched from OpenSearch
+  alert_filter:
+    bool:
+      should:
+        - match: {"rule.groups": "authentication"}
+        - match: {"rule.groups": "sudo"}
 
 # Optional: Data shipping configuration (for production)
 shipping:
@@ -74,7 +64,6 @@ detection:
 
 - `enabled`: Enable/disable scenario (default: true)
 - `model_name`: Custom model filename for saving/loading (auto-generated if omitted)
-- `query_filter`: OpenSearch query DSL to filter alerts before processing (**Planned feature - not yet implemented**)
 - `training`: Training phase configuration
 - `detection`: Detection phase configuration
 - `shipping`: Data shipping configuration for production deployments
@@ -97,31 +86,28 @@ model_name: "brute_force_baseline_v2_20260125"
 - `{scenario}_{environment}`: `auth_anomaly_production`
 - `{scenario}_{datasource}`: `lateral_movement_dc1`
 
-#### query_filter
+#### alert_filter
 
-**Status: Planned feature - not yet implemented in current version**
-
-OpenSearch query DSL to pre-filter alerts before feature extraction:
+OpenSearch query DSL placed under the `training:` section to pre-filter alerts before feature extraction:
 
 ```yaml
-# query_filter:  # Commented out until implemented
-#   bool:
-#     must:
-#       - match: {"rule.groups": "authentication"}
-#     should:
-#       - match: {"rule.groups": "sudo"}
-#       - match: {"rule.groups": "ssh"}
-#     must_not:
-#       - match: {"agent.name": "test-agent"}
+training:
+  alert_filter:
+    bool:
+      must:
+        - match: {"rule.groups": "authentication"}
+      should:
+        - match: {"rule.groups": "sudo"}
+        - match: {"rule.groups": "ssh"}
+      must_not:
+        - match: {"agent.name": "test-agent"}
 ```
 
-**Planned use cases**:
+**Use cases**:
 - Limit to specific rule groups (authentication, web, network)
 - Exclude test/development agents
 - Focus on high-severity alerts only: `{"range": {"rule.level": {"gte": 7}}}`
 - Filter by attack techniques: `{"match": {"rule.mitre.technique": "T1078"}}`
-
-**Note**: Currently, alerts are processed from all indices matching the pattern. Use scenario-specific models for focused detection.
 
 #### shipping
 
@@ -150,82 +136,6 @@ The scenario system automatically determines execution based on YAML sections:
 | `training` + `detection` | Train → Detect (batch) | Full workflow with fresh model |
 | `training` only | Train (save model) | Establish baseline, no detection |
 | `detection` only | Detect (load model) | Ad-hoc investigation with existing model |
-
-### Example: Full workflow
-
-```yaml
-name: "Brute Force Detection"
-description: "Detect authentication attack patterns"
-enabled: true
-
-training:
-  lookback_hours: 168  # 1 week baseline
-  numeric_fields: ["rule.level"]
-  categorical_fields: ["agent.id", "rule.groups"]
-  bucket_minutes: 5
-  sliding_window: 200
-
-detection:
-  mode: "batch"
-  lookback_minutes: 60
-  threshold: 0.7
-```
-
-Execution:
-```bash
-poetry run sonar scenario --use-case brute_force_detection.yaml
-```
-
-Output:
-```
-Phase 1: Training model on 168 hours of data...
-✓ Training complete. Model saved to ./model/mvad_model.pkl
-
-Phase 2: Running detection on last 60 minutes...
-✓ Detection complete. Found 3 anomalies.
-```
-
-### Example: Training only
-
-```yaml
-name: "Weekly Baseline"
-description: "Establish detection baseline (no immediate detection)"
-enabled: true
-
-training:
-  lookback_hours: 336  # 2 weeks
-  numeric_fields: ["rule.level"]
-  categorical_fields: ["agent.id"]
-  bucket_minutes: 10
-  sliding_window: 250
-```
-
-Execution:
-```bash
-poetry run sonar scenario --use-case weekly_baseline.yaml
-```
-
-Use case: Scheduled weekly retraining via cron without immediate detection.
-
-### Example: Detection only
-
-```yaml
-name: "Ad-hoc Investigation"
-description: "Investigate recent activity with existing model"
-enabled: true
-
-detection:
-  mode: "historical"
-  lookback_minutes: 120
-  threshold: 0.75
-```
-
-Execution:
-```bash
-poetry run sonar scenario --use-case adhoc_investigation.yaml
-```
-
-Use case: Quick investigation using pre-trained model from baseline.
 
 ## Detection modes
 
@@ -395,21 +305,27 @@ training:
 
 **What are derived features?**
 
-Instead of just raw alert fields (e.g., `rule.level`), SONAR computes additional features:
-- **Alert frequency patterns**: Sudden spikes or drops in alert rate
-- **Severity trends**: Changes in average alert severity over time
-- **Source diversity**: Unique source IPs, users, or hosts per bucket
-- **Temporal patterns**: Hour-of-day, day-of-week encoding
+SOAR computes boolean indicator columns from alert rule groups and data fields. These are appended to the numeric feature matrix alongside raw fields:
+
+| Feature | Condition |
+|---------|----------|
+| `is_auth_failure` | Rule groups include `failed_login` / `authentication_failed` |
+| `is_auth_success` | Rule groups include `authentication_success` / `session_opened` |
+| `is_brute_force` | Rule groups include `brute_force` |
+| `is_privilege_event` | Rule groups include `sudo` / `privilege_escalation` / `account_changed` |
+| `is_high_severity` | `rule.level >= 10` |
+| `is_critical_severity` | `rule.level >= 12` |
+| `is_ssh_event` | Rule groups include `ssh` / `sshd` |
+| `is_windows_logon` | Rule groups include `windows_logon` / `win_logon` |
+| `is_cpu_high` | `data.cpu_usage_% >= 80` |
+| `is_cpu_critical` | `data.cpu_usage_% >= 95` |
+| `is_memory_high` | `data.memory_usage_% >= 80` |
+| `is_memory_critical` | `data.memory_usage_% >= 95` |
+| `is_high_load` | `data.1min_loadAverage >= 4.0` |
 
 **When to use**:
-- Enable (default): Most security scenarios benefit from derived features
-- Disable: Only when analyzing simple numeric metrics (CPU, memory) where raw values are sufficient
-
-**Example**: For authentication monitoring:
-- Raw: `rule.level = 5`
-- Derived: `auth_failures_per_minute = 15`, `unique_srcip_count = 8`, `hour_of_day_encoded = 0.75`
-
-**Impact**: Adds ~5-10 computed columns to feature set, improves detection of complex attack patterns.
+- Enable (default): All security attack scenarios; captures event type transitions
+- Disable: Only when analyzing pure numeric metrics where raw values are sufficient and the boolean flags add noise
 
 ## Detection parameters
 
@@ -461,53 +377,57 @@ detection:
 
 Reduces false positives by requiring sustained anomalies.
 
-## Query filters
+## Query filters (alert_filter)
 
-Filter which alerts to analyze using OpenSearch query DSL:
+Filter which alerts are fetched using OpenSearch query DSL. Place `alert_filter` inside the `training:` section:
 
 ### Authentication events only
 
 ```yaml
-query_filter:
-  bool:
-    should:
-      - match: {"rule.groups": "authentication"}
-      - match: {"rule.groups": "sudo"}
+training:
+  alert_filter:
+    bool:
+      should:
+        - match: {"rule.groups": "authentication"}
+        - match: {"rule.groups": "sudo"}
 ```
 
 ### Specific agents
 
 ```yaml
-query_filter:
-  bool:
-    must:
-      - terms:
-          agent.id: ["001", "002", "003"]
+training:
+  alert_filter:
+    bool:
+      must:
+        - terms:
+            agent.id: ["001", "002", "003"]
 ```
 
 ### High-severity alerts
 
 ```yaml
-query_filter:
-  range:
-    rule.level:
-      gte: 10
+training:
+  alert_filter:
+    range:
+      rule.level:
+        gte: 10
 ```
 
 ### Complex filters
 
 ```yaml
-query_filter:
-  bool:
-    must:
-      - range:
-          rule.level:
-            gte: 5
-    should:
-      - match: {"rule.groups": "web"}
-      - match: {"rule.groups": "attack"}
-    must_not:
-      - match: {"agent.name": "test-agent"}
+training:
+  alert_filter:
+    bool:
+      must:
+        - range:
+            rule.level:
+              gte: 5
+      should:
+        - match: {"rule.groups": "web"}
+        - match: {"rule.groups": "attack"}
+      must_not:
+        - match: {"agent.name": "test-agent"}
 ```
 
 ## Built-in scenarios
@@ -518,58 +438,11 @@ SONAR includes ready-to-use scenarios in `sonar/scenarios/` (from project root):
 
 **File**: `sonar/scenarios/brute_force_detection.yaml`
 
-```yaml
-name: "Brute Force Detection"
-description: "Detect authentication attack patterns"
-enabled: true
-
-query_filter:
-  bool:
-    should:
-      - match: {"rule.groups": "authentication"}
-
-training:
-  lookback_hours: 168
-  numeric_fields: ["rule.level"]
-  categorical_fields: ["agent.id", "rule.groups"]
-  bucket_minutes: 5
-  sliding_window: 200
-
-detection:
-  mode: "historical"
-  lookback_minutes: 60
-  threshold: 0.7
-```
-
 **Use case**: Detect unusual authentication patterns indicating brute force attacks.
 
 ### Lateral movement detection
 
 **File**: `sonar/scenarios/lateral_movement_detection.yaml`
-
-```yaml
-name: "Lateral Movement Detection"
-description: "Detect lateral movement via authentication patterns"
-enabled: true
-
-query_filter:
-  bool:
-    should:
-      - match: {"rule.groups": "authentication"}
-      - match: {"rule.groups": "ssh"}
-
-training:
-  lookback_hours: 336  # 2 weeks
-  numeric_fields: ["rule.level"]
-  categorical_fields: ["agent.id", "data.srcip"]
-  bucket_minutes: 10
-  sliding_window: 250
-
-detection:
-  mode: "batch"
-  lookback_minutes: 120
-  threshold: 0.75
-```
 
 **Use case**: Identify unusual cross-host authentication patterns.
 
@@ -577,67 +450,11 @@ detection:
 
 **File**: `sonar/scenarios/privilege_escalation_detection.yaml`
 
-```yaml
-name: "Privilege Escalation Detection"
-description: "Monitor privilege escalation attempts"
-enabled: true
-
-query_filter:
-  bool:
-    should:
-      - match: {"rule.groups": "sudo"}
-      - match: {"rule.groups": "privilege_escalation"}
-
-training:
-  lookback_hours: 168
-  numeric_fields: ["rule.level"]
-  categorical_fields: ["agent.id", "data.command"]
-  categorical_top_k: 15
-  bucket_minutes: 15
-  sliding_window: 150
-
-detection:
-  mode: "historical"
-  lookback_minutes: 60
-  threshold: 0.8
-```
-
 **Use case**: Detect unusual privilege escalation attempts via sudo/su.
 
 ### Linux resource monitoring
 
 **File**: `sonar/scenarios/linux_resource_monitoring.yaml`
-
-```yaml
-name: "Linux Resource Monitoring"
-description: "Detect resource exhaustion and abnormal usage"
-enabled: true
-
-query_filter:
-  bool:
-    should:
-      - match: {"rule.groups": "syslog"}
-      - match: {"rule.groups": "performance"}
-
-training:
-  lookback_hours: 24
-  numeric_fields:
-    - "data.cpu_usage_%"
-    - "data.memory_usage_%"
-    - "rule.level"
-  categorical_fields:
-    - "agent.name"
-    - "rule.groups"
-  categorical_top_k: 10
-  bucket_minutes: 1
-  sliding_window: 300
-  device: "cpu"
-
-detection:
-  mode: "batch"
-  lookback_minutes: 10
-  threshold: 0.85
-```
 
 **Use case**: Identify CPU spikes, memory leaks, fork bombs, resource exhaustion.
 
@@ -649,7 +466,7 @@ Maintain fresh baseline with weekly retraining:
 
 ```bash
 # Crontab entry: Every Sunday at 2 AM
-0 2 * * 0 cd /home/alab/soar && poetry run sonar scenario --use-case scenarios/brute_force_detection.yaml
+0 2 * * 0 cd /home/alab/soar && poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml
 ```
 
 Scenario should include only `training:` section to update model without immediate detection.
@@ -717,10 +534,10 @@ Run multiple scenarios for comprehensive coverage:
 #!/bin/bash
 # monitor_all.sh
 
-poetry run sonar scenario --use-case scenarios/brute_force_detection.yaml
-poetry run sonar scenario --use-case scenarios/lateral_movement_detection.yaml
-poetry run sonar scenario --use-case scenarios/privilege_escalation_detection.yaml
-poetry run sonar scenario --use-case scenarios/linux_resource_monitoring.yaml
+poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml
+poetry run sonar scenario --use-case sonar/scenarios/lateral_movement_detection.yaml
+poetry run sonar scenario --use-case sonar/scenarios/privilege_escalation_detection.yaml
+poetry run sonar scenario --use-case sonar/scenarios/linux_resource_monitoring.yaml
 ```
 
 Schedule via cron:
@@ -744,7 +561,7 @@ Ensure debug configuration points to appropriate test data:
 ```yaml
 debug:
   enabled: true
-  data_dir: "./test_data/resource_monitoring"
+  data_dir: "sonar/test_data/resource_monitoring"
   training_data_file: "resource_monitoring_training.json"
   detection_data_file: "resource_monitoring_detection.json"
 ```
@@ -767,7 +584,7 @@ Before deploying scenarios:
 - Verify: Check logs for feature count details
 
 **Empty training data**:
-- Solution: Extend `lookback_hours` or adjust `query_filter`
+- Solution: Extend `lookback_hours` or add/adjust `alert_filter` under `training:`
 - Verify: Check alert count in logs
 
 **Too many features**:
@@ -783,9 +600,3 @@ Before deploying scenarios:
 5. **Monitor performance**: Track training/detection times
 6. **Regular retraining**: Update baselines weekly or monthly
 7. **Test before production**: Always validate with debug mode first
-
-## Next steps
-
-- Review [setup-guide.md](./setup-guide.md) for installation details
-- See [architecture.md](./architecture.md) for system design
-- Check [troubleshooting.md](./troubleshooting.md) for error resolution

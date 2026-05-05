@@ -20,6 +20,8 @@ def test_geoip_detection_writes_one_line(tmp_path):
     common.load_config = lambda: {
         "common": {"timezone_offset": "+01:00", "hostname": "edge.vm"},
         "geoip_detection": {
+            "timezone_offset": "+01:00",
+            "hostname": "edge.vm",
             "log_path": str(tmp_path / "auth.log"),
             "sudo_tee": False,
             "user": "test01",
@@ -29,6 +31,7 @@ def test_geoip_detection_writes_one_line(tmp_path):
             "key_fingerprint_success": "ED25519 SHA256:XXX",
         },
     }
+    common.get_scenario_simulate = lambda cfg, scenario: cfg[scenario]
     common.detect_authlog_timestamp_format = lambda ts, tz, auth_path: "Feb 17 12:00:04"
     common.append_line_authlog = lambda line, path, sudo_tee: calls.append((line, path, sudo_tee))
 

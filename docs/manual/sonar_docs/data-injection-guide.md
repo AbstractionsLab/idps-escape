@@ -208,18 +208,7 @@ wazuh:
 
 ## Best practices
 
-### 1. Always dry-run first
-
-```bash
-poetry run python inject_wazuh_data.py --hours 24 --dry-run
-```
-
-Preview shows:
-- How many alerts will be indexed
-- Which indices will be targeted
-- Time range adjustments
-
-### 2. Match scenario requirements
+### 1. Match scenario requirements
 
 For SONAR scenarios with 5-minute buckets:
 - **Minimum**: 1000 minutes (16.7 hours) = 200 time points
@@ -236,19 +225,7 @@ poetry run python inject_wazuh_data.py --days 7
 poetry run python inject_wazuh_data.py --days 14
 ```
 
-### 3. Separate training and detection data
-
-```bash
-# Phase 1: Train on normal baseline
-poetry run python inject_wazuh_data.py --days 14 --source generated_scenarios/normal_training.json
-poetry run sonar train --scenario scenarios/brute_force_detection.yaml
-
-# Phase 2: Inject attack data
-poetry run python inject_wazuh_data.py --hours 48 --source generated_scenarios/attack_scenarios.json
-poetry run sonar detect --scenario scenarios/brute_force_detection.yaml
-```
-
-### 4. Clean old data between tests
+### 2. Clean old data between tests
 
 ```bash
 # Delete old test indices (CAUTION: Deletes data!)
@@ -258,7 +235,7 @@ curl -k -u admin:admin -X DELETE "https://localhost:9200/wazuh-alerts-4.x-2025.1
 curl -k -u admin:admin -X DELETE "https://localhost:9200/wazuh-alerts-4.x-2025.12.30"
 ```
 
-### 5. Tune bulk size for performance
+### 3. Tune bulk size for performance
 
 ```bash
 # Small Wazuh instances (< 4GB RAM)
@@ -266,45 +243,6 @@ poetry run python inject_wazuh_data.py --hours 24 --bulk-size 500
 
 # Large instances (8GB+ RAM)
 poetry run python inject_wazuh_data.py --hours 24 --bulk-size 5000
-```
-
-## Complete workflow example
-
-```bash
-# 1. Generate fresh attack scenarios
-cd /home/alab/soar/sonar/test_data
-python generate_attack_data.py
-
-# 2. Preview injection (dry run)
-poetry run python inject_wazuh_data.py --days 14 \
-  --source generated_scenarios/normal_training.json \
-  --dry-run
-
-# 3. Inject training data
-poetry run python inject_wazuh_data.py --days 14 \
-  --source generated_scenarios/normal_training.json
-
-# 4. Wait for indexing to complete
-sleep 10
-
-# 5. Verify data was indexed
-curl -k -u admin:admin "https://localhost:9200/wazuh-alerts-*/_count"
-
-# 6. Train SONAR (production mode)
-cd /home/alab/soar/sonar
-poetry run sonar train --scenario scenarios/brute_force_detection.yaml
-
-# 7. Inject attack data
-cd test_data
-poetry run python inject_wazuh_data.py --hours 48 \
-  --source generated_scenarios/attack_scenarios.json
-
-# 8. Run detection
-cd /home/alab/soar/sonar
-poetry run sonar detect --scenario scenarios/brute_force_detection.yaml
-
-# 9. Check for anomalies
-curl -k -u admin:admin "https://localhost:9200/wazuh-anomalies-mvad/_search?size=10&pretty"
 ```
 
 ## Technical details

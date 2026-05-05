@@ -35,3 +35,8 @@ poetry run python ./SpecEngine/c5publish.py --linkify-only
 
 # Generate interactive Cytoscape.js traceability graph
 poetry run python ./SpecEngine/c5graph.py
+
+# Recompute references content fingerprints for dependency impact analysis.
+# Items whose referenced files have changed since the last run are flagged as
+# [STALE]; their stored fingerprint is updated in-place.
+poetry run python ./SpecEngine/c5fingerprint.py

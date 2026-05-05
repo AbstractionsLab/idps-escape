@@ -55,7 +55,7 @@ systemctl restart wazuh-agent
 #### Manager-side configuration
 
 1. Copy the files in `/radar/scenarios/decoders/log_volume` into the `/var/ossec/etc/decoders/`
-2. Copy the files in `/radar/scenarios/decoders/log_volume` into the `/var/ossec/etc/rules/`
+2. Copy the files in `/radar/scenarios/rules/log_volume` into the `/var/ossec/etc/rules/`
 3. Configure active response scripts.
 ```
 cp /radar/scenarios/active_responses/radar_ar.py /var/ossec/active-response/bin/radar_ar.py
@@ -72,12 +72,12 @@ chown root:wazuh /var/ossec/active-response/bin/radar_ar.py
 
 ##### Create the Anomaly Detector
 
-1. Ensure that `data.log_bytes` in index `wazuh-archives-*` is a numerical field in **Index Management** Menu.
+1. Ensure that `data.log_bytes` in index `wazuh-ad-log-volume-*` is a numerical field in **Index Management** Menu.
 2. **Navigate** in Wazuh Dashboards to **OpenSearch Plugins ➔ Anomaly Detection**.
 3. Click **Create detector** and fill out:
     - **Name:** `log_volume-detector`
-    - **Description:** “Monitor per-user login”
-    - **Index:** `wazuh-archives-*`
+    - **Description:** “Monitor log volume per endpoint”
+    - **Index:** `wazuh-ad-log-volume-*`
     - **Time field:** `@timestamp`
     - **Detection interval:** `5m` (with `1m` window delay)
     - **Detector type:** Real-time (continuous)

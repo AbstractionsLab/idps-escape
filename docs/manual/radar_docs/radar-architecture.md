@@ -96,13 +96,6 @@ RADAR supports multi-node Wazuh deployments for high availability and scalabilit
    - Ansible playbooks handle replication of decoders, rules, and configurations across all nodes
    - Anomaly detectors and monitors are created once in Opensearch (shared across cluster)
 
-### Benefits of multi-node deployment
-
-- **High availability**: Service continues if one manager node fails
-- **Load distribution**: Incoming logs are load-balanced across manager nodes
-- **Scalability**: Add nodes to handle increased log volume
-- **Resilience**: Maintains detection and response even during node maintenance
-
 ## Module Structure
 
 ### Wazuh Agent Module
@@ -249,8 +242,6 @@ The webhook service is automatically bootstrapped during manager deployment via 
 - `webhook/` directory: Application code and dependencies
 
 **Automatic restart**: The webhook container is configured to restart automatically if it crashes, ensuring continuous availability of the notification endpoint.
-
-#### Webhook failover behavior
 
 
 ### RADAR Controller/Orchestrator Module
@@ -488,27 +479,12 @@ Defines the `radar-cli` container used by `run-radar.sh`:
 - Dependencies: `requests`, `PyYAML`
 
 
-##### Supporting Tools
+##### DECIPHER Integration
 
-**radar-cli**
-- Python-based CLI container
-- Interacts with Opensearch API for detector/monitor management
-- Scripts: `detector.py`, `monitor.py`, `webhook.py`, `wazuh_ingest.py`
-
-**Docker Compose**
-- Container orchestration for Wazuh stack
-- Volume mounts for configuration and data persistence
-
-**Ansible**
-- Automated configuration management
-- Idempotent playbook execution
-- Encrypted credential storage (Ansible Vault)
-
-**DECIPHER**
-- RADAR estimates CTI score via DECIPHER analyze endpoint
+- RADAR estimates CTI score via the DECIPHER analyze endpoint
 - RADAR creates FlowIntel cases via the DECIPHER incident endpoint
 - Configuration via `DECIPHER_*` environment variables in `.env`
-- Deployment guide - [DECIPHER deployment (Flowintel setup)](https://github.com/AbstractionsLab/satrap-dl/tree/main/deployment)
+- Deployment guide: [DECIPHER deployment (Flowintel setup)](https://github.com/AbstractionsLab/satrap-dl/tree/main/deployment)
 
 
 ## Data Flow
@@ -652,104 +628,6 @@ sequenceDiagram
 23. Manager executes action
 25. Action logged for audit
 
-## Configuration System
-
-### Centralized Configuration (config.yaml)
-
-The `config.yaml` file serves as the single source of truth for all scenario configurations.
-
-**Key Sections**:
-- **indices**: OpenSearch index patterns for data source
-- **time_field**: Timestamp field for temporal analysis
-- **category_field**: Entity field for per-entity baselines (UEBA)
-- **features**: Fields to extract and analyze, with aggregation methods
-- **detector**: RCF parameters (shingle size, detection interval)
-- **monitor**: Alerting thresholds and severity levels
-- **webhook**: Notification endpoint configuration
-
-
-### Risk-Aware Active Response Configuration
-
-The `ar.yaml` file configures the risk-based active response system for each scenario. This file is located at the path specified by the `AR_RISK_CONFIG` environment variable in `.env` (default: `ar.yaml` in the Wazuh manager's active response directory).
-
-**Key Configuration Parameters**:
-
-| Parameter | Description | Example Values |
-|-----------|-------------|----------------|
-| `ad.rule_ids` | Rule IDs from ML-based anomaly detection | `["100021", "100309"]` |
-| `signature.rule_ids` | Rule IDs from signature-based detection | `["210012", "210013"]` |
-| `w_ad` | Weight for anomaly detection in risk score (0.0-1.0) | `0.3` for 30% weight |
-| `w_sig` | Weight for signature-based detection in risk score (0.0-1.0) | `0.4` for 40% weight |
-| `w_cti` | Weight for cyber threat intelligence in risk score (0.0-1.0) | `0.3` for 30% weight |
-| `delta_ad_minutes` | Time window for AD alerts correlation (minutes) | `10` |
-| `delta_signature_minutes` | Time window for signature alerts correlation (minutes) | `1` |
-| `signature_impact` | Impact score for signature detections (0.0-1.0) | `0.7` |
-| `signature_likelihood` | Likelihood score for signature detections (0.0-1.0) or weighted rules | `0.8` or rule-specific weights |
-| `tiers.tier1_min` | Minimum risk score to enter Tier 1; scores below fall into Tier 0 (0.0-1.0) | `0.0` |
-| `tiers.tier1_max` | Maximum risk score for Tier 1 (0.0-1.0) | `0.33` |
-| `tiers.tier2_max` | Maximum risk score for Tier 2 (0.0-1.0) | `0.66` |
-| `mitigations_tier2` | List of mild/reversible active response actions executed at Tier 2 | `["firewall-drop"]` |
-| `mitigations_tier3` | List of harsh/permanent active response actions executed at Tier 3 | `["firewall-drop", "lock_user_linux.sh"]` |
-| `allow_mitigation` | Whether to execute automated mitigations at Tier 2 and Tier 3 | `true` or `false` |
-
-
-### Environment Variables (.env)
-
-Connection details and credentials stored securely:
-
-```
-OS_URL=https://OS_IP:9200
-OS_USER=admin
-OS_PASS=SecretPassword
-WAZUH_API_URL=https://WAZUH_IP:55000
-WAZUH_AGENT_VERSION=4.14.1-1
-DASHBOARD_URL=https://DASHBOARD_IP 
-WEBHOOK_URL=http://WEBHOOK_IP:8080/notify
-AR_RISK_CONFIG=/var/ossec/active-response/bin/ar.yaml
-AR_LOG_FILE=/var/ossec/logs/active-responses.log
-DECIPHER_BASE_URL=http://DECIPHER_IP:8000
-DECIPHER_VERIFY_SSL=false
-DECIPHER_TIMEOUT_SEC=30
-SMTP_HOST=SMTP_HOST
-SMTP_PORT=SMTP_PORT
-SMTP_USER=SMTP_USER
-SMTP_PASS=SMTP_PASS
-```
-
-### Ansible Inventory (inventory.yaml)
-
-Remote host definitions for distributed deployments:
-
-```yaml
-all:
-  children:
-    wazuh_manager_ssh:
-      hosts:
-        manager-node:
-          ansible_host: 192.168.5.10
-          ansible_user: linuxuser
-    
-    wazuh_agents_ssh:
-      hosts:
-        agent-node-1:
-          ansible_host: 192.168.5.20
-          ansible_user: linuxuser
-        agent-node-2:
-          ansible_host: 192.168.5.21
-          ansible_user: linuxuser
-```
-
-### Ansible Vault (host_vars/)
-
-Encrypted credentials for remote access:
-
-```bash
-# Create vault for host
-ansible-vault create host_vars/edge.vm.yml
-
-# Content (encrypted):
-ansible_become_password: sudo_password_here
-```
 
 ## Scenario-Based Execution
 

@@ -256,121 +256,28 @@ We define a minimal normalized CTI contract:
 
 ## Risk Engine
 
-The risk engine combines anomaly detection, signature-based detection, and CTI indicators into a normalized risk score ∈ [0, 1]. See [radar-risk-math.md](radar-risk-math.md) for complete mathematical specification.
+The risk engine combines anomaly detection, signature-based detection, and CTI indicators into a normalized risk score ∈ [0, 1]. The system is fully documented in [radar-risk-math.md](radar-risk-math.md), which provides:
 
-### Unified Risk Formula
+- Complete mathematical specification of the unified risk formula
+- Inputs (RRCF anomaly scores, signature likelihood/impact, CTI flags)
+- Risk aggregation algorithm and weights
+- Concrete calculation examples with step-by-step walkthrough
+- Tiering thresholds and response mapping
+- Future enhancements (see [radar-risk-engine-roadmap.md](radar-risk-engine-roadmap.md))
 
-$$
-R = w_A \cdot A + w_S \cdot S + w_T \cdot T
-$$
-
-where A = G×C (anomaly intensity), S = L×I (signature risk), T = CTI score, and weights satisfy w_A + w_S + w_T = 1.
-
-**Scenario weight configurations** (from ar.yaml):
-
-- **geoip_detection**: w_A=0.0, w_S=0.6, w_T=0.4 (signature-focused)
-- **suspicious_login**: w_A=0.3, w_S=0.4, w_T=0.3 (hybrid)
-- **log_volume**: w_A=0.9, w_S=0.0, w_T=0.1 (AD-focused)
-
----
-
-### Signature Likelihood Configuration
-
-The likelihood value can be configured in two ways:
-
-**Scalar mode** (single value for all rules in scenario):
-```yaml
-signature_likelihood: 0.8
-```
-
-**List mode** (rule-based mapping for fine-grained control):
-```yaml
-signature_likelihood:
-  - rule_id: [210012, 210013]
-    weight: 0.5
-  - rule_id: [210020, 210021]
-    weight: 0.7
-```
-
-If no match is found in list mode, likelihood defaults to 0.0.
-
-### CTI Score Calculation
-
-CTI indicators are aggregated using the formula T = 1 - ∏(1 - w_i) with hardcoded weights (IP: 0.6, Domain: 0.4, Hash: 0.7, User: 0.5). See [radar-risk-math.md](radar-risk-math.md#cti-subsystem) for detailed specification and examples.
-
----
-
-### Risk Components Breakdown
-
-The risk engine returns detailed component information for explainability:
-
-```python
-{
-  "risk_score": 0.4795,
-  "tier": 2,
-  "components": {
-    "anomaly_component": 0.1835,     # w_A × A
-    "anomaly_intensity_A": 0.4588,   # G × C
-    "signature_component": 0.144,    # w_S × S
-    "signature_risk_S": 0.36,        # L × I
-    "cti_component": 0.152,          # w_T × T
-    "cti_score_T": 0.76,
-    # ... plus individual G, C, L, I values
-  }
-}
-```
-
-For complete calculation examples, see [radar-risk-math.md](radar-risk-math.md#concrete-example-calculation).
+**Scenario-specific configurations** are stored in `ar.yaml` and define the weights (w_A, w_S, w_T) for each scenario. For implementation details of how risk is calculated in the active response script, continue reading the [Action Planning](#action-planning) and [Action Execution](#action-execution) sections below.
 
 ---
 
 ## Tiering
 
-The system implements a four-tier response framework. Default boundaries (configurable in `ar.yaml` per scenario):
-- **tier1_min**: 0.0 (scores below this fall into Tier 0)
-- **tier1_max**: 0.33
-- **tier2_max**: 0.66
+The system implements a four-tier response framework based on the risk score calculated above. Tier boundaries and actions are fully documented in [radar-risk-math.md - Tiering the risk score](radar-risk-math.md#tiering-the-risk-score), which specifies:
 
-### Tier 0: Below Threshold
-**Threshold:** `R < tier1_min`
+- Default thresholds for each tier (configurable per scenario in `ar.yaml`)
+- Mapping of risk scores to response actions
+- Examples showing how tiers affect automated response execution
 
-**Actions:**
-- Audit log entry only
-
-**Rationale:** Risk score too low to warrant any notification or action.
-
-### Tier 1: Low Risk
-**Threshold:** `tier1_min ≤ R < tier1_max`
-
-**Mandatory Actions:**
-- Email notification to security operations team
-- FlowIntel case creation via DECIPHER incident endpoint
-
-**Rationale:** Low-risk events require awareness and tracking but do not warrant automated remediation.
-
-### Tier 2: Medium Risk
-**Threshold:** `tier1_max ≤ R < tier2_max`
-
-**Mandatory Actions:**
-- Email notification to security operations team
-- FlowIntel case creation via DECIPHER incident endpoint
-
-**Optional Mitigations** (if `allow_mitigation: true` and `mitigations_tier2` is non-empty):
-  - GeoIP: `firewall-drop` (with timeout)
-  - Log volume: notify only (no `mitigations_tier2` entries)
-  - Suspicious login: `firewall-drop`
-
-### Tier 3: High Risk
-**Threshold:** `tier2_max ≤ R ≤ 1.0`
-
-**Mandatory Actions:**
-- Email notification to security operations team
-- FlowIntel case creation via DECIPHER incident endpoint
-
-**Mitigation Actions** (if `allow_mitigation: true`):
-- GeoIP: `firewall-drop`
-- Suspicious login: `firewall-drop` + `lock_user_linux.sh`
-- Log volume: `terminate_service.sh`
+**Scenario-specific mitigations** (available actions per tier) are configured in `ar.yaml` under each scenario's `mitigations_tier2` and `mitigations_tier3` lists. Actions are only executed when `allow_mitigation: true` is set for the scenario.
 
 ---
 
@@ -469,26 +376,6 @@ Authorization: Bearer {token}
 - Failure: Log error, return error details in result dict
 - Timeout: Controlled by `WAZUH_TIMEOUT_SEC` (default: 30s)
 
-### Execution Results Structure
-
-```python
-{
-  "mitigations": [
-    {
-      "command": "firewall-drop",
-      "agent_id": "001",
-      "args": ["203.0.113.42"],
-      "result": {...}  # Wazuh API response
-    },
-    {
-      "command": "lock_user_linux.sh",
-      "agent_id": "001",
-      "args": ["admin"],
-      "error": "Wazuh API timeout"
-    }
-  ]
-}
-```
 
 ---
 
@@ -587,51 +474,17 @@ All logs use structured JSON format written to `/var/ossec/logs/active-responses
 
 ### Error Handling Strategies
 
-#### 1. Input Validation Errors
-**Scenario**: Invalid or missing alert JSON from stdin
-- **Action**: Log ERROR and exit with code 1
-- **Recovery**: None (wait for next alert)
-
-#### 2. Configuration Errors
-**Scenario**: Missing or invalid `ar.yaml`
-- **Action**: Log ERROR with file path
-- **Recovery**: None (requires manual fix)
-
-#### 3. External Service Failures
-
-**OpenSearch Connection:**
-- **Scenario**: Cannot connect to OpenSearch
-- **Action**: Log ERROR during initialization
-- **Recovery**: Script continues but context collection will fail
-
-**Wazuh API:**
-- **Scenario**: API timeout or authentication failure
-- **Action**: Log ERROR, use fallback agent ID from alert
-- **Recovery**: Partial degradation (may target wrong agent)
-
-**DECIPHER/CTI:**
-- **Scenario**: DECIPHER service unavailable
-- **Action**: Log WARNING, set CTI score to 0, skip FlowIntel case creation
-- **Recovery**: Risk calculation uses only AD + signature components
-
-**Email/SMTP:**
-- **Scenario**: SMTP connection failure
-- **Action**: Log ERROR with SMTP details
-- **Recovery**: Continue with other actions (DECIPHER, mitigations)
-
-**DECIPHER / FlowIntel:**
-- **Scenario**: Incident creation API error
-- **Action**: Log ERROR with API response
-- **Recovery**: Continue with other actions (email, mitigations)
-
-#### 4. Mitigation Execution Errors
-**Scenario**: Missing IOCs for command arguments
-- **Action**: Log ERROR, skip mitigation
-- **Recovery**: Continue with other planned mitigations
-
-**Scenario**: Wazuh Active Response dispatch fails
-- **Action**: Log ERROR with command details, capture error in results
-- **Recovery**: Continue with other planned mitigations
+| Failure | Action | Recovery |
+|---------|--------|----------|
+| Invalid or missing alert JSON from stdin | Log ERROR, exit code 1 | Wait for next alert |
+| Missing or invalid `ar.yaml` | Log ERROR with file path | Manual fix required |
+| OpenSearch unreachable | Log ERROR during init | Context collection fails; script continues |
+| Wazuh API timeout or auth failure | Log ERROR, fall back to `alert.agent.id` | Partial degradation (may target wrong agent) |
+| DECIPHER unavailable | Log WARNING, CTI score = 0, no FlowIntel case | Risk uses AD + signature only |
+| SMTP failure | Log ERROR with server details | Continue with DECIPHER / mitigations |
+| FlowIntel case creation error | Log ERROR with API response | Continue with email / mitigations |
+| Missing IOCs for mitigation args | Log ERROR, skip command | Continue with remaining mitigations |
+| Wazuh AR dispatch failure | Log ERROR with command details | Continue with remaining mitigations |
 
 ### Critical Exception Handler
 
@@ -660,104 +513,34 @@ The script loads environment variables from `active_responses.env` file located 
 
 The `EnvLoader` class parses the file and sets default values if not specified.
 
-### Environment File Format
-
-```bash
-# OpenSearch Configuration
-OS_URL=https://opensearch.example.com:9200
-OS_USER=admin
-OS_PASS=SecurePassword123
-OS_VERIFY_SSL=false
-OS_INDEXES=wazuh-alerts-*,wazuh-archives-*
-
-# Email/SMTP Configuration
-SMTP_HOST=smtp.office365.com
-SMTP_PORT=587
-SMTP_USER=radar@example.com
-SMTP_PASS=EmailPassword123
-EMAIL_FROM=radar@example.com
-EMAIL_TO=soc-team@example.com
-SMTP_STARTTLS=yes
-
-# Wazuh API Configuration
-WAZUH_API_URL=https://wazuh-manager.example.com:55000
-WAZUH_AUTH_USER=admin
-WAZUH_AUTH_PASS=WazuhPassword123
-WAZUH_VERIFY_SSL=false
-WAZUH_TIMEOUT_SEC=30
-
-# DECIPHER Configuration
-DECIPHER_BASE_URL=https://decipher.example.com
-DECIPHER_VERIFY_SSL=false
-DECIPHER_TIMEOUT_SEC=30
-
-# Script Configuration
-AR_LOG_FILE=/var/ossec/logs/active-responses.log
-AR_RISK_CONFIG=/var/ossec/active-response/ar.yaml
-```
-
 ### Variable Reference
-
-#### OpenSearch Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OS_URL` | `https://localhost:9200` | OpenSearch cluster URL |
-| `OS_USER` | `admin` | OpenSearch authentication username |
-| `OS_PASS` | `""` | OpenSearch authentication password |
-| `OS_VERIFY_SSL` | `false` | Verify SSL certificates for OpenSearch |
-| `OS_INDEXES` | `wazuh-alerts-*,wazuh-archives-*` | Comma-separated index patterns to query |
+| `OS_USER` | `admin` | OpenSearch username |
+| `OS_PASS` | `""` | OpenSearch password |
+| `OS_VERIFY_SSL` | `false` | Verify SSL for OpenSearch |
+| `OS_INDEXES` | `wazuh-alerts-*,wazuh-archives-*` | Index patterns to query |
+| `SMTP_HOST` | `smtp.office365.com` | SMTP hostname |
+| `SMTP_PORT` | `587` | SMTP port |
+| `SMTP_USER` | `""` | SMTP username (empty → email notifications skipped) |
+| `SMTP_PASS` | `""` | SMTP password |
+| `EMAIL_FROM` | `{SMTP_USER}` | Sender address |
+| `EMAIL_TO` | `""` | Recipient address (required for email) |
+| `SMTP_STARTTLS` | `yes` | Use STARTTLS |
+| `WAZUH_API_URL` | `""` | Wazuh API URL (e.g. `https://host:55000`); required for mitigations |
+| `WAZUH_AUTH_USER` | `""` | Wazuh API username |
+| `WAZUH_AUTH_PASS` | `""` | Wazuh API password |
+| `WAZUH_VERIFY_SSL` | `false` | Verify SSL for Wazuh API |
+| `WAZUH_TIMEOUT_SEC` | `30` | Wazuh API timeout (s) |
+| `DECIPHER_BASE_URL` | `""` | DECIPHER URL; empty → CTI score = 0, no FlowIntel case |
+| `DECIPHER_VERIFY_SSL` | `false` | Verify SSL for DECIPHER |
+| `DECIPHER_TIMEOUT_SEC` | `30` | DECIPHER timeout (s) |
+| `AR_LOG_FILE` | `/var/ossec/logs/active-responses.log` | Structured log path |
+| `AR_RISK_CONFIG` | `/var/ossec/active-response/ar.yaml` | Scenario config path |
 
-#### Email/SMTP Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SMTP_HOST` | `smtp.office365.com` | SMTP server hostname |
-| `SMTP_PORT` | `587` | SMTP server port |
-| `SMTP_USER` | `""` | SMTP authentication username |
-| `SMTP_PASS` | `""` | SMTP authentication password |
-| `EMAIL_FROM` | `{SMTP_USER}` | Email sender address |
-| `EMAIL_TO` | `""` | Email recipient address (required) |
-| `SMTP_STARTTLS` | `yes` | Use STARTTLS for SMTP connection |
-
-**Note**: If `SMTP_USER` or `EMAIL_TO` are empty, email notifications are skipped with a warning log.
-
-#### Wazuh API Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `WAZUH_API_URL` | `""` | Wazuh manager API base URL (e.g., `https://host:55000`) |
-| `WAZUH_AUTH_USER` | `""` | Wazuh API authentication username |
-| `WAZUH_AUTH_PASS` | `""` | Wazuh API authentication password |
-| `WAZUH_VERIFY_SSL` | `false` | Verify SSL certificates for Wazuh API |
-| `WAZUH_TIMEOUT_SEC` | `30` | API request timeout in seconds |
-
-**Note**: Required for mitigation execution. Script initializes client but mitigations will fail if credentials are invalid.
-
-#### DECIPHER Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DECIPHER_BASE_URL` | `""` | DECIPHER instance base URL |
-| `DECIPHER_VERIFY_SSL` | `false` | Verify SSL certificates for DECIPHER API |
-| `DECIPHER_TIMEOUT_SEC` | `30` | API request timeout in seconds |
-
-**Note**: Required for CTI enrichment and FlowIntel case creation at tier ≥ 1. If `DECIPHER_BASE_URL` is empty or the health check fails, CTI score is set to 0 and no case is created.
-
-#### Script Configuration Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AR_LOG_FILE` | `/var/ossec/logs/active-responses.log` | Path to structured log file |
-| `AR_RISK_CONFIG` | `/var/ossec/active-response/ar.yaml` | Path to scenario configuration YAML |
-
-### Environment File Parsing
-
-The `EnvLoader` supports:
-- **Inline comments**: `KEY=value # comment` (comments are stripped)
-- **Quoted values**: `KEY="value with spaces"`
-- **Empty lines and full-line comments**: Ignored
-- **Fallback behavior**: If file doesn't exist, uses hardcoded defaults
+`EnvLoader` strips inline comments, supports quoted values, and falls back to hardcoded defaults if the file is absent.
 
 ---
 
@@ -766,69 +549,6 @@ The `EnvLoader` supports:
 ### Configuration File: `ar.yaml`
 
 The configuration file is located at `/var/ossec/active-response/ar.yaml` (or path specified by `AR_RISK_CONFIG` environment variable) and defines scenario mappings, risk parameters, and response actions.
-
-### Configuration Structure
-
-```yaml
-scenarios:
-  geoip_detection:
-    # Scenario identification
-    ad:
-      rule_ids: []
-    signature:
-      rule_ids: [100900, 100901]
-
-    # Risk calculation weights (must sum to 1.0)
-    w_ad: 0.0
-    w_sig: 0.6
-    w_cti: 0.4
-
-    # Signature risk parameters
-    signature_likelihood: 0.8  # Can be scalar or list (see below)
-    signature_impact: 0.6
-
-    # Time windows for context collection
-    delta_ad_minutes: 10
-    delta_signature_minutes: 1
-
-    # Tier boundaries
-    tiers:
-      tier1_min: 0.0
-      tier1_max: 0.33
-      tier2_max: 0.66
-
-    # Mitigation configuration
-    allow_mitigation: true
-    mitigations_tier2:
-      - firewall-drop
-    mitigations_tier3:
-      - firewall-drop
-
-  suspicious_login:
-    ad:
-      rule_ids: [100021]
-    signature:
-      rule_ids: [210012, 210013, 210020, 210021]
-    w_ad: 0.3
-    w_sig: 0.4
-    w_cti: 0.3
-    signature_likelihood:
-      - rule_id: [210012, 210013]
-        weight: 0.5
-      - rule_id: [210020, 210021]
-        weight: 0.5
-    signature_impact: 0.7
-    tiers:
-      tier1_min: 0.0
-      tier1_max: 0.33
-      tier2_max: 0.66
-    allow_mitigation: true
-    mitigations_tier2:
-      - firewall-drop
-    mitigations_tier3:
-      - firewall-drop
-      - lock_user_linux.sh
-```
 
 ### Configuration Parameters
 
@@ -888,11 +608,8 @@ In list mode, if a rule ID doesn't match any entry, likelihood defaults to 0.0.
 
 When deploying to production:
 
-1. **Test in staging**: Validate configuration with `allow_mitigation: false`
-2. **Configure environment variables**: Complete `active_responses.env` with all required credentials
-3. **Verify external services**: Test connectivity to OpenSearch, Wazuh API, SMTP, DECIPHER
-4. **Review tier boundaries**: Adjust `tier1_min`, `tier1_max`, and `tier2_max` per scenario to match organizational risk tolerance
-5. **Tune risk weights**: Calibrate `w_ad`, `w_sig`, `w_cti` based on detection source reliability
-6. **Enable mitigations gradually**: Start with Tier 1 (notify + case only), then enable Tier 2/3 mitigations selectively
-7. **Monitor logs**: Review `/var/ossec/logs/active-responses.log` for errors and false positives
-8. **Configure DECIPHER**: Ensure `DECIPHER_BASE_URL` and connectivity are validated before enabling Tier ≥ 1 response
+1. **Test in staging** first with `allow_mitigation: false`
+2. **Complete `active_responses.env`** with all credentials and verify connectivity to OpenSearch, Wazuh API, SMTP, and DECIPHER
+3. **Tune per-scenario** — adjust tier boundaries, risk weights, and likelihood values based on your environment; see [Getting started - Configure active response parameters](./radar-getting-started.md#5-configure-active-response-parameters) for a full parameter reference
+4. **Enable mitigations gradually**: start notify-only (Tier 1), then selectively enable Tier 2/3 automated actions
+5. **Monitor** `/var/ossec/logs/active-responses.log` for errors and false positives

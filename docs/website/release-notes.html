@@ -341,6 +341,160 @@
       </div>
 
       <!-- ═══════════════════════════════════════════
+           v1.0
+           ═══════════════════════════════════════════ -->
+      <div class="release" id="v1.0">
+        <div class="release-heading">
+          <h2 class="release-title">v1.0</h2>
+          <span class="release-date">May 2026</span>
+        </div>
+
+        <!-- ── main feature ── -->
+        <div class="feature-card highlight">
+          <div class="new-badge">New feature</div>
+          <h3>RADAR web interface</h3>
+          <p>
+            A Flask-based control panel (<code>app.py</code>) introduces a four-page web interface
+            for managing and operating RADAR scenarios without direct server access.
+            Three new system requirements formalise the subsystems: <strong>SRS-063</strong>
+            (REST API contract), <strong>SRS-064</strong> (frontend specification), and
+            <strong>SRS-065</strong> (Ruleset-as-Code).
+          </p>
+
+          <table class="detail-table" aria-label="RADAR GUI pages">
+            <thead>
+              <tr>
+                <th>Page</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Active Responses</strong></td>
+                <td>Per-scenario configuration of risk weights, detection scoring, time windows, tier boundaries, and per-tier mitigation actions.</td>
+              </tr>
+              <tr>
+                <td><strong>Infrastructure</strong></td>
+                <td>Full Ansible inventory management with cards for each manager and agent showing connection type, IP, and credential status.</td>
+              </tr>
+              <tr>
+                <td><strong>Connectors</strong></td>
+                <td>Credential and URL management for OpenSearch, Wazuh API, OpenSearch Dashboards, SMTP, DECIPHER, and Webhook.</td>
+              </tr>
+              <tr>
+                <td><strong>Deploy</strong></td>
+                <td>Three-tab interface for running <code>build-radar.sh</code> (Build &amp; deploy), <code>run-radar.sh</code> (Run scenarios), and <code>health-radar.sh</code> (Status).</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            A new user manual <code>radar-gui-user-manual.md</code> covers first-time setup, and the
+            product presentation website has been extended with a RADAR GUI gallery section featuring
+            four screenshots.
+          </p>
+          <div class="chips">
+            <span class="chip">RADAR GUI</span>
+            <span class="chip">Flask</span>
+            <span class="chip">Active Responses</span>
+            <span class="chip">Infrastructure</span>
+            <span class="chip">Connectors</span>
+            <span class="chip">Deploy</span>
+            <span class="chip">SRS-063</span>
+            <span class="chip">SRS-064</span>
+            <span class="chip">SRS-065</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Ruleset as Code (RaC)</h3>
+          <p>
+            A GitHub Actions-based CI/CD pipeline enables developing, reviewing, and deploying Wazuh
+            rules and decoders without direct server access. New documentation in
+            <code>radar-rules.md</code> covers the Wazuh rules repository structure and workflow.
+          </p>
+          <div class="chips">
+            <span class="chip">Ruleset as Code</span>
+            <span class="chip">GitHub Actions</span>
+            <span class="chip">CI/CD</span>
+            <span class="chip">SRS-065</span>
+            <span class="chip">radar-rules.md</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Off-hour login detection &amp; GeoIP frequency rule</h3>
+          <p>
+            A new system requirement <strong>SRS-062</strong> specifies per-user behavioral baseline
+            detection of authentication events outside business hours (Mon–Fri, 07:00–20:00) using
+            OpenSearch RCF with a <code>data.user.keyword</code> categorical field.
+          </p>
+          <p>
+            A new GeoIP frequency rule provides an escalation path for coordinated geographic
+            anomalies by detecting high-frequency authentication attempts from non-whitelisted
+            countries.
+          </p>
+          <div class="chips">
+            <span class="chip">SRS-062</span>
+            <span class="chip">off-hour login</span>
+            <span class="chip">GeoIP frequency rule</span>
+            <span class="chip">OpenSearch RCF</span>
+            <span class="chip">behavioral baseline</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>RADAR container hardening &amp; active response logging</h3>
+          <p>
+            Security hardenings have been applied to all RADAR container Dockerfiles.
+            Active response logging has been enhanced in <code>radar_ar.py</code> to always record
+            planned mitigations — including <code>would_be_mitigations</code> when
+            <code>allow_mitigation</code> is false — improving observability and the audit trail for
+            response decisions.
+          </p>
+          <div class="chips">
+            <span class="chip">container hardening</span>
+            <span class="chip">radar_ar.py</span>
+            <span class="chip">audit trail</span>
+            <span class="chip">would_be_mitigations</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>SpecEngine C5-DEC v1.3 upgrade</h3>
+          <p>
+            The dependency content fingerprinting feature of SpecEngine has been integrated into
+            IDPS-ESCAPE, enabling automatic detection of stale Doorstop links when upstream
+            requirement content changes.
+          </p>
+          <div class="chips">
+            <span class="chip">SpecEngine</span>
+            <span class="chip">C5-DEC v1.3</span>
+            <span class="chip">content fingerprinting</span>
+            <span class="chip">Doorstop</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Test specification TST-050 &amp; report TRP-040</h3>
+          <p>
+            A new test case specification <strong>TST-050</strong> covers the SONAR Linux resource
+            monitoring scenario (v1.0). The corresponding execution report <strong>TRP-040</strong>
+            records the v1.0 test campaign results: 6/6 steps passed on 2026-05-04 in debug mode.
+          </p>
+          <div class="chips">
+            <span class="chip">TST-050</span>
+            <span class="chip">TRP-040</span>
+            <span class="chip">SONAR resource monitoring</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- /v1.0 -->
+
+      <hr class="release-divider">
+
+      <!-- ═══════════════════════════════════════════
            v0.9
            ═══════════════════════════════════════════ -->
       <div class="release" id="v0.9">

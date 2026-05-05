@@ -897,13 +897,16 @@ class ActionPlanner:
 
         planned = {"notify_email": tier >= 1, "mitigations": []}
 
-        if allow_mitigation:
-            if tier == 2:
-                planned["mitigations"] = [str(x) for x in (scfg.get("mitigations_tier2") or [])]
-            elif tier == 3:
-                planned["mitigations"] = [str(x) for x in (scfg.get("mitigations_tier3") or [])]
+        would_be_mitigations = []
+        if tier == 2:
+            would_be_mitigations = [str(x) for x in (scfg.get("mitigations_tier2") or [])]
+        elif tier == 3:
+            would_be_mitigations = [str(x) for x in (scfg.get("mitigations_tier3") or [])]
 
-        self.logger.log("INFO", "Actions planned", tier=tier, allow_mitigation=allow_mitigation, mitigations=planned["mitigations"])
+        if allow_mitigation:
+            planned["mitigations"] = would_be_mitigations
+
+        self.logger.log("INFO", "Actions planned", tier=tier, allow_mitigation=allow_mitigation, mitigations=planned["mitigations"], would_be_mitigations=would_be_mitigations)
         return planned
 
 

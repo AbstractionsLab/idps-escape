@@ -44,7 +44,7 @@ if [[ "$MANAGER_MODE" == "remote" || "$AGENT_MODE" == "remote" ]]; then
     else
         ssh-add -l | grep -q "$(ssh-keygen -lf "$SSH_KEY" | awk '{print $2}')" || ssh-add "$SSH_KEY"
     fi
-    VAULT_FLAG="--ask-vault-pass"
+    if [[ "${RADAR_NONINTERACTIVE:-}" == "1" ]]; then VAULT_FLAG=""; else VAULT_FLAG="--ask-vault-pass"; fi
 fi
 
 [[ -f "$ENV_FILE" ]] && set -a && source "$ENV_FILE" && set +a || true

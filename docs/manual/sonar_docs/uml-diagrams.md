@@ -37,6 +37,7 @@ classDiagram
         +MVADConfig mvad
         +FeatureConfig features
         +DebugConfig debug
+        +ShippingConfig shipping
         +str model_path
     }
 
@@ -62,6 +63,8 @@ classDiagram
         +Sequence~str~ categorical_fields
         +int categorical_top_k
         +bool derived_features
+        +Optional~Dict~ alert_filter
+        +Sequence~str~ max_numeric_fields
     }
 
     class DebugConfig {
@@ -100,6 +103,9 @@ classDiagram
         +int sliding_window
         +str device
         +Dict extra_params
+        +bool derived_features
+        +Optional~Dict~ alert_filter
+        +List~str~ max_numeric_fields
         +bool fill_with_synthetic
         +int synthetic_count
         +str synthetic_mode
@@ -162,7 +168,6 @@ classDiagram
         +predict(ts_data) Any
         +save() void
         +load() void
-        -_align_columns(ts_data) DataFrame
     }
 
     class MVADPostProcessor {
@@ -498,7 +503,7 @@ flowchart LR
         direction TB
         TRAIN[Training]
         PRED[Prediction]
-        MODEL[(Trained Model<br/>mvad_model.pkl)]
+        MODEL[(Trained Model<br/>sonar/models/&lt;name&gt;.pkl)]
     end
 
     subgraph Output["Output"]
@@ -584,7 +589,7 @@ flowchart TB
         end
 
         subgraph Storage["Local storage"]
-            Model[(mvad_model.pkl)]
+            Model[(sonar/models/)]
             TestData[(test_data/)]
             Config[(config.yaml)]
         end

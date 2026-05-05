@@ -2,26 +2,13 @@
 
 This manual provides detailed documentation for all IDPS-ESCAPE components implementing a comprehensive SOAR system following the MAPE-K paradigm (Monitor, Analyze, Plan, Execute, Knowledge).
 
-**Key subsystems:** [**RADAR**](./radar_docs/README.md) (automated response), [**SONAR**](./sonar_docs/README.md) (production anomaly detection), and [ADBox](./adbox_docs/adbox.md) (legacy research framework).
+**Key subsystems:** [**RADAR**](./radar_docs/README.md) (automated response), [**SONAR**](./sonar_docs/README.md) (anomaly detection, at most TRL 6), and [ADBox](./adbox_docs/adbox.md) (legacy research framework).
 
 **Hybrid detection approach:** Signature-based (Wazuh, Suricata) + multivariate AD (SONAR) + streaming AD (RRCF via OpenSearch AD plugin).
 
 ## Core components
 
-### SONAR (Production Anomaly Detection)
-
-[Quick start](./sonar_docs/setup-guide.md) | [Full documentation](./sonar_docs/README.md)
-
-**SONAR** (SIEM-Oriented Neural Anomaly Recognition) is our production-grade multivariate time-series anomaly detection subsystem:
-- Multivariate anomaly detection using Microsoft MVAD library
-- Scenario-based YAML workflows for repeatable detection strategies
-- Debug mode for offline testing without Wazuh infrastructure
-- Real-time and batch detection modes
-- Data shipping integration to Wazuh data streams for RADAR-driven responses
-
-**Use SONAR for all production deployments.**
-
-### RADAR (Automated Response)
+### RADAR (Risk-aware detection and response)
 
 [Getting started](./radar_docs/radar-getting-started.md) | [Full documentation](./radar_docs/README.md)
 
@@ -30,6 +17,20 @@ The [RADAR](/radar/README.md) subsystem provides solutions for completing the SO
 - OpenSearch AD integration (RRCF-based)
 - AD scenario implementations with active response solutions
 - SOAR playbooks facilitating security orchestration
+- Web-based GUI for full deployment, orchestration and configuration lifecycle
+
+### SONAR (SIEM-oriented Anomaly Detection based on deep learning)
+
+[Quick start](./sonar_docs/setup-guide.md) | [Full documentation](./sonar_docs/README.md)
+
+**SONAR** (SIEM-Oriented Neural Anomaly Recognition) is our multivariate time-series anomaly detection subsystem:
+- Multivariate anomaly detection using Microsoft MVAD library
+- Scenario-based YAML workflows for repeatable detection strategies
+- Debug mode for offline testing without Wazuh infrastructure
+- Real-time and batch detection modes
+- Data shipping integration to Wazuh data streams for RADAR-driven responses
+
+SONAR is at most at TRL 6; validate in your environment before operational deployment.
 
 ## Map of content
 
@@ -42,18 +43,25 @@ The [RADAR](/radar/README.md) subsystem provides solutions for completing the SO
 - [Data shipping guide](./sonar_docs/data-shipping-guide.md) - Production integration
 - [Troubleshooting](./sonar_docs/troubleshooting.md) - Common issues and solutions
 - [Architecture](./sonar_docs/architecture.md) - System design and patterns
+- [Model naming guide](./sonar_docs/model-naming-guide.md) - Model naming and versioning
+- [UML diagrams](./sonar_docs/uml-diagrams.md) - System UML diagrams
 
 ### RADAR Documentation
-- [RADAR standalone user manual](./radar-user-manual.md) - Single end-user-oriented manual for deployment and operations
+- [RADAR standalone user manual](../_internal/radar-user-manual.md) - Single end-user-oriented manual for deployment and operations
 - [RADAR README](./radar_docs/README.md) - Main documentation
 - [RADAR developer README](/radar/README.md) - Developer quick reference
+- [GUI user manual](./radar_docs/radar-gui-user-manual.md) - Web UI deployment and operations guide
 - [Architecture](./radar_docs/radar-architecture.md) - System design and components
 - [Getting started](./radar_docs/radar-getting-started.md) - Setup and deployment
 - [Ansible playbook](./radar_docs/radar-manager-ansible-playbook.md) - Automated deployment
 - [Run AD workflow](./radar_docs/radar-run-ad.md) - Detector and monitor creation
+- [Health check](./radar_docs/radar-health-check.md) - Stack health monitoring
 - [Detection rules](./radar_docs/radar-rules.md) - Wazuh rule definitions
+- [Risk math](./radar_docs/radar-risk-math.md) - Scoring and tier calculations
+- [Risk engine roadmap](./radar_docs/radar-risk-engine-roadmap.md) - Future CTI integration
 - [Active response](./radar_docs/radar-active-response.md) - Response logic flow
 - [Scenarios overview](/radar/scenarios/README.md) - Detailed scenario documentation
+- [Suspicious login extensibility](./radar_docs/radar-scenarios/suspicious-login-extensibility-guide.md) - Protocol extensibility guide
 - [Webhook service](/radar/webhook/README.md) - Webhook deployment
 
 ### Deployment and Integration

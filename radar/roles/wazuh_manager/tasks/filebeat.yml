@@ -18,43 +18,34 @@
       delay: 90
       changed_when: radar_template_apply.status in [200, 201]
 
-    - name: filebeat | Pull wazuh archives pipeline from manager
-      shell: |
-        set -e
-        docker cp "{{ _mgr_container }}:/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json" \
-            "pipeline.wazuh.archives.orig.json"
-        cp -f pipeline.wazuh.archives.orig.json pipeline.wazuh.archives.backup.json
-      args:
-        executable: /bin/bash
-      register: _archives_pipeline_pull
-      changed_when: false
-      failed_when: _archives_pipeline_pull.rc != 0
-
     - name: filebeat | Load RADAR log-volume date_index_name snippet
       delegate_to: localhost
       become: false
       set_fact:
         radar_log_volume_dateindex_snippet: "{{ lookup('file', radar_pipeline_snippet_src) | trim }}"
 
-    - name: filebeat | Inject RADAR date_index_name logic into archives pipeline
-      replace:
-        path: pipeline.wazuh.archives.orig.json
+    - name: filebeat | Ensure host pipeline directory exists
+      ansible.builtin.file:
+        path: "{{ _host_pipeline_json | dirname }}"
+        state: directory
+        mode: '0755'
+
+    - name: filebeat | Stat host pipeline file
+      ansible.builtin.stat:
+        path: "{{ _host_pipeline_json }}"
+      register: _pipeline_stat
+      changed_when: false
+
+    - name: filebeat | Inject RADAR date_index_name logic into volume-mapped pipeline (idempotent)
+      when: _pipeline_stat.stat.exists
+      ansible.builtin.replace:
+        path: "{{ _host_pipeline_json }}"
         regexp: '(?s)\{\s*"date_index_name"\s*:\s*\{.*?"index_name_prefix"\s*:\s*"\{\{fields.index_prefix\}\}".*?"ignore_failure"\s*:\s*(true|false)\s*\}\s*\},'
         replace: "{{ radar_log_volume_dateindex_snippet }}"
       register: _archives_pipeline_patched
 
-    - name: filebeat | Push patched archives pipeline into manager container
-      when: _archives_pipeline_patched is changed
-      shell: |
-        docker cp "pipeline.wazuh.archives.orig.json" \
-            "{{ _mgr_container }}:/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json"
-      args:
-        executable: /bin/bash
-      register: _archives_pipeline_push
-      changed_when: _archives_pipeline_push.rc == 0
-      failed_when: _archives_pipeline_push.rc != 0
-
     - name: filebeat | Run filebeat setup --pipelines --modules wazuh
+      when: _archives_pipeline_patched is changed
       shell: |
         docker exec "{{ _mgr_container }}" bash -lc \
           'filebeat setup --pipelines --modules wazuh >/tmp/filebeat-setup-radar.out 2>&1 || true; cat /tmp/filebeat-setup-radar.out'
@@ -63,15 +54,6 @@
       register: _filebeat_setup
       changed_when: _filebeat_setup.stdout is search("Created|created|Updated pipeline")
       failed_when: false
-
-    - name: filebeat | Cleanup temporary pipeline files
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - pipeline.wazuh.archives.orig.json
-        - pipeline.wazuh.archives.backup.json
-      ignore_errors: true
 
   when: scenario_name == 'log_volume'
 

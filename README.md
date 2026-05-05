@@ -5,13 +5,13 @@ IDPS-ESCAPE (Intrusion Detection and Prevention System - Enhanced Security throu
 <img src="./docs/manual/_figures/CyFORT-IDPS-ESCAPE-logo.png" alt="cyfort_logo" width="500"/>
 
 **Core components:**
-- [**RADAR**](/radar/README.md) - Risk-aware detection and automated response with Ansible-based deployment
-- [**SONAR**](/sonar/README.md) - Production-grade multivariate anomaly detection powered by deep learning
+- [**RADAR**](/radar/README.md) - Risk-aware detection and automated response, deployed with Ansible and operated via a web UI control panel
+- [**SONAR**](/sonar/README.md) - SIEM-oriented multivariate anomaly detection powered by deep learning
 - [**ADBox**](/docs/manual/adbox_docs/adbox.md) - Legacy research framework
 
-**Built on:** [Ansible](https://github.com/ansible/ansible), [OpenSearch](https://opensearch.org/), [Wazuh](https://wazuh.com/), [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl), [PyFlowintel](https://github.com/AbstractionsLab/PyFlowintel), [Flowintel](https://github.com/flowintel/flowintel), [MISP](https://www.misp-project.org/), [Suricata](https://suricata.io/)
+**Built on:** [Wazuh](https://wazuh.com/), [OpenSearch](https://opensearch.org/), [Ansible](https://github.com/ansible/ansible), [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl), [PyFlowintel](https://github.com/AbstractionsLab/PyFlowintel), [Flowintel](https://github.com/flowintel/flowintel), [MISP](https://www.misp-project.org/), [Suricata](https://suricata.io/)
 
-We adopt a **hybrid detection approach** for defense-in-depth against known and emerging threats, combining signature-based engines (Wazuh, Suricata) and machine learning (ML) algorithms for ML-based anomaly detection (AD) through SONAR and RADAR relying on [MTAD-GAT](https://arxiv.org/pdf/2009.02040) (attention mechanism and deep learning) and [RRCF](https://proceedings.mlr.press/v48/guha16.pdf) (random forest) for streaming data, respectively.
+We adopt a **hybrid detection approach** for defense-in-depth against known and emerging threats, combining signature-based engines (Wazuh, Suricata) and machine learning (ML) algorithms for ML-based anomaly detection (AD) through RADAR and SONAR, relying on [RRCF](https://proceedings.mlr.press/v48/guha16.pdf) (random forest) for streaming data and [MTAD-GAT](https://arxiv.org/pdf/2009.02040) (attention mechanism and deep learning), respectively.
 
 This repository contains complete [documentation](./docs/manual/README.md), user manual, **[interlinked technical specifications](https://abstractionslab.github.io/idps-escape/traceability/index.html)** for traceability, and validation test results, all based on the [C5-DEC](https://abstractionslab.github.io/c5dec/website/product-presentation.html) method.
 
@@ -37,23 +37,27 @@ For a visual user-oriented tour of IDPS-ESCAPE, visit the **[product presentatio
 
 [**RADAR**](/radar/README.md) provides hybrid detection and intelligent automated response with [Ansible-based Infrastructure-as-Code](#fully-automated-deployment-with-ansible) deployment:
 
-- **Hybrid detection**: Signature-based (Wazuh, Suricata) + ML-based anomaly detection (RRCF)
+- **Hybrid detection**: Signature-based (Wazuh, Suricata) + ML-based anomaly detection ([RRCF](https://proceedings.mlr.press/v48/guha16.pdf))
 - **Risk-aware actions**: Tiered response (low/medium/high risk) with host isolation, process control, network rules, alert escalation, and incident case creation
-- **Automatic case creation**: Incident case creation via integration with the DECIPHER subsystem of SATRAP-DL and Flowintel
+- **Automatic case creation**: Incident case creation via integration with the DECIPHER subsystem of [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl) and [Flowintel](https://github.com/flowintel/flowintel)
 - **Flexible deployment**: Local/remote manager and agent configurations
 - **Production scenarios**: Default baseline detection, GeoIP detection, log volume monitoring, suspicious login
 - **Experimental scenarios**: Insider threat, DDoS, C2 malware (require adaptation)
+- **Web-based GUI**: provides a browser-based control panel covering the full deployment, orchestration and configuration lifecycle
 
-See [RADAR README](/docs/manual/radar_docs/README.md), [scenarios](/radar/scenarios/README.md), [adversarial ML guidance](/docs/manual/radar_docs/adversarial-ml-guidance.md) and [developer README](/radar/README.md).
+![RADAR Demonstration](/docs/manual/_figures/RADAR_GUI.gif)
+
+See [RADAR README](/docs/manual/radar_docs/README.md), [GUI user manual](/docs/manual/radar_docs/radar-gui-user-manual.md), [scenarios](/radar/scenarios/README.md), [adversarial ML guidance](/docs/manual/radar_docs/adversarial-ml-guidance.md) and [developer README](/radar/README.md).
 
 ### SONAR - SIEM-Oriented Neural Anomaly Recognition via multivariate AD
 
-[**SONAR**](/sonar/README.md) provides production-grade anomaly detection:
+[**SONAR**](/sonar/README.md) provides a standalone SIEM-oriented anomaly detection solution based on deep learning:
 
-- **Microsoft MVAD engine**: Battle-tested multivariate time-series detection
+- **Multivariate time series AD engine**: modular and optimized multivariate time-series detection based on [MTAD-GAT](https://arxiv.org/pdf/2009.02040)
 - **Debug mode**: Offline testing with synthetic data (no infrastructure required)
+- **Wazuh integration**: Integrated with Wazuh, the open-source SIEM, for monitoring data ingestion and detection data provision and visualization
 - **Scenario-based**: YAML configuration for repeatable workflows
-- **RADAR integration**: Data shipping to Wazuh for automated response
+- **RADAR integration**: [SONAR data streams shipping](/docs/manual/sonar_docs/data-shipping-guide.md#integration-with-radar) to Wazuh for automated response and easy ingestion by RADAR
 - **Flexible modes**: Real-time, batch, and historical analysis
 
 See [SONAR README](/docs/manual/sonar_docs/README.md), [scenario guide](/docs/manual/sonar_docs/scenario-guide.md), [architecture](/docs/manual/sonar_docs/architecture.md) and [developer README](/sonar/README.md).
@@ -64,20 +68,20 @@ RADAR ships [complete Ansible IaC](/radar/README.md) for reproducible, productio
 
 ### ADBox (Legacy)
 
-> **⚠️ Legacy System**: ADBox uses MTAD-GAT for research purposes only. **Use SONAR for all production deployments.**
+> **⚠️ Legacy System**: ADBox uses MTAD-GAT for research purposes only. **Use SONAR for deployments.**
 
 [ADBox](/docs/manual/adbox_docs/adbox.md) is maintained for research continuity with PyTorch-based Graph Attention Networks. See the [ADBox manual](/docs/manual/adbox_docs/adbox.md) for legacy documentation.
 
 ## Documentation
 
-See our [user manual](./docs/manual/README.md) for comprehensive documentation on [RADAR](/radar/README.md), [SONAR](/sonar/README.md), and [ADBox](/docs/manual/adbox_docs/adbox.md). Visit our [traceability page](https://abstractionslab.github.io/idps-escape/traceability/index.html) for interlinked requirements, technical specifications such as architecture diagrams, and test reports ([TRP](https://abstractionslab.github.io/idps-escape/docs/traceability/TRP.html)).
+See our [user manual](./docs/manual/README.md) for comprehensive documentation on [RADAR](/radar/README.md), [SONAR](/sonar/README.md), and [ADBox](/docs/manual/adbox_docs/adbox.md). Visit our [traceability page](https://abstractionslab.github.io/idps-escape/traceability/index.html) for interlinked requirements, technical specifications such as architecture diagrams, and test reports.
 
 ## Quick start
 
 ### Decision tree
 
 - **Want full automated response?** Bootstrap [complete RADAR stack](#full-stack-automated-deployment-radar)
-- **Need production anomaly detection?** Deploy [SONAR with Wazuh](#production-deployment-with-sonar)
+- **Need production anomaly detection?** Deploy [SONAR with Wazuh](#sonar-usage)
 - **Just exploring?** Start with [SONAR debug mode](#evaluating-sonar-5-minutes) (no infrastructure needed)
 
 ### Full stack automated deployment (RADAR)
@@ -103,13 +107,13 @@ See the [RADAR getting started](/docs/manual/radar_docs/radar-getting-started.md
 
 Screenshots from a Suspicious Login scenario run:
 
-![Wazuh Dashboard RADAR Suspicious Login detection](/docs/manual/_figures/RADAR-v0.8-wazuh-dashboard.png)
+![Wazuh Dashboard RADAR Suspicious Login detection](/docs/manual/_figures/RADAR-wazuh-dashboard.png)
 
-![Email alert sent by active response](/docs/manual/_figures/RADAR-v0.8-email-suspicious-login.png)
+![Email alert sent by active response](/docs/manual/_figures/RADAR-email-suspicious-login.png)
 
 ![RADAR DECIPHER MISP lookup — CTI scoring via MISP](/docs/manual/_figures/RADAR-DECIPHER-MISP-lookup.png)
 
-![FlowIntel incident case created by RADAR via DECIPHER](/docs/manual/_figures/RADAR-v0.8-FlowIntel-case.png)
+![FlowIntel incident case created by RADAR via DECIPHER](/docs/manual/_figures/RADAR-FlowIntel-case.png)
 
 ### SONAR usage
 
@@ -218,17 +222,9 @@ See [SONAR README](/sonar/README.md) and [RADAR README](/radar/README.md) for co
 
 See our test report (TRP) in the list of published documents on the [technical specifications traceability page](https://abstractionslab.github.io/idps-escape/traceability/index.html) detailing the validation test campaign results. Unit tests are available in the `tests` folder.
 
-## Roadmap
-
-- Web-based management interface for our Ansible-based RADAR deployment solution
-- Support for automatic Wazuh multi-node RADAR deployment
-- New detection and response scenarios via hybrid correlation (signatures + RRCF + SONAR anomalies)
-- Automatic model retraining in SONAR (schedule-based, drift-triggered)
-- Automated SONAR-RADAR integration
-
 ## Disclaimer
 
-Provided for evaluation and testing. While SONAR and RADAR have been deployed in controlled environments, conduct thorough security assessments before production use. **Use at your own risk.**
+RADAR has been validated in controlled environments and is released as stable v1.0. SONAR is at most at TRL 6. Conduct a thorough security assessment before deploying either component in production. **Use at your own risk.**
 
 ## License
 

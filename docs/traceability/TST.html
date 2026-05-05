@@ -78,6 +78,10 @@
 <li><a href="#TST-049">3.9 RADAR deployment integrity verification</a></li>
 </ul>
 </li>
+<li><a href="#TST-SONAR">4.0 SONAR test case specifications</a><ul>
+<li><a href="#TST-050">4.1 Linux resource usage monitoring scenario</a></li>
+</ul>
+</li>
 </ul>
           </nav>
       </div>
@@ -4841,6 +4845,87 @@ sudo rm -rf /tmp/
 <tr>
 <td>version</td>
 <td>0.8.2</td>
+</tr>
+</tbody>
+</table>
+<h1 id="TST-SONAR">4.0 SONAR test case specifications</h1>
+<h2 id="TST-050">4.1 Linux resource usage monitoring scenario <small><a href="TST.html#TST-050">TST-050</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ol>
+<li>SONAR dependencies installed: <code>poetry install --with adbox,radar,test</code>.</li>
+<li><code>sonar/scenarios/linux_resource_monitoring.yaml</code> is present with <code>debug.enabled: false</code> (the <code>--debug</code> CLI flag is used instead).</li>
+<li>The following local test data files exist:
+   - <code>sonar/test_data/resource_monitoring/resource_monitoring_training-2.json</code>
+   - <code>sonar/test_data/resource_monitoring/resource_monitoring_detection.json</code></li>
+</ol>
+<h2>Test steps</h2>
+<ol>
+<li>
+<p>From the repository root, train the SONAR model for the Linux resource monitoring scenario using local debug data:
+   <code>poetry run sonar train --scenario sonar/scenarios/linux_resource_monitoring.yaml --debug</code></p>
+</li>
+<li>
+<p>Verify the training log reports successful completion and a model artefact is persisted under <code>sonar/models/</code> with the name matching the <code>model_name</code> field in the scenario YAML (<code>linux_resource_monitoring_20260112_230114</code>).</p>
+</li>
+<li>
+<p>From the repository root, run anomaly detection for the Linux resource monitoring scenario using the local debug detection data:
+   <code>poetry run sonar detect --scenario sonar/scenarios/linux_resource_monitoring.yaml --debug</code></p>
+</li>
+<li>
+<p>Inspect the detection output log and verify that at least one anomaly is flagged with a score exceeding the configured threshold (<code>0.75</code>).</p>
+</li>
+<li>
+<p>Verify that at least <code>min_consecutive: 3</code> consecutive anomalous 1-minute buckets are present in the reported output, satisfying the sustained-anomaly criterion.</p>
+</li>
+<li>
+<p>Verify in the detection log that derived features reflect the expected Boolean classifications: buckets with <code>cpu_usage_% ≥ 80</code> carry <code>is_cpu_high = True</code>; buckets with <code>memory_usage_% ≥ 80</code> carry <code>is_memory_high = True</code>; buckets with <code>1min_loadAverage ≥ 4.0</code> carry <code>is_high_load = True</code>.</p>
+</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>Training completes without error; a model file named <code>linux_resource_monitoring_20260112_230114</code> is persisted to disk.</li>
+<li>Detection completes without error.</li>
+<li>At least one anomaly is flagged; the anomaly score for each reported bucket exceeds <code>0.75</code>.</li>
+<li>At least three consecutive anomalous 1-minute buckets appear in the flagged output.</li>
+<li>Derived features <code>is_cpu_high</code>, <code>is_memory_high</code>, and <code>is_high_load</code> carry Boolean values consistent with the raw metric thresholds applied to the detection data.</li>
+</ol>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-048">SRS-048 Default Detector Training</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-040">TRP-040 TCER: Linux resource usage monitoring scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>stable</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>sonar/test_data/resource_monitoring/</td>
+</tr>
+<tr>
+<td>version</td>
+<td>1.0</td>
 </tr>
 </tbody>
 </table>

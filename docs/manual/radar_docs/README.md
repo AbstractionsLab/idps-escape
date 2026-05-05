@@ -51,13 +51,7 @@ docker ps | grep wazuh
 
 ### Deployment modes
 
-| Manager | Agents | Use Case |
-|---------|--------|----------|
-| **Local** | **Local** | Development, testing, demos |
-| **Local** | **Remote** | Production with centralized management |
-| **Remote** | **Remote** | Full distributed deployment |
-
-**Details**: [Getting started - Deployment modes](./radar-getting-started.md#modes-of-deployment)
+RADAR supports flexible deployment topologies combining local and remote Wazuh managers and agents. For detailed information about each deployment mode (local/remote configurations), use cases, and configuration steps, see [Getting started - Deployment modes](./radar-getting-started.md#modes-of-deployment).
 
 ---
 
@@ -244,14 +238,17 @@ docker exec wazuh.manager tail -f /var/ossec/logs/active-responses.log
 
 ### Test framework
 
-RADAR includes a comprehensive automated test framework supporting:
+RADAR includes an automated test framework supporting simulation of production scenarios:
 
-- **4 threat scenarios**: Insider threat, DDoS, malware C2, suspicious login
-- **Full pipeline**: Dataset ingestion → preprocessing → detector setup → attack simulation → evaluation
-- **Metrics computation**: True/False Positives/Negatives, precision, recall, F1-score
-- **Ansible automation**: Complete infrastructure-as-code test execution
+- **3 production scenarios**: Suspicious login, GeoIP detection, Log volume growth
+- **Simulation phase**: Agent-realistic attack artifact generation via `simulate-radar.sh`
+- **Ansible automation**: Infrastructure-as-code test execution
 
-**Complete guide**: [RADAR test framework README](../../../radar/radar-test-framework/README.md) (706 lines - comprehensive)
+The following scenarios are **archived** (in `radar/archives/`) and require adaptation before use: Insider threat, DDoS detection, Malware C2, and SSO-based suspicious login.
+
+> **Note**: The evaluate phase (TP/FP metrics, precision/recall) is not yet implemented and is planned for a future release.
+
+**Complete guide**: [RADAR test framework README](../../../radar/radar-test-framework/README.md)
 
 **Quick start**:
 ```bash
@@ -392,7 +389,7 @@ A: Edit scenario-specific Python scripts in `radar/scenarios/<scenario>/active_r
 
 | RADAR Version | Wazuh | OpenSearch | Docker | Ansible |
 |---------------|-------|------------|--------|---------|
-| v0.7.x | 4.14.1 | 2.x | 20.10+ | 2.9+ |
+| v0.7.x | 4.14.1 | 2.x | 20.10+ | 2.15+ |
 | v0.6.x | 4.7.x | 1.3+ | 20.10+ | 2.9+ |
 
 ---

@@ -27,6 +27,7 @@ scenarios:
         - "100900"
         - "100901"
         - "100902"
+        - "100903"
     w_ad: 0.0
     w_sig: 0.6
     w_cti: 0.4
@@ -34,7 +35,7 @@ scenarios:
     delta_signature_minutes: 1
     signature_impact: 0.6
     signature_likelihood: 
-      - rule_id: [100900, 100901]
+      - rule_id: [100900, 100901, 100903]
         weight: 0.9
       - rule_id: [100902]
         weight: 0.1

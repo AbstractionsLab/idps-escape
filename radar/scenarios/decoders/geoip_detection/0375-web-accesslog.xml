@@ -47,27 +47,63 @@
     <prematch>^\S+ \S+ \S+ \.*[\S+ \S\d+] "\w+ \S+ HTTP\S+" </prematch>
 </decoder>
 
+<!-- RADAR: domain/IPv6:port + IP format -->
+<decoder name="web-accesslog-domainport-radar">
+    <type>web-log</type>
+    <parent>web-accesslog</parent>
+    <prematch>^\S+:\S+ \S+ .+RADAR country="</prematch>
+    <regex>^\S+ (\S+) .+"(\w+) (\S+) HTTP\S+" (\d+) .+RADAR country="(\S*)" region="(\S*)" city="(\S*)"</regex>
+    <order>srcip, protocol, url, id, radar_country, radar_region, radar_city</order>
+</decoder>
+
+<!-- RADAR: two IPs / domain:port+IP format -->
+<decoder name="web-accesslog-ip-ip-radar">
+    <type>web-log</type>
+    <parent>web-accesslog</parent>
+    <prematch>^\d+.\d+.\d+.\d+ \d+.\d+.\d+.\d+ .+RADAR country="</prematch>
+    <regex>^(\S+) (\S+) .+"(\w+) (\S+) HTTP\S+" (\d+) .+RADAR country="(\S*)" region="(\S*)" city="(\S*)"</regex>
+    <order>srcip2, srcip, protocol, url, id, radar_country, radar_region, radar_city</order>
+</decoder>
+
+<!-- RADAR: domain + IP format -->
+<decoder name="web-accesslog-domain-radar">
+    <type>web-log</type>
+    <parent>web-accesslog</parent>
+    <prematch>^\S+.\D+ \S+ .+RADAR country="</prematch>
+    <regex>^\S+ (\S+) .+"(\w+) (\S+) HTTP\S+" (\d+) .+RADAR country="(\S*)" region="(\S*)" city="(\S*)"</regex>
+    <order>srcip, protocol, url, id, radar_country, radar_region, radar_city</order>
+</decoder>
+
+<!-- RADAR: single IP (catch-all for RADAR lines) -->
+<decoder name="web-accesslog-ip-radar">
+    <type>web-log</type>
+    <parent>web-accesslog</parent>
+    <prematch>RADAR country="</prematch>
+    <regex>^(\S+) \S+ \S+ \.*[\S+ \S\d+] "(\w+) (\S+) HTTP\S+" (\d+) \.+RADAR country="(\.+)" region="(\.+)" city="(\.+)"</regex>
+    <order>srcip, protocol, url, id, radar_country, radar_region, radar_city</order>
+</decoder>
+
 <decoder name="web-accesslog-domain">
     <type>web-log</type>
     <parent>web-accesslog</parent>
-    <prematch>^\S+\.\S+</prematch>
-    <regex type="pcre2">^\S+ (\S+) \S+ \S+ \[.*?\] "\w+ (\S+) HTTP[^"]*" (\d+) .*?RADAR country="([^"]*)" region="([^"]*)" city="([^"]*)"</regex>
-    <order>srcip, url, id, radar_country, radar_region, radar_city</order>
+    <prematch>^\S+.\D+</prematch>
+    <regex>^\S+ (\S+) \S+ \.*[\S+ \S\d+] "(\w+) (\S+) HTTP\S+" (\d+) </regex>
+    <order>srcip, protocol, url, id</order>
 </decoder>
 
 <decoder name="web-accesslog-ip-ip">
     <type>web-log</type>
     <parent>web-accesslog</parent>
     <prematch>^\S+ \S+.\S+ |^\S+ \S+:\S+ </prematch>
-    <regex type="pcre2">^\S+ (\S+) \S+ \S+ \[.*?\] "\w+ (\S+) HTTP[^"]*" (\d+) .*?RADAR country="([^"]*)" region="([^"]*)" city="([^"]*)"</regex>
-    <order>srcip, url, id, radar_country, radar_region, radar_city</order>
+    <regex>^(\S+) (\S+) \S+ \.*[\S+ \S\d+] "(\w+) (\S+) HTTP\S+" (\d+) </regex>
+    <order>srcip2, srcip, protocol, url, id</order>
 </decoder>
 
 <decoder name="web-accesslog-ip">
     <type>web-log</type>
     <parent>web-accesslog</parent>
-    <regex type="pcre2">^(\S+) \S+ \S+ \[.*?\] "\w+ (\S+) HTTP[^"]*" (\d+) .*?RADAR country="([^"]*)" region="([^"]*)" city="([^"]*)"</regex>
-    <order>srcip, url, id, radar_country, radar_region, radar_city</order>
+    <regex>^(\S+) \S+ \S+ \.*[\S+ \S\d+] "(\w+) (\S+) HTTP\S+" (\d+) </regex>
+    <order>srcip, protocol, url, id</order>
 </decoder>
 
 <decoder name="web-accesslog-glpi">

@@ -29,6 +29,7 @@ def test_log_volume_creates_and_grows_file(tmp_path, monkeypatch):
     }
 
     monkeypatch.setattr(mod, "load_config", lambda: cfg)
+    monkeypatch.setattr(mod, "get_scenario_simulate", lambda cfg, scenario: cfg[scenario])
 
     mod.main()
 

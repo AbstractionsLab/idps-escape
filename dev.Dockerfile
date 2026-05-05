@@ -15,55 +15,44 @@ ENV MY_ENV=${MY_ENV} \
 ENV user=alab
 ENV SOAR_FOLDER=soar
 
-# Update and install depencencies
-RUN apt update --fix-missing
-RUN apt-get install -y git python3-pip graphviz
+# Install system dependencies, Node.js 20, and Chromium in a single layer;
+# clean up APT cache immediately to avoid baking it into the image
+RUN apt-get update --fix-missing \
+  && apt-get install -y --no-install-recommends git python3-pip graphviz curl ca-certificates \
+  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
+  && apt-get install -y --no-install-recommends chromium || apt-get install -y --no-install-recommends chromium-browser || true \
+  && apt-get autoremove -y \
+  && apt-get autoclean -y \
+  && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x (required by Mermaid CLI / mmdc)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs
-
-# Install Chromium (headless browser backend for Mermaid CLI)
-RUN apt-get install -y chromium || apt-get install -y chromium-browser || true
-
-# Install Mermaid CLI for rendering Mermaid diagrams in specs
+# Install Mermaid CLI (global, system-level; runs as root)
 RUN npm install -g @mermaid-js/mermaid-cli
 
-# Install pipx
-RUN python3 -m pip install pipx
-RUN python3 -m pipx ensurepath
+# Create a non-root user (no sudo granted)
+RUN useradd -ms /bin/bash ${user}
 
-# Create a non-root user
-RUN useradd -ms /bin/bash ${user} && echo '${user} ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
-
-# Add location where pip is installed to the PATH variable
+# Add location where pip/pipx install user-scoped tools to the PATH
 ENV PATH="/home/${user}/.local/bin:${PATH}"
 
-# Copy the files and install the python environment as user alab 
-USER ${user} 
-# RUN pip3 install pipenv
-RUN pip3 install poetry=="${POETRY_VERSION}"
+# Switch to non-root user for all subsequent steps
+USER ${user}
+
+# Install pipx and poetry under the user account
+RUN python3 -m pip install --no-cache-dir pipx \
+  && python3 -m pipx ensurepath \
+  && pip3 install --no-cache-dir poetry=="${POETRY_VERSION}"
 
 WORKDIR /home/${user}/${SOAR_FOLDER}
 COPY --chown=${user}:${user} poetry.lock pyproject.toml /home/${user}/${SOAR_FOLDER}/
 
 # Project initialization
-RUN poetry install --only docs && poetry lock
+RUN poetry install --only docs --no-root
 
-# Creating folders, and files for a project
-COPY . /home/${user}/${SOAR_FOLDER}
-
-# Install python virtual environment for the project
-WORKDIR /home/${user}/${SOAR_FOLDER}
-# RUN pipenv install
+# Copy project files with correct ownership
+COPY --chown=${user}:${user} . /home/${user}/${SOAR_FOLDER}
 
 # Install Doorstop
 RUN pipx install doorstop==3.0b10
 
-# Clean up unnecessary packages
-USER root
-RUN apt-get autoremove -y && apt-get autoclean -y
-
-# Set the container starting point, running the project as the user
-USER ${user} 
 CMD ["poetry", "shell"]

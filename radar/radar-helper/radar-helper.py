@@ -164,7 +164,10 @@ class BaseLogWatcher(threading.Thread):
 # ------------------------------------------------------------
 
 class ApacheLogWatcher(BaseLogWatcher):
-    APACHE_LOG = "/var/log/apache2/access.log"
+    APACHE_LOGS = [
+        "/var/log/apache2/access.log",
+        "/var/log/apache2/other_vhosts_access.log"
+    ]
     OUT_APACHE_LOG = "/var/log/suspicious_login.log"
     CITY_DB = "/usr/share/GeoIP/GeoLite2-City.mmdb"
 
@@ -196,9 +199,9 @@ class ApacheLogWatcher(BaseLogWatcher):
         "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31.",
     )
 
-    def __init__(self, radar_logger: RadarLogger, in_path: str = None, out_path: str = None):
+    def __init__(self, radar_logger: RadarLogger, in_path: str, out_path: str = None):
         super().__init__(
-            in_path or self.APACHE_LOG,
+            in_path,
             out_path or self.OUT_APACHE_LOG,
             logger_name="radar.apache",
             radar_logger=radar_logger,
@@ -441,10 +444,14 @@ class AuditLogWatcher(BaseLogWatcher):
 
 def main():
     auth_watcher = AuthLogWatcher(RADAR_LOG)
-    apache_watcher = ApacheLogWatcher(RADAR_LOG)
+    apache_watchers = [
+        ApacheLogWatcher(RADAR_LOG, in_path=p)
+        for p in ApacheLogWatcher.APACHE_LOGS
+    ]
 
     auth_watcher.start()
-    apache_watcher.start()
+    for w in apache_watchers:
+        w.start()
 
     try:
         while True:
@@ -453,9 +460,11 @@ def main():
         pass
     finally:
         auth_watcher.stop()
-        apache_watcher.stop()
+        for w in apache_watchers:
+            w.stop()
         auth_watcher.join(timeout=5.0)
-        apache_watcher.join(timeout=5.0)
+        for w in apache_watchers:
+            w.join(timeout=5.0)
 
 
 if __name__ == "__main__":

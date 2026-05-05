@@ -76,6 +76,67 @@ poetry run python c5browser.py --specs-dir path/to/specs/
 
 ---
 
+### `c5fingerprint.py`
+
+Computes and stores dependency content fingerprints in Doorstop items, enabling dependency-aware impact analysis when referenced source files change.
+
+**Role in the pipeline:**
+
+Each Doorstop item may carry a `references:` list pointing to source files (e.g. a TCS item referencing the implementation files it covers). `c5fingerprint.py` hashes the content of those files and stores the result as `references_content_fingerprint` in the item's YAML frontmatter. When a referenced file changes, the stored fingerprint becomes *stale*, alerting reviewers that the item may need to be revisited. This creates a lightweight traceability link between specification items and their dependent source artifacts.
+
+**How it works:**
+
+1. **Document discovery** — walks the specs directory for `.doorstop.yml` files to identify all Doorstop documents and their item files (same discovery pattern as other SpecEngine scripts).
+2. **Reference extraction** — for each item, parses the `references:` frontmatter list and collects every entry that carries a `path` key. URL-only or path-less entries are skipped.
+3. **Per-file hashing** — each referenced path is resolved relative to the repository root and hashed with SHA-256 (truncated to 16 hex characters). Files that are missing or inaccessible are recorded as `"missing"` and excluded from the combined hash, so a missing file does not mask changes in files that are present.
+4. **Combined hash** — a single combined digest is computed over the sorted `"path:hash"` pairs of all present files.
+5. **Staleness check** — the newly computed fingerprint is compared against the stored `references_content_fingerprint` value. Items where any file hash has changed are flagged as `[STALE]`.
+6. **In-place update** — unless `--dry-run` or `--check` is set, stale items are updated in place with the new fingerprint.
+7. **Attribute registration** — for every document that contains at least one item with references, the `references_content_fingerprint: {}` default is injected into the document's `.doorstop.yml` `attributes.defaults` block (idempotent).
+
+**Stored fingerprint format** (written into each item's YAML frontmatter):
+
+```yaml
+references_content_fingerprint:
+  combined: 4a7b9c1d2e3f4a5b
+  files:
+    c5dec/core/cpssa/__init__.py: 9c0d1e2f3a4b5c6d
+    c5dec/core/cpssa/cpssa.py: 1a2b3c4d5e6f7a8b
+```
+
+**Usage:**
+
+```bash
+# Standard invocation (from docs/specs/ via publish.sh)
+poetry run python ./SpecEngine/c5fingerprint.py
+
+# Dry-run – compute only, no writes (exit 0)
+poetry run python ./SpecEngine/c5fingerprint.py --dry-run
+
+# Check mode – exit 1 if stale items found (CI gate)
+poetry run python ./SpecEngine/c5fingerprint.py --check
+
+# Verbose – show per-file hash details per item
+poetry run python ./SpecEngine/c5fingerprint.py --verbose
+
+# Non-default paths
+poetry run python ./SpecEngine/c5fingerprint.py \
+    --specs-dir /path/to/docs/specs \
+    --repo-root /path/to/repo/root
+```
+
+**Flags:**
+
+| Flag | Effect |
+|------|--------|
+| `--dry-run` | Compute fingerprints but write nothing. Exits with 0. |
+| `--check` | Implies `--dry-run`. Exits with 1 if any stale items are found. Suitable as a CI gate. |
+| `--verbose` | Print per-item and per-file hash details alongside the `[OK]` / `[STALE]` status. |
+| `--specs-dir PATH` | Override the specs root (default: parent of this script's directory). |
+| `--repo-root PATH` | Override the repository root used to resolve reference paths. |
+
+---
+
 ### `c5graph.py`
 
 Generates a self-contained, interactive HTML graph (`specs-graph.html`) visualising the Doorstop item dependency tree using Cytoscape.js with the Dagre hierarchical layout.
@@ -193,7 +254,7 @@ Items that already have a corresponding `.md` file are skipped. Files that do no
 `--dry-run` prints what would happen without writing any files.
 
 **Default target folders** (relative to the repo root):
-`docs/specs/arc`, `docs/specs/mrs`, `docs/specs/srs`, `docs/specs/swd`, `docs/specs/tra`, `docs/specs/trb`, `docs/specs/tst`
+`docs/specs/arc`, `docs/specs/mrs`, `docs/specs/srs`, `docs/specs/swd`, `docs/specs/tcs`, `docs/specs/trp`
 
 **Usage:**
 

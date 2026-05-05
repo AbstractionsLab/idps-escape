@@ -1,3 +1,38 @@
+# 1.0.0 (2026-05-05)
+
+## Added
+
+- **Web interface**: Flask-based control panel (`app.py`) serving four pages with a functional deployment of RADAR scenarios.
+  - **Active Responses page**: per-scenario configuration of risk weights, signature and anomaly detection scoring, time windows, tier boundaries, and per-tier mitigation actions.
+  - **Infrastructure page**: full Ansible inventory management with cards for each manager and agent showing connection type, IP, and credential status.
+  - **Connectors page**: credential and URL management for OpenSearch, Wazuh API, OpenSearch Dashboards, SMTP, DECIPHER, and Webhook. 
+  - **Deploy page**: three-tab interface for running `build-radar.sh` (Build & deploy), `run-radar.sh` (Run Anomaly Detector, Hybrid and Anomaly ML scenarios only), and `health-radar.sh` (Status). 
+  - **Vault and credential management**: Ansible Vault integration storing sudo passwords encrypted in `host_vars/<name>.yml`. The vault password is held in a server-side in-memory session (never written to disk) tied to a `radar_vault_sid` cookie, with create, unlock, and lock flows. SSH key passphrases are managed in the same session and used to drive a short-lived `ssh-agent` process for the duration of each remote Ansible run.
+  - **REST API**: API under `/api/` covering scenarios, connectors, infrastructure CRUD, health checks, deploy streaming, vault, and SSH passphrase session management. 
+  - **Software Design Specification**: software design specification for the RADAR GUI covering module structure, Flask application architecture, orchestrator module design decisions, the credential and session security model
+  - **System requirements**: SRS-063 (REST API contract), SRS-064 (frontend specification), and SRS-065 (Ruleset-as-Code) define the three new subsystems
+- **GeoIP frequency rule**: New rule detects high-frequency authentication attempts from non-whitelisted countries, providing escalation path for coordinated geographic anomalies
+- **Off-hour login detection scenario specification** (`SRS-062`): New system requirement for per-user behavioral baseline detection of authentication events outside business hours (Mon–Fri, 07:00–20:00) using OpenSearch RCF with `data.user.keyword` categorical field
+- **Ruleset as Code (RaC)**: GitHub Actions-based CI/CD pipeline for developing, reviewing, and deploying Wazuh rules and decoders without direct server access.
+- **Test case and execution report**: TST-050 (SONAR Linux resource monitoring scenario, v1.0) and TRP-040 (execution report: 6/6 steps passed on 2026-05-04, debug mode)
+- **New manual pages**: `radar-gui-user-manual.md` (GUI user guide with first-time setup checklist), `radar-rules.md` (Wazuh rules repository overview), `radar-risk-engine-roadmap.md` (CTI integration strategy), and `suspicious-login-extensibility-guide.md` (protocol extensibility guide)
+
+## Modified
+
+- **Active response logging**: Enhanced `radar_ar.py` to always log planned mitigations including `would_be_mitigations` when `allow_mitigation` is false, improving observability and audit trail for response decisions
+- **Filebeat pipeline volume mapping**: the Wazuh archives ingest pipeline was configured with volume-mapped binding.
+- **Ansible playbook documentation** (`radar-manager-ansible-playbook.md`): Updated task file table, variable tables, and per-block step descriptions
+- **RADAR container hardening**: Applied security hardenings for RADAR containers' dockerfiles
+- **Documentation review**: corrected factual and logic errors, and removed all cross-document duplication by consolidating repeated content to a single authoritative location per topic
+- **Product presentation website**: Extended `product-presentation.html` with a RADAR GUI gallery section (four screenshots: Scenarios, Infrastructure, Connectors, Deploy); moved scenario screenshot from main README to `radar/README.md` and replaced it with a GIF walkthrough; simplified roadmap to reflect delivered items
+- **SpecEngine C5-DEC v1.3 upgrade**: Added the dependency content fingerprinting feature of SpecEngine to IDPS-ESCAPE
+
+## Fixed
+
+- Decoder parsing for domain:port format in authentication event enrichment
+- Re-attaches an existing monitor to a newly created detector when the stored `detector_id` is stale.
+- Updated `test_monitor.py` and simulation test fixtures to reflect the new monitor re-attach logic and the `get_scenario_simulate` import added to the scenario scripts.
+
 # 0.10 (2026-04-15)
 
 ## Added
@@ -24,6 +59,13 @@
 - **SONAR `TrainingScenario`**: Extended with `derived_features`, `alert_filter`, and `max_numeric_fields` fields; `UseCase.from_yaml()` and `to_yaml()` updated to parse and emit all three
 - **SONAR `cli.py`**: `cmd_scenario()` now propagates `derived_features`, `alert_filter`, and `max_numeric_fields` from the scenario into `cfg.features`; `_execute_training_phase()` and `_run_single_detection()` pass `query=cfg.features.alert_filter` to every `search_alerts()` call
 - **SONAR feature log line**: Updated to report `N numeric + M max + D derived + C categorical = total` columns
+
+## Modified
+
+- **Unified configuration files**: Consolidated scenario parameters from three sources into a single `radar/config.yaml` file
+  - Added optional `ingest:` section under applicable scenarios for data ingestion parameters
+  - Added optional `simulate:` section under all scenarios for RADAR test framework simulation parameters
+  - All scenario configuration (detector/monitor, ingestion, and simulation settings) now co-located in `radar/config.yaml` for simplified management
 
 # 0.9 (2026-04-01)
 
@@ -128,7 +170,7 @@
 
 ## Added
 
-- **SONAR (SIEM-Oriented Neural Anomaly Recognition)**: Production-grade multivariate anomaly detection subsystem for Wazuh, a redesign and rewrite of ADBox
+- **SONAR (SIEM-Oriented Neural Anomaly Recognition)**: multivariate anomaly detection subsystem for Wazuh, a redesign and rewrite of ADBox
   - Powered by Microsoft's anomaly detection library implementing MTAD-GAT (time-series-anomaly-detector)
   - Complete SONAR subsystem with dedicated modules including CLI, engine, features, pipeline, and configuration modules
   - YAML-based scenario configuration system for repeatable detection workflows

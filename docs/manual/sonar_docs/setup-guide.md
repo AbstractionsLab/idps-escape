@@ -223,7 +223,7 @@ poetry run sonar scenario --use-case scenario.yaml --debug
 ```yaml
 debug:
   enabled: true
-  data_dir: "./test_data/resource_monitoring"  # Relative to sonar/ directory
+  data_dir: "sonar/test_data/resource_monitoring"  # Relative to project root
   training_data_file: "resource_monitoring_training.json"
   detection_data_file: "resource_monitoring_detection.json"
 ```
@@ -414,13 +414,13 @@ detection:
 
 ```bash
 # All tests
-poetry run pytest tests/
+poetry run pytest tests/sonartests/
 
 # Specific test file
-poetry run pytest tests/engine_test.py
+poetry run pytest tests/sonartests/test_engine_and_features.py
 
 # With coverage
-poetry run pytest --cov=sonar --cov-report=html
+poetry run pytest --cov=sonar --cov-report=html tests/sonartests/
 ```
 
 ### Integration tests
@@ -461,9 +461,3 @@ poetry run sonar train --lookback-hours 24
 # Or specify model path
 poetry run sonar detect --model-path ./custom_model.pkl
 ```
-
-## Next steps
-
-- Review [scenario-guide.md](./scenario-guide.md) for advanced scenario patterns
-- See [architecture.md](./architecture.md) for system design details
-- Check [uml-diagrams.md](./uml-diagrams.md) for visual representations

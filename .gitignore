@@ -188,3 +188,6 @@ adbox/assets/detector_models
 adboxv2/model/mvad_model.pkl
 
 payloads/
+
+# Ansible vault
+host_vars/*.yml

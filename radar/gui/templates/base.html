@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}RADAR{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <img class="sidebar__logo" src="{{ url_for('static', filename='img/1D1B2_LOG_IDPS-ESCAPE-400x400.png') }}" alt="IDPS-ESCAPE logo">
+      <span class="sidebar__brand-text">
+        <span class="sidebar__supertitle">IDPS-ESCAPE</span>
+        <span class="sidebar__title">RADAR</span>
+      </span>
+    </div>
+    <nav class="sidebar__nav">
+      <a href="{{ url_for('active_responses') }}"
+         class="nav-item {% if request.endpoint == 'active_responses' %}nav-item--active{% endif %}">
+        RADAR Scenarios
+      </a>
+      <a href="{{ url_for('infrastructure') }}"
+         class="nav-item {% if request.endpoint == 'infrastructure' %}nav-item--active{% endif %}">
+        Infrastructure
+      </a>
+      <a href="{{ url_for('connectors') }}"
+         class="nav-item {% if request.endpoint == 'connectors' %}nav-item--active{% endif %}">
+        Connectors
+      </a>
+      <a href="{{ url_for('deploy') }}"
+         class="nav-item {% if request.endpoint == 'deploy' %}nav-item--active{% endif %}">
+        Deploy
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <div class="page-header">
+      <div class="page-header__left">
+        <h1 class="page-header__title">{% block page_title %}{% endblock %}</h1>
+        {% block page_subtitle %}{% endblock %}
+      </div>
+      <div class="page-header__right">
+        <span id="ssh-badge" class="vault-badge" style="display:none"></span>
+        <span id="vault-badge" class="vault-badge" style="display:none"></span>
+        {% block page_actions %}{% endblock %}
+      </div>
+    </div>
+
+    {% block subnav %}{% endblock %}
+
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+
+  </main>
+
+  <div id="global-toast-host" class="toast-host"></div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+
+</body>
+</html>

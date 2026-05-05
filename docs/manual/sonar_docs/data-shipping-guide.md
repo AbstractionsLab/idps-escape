@@ -34,13 +34,6 @@ Data shipping is an **add-on feature** that enables SONAR to:
 | Testing/development | ❌ No | Debug mode with local test data is more appropriate |
 | Production deployment | ✅ Yes | Enables integration with SIEM dashboards and alerting |
 
-### Key benefits
-
-- **Scenario isolation**: Each trained model gets its own data stream
-- **Template-based indexing**: Automatic field typing and validation
-- **Data lifecycle management**: Built-in rollover policies for stream management
-- **RADAR integration**: Anomalies automatically trigger automated responses
-
 ---
 
 ## Architecture
@@ -197,7 +190,7 @@ poetry run sonar train \
 **Output:**
 ```
 [INFO] Training on 2400 time points...
-[INFO] Saving model to ./mvad_model.pkl...
+[INFO] Saving model to ./sonar/models/sonar_scenario_a1b2c3d4.pkl...
 [INFO] Initializing data shipper for stream creation...
 [INFO] Creating data stream for scenario: sonar_scenario_a1b2c3d4
 [INFO] ✓ Data stream ready: sonar_anomalies_mvad_a1b2c3d4
@@ -266,18 +259,6 @@ sonar scenario --use-case YAML --ship
 3. Instead of indexing to `wazuh-anomalies-mvad`, anomalies are shipped to scenario-specific data stream
 4. Each document is indexed with full feature context
 
-### Scenario execution with shipping
-
-```bash
-# From project root
-sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml --ship
-```
-
-**Behavior:**
-- **If training section exists**: Creates data stream during training phase
-- **If detection section exists**: Ships anomalies during detection phase
-- **If both exist**: Full workflow with stream creation and shipping
-
 ---
 
 ## YAML configuration
@@ -308,24 +289,6 @@ shipping:
 | `install_templates` | boolean | `true` | Whether to install base index templates on first run |
 | `scenario_id` | string | `null` | Custom scenario ID (defaults to hash of model path if not specified) |
 
-### YAML vs CLI flag behavior
-
-The `--ship` CLI flag **overrides** YAML configuration:
-
-```bash
-# YAML has shipping.enabled: false
-# CLI flag enables it anyway:
-poetry run sonar scenario --use-case my_scenario.yaml --ship  # Shipping enabled
-
-# YAML has shipping.enabled: true
-# CLI flag not provided, but shipping still enabled:
-poetry run sonar scenario --use-case my_scenario.yaml  # Shipping enabled
-
-# YAML has shipping.enabled: true
-# Debug mode always disables shipping:
-poetry run sonar scenario --use-case my_scenario.yaml --debug  # Shipping disabled
-```
-
 ### Example: Production scenario with shipping
 
 ```yaml
@@ -333,15 +296,14 @@ name: "Lateral Movement Detection"
 description: "Detect lateral movement patterns using PSExec, WMI, RDP connections"
 
 wazuh:
-  host: "wazuh.production.local"
-  port: 9200
-  index_pattern: "wazuh-alerts-*"
+  base_url: "https://wazuh.production.local:9200"
+  alerts_index_pattern: "wazuh-alerts-*"
   username: "admin"
-  password_env: "WAZUH_PASSWORD"
+  password: "changeme"
+  verify_ssl: true
 
 training:
-  lookback_days: 14
-  min_samples: 1000
+  lookback_hours: 336  # 14 days
   bucket_minutes: 10
   sliding_window: 144
   categorical_top_k: 20

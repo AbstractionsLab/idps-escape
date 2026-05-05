@@ -16,4 +16,8 @@
     <list field="radar_country" lookup="not_match_key">etc/lists/whitelist_countries</list>
     <description>Connection from non-whitelist country</description>
   </rule>
+  <rule id="100903" level="12" frequency="300" timeframe="300">
+    <if_matched_sid>100902</if_matched_sid>
+    <description>High number of connections from non-whitelist countries</description>
+  </rule>
 </group>

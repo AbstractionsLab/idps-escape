@@ -50,6 +50,7 @@
     _host_ossec_etc: "{{ (_mgr_vols | select('match', '.+:/var/ossec/etc/?$') | list | first) | regex_replace(':(/var/ossec/etc)/?$','') }}"
     _host_active_response_bin: "{{ (_mgr_vols | select('match', '.+:/var/ossec/active-response/bin/?$') | list | first) | regex_replace(':(/var/ossec/active-response/bin)/?$','') }}"
     _host_filebeat_etc_dir: "{{ (_mgr_vols | select('match', '.+:/etc/filebeat/?$') | list | first) | regex_replace(':(/etc/filebeat)/?$','') }}"
+    _host_filebeat_modules_dir: "{{ (_mgr_vols | select('match', '.+:/usr/share/filebeat/module/?$') | list | first) | regex_replace(':(/usr/share/filebeat/module)/?$','') }}"
 
 - name: Derive concrete host destinations
   ansible.builtin.set_fact:
@@ -59,6 +60,7 @@
     _host_lists_dir: "{{ _host_ossec_etc ~ '/lists' }}"
     _host_shared_dir: "{{ _host_ossec_etc ~ '/shared' }}"
     _host_filebeat_yml: "{{ _host_filebeat_etc_dir ~ '/filebeat.yml' }}"
+    _host_pipeline_json: "{{ _host_filebeat_modules_dir ~ '/wazuh/archives/ingest/pipeline.json' }}"
 
 - name: Derive agent config variables
   ansible.builtin.set_fact:
@@ -70,6 +72,7 @@
       - _host_ossec_etc | length > 0
       - _host_active_response_bin | length > 0
       - _host_filebeat_etc_dir | length > 0
+      - _host_filebeat_modules_dir | length > 0
     fail_msg: "volumes.yml is missing required bind mounts for manager paths."
 
 - name: Show resolved manager mode
