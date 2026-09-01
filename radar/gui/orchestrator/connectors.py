@@ -1,11 +1,22 @@
 from __future__ import annotations
 
-import os
+import re
 import smtplib
+import subprocess
 import threading
 from pathlib import Path
 
 _lock = threading.Lock()
+
+_DEFAULT_MANAGER_CONTAINER = "wazuh.manager"
+_DEFAULT_AR_RISK_CONFIG = "/var/ossec/active-response/bin/ar.yaml"
+
+def _manager_container(env: dict) -> str:
+    return env.get("MANAGER_CONTAINER", "").strip() or _DEFAULT_MANAGER_CONTAINER
+
+def _ar_bin_env_path(env: dict) -> str:
+    ar_risk_config = env.get("AR_RISK_CONFIG", "").strip() or _DEFAULT_AR_RISK_CONFIG
+    return str(Path(ar_risk_config).parent / "active_responses.env")
 
 FIELD_MAP = {
     "os-url": "OS_URL",
@@ -33,13 +44,15 @@ FIELD_MAP = {
     "decipher-timeout": "DECIPHER_TIMEOUT_SEC",
     "webhook-name": "WEBHOOK_NAME",
     "webhook-url": "WEBHOOK_URL",
+    "maxmind-key": "MAXMIND_LICENSE_KEY",
 }
 
 PASSWORD_KEYS = {
     "os-pass": "OS_PASS",
     "wazuh-pass": "WAZUH_AUTH_PASS",
     "dashboard-pass": "DASHBOARD_PASS",
-    "smtp-pass": "SMTP_PASS"
+    "smtp-pass": "SMTP_PASS",
+    "maxmind-key": "MAXMIND_LICENSE_KEY",
 }
 
 
@@ -63,7 +76,10 @@ def load_env(radar_root: str) -> dict:
                 continue
             if "=" in line:
                 k, _, v = line.partition("=")
-                result[k.strip()] = v.strip().strip('"')
+                v = v.strip()
+                if not (v.startswith('"') or v.startswith("'")):
+                    v = re.split(r"\s+#", v, maxsplit=1)[0].strip()
+                result[k.strip()] = v.strip('"').strip("'")
     return result
 
 
@@ -76,7 +92,7 @@ def reveal_password(radar_root: str, env_key: str) -> str | None:
     return load_env(radar_root).get(env_key)
 
 
-def save_connector(radar_root: str, connector: str, fields: dict) -> None:
+def save_connector(radar_root: str, connector: str, fields: dict) -> dict:
     with _lock:
         env = load_env(radar_root)
 
@@ -108,6 +124,39 @@ def save_connector(radar_root: str, connector: str, fields: dict) -> None:
                 env[env_key] = value
 
         _write_env(radar_root, env)
+
+    try:
+        _sync_active_responses_env(radar_root)
+        return {"synced": True, "sync_error": None}
+    except Exception as e:
+        return {"synced": False, "sync_error": str(e)}
+
+
+def _sync_active_responses_env(radar_root: str) -> None:
+    env = load_env(radar_root)
+    container = _manager_container(env)
+    ar_env_path = _ar_bin_env_path(env)
+    src = str(_env_path(radar_root))
+    try:
+        subprocess.run(
+            ["docker", "cp", src, f"{container}:{ar_env_path}"],
+            capture_output=True, text=True, timeout=15, check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        detail = (e.stderr or e.stdout or str(e)).strip()
+        raise RuntimeError(f"could not copy .env into {container}: {detail}")
+    except FileNotFoundError:
+        raise RuntimeError(f"docker CLI not found on GUI host -- could not sync into {container}")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"timed out copying .env into {container}")
+    subprocess.run(
+        ["docker", "exec", "-u", "root", container, "chown", "root:wazuh", ar_env_path],
+        capture_output=True, text=True, timeout=10,
+    )
+    subprocess.run(
+        ["docker", "exec", "-u", "root", container, "chmod", "0660", ar_env_path],
+        capture_output=True, text=True, timeout=10,
+    )
 
 
 def _save_cert(radar_root: str, name: str, content: str) -> Path:
@@ -163,6 +212,8 @@ def test_connector(radar_root: str, connector: str) -> dict:
         return _test_decipher(env)
     if connector == "webhook":
         return _test_webhook(env)
+    if connector == "maxmind":
+        return _test_maxmind(env)
     return {"ok": False, "error": f"Unknown connector: {connector}"}
 
 
@@ -245,15 +296,67 @@ def _test_smtp(env: dict) -> dict:
         return {"ok": False, "error": str(e)}
 
 
+def _test_via_manager_container(label: str, url: str, verify_val: str, timeout_val: str, container: str) -> dict:
+    try:
+        timeout_f = float(timeout_val)
+    except (TypeError, ValueError):
+        timeout_f = 10.0
+
+    insecure = not verify_val or verify_val.lower() in ("false", "0")
+    cmd = [
+        "docker", "exec", container,
+        "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+        "--max-time", str(timeout_f),
+    ]
+    if insecure:
+        cmd.append("-k")
+    cmd.append(url)
+
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_f + 15)
+        status = (proc.stdout or "").strip()
+        if proc.returncode == 0 and status[:1] in ("2", "3"):
+            return {"ok": True, "detail": f"{label} responded HTTP {status} -- checked from inside {container}"}
+        err = (proc.stderr or "").strip()
+        detail = err or f"curl exited {proc.returncode} (status={status or 'n/a'})"
+        return {"ok": False, "error": f"{detail} (checked from inside {container})"}
+    except FileNotFoundError:
+        return {"ok": False, "error": f"docker CLI not found on GUI host -- cannot exec into {container}"}
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": f"timed out waiting for docker exec into {container}"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 def _test_decipher(env: dict) -> dict:
+    base = env.get("DECIPHER_BASE_URL", "")
+    if not base:
+        return {"ok": False, "error": "DECIPHER_BASE_URL not configured"}
+    url = base.rstrip("/") + "/health"
+    timeout = env.get("DECIPHER_TIMEOUT_SEC", "30")
+    verify = env.get("DECIPHER_VERIFY_SSL", "false")
+    container = _manager_container(env)
+    return _test_via_manager_container("DECIPHER", url, verify, timeout, container)
+
+
+def _test_maxmind(env: dict) -> dict:
     try:
         import urllib.request
-        url = env.get("DECIPHER_BASE_URL", "").rstrip("/") + "/api/case/list"
-        timeout = int(env.get("DECIPHER_TIMEOUT_SEC", 30))
-        ctx = _ssl_ctx(env.get("DECIPHER_VERIFY_SSL", "false"))
-        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
-        with urllib.request.urlopen(req, context=ctx, timeout=timeout) as resp:
-            return {"ok": True, "detail": f"DECIPHER responded {resp.status}"}
+        import urllib.error
+        key = env.get("MAXMIND_LICENSE_KEY", "").strip()
+        if not key:
+            return {"ok": False, "error": "MAXMIND_LICENSE_KEY not configured"}
+        url = (
+            "https://download.maxmind.com/app/geoip_download"
+            f"?edition_id=GeoLite2-City&license_key={key}&suffix=tar.gz"
+        )
+        req = urllib.request.Request(url, method="HEAD")
+        with urllib.request.urlopen(req, timeout=10):
+            return {"ok": True, "detail": "MaxMind license key accepted"}
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            return {"ok": False, "error": "MaxMind rejected this license key (401/403)"}
+        return {"ok": False, "error": f"MaxMind returned HTTP {e.code}"}
     except Exception as e:
         return {"ok": False, "error": str(e)}
 

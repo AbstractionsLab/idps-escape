@@ -1,107 +1,89 @@
 {% extends "base.html" %}
-{% block title %}Deploy{% endblock %}
+{% block title %}Deployment{% endblock %}
 
-{% block page_title %}Deploy{% endblock %}
+{% block page_title %}Deployment{% endblock %}
 
 {% block subnav %}
 <div class="subnav">
-  <div class="subnav__item subnav__item--active" data-tab="build" onclick="switchTab('build')">Build &amp; deploy</div>
-  <div class="subnav__item" data-tab="run" onclick="switchTab('run')">Run Anomaly Detector</div>
+  <div class="subnav__item subnav__item--active" data-tab="build" onclick="switchTab('build')">Scenario Management</div>
+  <div class="subnav__item" data-tab="run" onclick="switchTab('run')">Anomaly Detector</div>
+  <div class="subnav__item" data-tab="onboard" onclick="switchTab('onboard')">Agent Management</div>
+  <div class="subnav__item" data-tab="groups" onclick="switchTab('groups')">Group Management</div>
   <div class="subnav__item" data-tab="health" onclick="switchTab('health')">Status</div>
+  <div class="subnav__item" data-tab="teardown" onclick="switchTab('teardown')">Teardown</div>
 </div>
 {% endblock %}
 
 {% block content %}
 
-{% if summary.get('error') %}
-<div class="strip strip--red" style="margin-bottom:20px">
-  <strong>Inventory unreadable:</strong> {{ summary.error }}
-</div>
-{% endif %}
-
 <div class="deploy-layout">
 
   <div class="deploy-panel" id="tab-build">
-    <div class="card">
-      <div class="card__title">Build &amp; deploy a scenario</div>
-      <hr class="divider">
+    <div class="subtabs">
+      <div class="subtabs__item subtabs__item--active" data-parent="build" data-subtab="deploy" onclick="switchSubTab('build','deploy')">Deploy scenario</div>
+      <div class="subtabs__item" data-parent="build" data-subtab="undeploy" onclick="switchSubTab('build','undeploy')">Undeploy scenario</div>
+    </div>
 
-      <div class="form-group">
-        <label class="form-label">Scenario *</label>
-        <select class="form-input" id="b-scenario">
-          {% for s in scenarios %}
-          <option value="{{ s.id }}">{{ s.name }}{% if s.id in bound_scenarios %} — bound{% endif %}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="subtab-panel" id="subtab-build-deploy">
+      <div class="card">
+        <div class="card__title">Deploy scenario</div>
+        <hr class="divider">
 
-      <div class="grid-2">
         <div class="form-group">
-          <label class="form-label">Manager location *</label>
-          <select class="form-input" id="b-manager">
-            <option value=""></option>
-            <option value="local">local — docker-compose.core.yml on this host</option>
-            <option value="remote">remote — SSH to a Wazuh manager/worker</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Agents location *</label>
-          <select class="form-input" id="b-agent">
-            <option value=""></option>
-            <option value="local">local — container agents via docker-compose</option>
-            <option value="remote">remote — SSH-managed agents</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="b-manager-exists" checked>
-          <span>Manager already exists at that location (skip bootstrap)</span>
-        </label>
-        <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
-          Uncheck to bootstrap: <code>docker compose up</code> locally, or let Ansible stand up a remote manager.
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">SSH private key (optional)</label>
-        <input class="form-input mono" id="b-ssh-key" placeholder="~/.ssh/id_ed25519">
-        <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
-          Only used when manager or agents are remote. Defaults to <code>~/.ssh/id_ed25519</code> on the server.
-        </div>
-      </div>
-
-      <div id="b-agent-select-wrap" style="display:none">
-        <div class="form-group">
-          <label class="form-label">Target agents <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted)">(optional — leave all unchecked to target all)</span></label>
-          <div class="agent-select-list" id="b-agent-list-local">
-            {% for agent in summary.container_agents %}
-            <label class="agent-select-item">
-              <input type="checkbox" class="agent-select-cb" value="{{ agent.name }}">
-              <span class="agent-select-name mono">{{ agent.name }}</span>
-              <span class="badge badge--green" style="font-size:10px">container</span>
-            </label>
-            {% endfor %}
-          </div>
-          <div class="agent-select-list" id="b-agent-list-remote" style="display:none">
-            {% for agent in summary.ssh_agents %}
-            <label class="agent-select-item">
-              <input type="checkbox" class="agent-select-cb" value="{{ agent.name }}">
-              <span class="agent-select-name mono">{{ agent.name }}</span>
-              <span class="badge badge--blue" style="font-size:10px">ssh</span>
-            </label>
-            {% endfor %}
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="b-core-only" style="margin-top:2px" onchange="toggleCoreOnly()">
+            <span>Plain Wazuh only</span>
+          </label>
+          <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+            Brings up the manager/indexer/dashboard stack with no RADAR scenario applied.
           </div>
         </div>
+
+        <div class="form-group" id="b-scenario-group">
+          <label class="form-label">Scenario *</label>
+          <select class="form-input" id="b-scenario">
+            <option value="" disabled selected>Select a scenario</option>
+            {% for s in scenarios %}
+            <option value="{{ s.id }}" data-shared="{{ 'true' if s.shared else 'false' }}">{{ s.name }}{% if not s.ar_config.get('active') %} (not deployed){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="deploy-preview" id="b-preview"></div>
+
+        <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+          <button class="btn" onclick="previewCmd('build')">Preview command</button>
+          <button class="btn btn--primary" onclick="runAction('build')" id="b-run-btn">Deploy</button>
+          <button class="btn" onclick="stopStream()" id="b-stop-btn" style="display:none">Stop streaming</button>
+        </div>
       </div>
+    </div>
 
-      <div class="deploy-preview" id="b-preview"></div>
+    <div class="subtab-panel" id="subtab-build-undeploy" style="display:none">
+      <div class="card">
+        <div class="card__title">Undeploy scenario</div>
+        <hr class="divider">
+        <div class="form-hint" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+          Resets the scenario's own configurations.
+        </div>
 
-      <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
-        <button class="btn" onclick="previewCmd('build')">Preview command</button>
-        <button class="btn btn--primary" onclick="runAction('build')" id="b-run-btn">Deploy</button>
-        <button class="btn" onclick="stopStream()" id="b-stop-btn" style="display:none">Stop streaming</button>
+        <div class="form-group">
+          <label class="form-label">Scenario *</label>
+          <select class="form-input" id="ub-scenario">
+            <option value="" disabled selected>Select a scenario</option>
+            {% for s in scenarios %}
+            <option value="{{ s.id }}">{{ s.name }}{% if not s.ar_config.get('active') %} (not deployed){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="deploy-preview" id="ub-preview"></div>
+
+        <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+          <button class="btn" onclick="previewUndoScenario()">Preview command</button>
+          <button class="btn btn--danger" onclick="undoScenario()" id="ub-run-btn">Undeploy</button>
+          <button class="btn" onclick="stopStream()" id="ub-stop-btn" style="display:none">Stop streaming</button>
+        </div>
       </div>
     </div>
   </div>
@@ -114,8 +96,9 @@
       <div class="form-group">
         <label class="form-label">Scenario *</label>
         <select class="form-input" id="r-scenario">
+          <option value="" disabled selected>Select a scenario</option>
           {% for s in scenarios if s.type in ('hybrid', 'anomaly') %}
-          <option value="{{ s.id }}">{{ s.name }}</option>
+          <option value="{{ s.id }}" data-shared="{{ 'true' if s.shared else 'false' }}">{{ s.name }}</option>
           {% endfor %}
         </select>
       </div>
@@ -134,6 +117,170 @@
         <button class="btn btn--primary" onclick="runAction('run')" id="r-run-btn">Run</button>
         <button class="btn" onclick="stopStream()" id="r-stop-btn" style="display:none">Stop streaming</button>
       </div>
+
+      <div class="form-hint" style="margin-top:14px;font-size:12px;color:var(--text-muted)">
+        To remove Anomaly Detector from a previous
+        run, go to the Wazuh dashboard and delete manually.
+      </div>
+    </div>
+  </div>
+
+  <div class="deploy-panel" id="tab-onboard" style="display:none">
+    <div class="subtabs">
+      <div class="subtabs__item subtabs__item--active" data-parent="onboard" data-subtab="onboard" onclick="switchSubTab('onboard','onboard')">Onboard agent</div>
+      <div class="subtabs__item" data-parent="onboard" data-subtab="deregister" onclick="switchSubTab('onboard','deregister')">Deregister agent</div>
+      <div class="subtabs__item" data-parent="onboard" data-subtab="enrollment-window" onclick="switchSubTab('onboard','enrollment-window')">Enrollment Window</div>
+    </div>
+
+    <div class="subtab-panel" id="subtab-onboard-onboard">
+      <div class="card">
+        <div class="card__title">Onboard agent</div>
+        <hr class="divider">
+        <div class="form-hint" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+          Mints a short-lived enrollment token, printing a ready-to-paste command for
+          <code>bootstrap-agent.sh</code>. Note: activating and revoking the token each
+          briefly restart the manager, disconnecting all currently-connected agents for
+          a few seconds - this is a real cost of Wazuh's built-in short-lived-token
+          mechanism, not a bug.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Scenario *</label>
+          <select class="form-input" id="o-scenario">
+            <option value="" disabled selected>Select a scenario</option>
+            {% for s in scenarios %}
+            <option value="{{ s.id }}" data-shared="{{ 'true' if s.shared else 'false' }}">{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Token expiry (minutes)</label>
+            <input class="form-input" type="number" id="o-expiry" value="60" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Manager address (optional override)</label>
+            <input class="form-input mono" id="o-manager-address" placeholder="auto-detected if left blank">
+          </div>
+        </div>
+
+        <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+          <button class="btn btn--primary" onclick="mintToken()" id="o-run-btn">Mint token</button>
+          <button class="btn" onclick="stopStream()" id="o-stop-btn" style="display:none">Stop streaming</button>
+        </div>
+
+        <div id="o-cmd-copy-wrap" style="display:none;margin-top:16px;padding:14px;border:2px solid var(--blue, #3b82f6);border-radius:8px;background:#1a2233;color:#f3f4f6">
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px;color:#f3f4f6">
+            <span>Run this on the target endpoint</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:stretch">
+            <code class="mono" id="o-cmd-copy-text" style="flex:1;background:#10151f;color:#f3f4f6;padding:10px 12px;border-radius:6px;font-size:13px;line-height:1.5;word-break:break-all;user-select:all"></code>
+            <button class="btn btn--primary btn--sm" onclick="copyBootstrapCmd()" style="white-space:nowrap">Copy command</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subtab-panel" id="subtab-onboard-deregister" style="display:none">
+      <div class="card">
+        <div class="card__title">Deregister agent</div>
+        <hr class="divider">
+        <div class="form-hint" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+          Undo of onboarding: removes the agent from the manager entirely, freeing its name/IP for a
+          fresh enrollment. If the Wazuh agent service is still running on the endpoint itself, it
+          will try to re-enroll automatically -- stop it there first if you don't want that.
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Agent name *</label>
+            <input class="form-input mono" id="dr-agent-name" placeholder="edge-vm-01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Agent IP (optional, used if name doesn't resolve)</label>
+            <input class="form-input mono" id="dr-agent-ip" placeholder="8.8.8.8">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="dr-no-purge">
+            <span>Keep the entry reserved instead of freeing the name/IP for reuse</span>
+          </label>
+          <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+            Checked: the agent record stays in Wazuh (disabled/unreachable) under this same name/IP --
+            re-onboarding the same endpoint later will need a different name or IP, or you'll need to
+            come back and deregister it properly first. Unchecked (default): the name/IP is freed
+            immediately, so the same endpoint can be re-onboarded right away without any conflict.
+          </div>
+        </div>
+
+        <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+          <button class="btn btn--danger" onclick="deregisterAgent()" id="dr-run-btn">Deregister agent</button>
+          <button class="btn" onclick="stopStream()" id="dr-stop-btn" style="display:none">Stop streaming</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="subtab-panel" id="subtab-onboard-enrollment-window" style="display:none">
+      <div class="card">
+        <div class="card__title">Enrollment window (port 1515)</div>
+        <hr class="divider">
+        <div class="form-hint" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+          Port 1515 (agent enrollment) is closed by default via a host firewall rule. Open a
+          time-limited window before onboarding a new agent.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Minutes (for Open)</label>
+          <input class="form-input" type="number" id="ew-minutes" value="30" min="1" style="max-width:160px">
+        </div>
+
+        <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+          <button class="btn" onclick="enrollmentWindowAction('status')">Check status</button>
+          <button class="btn btn--primary" onclick="enrollmentWindowAction('open')" id="ew-open-btn">Open</button>
+          <button class="btn btn--danger" onclick="enrollmentWindowAction('close')" id="ew-close-btn">Close</button>
+          <button class="btn" onclick="stopStream()" id="ew-stop-btn" style="display:none">Stop streaming</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="deploy-panel" id="tab-groups" style="display:none">
+    <div class="card">
+      <div class="card__title">Assign or unassign an agent's groups</div>
+      <hr class="divider">
+      <div class="form-hint" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+        Run "Assign group" after <code>bootstrap-agent.sh</code> completes on the agent endpoint.
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Agent IP (preferred)</label>
+          <input class="form-input mono" id="ga-agent-ip" placeholder="203.0.113.10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Scenario *</label>
+          <select class="form-input" id="ga-scenario">
+            <option value="" disabled selected>Select a scenario</option>
+            {% for s in scenarios %}
+            <option value="{{ s.id }}" data-shared="{{ 'true' if s.shared else 'false' }}">{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Agent name (optional)</label>
+        <input class="form-input mono" id="ga-agent-name" placeholder="edge-vm-01">
+      </div>
+
+      <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+        <button class="btn btn--primary" onclick="assignAgentGroup()" id="ga-run-btn">Assign group</button>
+        <button class="btn btn--danger" onclick="unassignAgentGroup()" id="ga-unassign-btn">Unenroll from groups</button>
+        <button class="btn" onclick="stopStream()" id="ga-stop-btn" style="display:none">Stop streaming</button>
+      </div>
     </div>
   </div>
 
@@ -142,37 +289,21 @@
       <div class="card__title">Infrastructure health check</div>
       <hr class="divider">
 
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Manager location *</label>
-          <select class="form-input" id="h-manager">
-            <option value="local">local</option>
-            <option value="remote">remote</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Agents location *</label>
-          <select class="form-input" id="h-agent">
-            <option value="local">local</option>
-            <option value="remote">remote</option>
-          </select>
-        </div>
+      <div class="form-hint" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+        Runs <code>health-radar.sh</code> against the local manager: container/file checks, then Wazuh API /
+        OpenSearch / webhook checks.
       </div>
 
       <div class="form-group">
         <label class="form-label">Scenario filter</label>
         <select class="form-input" id="h-scenario">
-          <option value="all">all (every bound scenario)</option>
+          <option value="" disabled selected>Select a scenario</option>
           {% for s in scenarios %}
-          <option value="{{ s.id }}">{{ s.name }}</option>
+          <option value="{{ s.id }}" data-shared="{{ 'true' if s.shared else 'false' }}">{{ s.name }}</option>
           {% endfor %}
         </select>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">SSH private key (optional)</label>
-        <input class="form-input mono" id="h-ssh-key" placeholder="~/.ssh/id_ed25519">
-      </div>
 
       <div class="deploy-preview" id="h-preview"></div>
 
@@ -180,6 +311,38 @@
         <button class="btn" onclick="previewCmd('health')">Preview command</button>
         <button class="btn btn--primary" onclick="runAction('health')" id="h-run-btn">Run health check</button>
         <button class="btn" onclick="stopStream()" id="h-stop-btn" style="display:none">Stop streaming</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="deploy-panel" id="tab-teardown" style="display:none">
+    <div class="card">
+      <div class="card__title">Tear down manager</div>
+      <hr class="divider">
+      <div class="form-hint" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)">
+        Stops and removes the manager, indexer, dashboard, and webhook containers.
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="td-remove-data" style="margin-top:2px">
+          <span>Delete all data</span>
+        </label>
+        <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+          Leave unchecked to just stop the containers.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="td-confirm" style="margin-top:2px">
+          <span id="td-confirm-label">I understand this stops the manager stack.</span>
+        </label>
+      </div>
+
+      <div class="modal-actions" style="justify-content:flex-start;margin-top:0">
+        <button class="btn btn--danger" onclick="teardownStack()" id="td-run-btn" disabled>Tear down</button>
+        <button class="btn" onclick="stopStream()" id="td-stop-btn" style="display:none">Stop streaming</button>
       </div>
     </div>
   </div>

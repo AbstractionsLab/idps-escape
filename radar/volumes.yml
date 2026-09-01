@@ -12,4 +12,4 @@ services:
       - /srv/wazuh/manager/active-response/bin:/var/ossec/active-response/bin
       - /srv/wazuh/manager/filebeat/etc:/etc/filebeat
       - /srv/wazuh/manager/filebeat/var:/var/lib/filebeat
-      - /srv/wazuh/manager/filebeat/modules:/usr/share/filebeat/module
+      - /srv/wazuh/manager/filebeat/pipeline-archives.json:/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json

@@ -341,6 +341,302 @@
       </div>
 
       <!-- ═══════════════════════════════════════════
+           v2.0.0
+           ═══════════════════════════════════════════ -->
+      <div class="release" id="v2.0.0">
+        <div class="release-heading">
+          <h2 class="release-title">v2.0.0</h2>
+          <span class="release-date">August 2026</span>
+        </div>
+
+        <!-- ── main feature ── -->
+        <div class="feature-card highlight">
+          <div class="new-badge">New feature</div>
+          <h3>Manager-centric enrichment architecture</h3>
+          <p>
+            Enrichment logic has moved out of the endpoints and into the Wazuh manager. A new
+            <code>manager-enrichment</code> package (<code>enrichment.py</code>,
+            <code>web_enrichment.py</code>, <code>geoip.py</code>, <code>state_store.py</code>)
+            centralizes GeoIP and web enrichment processing, integrated directly with manager
+            workflows and web endpoints.
+          </p>
+          <p>
+            Agents now ship raw <code>/var/log/auth.log</code> directly instead of running a
+            per-endpoint enrichment helper, venv, and systemd service. This also fixes per-user
+            velocity/ASN state, which was previously tracked separately per endpoint instead of
+            centrally.
+          </p>
+          <p>
+            <strong>Migrating an existing deployment:</strong> set <code>MAXMIND_LICENSE_KEY</code>
+            in the manager's <code>.env</code>, redeploy with
+            <code>sudo ./build-radar.sh suspicious_login</code> /
+            <code>geoip_detection</code>, then re-run <code>bootstrap-agent.sh</code> on every
+            existing endpoint. Manager and agent updates must land together per endpoint.
+          </p>
+          <div class="chips">
+            <span class="chip">manager-enrichment</span>
+            <span class="chip">enrichment.py</span>
+            <span class="chip">web_enrichment.py</span>
+            <span class="chip">geoip.py</span>
+            <span class="chip">state_store.py</span>
+            <span class="chip">breaking change</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Manager APIs, CLI, and deployment orchestration</h3>
+          <p>
+            A major API redesign supports the new manager-centric enrichment flow, with a new
+            <code>wazuh_api</code> module providing programmatic and CLI access to manager
+            operations. Manager-side helper scripts under <code>radar_deploy</code>
+            (<code>apply-scenario</code>, <code>assign-agent-group</code>, <code>ensure-certs</code>,
+            <code>health</code>, <code>local-agent</code>, <code>mint-token</code>) are now driven by
+            top-level <code>radar.sh</code> and <code>bootstrap-agent.sh</code> entrypoints.
+          </p>
+          <div class="chips">
+            <span class="chip">wazuh_api</span>
+            <span class="chip">radar_deploy</span>
+            <span class="chip">radar.sh</span>
+            <span class="chip">bootstrap-agent.sh</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Enrollment hardening &amp; agent lifecycle management</h3>
+          <p>
+            New scripts secure and manage Wazuh agent enrollment end to end: <code>manager-harden-enrollment.sh</code>
+            enforces password-protected enrollment with purge disabled and cluster key management;
+            <code>manager-enrollment-window.sh</code> opens and closes time-limited enrollment
+            windows via firewall rules on port 1515. Webhook deployment now mints a short-lived
+            registration token when needed and persists agent state.
+          </p>
+
+          <table class="detail-table" aria-label="Agent lifecycle management scripts">
+            <thead>
+              <tr>
+                <th>Script</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>manager-deregister-agent.sh</code></td>
+                <td>Deregister an agent from the manager.</td>
+              </tr>
+              <tr>
+                <td><code>manager-unassign-agent-group.sh</code></td>
+                <td>Unassign an agent from a scenario group.</td>
+              </tr>
+              <tr>
+                <td><code>manager-undo-scenario.sh</code></td>
+                <td>Undo a scenario deployment and remove its rules, decoders, and lists.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="chips">
+            <span class="chip">manager-harden-enrollment.sh</span>
+            <span class="chip">manager-enrollment-window.sh</span>
+            <span class="chip">agent lifecycle</span>
+            <span class="chip">webhook enrollment</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>RADAR GUI: manager-flow &amp; undo actions</h3>
+          <p>
+            The Deploy, Infrastructure, and Connectors pages have been adapted to support the new
+            manager-centric deployment flows. Every deployment action now has a corresponding undo
+            action in the GUI: deregister agent, undo deployment, and unassign agent group.
+          </p>
+          <div class="chips">
+            <span class="chip">RADAR GUI</span>
+            <span class="chip">Deploy page</span>
+            <span class="chip">undo actions</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Scanning detection scenario &amp; DECIPHER risk scoring</h3>
+          <p>
+            Scanning-detection rules, agent configuration, and manager snippets were updated per
+            <strong>SRS-066</strong>. DECIPHER CTI scores are now factored into RADAR's risk score
+            computation and case creation in FlowIntel. The scanning simulation and its tests were
+            reworked with interactive execution and verification-aware waits.
+          </p>
+          <div class="chips">
+            <span class="chip">SRS-066</span>
+            <span class="chip">DECIPHER CTI score</span>
+            <span class="chip">FlowIntel</span>
+            <span class="chip">scanning simulation</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Log-volume endpoint collection via systemd</h3>
+          <p>
+            <code>bootstrap-agent.sh --group log_volume</code> now installs and enables a systemd
+            service/timer that records <code>/var/log</code> size every 30 seconds, with the Wazuh
+            agent watching the resulting file. <code>uninstall-agent.sh</code> removes the collector,
+            timer, and logrotate configuration, and can optionally purge its data.
+          </p>
+          <div class="chips">
+            <span class="chip">log_volume</span>
+            <span class="chip">systemd timer</span>
+            <span class="chip">uninstall-agent.sh</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Documentation restructuring &amp; simulation standalone mode</h3>
+          <p>
+            Custom deployment guides moved from <code>/deployment/</code> to
+            <code>docs/manual/custom_deployments/</code>; legacy Ansible playbooks and deprecated
+            Wazuh installation guides were removed, and RADAR operational and user documentation was
+            streamlined and consolidated. Radar simulation scenarios now run standalone on the
+            endpoint without depending on Ansible automation.
+          </p>
+          <div class="chips">
+            <span class="chip">docs/manual/custom_deployments</span>
+            <span class="chip">standalone simulation</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Ansible cleanup &amp; archived scenario removal</h3>
+          <p>
+            Ansible role tasks and playbooks (<code>health_check</code>, <code>wazuh_agent</code>
+            playbooks, multiple <code>wazuh_manager</code> tasks) were removed as part of the
+            redesigned manager workflow. Unmaintained archived scenarios — DDoS detection, GeoIP
+            detection, and insider threat — were removed from <code>radar/archives/</code> to
+            streamline the codebase.
+          </p>
+          <div class="chips">
+            <span class="chip">Ansible roles</span>
+            <span class="chip">radar/archives removal</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Build &amp; project layout cleanup</h3>
+          <p>
+            Per-component Dockerfiles and run scripts were relocated into their own subdirectories
+            (<code>sonar/Dockerfile.sonar</code>, <code>adbox/Dockerfile.adbox</code>,
+            <code>adbox/Dockerfile.test</code>, <code>adbox/adbox.sh</code>,
+            <code>adbox/run_test.sh</code>, <code>sonar/sonar.sh</code>), replacing the former
+            root-level Dockerfiles and scripts. The root-level <code>radar.Dockerfile</code> and the
+            per-component <code>.devcontainer/adbox</code> and <code>.devcontainer/radar</code>
+            configs were removed, consolidating on the single root
+            <code>.devcontainer/devcontainer.json</code>.
+          </p>
+          <div class="chips">
+            <span class="chip">Dockerfile relocation</span>
+            <span class="chip">build.sh</span>
+            <span class="chip">single devcontainer.json</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Test specifications TST-055 &ndash; TST-058</h3>
+          <p>
+            New unit and integration tests were added to match the manager-centric redesign, and new
+            test case specifications <strong>TST-055</strong> through <strong>TST-058</strong> were
+            published, alongside updated RADAR manuals and specifications.
+          </p>
+          <div class="chips">
+            <span class="chip">TST-055</span>
+            <span class="chip">TST-056</span>
+            <span class="chip">TST-057</span>
+            <span class="chip">TST-058</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- /v2.0.0 -->
+
+      <hr class="release-divider">
+
+      <!-- ═══════════════════════════════════════════
+           v1.1
+           ═══════════════════════════════════════════ -->
+      <div class="release" id="v1.1">
+        <div class="release-heading">
+          <h2 class="release-title">v1.1</h2>
+          <span class="release-date">May 2026</span>
+        </div>
+
+        <!-- ── main feature ── -->
+        <div class="feature-card highlight">
+          <div class="new-badge">New feature</div>
+          <h3>Web scanning detection scenario</h3>
+          <p>
+            A new production-ready RADAR scenario detects web-layer attacks via
+            <strong>signature-based detection</strong> on Apache/Nginx HTTP access logs, using the
+            built-in <code>web-log</code> decoder. Detections trigger an automated response with a
+            firewall-drop active response and email notifications for high-risk events.
+          </p>
+          <p>
+            The scenario ships with full documentation
+            (<code>scanning_detection_explained.md</code> — objectives, detection methodology, manual
+            setup, and deployment instructions), a formal system requirement specification with
+            acceptance criteria and test specification, and a test report execution for the
+            <code>scanning_detection</code> scenario.
+          </p>
+          <div class="chips">
+            <span class="chip">scanning_detection</span>
+            <span class="chip">web-log decoder</span>
+            <span class="chip">firewall-drop AR</span>
+            <span class="chip">email notification</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>RADAR default-rule support</h3>
+          <p>
+            <code>ar.yaml</code> and <code>radar-default-ossec-snippet.xml</code> were updated with
+            new default warning rule IDs <code>23503</code>, <code>23504</code>, and
+            <code>23505</code>, using the <code>authentication_failures</code> rule group. A new
+            <code>default</code> simulation exercises the default Wazuh ruleset end to end from the
+            existing simulation entrypoints; <code>default</code> is now an explicit scenario option
+            restricted to <code>--agent remote</code>.
+          </p>
+          <p>
+            <code>config.yaml</code> gained <code>scenarios.default.simulate</code> configuration
+            support, and <code>simulate.yml</code> was extended with a new <code>default</code> block
+            that downgrades to a vulnerable version and schedules an independent safety-net restore
+            after <code>safety_net_minutes</code>. Test specifications and execution reports for the
+            default-rule flow, active response handling, and simulation behavior were added across
+            <strong>TST-053</strong> and <strong>TST-054</strong>.
+          </p>
+          <div class="chips">
+            <span class="chip">default scenario</span>
+            <span class="chip">rule 23503-23505</span>
+            <span class="chip">authentication_failures</span>
+            <span class="chip">TST-053</span>
+            <span class="chip">TST-054</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Rule group support in Active Response</h3>
+          <p>
+            The RADAR Active Response script now resolves scenarios by rule group in addition to
+            rule ID. <code>test_radar_ar.py</code> was updated to cover canonical rule group naming
+            and accurate scenario identification behavior.
+          </p>
+          <div class="chips">
+            <span class="chip">radar_ar.py</span>
+            <span class="chip">rule group</span>
+            <span class="chip">test_radar_ar.py</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- /v1.1 -->
+
+      <hr class="release-divider">
+
+      <!-- ═══════════════════════════════════════════
            v1.0
            ═══════════════════════════════════════════ -->
       <div class="release" id="v1.0">

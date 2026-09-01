@@ -1,4 +1,0 @@
-<localfile>
-    <location>/var/log/suspicious_login.log</location>
-    <log_format>syslog</log_format>
-</localfile>

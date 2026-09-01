@@ -19,7 +19,7 @@ The shipping must be installed as follows:
 
 ```sh
 $ ./build-adbox.sh
-$ ./adbox.sh -s
+$ ./adbox/adbox.sh -s
 ```
 
 ### Detector with shipping
@@ -28,7 +28,7 @@ The training and prediction pipelines are instructed via [use cases](./use_case.
 
 ```sh
 $ ./build-adbox.sh
-$ ./adbox.sh -u {number} -s
+$ ./adbox/adbox.sh -u {number} -s
 ```
 
 This way, ADBox:

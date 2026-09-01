@@ -4,167 +4,151 @@ set -Eeuo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  build-radar.sh <scenario> --agent <local|remote> --manager <local|remote> --manager_exists <true|false> [--ssh-key </path/to/private_key>]
+  build-radar.sh <scenario>
+  build-radar.sh --core-only
 
 Scenarios:
-  suspicious_login | insider_threat | ddos_detection | malware_communication | geoip_detection | log_volume
+  suspicious_login | geoip_detection | log_volume | scanning_detection
 
 Flags:
-  --agent           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)
-  --manager         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)
-  --manager_exists  Whether the manager already exists at that location:
-                      - true  : do not bootstrap a manager
-                      - false : bootstrap (local: docker compose up; remote: let Ansible bootstrap)
-  --ssh-key         Optional: path to the SSH private key used for remote manager/agent access.
-                    If not provided, defaults to: $HOME/.ssh/id_ed25519
+  --core-only           Bring up the Wazuh manager/indexer/dashboard stack
+                        only.
 
 Examples:
-  # Lab: local manager + local agent containers; create manager if missing
-  ./build-radar.sh insider_threat --agent local --manager local --manager_exists false
-
-  # Customer: remote manager already exists (cluster or single), remote SSH agents
-  ./build-radar.sh suspicious_login --agent remote --manager remote --manager_exists true
-
-  # Customer: remote manager DOES NOT exist yet; bootstrap it via Ansible, remote SSH agents
-  ./build-radar.sh ddos_detection --agent remote --manager remote --manager_exists false --ssh-key "$HOME/.ssh/mykeys/id_ed25519"
+  ./build-radar.sh suspicious_login
+  ./build-radar.sh --core-only
 EOF
   exit 2
 }
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-  usage
-fi
-
+[[ "${1:-}" == "-h" || "${1:-}" == "--help" ]] && usage
 [[ $# -ge 1 ]] || usage
-SCENARIO_NAME="$1"; shift
 
-AGENT_MODE=""
-MANAGER_MODE=""
-MANAGER_EXISTS=""
-SSH_KEY=""
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --agent)
-      [[ $# -ge 2 ]] || usage
-      AGENT_MODE="$2"; shift 2;;
-    --manager)
-      [[ $# -ge 2 ]] || usage
-      MANAGER_MODE="$2"; shift 2;;
-    --manager_exists)
-      [[ $# -ge 2 ]] || usage
-      MANAGER_EXISTS="$2"; shift 2;;
-    --ssh-key)
-      [[ $# -ge 2 ]] || usage
-      SSH_KEY="$2"; shift 2;;
-    -h|--help) usage ;;
-    *) echo "Unknown option: $1"; usage ;;
-  esac
-done
-
-
-case "$SCENARIO_NAME" in
-  suspicious_login|insider_threat|ddos_detection|malware_communication|geoip_detection|log_volume) ;;
-  *) echo "Invalid scenario: $SCENARIO_NAME"; usage ;;
-esac
-
-case "$AGENT_MODE"   in local|remote) ;; *) echo "--agent must be local or remote"; usage ;; esac
-case "$MANAGER_MODE" in local|remote) ;; *) echo "--manager must be local or remote"; usage ;; esac
-case "$MANAGER_EXISTS" in true|false) ;; *) echo "--manager_exists must be true or false"; usage ;; esac
-
-
-case "$SCENARIO_NAME" in
-  suspicious_login)       AGENT_SERVICE="agent.suspicious" ;;
-  insider_threat)         AGENT_SERVICE="agent.insider"    ;;
-  ddos_detection)         AGENT_SERVICE="agent.ddos"       ;;
-  malware_communication)  AGENT_SERVICE="agent.malcom"     ;;
-  geoip_detection)        AGENT_SERVICE="agent.geoip"     ;;
-  log_volume)             AGENT_SERVICE="agent.logvolume"     ;;
-esac
-
-
-if [[ "$MANAGER_MODE" == "local" ]]; then
-  LIMIT_MGR_GROUP="wazuh_manager_local"
+CORE_ONLY=false
+SCENARIO_NAME=""
+if [[ "$1" == "--core-only" ]]; then
+  CORE_ONLY=true
+  shift
 else
-  LIMIT_MGR_GROUP="wazuh_manager_ssh"
+  SCENARIO_NAME="$1"; shift
 fi
 
-if [[ "$AGENT_MODE" == "local" ]]; then
-  LIMIT_AGENT_GROUP="wazuh_agents_container"
-else
-  LIMIT_AGENT_GROUP="wazuh_agents_ssh"
+if [[ $# -gt 0 ]]; then
+  echo "Unknown option: $1"; usage
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+export PYTHONPATH="$(pwd)${PYTHONPATH:+:$PYTHONPATH}"
 
-DEFAULT_KEY="$HOME/.ssh/id_ed25519"
-KEY="${SSH_KEY:-$DEFAULT_KEY}"
-
-ANSIBLE_VAULT_FLAG=""
-if [[ "$MANAGER_MODE" == "remote" || "$AGENT_MODE" == "remote" ]]; then
-  if [[ ! -f "$KEY" ]]; then
-    echo "[!] SSH key not found at: $KEY" >&2
-    echo "Provide a valid key via --ssh-key or ensure $DEFAULT_KEY exists." >&2
-    exit 1
-  fi
-
-  if [ -z "${SSH_AUTH_SOCK:-}" ] || ! ssh-add -l >/dev/null 2>&1; then
-    echo "[*] Starting ssh-agent and adding key: $KEY"
-    eval "$(ssh-agent -s)"
-    ssh-add "$KEY"
-  else
-    echo "[*] Reusing existing ssh-agent session; adding key: $KEY (if not already loaded)"
-    ssh-add -l | grep -q "$(ssh-keygen -lf "$KEY" | awk '{print $2}')" || ssh-add "$KEY"
-  fi
-
-  if [[ "${RADAR_NONINTERACTIVE:-}" == "1" ]]; then ANSIBLE_VAULT_FLAG=""; else ANSIBLE_VAULT_FLAG="--ask-vault-pass"; fi
+if [[ "$CORE_ONLY" != true ]]; then
+  SCENARIO_INFO="$(python3 -m wazuh_api.cli scenario-info "$SCENARIO_NAME")" || exit 1
 fi
-
-
-EXTRA_VARS=(
-  "-e" "scenario_name=${SCENARIO_NAME}"
-  "-e" "agent_scope=${AGENT_MODE}"
-  "-e" "manager_scope=${MANAGER_MODE}"
-  "-e" "manager_bootstrap=$([[ "$MANAGER_MODE" == "remote" && "$MANAGER_EXISTS" == "false" ]] && echo true || echo false)"
-)
-
 
 echo "=== RADAR plan ==="
-echo "Scenario         : $SCENARIO_NAME"
-echo "Manager location : $MANAGER_MODE   (exists: $MANAGER_EXISTS)"
-echo "Agents location  : $AGENT_MODE"
-echo "Ansible limits   : ${LIMIT_MGR_GROUP}, ${LIMIT_AGENT_GROUP}"
-echo "Vault prompt     : $([[ -n "$ANSIBLE_VAULT_FLAG" ]] && echo yes || echo no)"
+if [[ "$CORE_ONLY" == true ]]; then
+  echo "Mode         : core-only (plain Wazuh, no RADAR scenario)"
+else
+  echo "Scenario     : $SCENARIO_NAME"
+fi
 echo "=================="
 
+if [[ ! -f .env ]]; then
+  echo "[!] .env not found. Copy env.example to .env and fill in the required values." >&2
+  exit 1
+fi
+set -a
+# shellcheck disable=SC1091
+source .env
+set +a
 
-if [[ "$MANAGER_MODE" == "local" && "$MANAGER_EXISTS" == "false" ]]; then
+# --- manager: bring up local core stack if not already running ---
+if ! docker ps --format '{{.Names}}' | grep -qx wazuh.manager; then
+  echo ">>> Ensuring indexer/manager/dashboard TLS certs exist..."
+  bash "radar_deploy/manager-ensure-certs.sh"
+
+  PIPELINE_CONTAINER_PATH='/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json'
+  PIPELINE_HOST_PATH=$(grep -E ":${PIPELINE_CONTAINER_PATH//\//\\/}\$" volumes.yml | head -1 | sed -E 's/^ *- *//; s/:[^:]*$//')
+  if [[ -z "$PIPELINE_HOST_PATH" ]]; then
+    echo "[!] volumes.yml has no bind mount for $PIPELINE_CONTAINER_PATH on service wazuh.manager" >&2
+    echo "    Add that mapping (see radar-getting-started.md's \"Configure volume mappings\" section) and re-run." >&2
+    exit 1
+  fi
+  if [[ ! -e "$PIPELINE_HOST_PATH" || -d "$PIPELINE_HOST_PATH" || ! -s "$PIPELINE_HOST_PATH" ]]; then
+    echo ">>> Seeding ${PIPELINE_HOST_PATH} with default content before first container creation..."
+    mkdir -p "$(dirname "$PIPELINE_HOST_PATH")"
+    [[ -d "$PIPELINE_HOST_PATH" ]] && (rmdir "$PIPELINE_HOST_PATH" 2>/dev/null || rm -rf "$PIPELINE_HOST_PATH")
+    cp config/wazuh_cluster/pipeline-archives.json "$PIPELINE_HOST_PATH"
+    chmod 644 "$PIPELINE_HOST_PATH"
+  fi
+
   echo ">>> Bringing up local core stack (docker-compose.core.yml)..."
   docker compose -f docker-compose.core.yml -f volumes.yml up -d
 else
-  echo ">>> Not touching local manager."
+  echo ">>> Manager already running."
 fi
 
-
-if [[ "$AGENT_MODE" == "local" ]]; then
-  echo ">>> Starting local agent container for scenario: $SCENARIO_NAME ($AGENT_SERVICE)"
-  docker compose -f docker-compose.agents.yml up -d "$AGENT_SERVICE"
-else
-  echo ">>> Agents are remote; will not start local agent containers."
-fi
-
-if [[ -f docker-compose.webhook.yml ]]; then
-  if [[ "$MANAGER_MODE" == "local" ]]; then
-    echo ">>> Building webhook locally..."
-    docker compose -f docker-compose.webhook.yml up -d
+# --- webhook (RADAR's AD-alerts integration; not part of plain Wazuh) ---
+if [[ "$CORE_ONLY" != true && -f docker-compose.webhook.yml ]]; then
+  echo ">>> Building webhook locally..."
+  WAZUH_REGISTRATION_TOKEN=""
+  if docker compose -f docker-compose.webhook.yml run --rm --no-deps --entrypoint sh webhook \
+       -c 'test -s /var/ossec/etc/client.keys' >/dev/null 2>&1; then
+    echo "OK - webhook already enrolled; no new token needed"
   else
-    echo ">>> Manager is remote; webhook will be deployed via Ansible."
+    echo ">>> Webhook not yet enrolled; minting a short-lived token..."
+    MINT_OUTPUT=$(bash radar_deploy/manager-mint-token.sh default 60 2>&1) || {
+      echo "$MINT_OUTPUT"
+      echo "[ERROR] Could not mint an enrollment token for the webhook." >&2
+      exit 1
+    }
+    echo "$MINT_OUTPUT"
+    WAZUH_REGISTRATION_TOKEN=$(echo "$MINT_OUTPUT" | grep '^TOKEN_VALUE=' | cut -d= -f2)
+    if [[ -z "$WAZUH_REGISTRATION_TOKEN" ]]; then
+      echo "[ERROR] Could not extract the enrollment token from manager-mint-token.sh output." >&2
+      exit 1
+    fi
   fi
+  export WAZUH_REGISTRATION_TOKEN
+
+  docker compose -f docker-compose.webhook.yml up -d --build
 fi
 
-export $(grep -v '^#' .env | grep -v '^$' | sed 's/#.*$//' | xargs)
+if [[ -z "${WAZUH_API_URL:-}" || -z "${WAZUH_AUTH_USER:-}" || -z "${WAZUH_AUTH_PASS:-}" ]]; then
+  echo "[!] WAZUH_API_URL / WAZUH_AUTH_USER / WAZUH_AUTH_PASS are not fully set in .env." >&2
+  exit 1
+fi
 
-echo ">>> Running Ansible (limit: ${LIMIT_MGR_GROUP}, ${LIMIT_AGENT_GROUP})..."
-ansible-playbook -i inventory.yaml site.yaml \
-  --limit "${LIMIT_MGR_GROUP}:${LIMIT_AGENT_GROUP}" \
-  "${EXTRA_VARS[@]}" \
-  ${ANSIBLE_VAULT_FLAG}
+export WAZUH_API_URL WAZUH_AUTH_USER WAZUH_AUTH_PASS OS_URL OS_USER OS_PASS
+
+echo ">>> Waiting for the Wazuh API to become reachable..."
+python3 -m wazuh_api.cli wait-for-api --timeout 120
+
+echo ">>> Hardening agent enrollment (require credential, disable auto-purge)..."
+bash "radar_deploy/manager-harden-enrollment.sh"
+
+if [[ "$CORE_ONLY" == true ]]; then
+  echo ""
+  echo "=== SUCCESS: plain Wazuh manager/indexer/dashboard is up (no RADAR scenario applied) ==="
+  echo "To layer a RADAR scenario on top later, run: ./build-radar.sh <scenario>"
+  exit 0
+fi
+
+if [[ "$SCENARIO_NAME" == "suspicious_login" && -z "${MAXMIND_LICENSE_KEY:-}" ]]; then
+  echo "[!] MAXMIND_LICENSE_KEY is not set in .env. Only needed the first time the manager"
+  echo "    fetches GeoLite2-City.mmdb / GeoLite2-ASN.mmdb (see radar_deploy/manager-apply-scenario.sh)."
+fi
+
+echo ">>> Waiting for OpenSearch to become reachable..."
+python3 -m wazuh_api.cli wait-for-opensearch --timeout 120
+
+echo ">>> Applying manager-side scenario config (active responses, enrichment, filebeat)..."
+bash "radar_deploy/manager-apply-scenario.sh" "$SCENARIO_NAME"
+
+echo ">>> Deploying '${SCENARIO_NAME}' group/agent.conf via Wazuh API..."
+python3 -m wazuh_api.cli deploy-scenario-config \
+  --scenario "$SCENARIO_NAME" --agent-config-dir scenarios/agent_configs
+
+echo ">>> Deploying decoders/rules/lists and ossec.conf via Wazuh API..."
+python3 -m wazuh_api.cli deploy-manager-config \
+  --scenario "$SCENARIO_NAME" --scenarios-dir scenarios

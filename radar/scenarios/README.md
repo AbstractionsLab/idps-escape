@@ -22,7 +22,8 @@ scenarios/
 │   ├── default/           # Baseline command shell execution detection
 │   ├── geoip_detection/   # Geographic access control rules
 │   ├── log_volume/        # OpenSearch AD integration rules
-│   └── suspicious_login/  # Credential attack detection rules
+│   ├── suspicious_login/  # Credential attack detection rules
+│   └── scanning_detection/ # Web scanning and injection detection rules
 └── templates/             # Index templates for OpenSearch
 ```
 
@@ -52,18 +53,9 @@ Contains custom log decoders organized by scenario. Decoders parse incoming log 
 - **`geoip_detection/`**: Decoders for GeoIP-based detection scenarios
 - **`log_volume/`**: Decoders for log volume anomaly detection
 - **`suspicious_login/`**: Contains `0310-ssh.xml` - a customized SSH decoder that extracts velocity/location change and geographic information from SSH logs
+- **`scanning_detection/`**: Uses Wazuh's built-in `web-log` decoder for Apache/Nginx HTTP access log parsing
 
 Decoders transform unstructured log messages into structured events that rules can analyze.
-
-### `dockerfiles/`
-
-Provides Dockerfiles for containerized deployment of scenario-specific detection agents:
-
-- **`Dockerfile.geoip_detection_agent`**: Builds container for GeoIP detection agents
-- **`Dockerfile.log_volume_agent`**: Builds container for log volume monitoring agents  
-- **`Dockerfile.suspicious_login_agent`**: Builds container for suspicious login detection agents
-
-These containers run Wazuh agents pre-configured for their specific detection scenarios, enabling scalable and isolated deployments.
 
 ### `ingest_scripts/`
 
@@ -86,7 +78,7 @@ Lists provide dynamic, updateable reference data that rules can check without re
 
 Contains OSSEC configuration snippets that get injected into the Wazuh manager's `ossec.conf`. These are needed configurations for Wazuh Manager depending on scenario. It is a binding and controlling configurations, currently it is mainly connecting rules and active response.
 
-These snippets are deployed idempotently via Ansible's `blockinfile` module, ensuring repeatable configuration management.
+These snippets are deployed idempotently by `wazuh_api`'s "marked block" helpers (`apply_marked_block`/`remove_marked_block` in `wazuh_api/manager_config.py`), which wrap each scenario's block in an `<!-- RADAR: <scenario> BEGIN/END -->` comment pair and push the updated file through the Wazuh REST API — ensuring repeatable configuration management, and a clean removal path on undeploy.
 
 ### `pipelines/`
 
@@ -100,10 +92,11 @@ Pipelines modify how data flows from Wazuh through Filebeat into OpenSearch, ena
 
 Contains Wazuh detection rules organized by scenario. Each scenario folder includes:
 
-- **`default/radar_rules.xml`**: Baseline threat detection rules for all deployments (6 rules: IDs 100400–100405). These rules operate on standard Wazuh event formats without requiring custom decoders, radar-helper enrichment, or index schema modifications. Current focus: command shell execution detection (PowerShell, CMD.exe, batch scripts), extensible to any threat indicators available in standard events.
+- **`default/radar_rules.xml`**: Baseline threat detection rules for all deployments (6 rules: IDs 100400–100405). These rules operate on standard Wazuh event formats without requiring custom decoders, manager-side enrichment integrations, or index schema modifications. Current focus: command shell execution detection (PowerShell, CMD.exe, batch scripts), extensible to any threat indicators available in standard events.
 - **`geoip_detection/a2-geoip-detection.xml`**: Rules that trigger on SSH connections from non-whitelisted countries
 - **`log_volume/a1-log-volume.xml`**: Rules that detect anomalous log volume event from webhook
 - **`suspicious_login/a3-suspicious-login.xml`**: Rules that identify suspicious authentication patterns (brute force and impossible travel anomalies)
+- **`scanning_detection/a4-scanning-detection.xml`**: Rules that detect web scanning, enumeration, and exploitation attempts by analyzing HTTP access logs for high request volumes, known scanner tool User-Agent signatures, and malicious HTTP methods
 
 Rules analyze decoded events and generate alerts when suspicious patterns are detected. They integrate with active responses to trigger automated actions.
 
@@ -117,4 +110,4 @@ Contains OpenSearch index templates that define mappings and settings:
 
 Templates ensure consistent data structures across indices, which is critical for accurate anomaly detection and querying.
 
-A consolidated overview of RADAR scenarios, together with the corresponding manual configuration and deployment instructions, is provided in [the dedicated documentation manual](/docs/manual/radar-scenarios/).
+A consolidated overview of RADAR scenarios, together with the corresponding manual configuration and deployment instructions, is provided in [the dedicated documentation manual](/docs/manual/radar_docs/radar-scenarios/).

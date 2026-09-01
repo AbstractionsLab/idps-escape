@@ -15,11 +15,11 @@ function updateWeightTotal() {
 }
 
 function validateTiers() {
-  const t1 = parseFloat(document.getElementById("tier1_max")?.value || 0.33);
-  const t2 = parseFloat(document.getElementById("tier2_max")?.value || 0.66);
-  const t3 = parseFloat(document.getElementById("tier3_max")?.value || 0.85);
+  const t0 = parseFloat(document.getElementById("tier1_min")?.value ?? 0);
+  const t1 = parseFloat(document.getElementById("tier1_max")?.value ?? 0.33);
+  const t2 = parseFloat(document.getElementById("tier2_max")?.value ?? 0.66);
   const warn = document.getElementById("tier-warn");
-  const valid = t1 < t2 && t2 < t3 && t3 < 1.0;
+  const valid = t0 >= 0 && t0 <= t1 && t1 <= t2 && t2 <= 1.0;
   if (warn) warn.style.display = valid ? "none" : "";
   return valid;
 }
@@ -91,7 +91,7 @@ async function saveConfig() {
   }
 
   if (!validateTiers()) {
-    _setMsg("Tier thresholds must be strictly increasing (T1 < T2 < T3 < 1.0)", false);
+    _setMsg("Tier thresholds must be strictly increasing (T0 max < T1 max < 1.0)", false);
     return;
   }
 
@@ -105,13 +105,12 @@ async function saveConfig() {
     delta_signature_minutes: parseInt(document.getElementById("delta_signature_minutes")?.value || 1),
     signature_impact: parseFloat(document.getElementById("signature_impact")?.value || 0.5),
     tiers: {
+      tier1_min: parseFloat(document.getElementById("tier1_min")?.value || 0),
       tier1_max: parseFloat(document.getElementById("tier1_max")?.value || 0.33),
       tier2_max: parseFloat(document.getElementById("tier2_max")?.value || 0.66),
-      tier3_max: parseFloat(document.getElementById("tier3_max")?.value || 0.85),
     },
     mitigations_tier2: _readTags("mit-tags-2"),
     mitigations_tier3: _readTags("mit-tags-3"),
-    mitigations_tier4: _readTags("mit-tags-4"),
     allow_mitigation: document.getElementById("allow_mitigation")?.checked || false,
   };
 

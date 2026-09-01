@@ -32,10 +32,10 @@ Below we explain the purpose for files in each folder and how they should be con
 
 The ADBox uses a SIEM to fetch data, which should be integrated with a signature based IDPS. The installation process all the mentioned components can be followed from the following links. 
 
-1. [Installation of Suricata](../../../deployment/suricata/suricata_installation.md)
-2. [Installation of Wazuh distribution](../../../deployment/wazuh/wazuh_installation.md)
-3. [Installation of Wazuh agent](../../../deployment/wazuh//wazuh_agents.md)
-4. [Integration of Wazuh with Suricata](../../../deployment/README.md)
+1. [Installation of Suricata](../custom_deployments/suricata/suricata_installation.md)
+2. [Installation of Wazuh distribution](https://documentation.wazuh.com/current/deployment-options/docker/)
+3. [Installation of Wazuh agent](../custom_deployments/wazuh/wazuh_agents.md)
+4. [Integration of Wazuh with Suricata](../custom_deployments/suricata-wazuh-integration.md)
 5. [Wazuh command monitoring, decoders and rules for Linux resource usage](./linux_resource.md)
 	
 Once all the above requirements are fulfilled, the credentials to connect to the Wazuh distribution can be provided in the `wazuh_credentials.json` file in this folder. 

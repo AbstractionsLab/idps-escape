@@ -2,7 +2,7 @@
 
 ## Purpose
 
-RADAR rules are custom Wazuh detection rules designed to identify anomalous behavior and security threats in real-time. These rules are deployed to `/var/ossec/etc/rules/` during the Ansible automation process and work in conjunction with custom decoders to extract and analyze event data.
+RADAR rules are custom Wazuh detection rules designed to identify anomalous behavior and security threats in real-time. These rules are deployed to `/var/ossec/etc/rules/` by `build-radar.sh` via the Wazuh REST API, and work in conjunction with custom decoders to extract and analyze event data.
 
 ## Repository Structure
 
@@ -11,7 +11,8 @@ radar/scenarios/rules/
 ├── default/           # Baseline command shell execution detection
 ├── geoip_detection/   # Geographic access control rules
 ├── log_volume/        # OpenSearch AD integration rules
-└── suspicious_login/  # Credential attack detection rules
+├── suspicious_login/  # Credential attack detection rules
+└── scanning_detection/ # Web scanning and injection detection rules
 ```
 
 Each scenario has its own subdirectory containing XML rule files that are automatically deployed based on the selected scenario.
@@ -22,7 +23,7 @@ Each scenario has its own subdirectory containing XML rule files that are automa
 
 ### Default Rules
 
-**Purpose**: Provide low-friction baseline threat detection rules that require **no prerequisite data preparation** (no custom decoders, no radar-helper enrichment, no index schema modifications). The Default scenario establishes a **detection floor** for any RADAR deployment by leveraging existing Wazuh data structures and standard event formats. These rules integrate seamlessly with CTI analysis and automated case creation, enabling rapid threat response without infrastructure investment.
+**Purpose**: Provide low-friction baseline threat detection rules that require **no prerequisite data preparation** (no custom decoders, no manager-side enrichment integration, no index schema modifications). The Default scenario establishes a **detection floor** for any RADAR deployment by leveraging existing Wazuh data structures and standard event formats. These rules integrate seamlessly with CTI analysis and automated case creation, enabling rapid threat response without infrastructure investment.
 
 **Rule Coverage**:
 - **PowerShell invocation** (rules 100400–100402): 3 rules detecting PowerShell.exe execution with filtering for legitimate administrative tools
@@ -49,6 +50,8 @@ A variable `$LEGIT_ACTIVITIES` maintains a regex pattern of known-good processes
 ```
 
 Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false positives from legitimate administrative tools, while the base rules (100400/100403) capture all invocations for alert volume tracking.
+
+**Beyond these 6 rules**: the Default scenario's `ar.yaml` entry can also match by `rule_groups` (e.g. `authentication_failures`, `vulnerability-detector`), sweeping in native Wazuh default rules without adding them here individually. Exact `rule_id` matches take precedence over `rule_group` matches.
 
 **Alert Flow**:
 ```
@@ -94,7 +97,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 **Purpose**: Detect and block authentication attempts from non-whitelisted geographic locations.
 
 **How it works**:
-- Extracts country information from successful authentication events enriched by `radar-helper`
+- Extracts country information from successful authentication events, enriched by the manager-side `custom-radar-enrich` integration
 - Compares against whitelist (`/var/ossec/etc/lists/whitelist_countries`)
 - Triggers alerts for connections from unauthorized countries
 
@@ -136,7 +139,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 **How it works**:
 - Monitors authentication failures and successes
 - Tracks temporal patterns (frequency within timeframes)
-- Analyzes geographic movement patterns (velocity, country changes) enriched by `radar-helper`
+- Analyzes geographic movement patterns (velocity, country changes), enriched by the manager-side `custom-radar-enrich` integration
 
 **Rules**:
 
@@ -168,6 +171,29 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 
 ---
 
+### 4. Web Scanning Detection
+
+**Purpose**: Detect web scanning, enumeration, and probing behavior.
+
+**Rules** (group `radar_scanning`, `rules/scanning_detection/a4-scanning-detection.xml`), implementing a
+three-indicator confirmation pattern:
+
+| Rule ID | Level | Role | Trigger Condition |
+|---------|-------|------|--------------------|
+| 100810 | 3 | Indicator 1: scanner User-Agent | `http.http_user_agent` matches `$RADAR_SCANNER_UA` (sqlmap, nikto, nmap, masscan, nuclei, zgrab, gobuster, dirbuster, dirb, ffuf, feroxbuster, wfuzz, wpscan, joomscan, openvas, nessus, acunetix, burp, w3af, whatweb, arachni, skipfish) |
+| 100815 | 3 | Per-event failed request | `http.status` is 401, 403, or 404 |
+| 100825 | 10 | Indicator 2: failed-request rate | `if_matched_sid` 100815, `same_field: src_ip`, ≥20 in 70 s |
+| 100820 | 6 | Indicator 3: method abuse | `http.http_method` is TRACE, TRACK, or CONNECT |
+| 100821 | 6 | Indicator 3: WebDAV method abuse | `http.http_method` is PROPFIND/PROPPATCH/MKCOL/COPY/MOVE/LOCK/UNLOCK/SEARCH, **and** the vhost (`http.hostname`) is not in the `radar_webdav_apps` CDB allowlist (vhosts that legitimately serve WebDAV are excluded) |
+| 100826–100829, 100831, 100832 | 3 | Confirmation anchors | Each pairs two of the three indicator groups (`radar_ind_ua`, `radar_ind_rate`, `radar_ind_method`) from the same `src_ip` within 300 s — six rules covering every ordered pairing |
+| 100830 | 12 | **Confirmed scan** (sole AR trigger) | `if_sid` any of the six anchor rules above |
+| 100840 | 0 | RADAR AR audit-entry decode | `if_sid` stock rule 650 + a `decision_id` field present — decodes `radar_ar.py`'s `AuditLog` entries (SWD-027); level 0, not user-facing |
+| 100835 | 12 | Allowlist unreadable (operational alert) | Child of 100840; `reason` field matches `allowlist_unreadable` — surfaces a misconfigured `AllowlistGuard` (SWD-027) as its own alert |
+
+Only **100830** triggers notification/active response for this scenario.
+
+---
+
 # Rule matching and precedence in Wazuh used by RADAR
 
 ## Rule loading order
@@ -178,14 +204,13 @@ Wazuh evaluates rules in a tree/layer model:
 
 - Independent rules (no if_sid / if_matched_sid) are evaluated in the order they are read/loaded.
 
-- Child rules (if_sid) are evaluated after their parent matches, and in the order they are defined. The first child rule that matches triggers; subsequent child rules are not evaluated (“first-match” logic). 
-Groups Google
+- Child rules (if_sid) are evaluated after their parent matches, and in the order they are defined. The first child rule that matches triggers; subsequent child rules are not evaluated ("first-match" logic). 
 
 - When multiple rules can match within the same layer/parent context, Wazuh uses a deterministic precedence:
     1. Higher rule level takes priority.
     2. If the level is the same, the rule read first takes priority. 
 
-> Important clarification for our documentation: Wazuh does not inherently sort by rule ID. In RADAR, “lower ID matches first” is true because we intentionally place rules in ascending ID order within files, and we control file loading order via filename prefixes. So the effective priority becomes “lower ID first” only as a consequence of our ordering strategy (read order). 
+> Important clarification for our documentation: Wazuh does not inherently sort by rule ID. In RADAR, "lower ID matches first" is true because we intentionally place rules in ascending ID order within files, and we control file loading order via filename prefixes. So the effective priority becomes "lower ID first" only as a consequence of our ordering strategy (read order). 
 
 ## Scenario rules order
 
@@ -205,6 +230,10 @@ Placed third because it represents a baseline policy violation ("successful auth
 
 Placed fourth because it contains more advanced behavioral logic (frequency correlation and enriched geo-velocity conditions). It is intentionally evaluated after baseline policy checks to avoid duplicate or competing alerts for the same authentication event.
 
+- a4 — Scanning detection
+
+Placed fifth because it operates on a different event source (web access logs via `web-log` decoder) and does not compete with authentication-based rules.
+
 # Summary
 
 RADAR rules provide scenario-specific threat detection capabilities:
@@ -213,5 +242,6 @@ RADAR rules provide scenario-specific threat detection capabilities:
 - **log_volume**: Anomaly detection via OpenSearch AD integration
 - **geoip_detection**: Geographic access control and policy enforcement
 - **suspicious_login**: Credential attack detection (brute force, impossible travel)
+- **scanning_detection**: Web scanning, injection, and enumeration detection (volumetric, UA signatures, SQLi, XSS, method abuse)
 
-Rules are automatically deployed via Ansible, and generate alerts indexed in OpenSearch for analysis and response.
+Rules are automatically deployed via `build-radar.sh` (through the Wazuh REST API), and generate alerts indexed in OpenSearch for analysis and response.

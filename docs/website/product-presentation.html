@@ -584,21 +584,21 @@
         </div>
         <div class="features">
           <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/README.md">RADAR</a> — risk-aware automated response</h3>
+            <p>RRCF-based behavioral and signature detection, now built around a manager-centric architecture with a programmatic <code>wazuh_api</code> module. Tiered active responses scale automatically to computed risk level.</p>
+            <div class="stack">
+              <span class="chip">RRCF</span>
+              <span class="chip">wazuh_api</span>
+              <span class="chip">Active response</span>
+            </div>
+          </article>
+          <article class="feature">
             <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/sonar_docs/README.md">SONAR</a> — multivariate anomaly detection</h3>
             <p>Microsoft MTAD-GAT multivariate time-series anomaly detection on Wazuh alerts. Scenario-driven YAML configuration, offline debug mode, and direct RADAR data shipping in Wazuh.</p>
             <div class="stack">
               <span class="chip">Microsoft MTAD-GAT</span>
               <span class="chip">YAML scenarios</span>
               <span class="chip">Debug mode</span>
-            </div>
-          </article>
-          <article class="feature">
-            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/README.md">RADAR</a> — risk-aware automated response</h3>
-            <p>RRCF-based behavioral and signature detection with Ansible Infrastructure-as-Code deployment. Tiered active responses scale automatically to computed risk level.</p>
-            <div class="stack">
-              <span class="chip">RRCF</span>
-              <span class="chip">Ansible IaC</span>
-              <span class="chip">Active response</span>
             </div>
           </article>
           <article class="feature">
@@ -629,20 +629,20 @@
             </div>
           </article>
           <article class="feature">
-            <h3>Ansible IaC deployment</h3>
-            <p>Zero-touch deployment of Wazuh manager and agents, OpenSearch AD detectors, monitors, webhooks, and active response scripts via reproducible Ansible playbooks.</p>
+            <h3>Manager-centric enrichment &amp; deployment</h3>
+            <p>Enrichment logic (GeoIP, web) now lives in the Wazuh manager instead of per-endpoint helpers. Onboarding, group assignment, enrollment hardening, and scenario teardown are all driven by scripted manager entrypoints (<code>radar.sh</code>, <code>bootstrap-agent.sh</code>) — no Ansible required.</p>
             <div class="stack">
-              <span class="chip">Ansible</span>
+              <span class="chip">manager-enrichment</span>
+              <span class="chip">bootstrap-agent.sh</span>
               <span class="chip">Docker</span>
-              <span class="chip">Reproducible</span>
             </div>
           </article>
           <article class="feature">
             <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/README.md">RADAR GUI</a> — web-based SOAR control panel</h3>
-            <p>Browser-based Flask interface for the full RADAR operational lifecycle: configure connectors, manage Wazuh inventory, tune risk weights and tier thresholds per scenario, deploy via Ansible, and monitor infrastructure health — all without touching configuration files directly.</p>
+            <p>Browser-based Flask interface for the full RADAR operational lifecycle: configure connectors, tune risk weights and tier thresholds per scenario, and drive the Deployment page's Scenario Management, Anomaly Detector, Agent Management, Group Management, Status, and Teardown tabs — each deploy action paired with a matching undo action.</p>
             <div class="stack">
               <span class="chip">Flask</span>
-              <span class="chip">Ansible Vault</span>
+              <span class="chip">Undo actions</span>
               <span class="chip">Real-time streaming</span>
             </div>
           </article>
@@ -689,7 +689,7 @@
             <button data-full="assets/IDPS-ESCAPE-automation.png" data-caption="IDPS-ESCAPE stack automated and scalable deployment">
               <img src="assets/IDPS-ESCAPE-automation.png" alt="IDPS-ESCAPE stack automated and scalable deployment">
             </button>
-            <figcaption>IDPS-ESCAPE stack automated and scalable deployment powered by Ansible and Docker.</figcaption>
+            <figcaption>IDPS-ESCAPE stack architecture: Wazuh agents report to a manager running RADAR+SONAR, enriched with DECIPHER/SATRAP-DL threat intelligence, deployed via Docker.</figcaption>
           </figure>
 
           <figure class="shot">
@@ -717,13 +717,6 @@
           </figure>
 
           <figure class="shot">
-            <button data-full="assets/RADAR_GUI_Infrastructure.png" data-caption="RADAR GUI — Infrastructure page">
-              <img src="assets/RADAR_GUI_Infrastructure.png" alt="RADAR GUI Infrastructure page showing Wazuh manager and agent inventory cards">
-            </button>
-            <figcaption>Infrastructure page: Ansible inventory management for Wazuh managers and agents, with connection type badges, Vault-encrypted credential storage, and per-node health checks.</figcaption>
-          </figure>
-
-          <figure class="shot">
             <button data-full="assets/RADAR_GUI_Connectors.png" data-caption="RADAR GUI — Connectors page">
               <img src="assets/RADAR_GUI_Connectors.png" alt="RADAR GUI Connectors page with credential fields and live test buttons for all external services">
             </button>
@@ -731,10 +724,31 @@
           </figure>
 
           <figure class="shot">
-            <button data-full="assets/RADAR_GUI_Deploy.png" data-caption="RADAR GUI — Deploy page">
-              <img src="assets/RADAR_GUI_Deploy.png" alt="RADAR GUI Deploy page with scenario selection, mode options, and real-time Ansible output streaming">
+            <button data-full="assets/RADAR_GUI_Scenario_Management.png" data-caption="RADAR GUI — Deployment: Scenario Management">
+              <img src="assets/RADAR_GUI_Scenario_Management.png" alt="RADAR GUI Deployment page, Scenario Management tab, deploying a scenario">
             </button>
-            <figcaption>Deploy page: build and deploy scenarios via Ansible, run OpenSearch anomaly detectors, and check infrastructure health.</figcaption>
+            <figcaption>Deployment → Scenario Management: deploy or undeploy a scenario against the local manager, with a command preview before running.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR_GUI_Agent_Management.png" data-caption="RADAR GUI — Deployment: Agent Management">
+              <img src="assets/RADAR_GUI_Agent_Management.png" alt="RADAR GUI Deployment page, Agent Management tab, minting an enrollment token">
+            </button>
+            <figcaption>Deployment → Agent Management: mint short-lived enrollment tokens, deregister agents, and open time-limited enrollment windows.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR_GUI_Group_Management.png" data-caption="RADAR GUI — Deployment: Group Management">
+              <img src="assets/RADAR_GUI_Group_Management.png" alt="RADAR GUI Deployment page, Group Management tab, assigning an agent to a scenario group">
+            </button>
+            <figcaption>Deployment → Group Management: assign or unassign an already-enrolled agent's scenario groups.</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <button data-full="assets/RADAR_GUI_Teardown.png" data-caption="RADAR GUI — Deployment: Teardown">
+              <img src="assets/RADAR_GUI_Teardown.png" alt="RADAR GUI Deployment page, Teardown tab, stopping the manager stack">
+            </button>
+            <figcaption>Deployment → Teardown: stop and remove the manager, indexer, dashboard, and webhook containers, with an explicit confirmation and optional data wipe.</figcaption>
           </figure>
         </div>
       </div>

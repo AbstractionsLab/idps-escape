@@ -20,6 +20,9 @@
        href="{{ url_for('active_responses', scenario_id=s.id) }}">
       <div class="ar-tab__name">{{ s.name }}</div>
       <div class="ar-tab__badges">
+        {% if s.id == 'default' %}<span class="badge badge--purple" style="font-size:10px">Baseline</span>
+        {% elif s.ar_config.get('active') %}<span class="badge badge--green" style="font-size:10px">Deployed</span>
+        {% else %}<span class="badge badge--gray" style="font-size:10px">Not deployed</span>{% endif %}
         {% if s.type == 'signature' %}<span class="badge badge--blue" style="font-size:10px">Signature</span>
         {% elif s.type == 'anomaly' %}<span class="badge badge--gray" style="font-size:10px">AD</span>
         {% elif s.type == 'hybrid' %}<span class="badge badge--purple" style="font-size:10px">Hybrid</span>{% endif %}
@@ -180,12 +183,23 @@
       </div>
       {% set tiers = cfg.get('tiers', {}) %}
       <div class="tier-stack">
+        <div class="tier-row tier-row--0">
+          <div class="tier-badge tier-badge--0">T0</div>
+          <div class="tier-row__body">
+            <div class="tier-row__label">No action &mdash; event logged only</div>
+            <div class="tier-row__range">
+              <span class="tier-bound">0.0</span><span class="tier-arrow">&#8594;</span>
+              <input type="number" class="tier-input" id="tier1_min" min="0" max="1" step="0.01"
+                     value="{{ tiers.get('tier1_min', 0.0) }}" oninput="validateTiers()">
+            </div>
+          </div>
+        </div>
         <div class="tier-row tier-row--1">
           <div class="tier-badge tier-badge--1">T1</div>
           <div class="tier-row__body">
-            <div class="tier-row__label">Alert only — email notification</div>
+            <div class="tier-row__label">Low risk &mdash; email notification + Flowintel case</div>
             <div class="tier-row__range">
-              <span class="tier-bound">0.0</span><span class="tier-arrow">&#8594;</span>
+              <span class="tier-bound">T0 max</span><span class="tier-arrow">&#8594;</span>
               <input type="number" class="tier-input" id="tier1_max" min="0" max="1" step="0.01"
                      value="{{ tiers.get('tier1_max', 0.33) }}" oninput="validateTiers()">
             </div>
@@ -194,7 +208,7 @@
         <div class="tier-row tier-row--2">
           <div class="tier-badge tier-badge--2">T2</div>
           <div class="tier-row__body">
-            <div class="tier-row__label">Escalate — email + Flowintel case + tier-2 mitigations</div>
+            <div class="tier-row__label">Medium risk &mdash; email + Flowintel case + mitigations</div>
             <div class="tier-row__range">
               <span class="tier-bound">T1 max</span><span class="tier-arrow">&#8594;</span>
               <input type="number" class="tier-input" id="tier2_max" min="0" max="1" step="0.01"
@@ -205,26 +219,15 @@
         <div class="tier-row tier-row--3">
           <div class="tier-badge tier-badge--3">T3</div>
           <div class="tier-row__body">
-            <div class="tier-row__label">High risk — full response + tier-3 mitigations</div>
+            <div class="tier-row__label">High risk &mdash; full response + strong mitigations</div>
             <div class="tier-row__range">
               <span class="tier-bound">T2 max</span><span class="tier-arrow">&#8594;</span>
-              <input type="number" class="tier-input" id="tier3_max" min="0" max="1" step="0.01"
-                     value="{{ tiers.get('tier3_max', 0.85) }}" oninput="validateTiers()">
-            </div>
-          </div>
-        </div>
-        <div class="tier-row tier-row--4">
-          <div class="tier-badge tier-badge--4">T4</div>
-          <div class="tier-row__body">
-            <div class="tier-row__label">Critical — immediate containment + tier-4 mitigations</div>
-            <div class="tier-row__range">
-              <span class="tier-bound">T3 max</span><span class="tier-arrow">&#8594;</span>
               <span class="tier-bound">1.0</span>
             </div>
           </div>
         </div>
       </div>
-      <div class="tier-warn" id="tier-warn" style="display:none">Tier thresholds must be strictly increasing.</div>
+            <div class="tier-warn" id="tier-warn" style="display:none">Tier thresholds must be non-decreasing and within [0, 1] (equal values are OK -- that just leaves that tier empty).</div>
     </div>
 
     <div class="ar-section">
@@ -235,13 +238,17 @@
 
       {% set mit2 = cfg.get('mitigations_tier2') or [] %}
       {% set mit3 = cfg.get('mitigations_tier3') or [] %}
-      {% set mit4 = cfg.get('mitigations_tier4') or [] %}
 
       <div class="mit-picker-grid">
 
         <div class="mit-picker-col">
+          <div class="mit-picker-header"><span class="tier-dot tier-dot--0"></span> Tier 0</div>
+          <div class="mit-picker-note">No action &mdash; event logged only</div>
+        </div>
+
+        <div class="mit-picker-col">
           <div class="mit-picker-header"><span class="tier-dot tier-dot--1"></span> Tier 1</div>
-          <div class="mit-picker-note">Email notification only</div>
+          <div class="mit-picker-note">Email notification + Flowintel case only</div>
         </div>
 
         <div class="mit-picker-col">
@@ -267,21 +274,6 @@
             {% endfor %}
           </div>
           <select class="mit-picker-select" onchange="addMitTag(this, 'mit-tags-3')">
-            <option value="">+ Add action</option>
-            {% for m in known_mitigations %}
-            <option value="{{ m }}">{{ m }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="mit-picker-col">
-          <div class="mit-picker-header"><span class="tier-dot tier-dot--4"></span> Tier 4</div>
-          <div class="mit-tag-list" id="mit-tags-4">
-            {% for m in mit4 %}
-            <span class="mit-tag" data-value="{{ m }}">{{ m }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
-            {% endfor %}
-          </div>
-          <select class="mit-picker-select" onchange="addMitTag(this, 'mit-tags-4')">
             <option value="">+ Add action</option>
             {% for m in known_mitigations %}
             <option value="{{ m }}">{{ m }}</option>

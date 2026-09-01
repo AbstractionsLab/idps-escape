@@ -10,15 +10,10 @@ window.RADAR = {
     });
     if (res.status === 403) {
       const body = await res.clone().json().catch(() => ({}));
-      if (body && body.need_vault) {
-        const ok = await RADAR.promptVaultUnlock();
+      if (body && body.need_sudo) {
+        const ok = await RADAR.promptSudoPassword();
         if (ok) return RADAR.radarFetch(url, options);
-        throw new Error("vault unlock cancelled");
-      }
-      if (body && body.need_ssh) {
-        const ok = await RADAR.promptSSHPassphrase();
-        if (ok) return RADAR.radarFetch(url, options);
-        throw new Error("ssh passphrase cancelled");
+        throw new Error("sudo password cancelled");
       }
     }
     if (!res.ok) {
@@ -99,89 +94,48 @@ window.RADAR = {
     });
   },
 
-  promptVaultUnlock() {
+  promptSudoPassword() {
     return RADAR._promptModal({
-      id: "radar-vault-modal",
-      title: "Unlock Ansible Vault",
-      sub: "Encrypted <code>host_vars/</code> files need the vault password. Kept in memory only.",
-      label: "Vault password",
-      btn: "Unlock",
-      endpoint: "/api/vault/unlock",
-      field: "password",
-      onSuccess: () => RADAR._updateVaultBadge(true),
-    });
-  },
-
-  promptSSHPassphrase() {
-    return RADAR._promptModal({
-      id: "radar-ssh-modal",
-      title: "SSH Key Passphrase",
-      sub: "Enter the passphrase for your SSH private key (<code>~/.ssh/id_ed25519</code>). Kept in memory only — used to load the key into a private ssh-agent for Ansible.",
-      label: "Passphrase (leave blank if key has none)",
+      id: "radar-sudo-modal",
+      title: "Sudo Password",
+      sub: "Bringing up the local manager stack needs <code>sudo</code> on this machine. Kept in memory only — used to feed <code>sudo -A</code> non-interactively, never logged.",
+      label: "Sudo password",
       btn: "Set",
-      endpoint: "/api/ssh/set",
-      field: "passphrase",
-      onSuccess: () => RADAR._updateSSHBadge(true),
+      endpoint: "/api/sudo/unlock",
+      field: "password",
+      onSuccess: () => RADAR._updateSudoBadge(true),
     });
   },
 
-  _updateVaultBadge(unlocked) {
-    const badge = document.getElementById("vault-badge");
+  _updateSudoBadge(unlocked) {
+    const badge = document.getElementById("sudo-badge");
     if (!badge) return;
-    badge.dataset.unlocked = unlocked ? "1" : "0";
     badge.style.display = "";
+    badge.dataset.set = unlocked ? "1" : "0";
     badge.innerHTML = unlocked
-      ? "🔓 Vault unlocked &nbsp;<a href='#' id='vault-lock-link'>lock</a>"
-      : "🔒 Vault locked &nbsp;<a href='#' id='vault-unlock-link'>unlock</a>";
-    const ll = badge.querySelector("#vault-lock-link");
-    const ul = badge.querySelector("#vault-unlock-link");
-    if (ll) ll.onclick = async (e) => {
-      e.preventDefault();
-      await fetch("/api/vault/lock", { method: "POST", credentials: "same-origin" });
-      RADAR._updateVaultBadge(false);
-    };
-    if (ul) ul.onclick = (e) => { e.preventDefault(); RADAR.promptVaultUnlock(); };
-  },
-
-  _updateSSHBadge(isSet) {
-    const badge = document.getElementById("ssh-badge");
-    if (!badge) return;
-    badge.style.display = "";
-    badge.dataset.set = isSet ? "1" : "0";
-    badge.innerHTML = isSet
-      ? "🔑 SSH passphrase set &nbsp;<a href='#' id='ssh-clear-link'>clear</a>"
-      : "🔑 SSH passphrase &nbsp;<a href='#' id='ssh-set-link'>set</a>";
-    const cl = badge.querySelector("#ssh-clear-link");
-    const sl = badge.querySelector("#ssh-set-link");
+      ? "🛡️ Sudo password set &nbsp;<a href='#' id='sudo-clear-link'>clear</a>"
+      : "🛡️ Sudo password &nbsp;<a href='#' id='sudo-set-link'>set</a>";
+    const cl = badge.querySelector("#sudo-clear-link");
+    const sl2 = badge.querySelector("#sudo-set-link");
     if (cl) cl.onclick = async (e) => {
       e.preventDefault();
-      await fetch("/api/ssh/clear", { method: "POST", credentials: "same-origin" });
-      RADAR._updateSSHBadge(false);
+      await fetch("/api/sudo/lock", { method: "POST", credentials: "same-origin" });
+      RADAR._updateSudoBadge(false);
     };
-    if (sl) sl.onclick = (e) => { e.preventDefault(); RADAR.promptSSHPassphrase(); };
+    if (sl2) sl2.onclick = (e) => { e.preventDefault(); RADAR.promptSudoPassword(); };
   },
 
-  async initVaultBadge() {
-    const badge = document.getElementById("vault-badge");
-    if (!badge) return;
-    const s = await fetch("/api/vault/status", { credentials: "same-origin" })
-      .then(r => r.json()).catch(() => ({ unlocked: false, any_encrypted: false }));
-    if (!s.any_encrypted && !s.unlocked) { badge.style.display = "none"; return; }
-    RADAR._updateVaultBadge(s.unlocked);
-  },
-
-  async initSSHBadge() {
-    const badge = document.getElementById("ssh-badge");
+  async initSudoBadge() {
+    const badge = document.getElementById("sudo-badge");
     if (!badge) return;
     badge.style.display = "";
-    const s = await fetch("/api/ssh/status", { credentials: "same-origin" })
-      .then(r => r.json()).catch(() => ({ set: false }));
-    RADAR._updateSSHBadge(s.set);
+    const s = await fetch("/api/sudo/status", { credentials: "same-origin" })
+      .then(r => r.json()).catch(() => ({ unlocked: false }));
+    RADAR._updateSudoBadge(s.unlocked);
   },
 
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  RADAR.initVaultBadge();
-  RADAR.initSSHBadge();
+  RADAR.initSudoBadge();
 });

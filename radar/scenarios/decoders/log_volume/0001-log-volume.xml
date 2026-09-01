@@ -4,7 +4,6 @@
 
 <decoder name="log_volume_metric_fields">
   <parent>log_volume_metric</parent>
-  <prematch>ossec: output: 'log_volume_metric':\s*</prematch>
-  <regex offset="after_prematch">(\S+) (\S+)</regex>
+  <regex>(\S+) (\S+)</regex>
   <order>log_path, log_bytes</order>
 </decoder>

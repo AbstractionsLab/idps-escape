@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
+import os
+import sys
 import time
 import subprocess
 from pathlib import Path
 
-from common import load_config, get_scenario_simulate
+CONFIG = {
+    "target_dir": "/var/log",
+    "spike_filename": "ratf_log_volume_spike.log",
+    "steps": 10,
+    "start_bytes": 268435456,
+    "growth_factor": 1.5,
+    "sleep_seconds": 1,
+    "max_total_bytes": 10000000000,
+    "max_step_bytes": 1500000000,
+    "write_chunk_bytes": 1048576,
+    "cleanup_minutes": 5,
+}
 
 
 def _int(v, default):
@@ -21,17 +34,30 @@ def _float(v, default):
 
 
 def _ensure_dir(path: Path) -> None:
-    path.mkdir(parents=True, exist_ok=True)
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except PermissionError as e:
+        raise RuntimeError(
+            f"Cannot create directory '{path}': permission denied. "
+            f"Run this script as a user with write access to that path, "
+            f"or point target_dir at somewhere writable."
+        ) from e
 
 
 def _append_bytes(file_path: Path, bytes_to_add: int, chunk: int = 1024 * 1024) -> None:
     remaining = bytes_to_add
     buf = b"0" * min(chunk, remaining)
-    with file_path.open("ab", buffering=0) as f:
-        while remaining > 0:
-            n = min(len(buf), remaining)
-            f.write(buf[:n])
-            remaining -= n
+    try:
+        with file_path.open("ab", buffering=0) as f:
+            while remaining > 0:
+                n = min(len(buf), remaining)
+                f.write(buf[:n])
+                remaining -= n
+    except OSError as e:
+        raise RuntimeError(
+            f"Could not write to '{file_path}': {e.strerror or e}. "
+            f"Check permissions and available disk space."
+        ) from e
 
 
 def _schedule_cleanup(file_path: Path, cleanup_minutes: int) -> None:
@@ -44,8 +70,7 @@ def _schedule_cleanup(file_path: Path, cleanup_minutes: int) -> None:
 
 
 def main() -> None:
-    cfg = load_config()
-    lv = get_scenario_simulate(cfg, "log_volume")
+    lv = CONFIG
 
     base_dir = Path(str(lv.get("target_dir", "/var/log")))
     filename = str(lv.get("spike_filename", "ratf_log_volume_spike.log"))
@@ -97,4 +122,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        if os.environ.get("RATF_DEBUG"):
+            raise
+        print(f"ERROR: log_volume simulation failed: {e}", file=sys.stderr)
+        print("(set RATF_DEBUG=1 for the full traceback)", file=sys.stderr)
+        sys.exit(1)

@@ -88,6 +88,7 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
 
     trigger_name = scn.get("trigger_name", f"{scenario_name}-trigger")
     monitor_name = scn.get("monitor_name", f"{scenario_name}-monitor")
+    lookback = interval * int(scn.get("monitor_lookback_multiplier", 2))
 
     query = {
         "size": 1,
@@ -98,7 +99,7 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
                     {
                         "range": {
                             "execution_end_time": {
-                                "from": f"{{{{period_end}}}}||-{interval}m",
+                                "from": f"{{{{period_end}}}}||-{lookback}m",
                                 "to": "{{period_end}}",
                                 "include_lower": True,
                                 "include_upper": True
@@ -121,8 +122,8 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
         "ctx.results[0].hits.hits[0]._source != null && "
         "ctx.results[0].hits.hits[0]._source.confidence != null && "
         "ctx.results[0].aggregations.max_anomaly_grade.value != null && "
-        f"ctx.results[0].aggregations.max_anomaly_grade.value > {grade_th} && "
-        f"ctx.results[0].hits.hits[0]._source.confidence > {conf_th}"
+        f"ctx.results[0].aggregations.max_anomaly_grade.value >= {grade_th} && "
+        f"ctx.results[0].hits.hits[0]._source.confidence >= {conf_th}"
     )
 
     return {

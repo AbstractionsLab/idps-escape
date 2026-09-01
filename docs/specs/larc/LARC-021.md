@@ -34,7 +34,7 @@ Where:
 
 - **A** (Anomaly intensity) = $G \cdot C$, where G is anomaly grade and C is confidence from OpenSearch RCF or SONAR MVAD
 - **S** (Signature risk) = $L \cdot I$, where L is likelihood and I is impact from rule-based detection
-- **T** (CTI score) = $1 − \prod_i^n(1 − \omega_i)$, aggregated over CTI indicator weights
+- **T** (CTI score) = `cti_score_T`, the normalized score returned directly by the DECIPHER analyze endpoint (SWD-038), clamped to [0,1]. RADAR does not aggregate CTI indicators locally.
 
 Default weights (configurable in ar.yaml):
 
@@ -44,18 +44,19 @@ Default weights (configurable in ar.yaml):
 
 ## Tier determination
 
-Risk scores map to response tiers:
+Risk scores map to four response tiers via the scenario's `tier1_min`/`tier1_max`/`tier2_max` boundaries in `ar.yaml` (default 0.0/0.33/0.66); see SRS-061 for the normative response semantics of each tier:
 
-- **Low** (0.0 ≤ R < 0.33): Email notification only
-- **Medium** (0.33 ≤ R < 0.66): Email + case creation + light mitigation
-- **High** (0.66 ≤ R ≤ 1.0): Full notification + case + strong containment
+- **Tier 0** (R < tier1_min): Audit log only, no notification
+- **Tier 1** (tier1_min ≤ R < tier1_max): Email notification + Flowintel case creation
+- **Tier 2** (tier1_max ≤ R < tier2_max): Tier 1 actions + `mitigations_tier2` (if `allow_mitigation`)
+- **Tier 3** (R ≥ tier2_max): Tier 1 actions + `mitigations_tier3` (if `allow_mitigation`)
 
 ## Flow sequence
 
-1. **Input collection**: Extract AD outputs (G, C), signature values (L, I), CTI flags
+1. **Input collection**: Extract AD outputs (G, C), signature values (L, I), the CTI score returned by DECIPHER
 2. **Component calculation**: Compute A, S, T from inputs
 3. **Weighted combination**: Apply weights to compute R
-4. **Tier assignment**: Map R to Low/Medium/High based on thresholds
+4. **Tier assignment**: Map R to Tier 0–3 based on `ar.yaml` boundaries
 5. **Action selection**: Determine response actions based on tier and scenario configuration
 
-See also: `/radar/scenarios/active_responses/ar.yaml` for configuration schema and `/docs/manual/radar_docs/radar-risk-math.md` for detailed mathematical specification.
+See also: `/radar/scenarios/active_responses/ar.yaml` for configuration schema and SWD-026 for the normative implementation design and algorithm specification.

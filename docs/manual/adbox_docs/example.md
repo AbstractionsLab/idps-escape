@@ -3,7 +3,7 @@
 In this section, we present an example illustrating the usage of ADBox, adopting the end user point of view.
 
 ## My system
-I have deployed all the components as explained in the [guide for IDPS and SIEM integrated deployment](../../../deployment/guide_sids.md) and the
+I have deployed all the components as explained in the [custom deployment guides](../custom_deployments/README.md) and the
 [ADBox user manual installation page](./adbox_installation.md). Moreover, I have enabled [Linux resource monitoring](./linux_resource.md).
 
 ## My use-case
@@ -68,7 +68,7 @@ prediction:
 I run adbox
 
 ```sh
-./adbox.sh -u 9
+./adbox/adbox.sh -u 9
 ```
 and stop it after a few hours.
 

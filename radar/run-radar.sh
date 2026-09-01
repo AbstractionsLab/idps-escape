@@ -6,7 +6,7 @@ usage() {
 Usage:
   $0 <scenario> [--ingest true|false]
 
-Scenarios: suspicious_login | insider_threat | ddos_detection | malware_communication | log_volume
+Scenarios: suspicious_login | geoip_detection | log_volume | scanning_detection
 Dataset ingest to speed up the training:    true (default) | false
 EOF
   exit 2

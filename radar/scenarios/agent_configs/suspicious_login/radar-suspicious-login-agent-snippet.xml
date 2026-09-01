@@ -1,6 +1,1 @@
-<agent_config os="Linux">
-<localfile>
-    <location>/var/log/suspicious_login.log</location>
-    <log_format>syslog</log_format>
-</localfile>
-</agent_config>
+<!-- see _shared/radar-shared-auth-log-agent-snippet.xml -->

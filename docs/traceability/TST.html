@@ -76,6 +76,15 @@
 <li><a href="#TST-047">3.7 Detection validation for GeoIP detection</a></li>
 <li><a href="#TST-048">3.8 Detection validation for Log volume abnormal growth</a></li>
 <li><a href="#TST-049">3.9 RADAR deployment integrity verification</a></li>
+<li><a href="#TST-051">3.10 Build scanning detection</a></li>
+<li><a href="#TST-052">3.11 Detection validation for scanning detection</a></li>
+<li><a href="#TST-053">3.12 Validate default scenario rules detection</a></li>
+<li><a href="#TST-054">3.13 DECIPHER-RADAR detection validation for Default rules</a></li>
+<li><a href="#TST-055">3.14 GUI: Build &amp; validate <code>suspicious_login</code> scenario</a></li>
+<li><a href="#TST-056">3.15 GUI: Build &amp; validate <code>geoip_detection</code> scenario</a></li>
+<li><a href="#TST-057">3.16 GUI: Build &amp; validate <code>scanning_detection</code> scenario</a></li>
+<li><a href="#TST-058">3.17 GUI: Build &amp; validate <code>log_volume</code> scenario</a></li>
+<li><a href="#TST-059">3.18 GUI: Unenroll, undeploy, and deregister the <code>log_volume</code> scenario</a></li>
 </ul>
 </li>
 <li><a href="#TST-SONAR">4.0 SONAR test case specifications</a><ul>
@@ -117,9 +126,9 @@
 <ol start="4">
 <li>Run the container by executing the bash file containing the run commands.</li>
 </ol>
-<p>4a. Make it executable: <code>chmod  +x  adbox.sh</code></p>
+<p>4a. Make it executable: <code>chmod  +x  adbox/adbox.sh</code></p>
 <p>4b. And execute it as follows</p>
-<pre><code>./adbox.sh -h
+<pre><code>./adbox/adbox.sh -h
 </code></pre>
 <h2>Expected outcome</h2>
 <p>Step 1. A copy of <code>siem-mtad-gat</code> folder in local folder</p>
@@ -260,7 +269,7 @@ Are you sure you wish to run the default ADBox in default mode? (y/n):
 <h2>Test steps</h2>
 <ol>
 <li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
-  <code>./adbox.sh -i</code></li>
+  <code>./adbox/adbox.sh -i</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <p>ADBox starts with</p>
@@ -327,7 +336,7 @@ Enter a number (1-4):
 <h2>Test steps</h2>
 <ol>
 <li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
-  <code>./adbox.sh</code></li>
+  <code>./adbox/adbox.sh</code></li>
 <li>Input <code>y</code> after <code>Are you sure you wish to run the default ADBox in default mode? (y/n):</code></li>
 </ol>
 <h2>Expected outcome</h2>
@@ -400,7 +409,7 @@ Data ingestion.
 <h2>Test steps</h2>
 <ol>
 <li>Run the container “siem-mtad-gat-container” by executing the adbox script without any parameters.
-  <code>./adbox.sh</code></li>
+  <code>./adbox/adbox.sh</code></li>
 <li>Input <code>y</code> after <code>Are you sure you wish to run the default ADBox in default mode? (y/n):</code></li>
 </ol>
 <h2>Expected outcome</h2>
@@ -486,7 +495,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <h2>Test steps</h2>
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 1 parameters.
-    <code>./adbox.sh -u 1</code></li>
+    <code>./adbox/adbox.sh -u 1</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
@@ -551,7 +560,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 1 parameters.</li>
 </ol>
-<pre><code>  ./adbox.sh -u 1
+<pre><code>  ./adbox/adbox.sh -u 1
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -623,7 +632,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <h2>Test steps</h2>
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 2 parameters.
-  <code>./adbox.sh -u 2</code></li>
+  <code>./adbox/adbox.sh -u 2</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
@@ -687,7 +696,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <h2>Test steps</h2>
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 2 parameters.
-  <code>./adbox.sh -u 2</code></li>
+  <code>./adbox/adbox.sh -u 2</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
@@ -759,7 +768,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 3 parameters.</li>
 </ol>
-<pre><code>  ./adbox.sh -u 3
+<pre><code>  ./adbox/adbox.sh -u 3
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -824,7 +833,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 3 parameters.</li>
 </ol>
-<pre><code>  ./adbox.sh -u 3
+<pre><code>  ./adbox/adbox.sh -u 3
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -900,7 +909,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 4 parameters.</li>
 </ol>
-<pre><code>./adbox.sh -u 4
+<pre><code>./adbox/adbox.sh -u 4
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -965,7 +974,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 4 parameters.</li>
 </ol>
-<pre><code>./adbox.sh -u 4
+<pre><code>./adbox/adbox.sh -u 4
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -1036,7 +1045,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <h2>Test steps</h2>
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 5 parameters.
-  <code>./adbox.sh -u 5</code></li>
+  <code>./adbox/adbox.sh -u 5</code></li>
 </ol>
 <h2>Expected outcome</h2>
 <ul>
@@ -1101,7 +1110,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with use case 5 parameters.</li>
 </ol>
-<pre><code>./adbox.sh -u 5
+<pre><code>./adbox/adbox.sh -u 5
 </code></pre>
 <h2>Expected outcome</h2>
 <ul>
@@ -1170,7 +1179,7 @@ The file '/home/alab/siem-mtad-gat/siem_mtad_gat/assets/data/train/sample-alerts
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox script with shipping flag.</li>
 </ol>
-<pre><code>  ./adbox.sh -s
+<pre><code>  ./adbox/adbox.sh -s
 </code></pre>
 <h2>Expected outcome</h2>
 <h3>CLI:</h3>
@@ -1239,7 +1248,7 @@ Exit shipper installation. Check ADBox templates and policy correct installation
 <ol>
 <li>Run the container <code>siem-mtad-gat-container</code> by executing the adbox use case 12 with shipping flag.</li>
 </ol>
-<pre><code>  ./adbox.sh -u 12 -s
+<pre><code>  ./adbox/adbox.sh -u 12 -s
 </code></pre>
 <h2>Expected outcome</h2>
 <h3>CLI:</h3>
@@ -1397,7 +1406,7 @@ Prediction ended
 <li>Set "port" as indexer's port</li>
 <li>Run</li>
 </ol>
-<pre><code>./adbox.sh -c
+<pre><code>./adbox/adbox.sh -c
 </code></pre>
 <h2>Expected outcome</h2>
 <ol>
@@ -1463,7 +1472,7 @@ Connection with Wazuh established successfully!
 <li>Update "password" as indexer's password</li>
 <li>Run</li>
 </ol>
-<pre><code>./adbox.sh -c
+<pre><code>./adbox/adbox.sh -c
 </code></pre>
 <h2>Expected outcome</h2>
 <ol>
@@ -4845,6 +4854,1379 @@ sudo rm -rf /tmp/
 <tr>
 <td>version</td>
 <td>0.8.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-051">3.10 Build scanning detection <small><a href="TST.html#TST-051">TST-051</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>In the controller host, the working directory is required to be <code>radar</code>:</li>
+</ol>
+<pre><code>cd radar
+</code></pre>
+<ol start="2">
+<li>Build RADAR with SCENARIO_NAME scanning_detection, if <code>manager</code> is <code>local</code> then the command should be run with <code>sudo</code>:</li>
+</ol>
+<pre><code>./build-radar.sh scanning_detection --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<p>In this step, please choose options according to your setup:</p>
+<ul>
+<li>
+<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
+</li>
+<li>
+<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
+</li>
+<li>
+<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
+<ul>
+<li>true  : do not bootstrap a manager</li>
+<li>false : bootstrap a manager</li>
+</ul>
+</li>
+<li>
+<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
+</li>
+</ul>
+<ol start="3">
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution:</li>
+</ol>
+<ul>
+<li>In case the manager is chosen to be <code>local</code>, in the controller node/host, run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --manager local
+</code></pre>
+<ul>
+<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the controller node/host, run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --manager remote
+</code></pre>
+<ul>
+<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>./stop-radar.sh --agent local
+</code></pre>
+<ul>
+<li>In case the agent is chosen to be <code>remote</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>./stop-radar.sh --agent remote
+</code></pre>
+<h2>Expected outcome</h2>
+<h3>2. Check the setup</h3>
+<h4>In Wazuh Manager</h4>
+<p>Connect to the Wazuh manager to be able to perform the following verifications:</p>
+<pre><code>docker exec -it wazuh.manager bash
+</code></pre>
+<ul>
+<li><strong>2.1</strong> RADAR scanning detection rules are deployed; verify via</li>
+</ul>
+<pre><code>ls -al /var/ossec/etc/rules/ | grep &quot;scanning&quot;
+</code></pre>
+<p>to ensure that <code>a4-scanning-detection.xml</code> exists, is owned by <code>root:wazuh</code>, mode <code>0640</code>.</p>
+<ul>
+<li><strong>2.2</strong> Scanning detection rules contain all expected rule IDs; verify via</li>
+</ul>
+<pre><code>grep 'id=&quot;10080' /var/ossec/etc/rules/a4-scanning-detection.xml
+</code></pre>
+<p>to ensure that rules 100800 through 100805 are present.</p>
+<ul>
+<li><strong>2.3</strong> Scanning detection rules are bound to active responses; verify via</li>
+</ul>
+<pre><code>grep -A5 'radar_ar_scanning' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to ensure that scanning rule IDs reference the intended <code>&lt;active-response&gt;</code> block triggering <code>radar_ar.py</code>.</p>
+<ul>
+<li><strong>2.4</strong> Agent is registered with the manager; verify via</li>
+</ul>
+<pre><code>/var/ossec/bin/agent_control -l
+</code></pre>
+<p>to ensure that an entry exists for each agent.</p>
+<ul>
+<li><strong>2.5</strong> Agent configurations for scanning detection are in place; verify via</li>
+</ul>
+<pre><code>cat /var/ossec/etc/shared/default/agent.conf | grep -A5 &quot;scanning_detection&quot;
+</code></pre>
+<p>to ensure that the <code>&lt;!-- RADAR: scanning_detection agent_config --&gt;</code> block exists and contains Apache and Nginx log source entries with <code>log_format apache</code>.</p>
+<ul>
+<li><strong>2.6</strong> Wazuh Manager is running after restart; verify via</li>
+</ul>
+<pre><code>/var/ossec/bin/wazuh-control status
+</code></pre>
+<p>to ensure that status output indicates the manager is <code>running</code> with no error messages.</p>
+<h4>In endpoints running agents</h4>
+<ul>
+<li><strong>2.7</strong> Wazuh agent is active and connected to the manager; verify via</li>
+</ul>
+<pre><code>systemctl status wazuh-agent
+</code></pre>
+<p>to ensure the agent service is active.</p>
+<ul>
+<li><strong>2.8</strong> Apache or Nginx is running and writing to the expected log path; verify via</li>
+</ul>
+<pre><code>ls -lh /var/log/apache2/access.log
+tail -5 /var/log/apache2/access.log
+ls -lh /var/log/apache2/other_vhosts_access.log
+tail -5 /var/log/apache2/other_vhosts_access.log
+ls -lh /var/log/nginx/access.log
+tail -5 /var/log/nginx/access.log
+</code></pre>
+<p>to ensure the file exists and contains recent access log entries in combined log format.</p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-041">TRP-041 TCER: Build scanning detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>1.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-052">3.11 Detection validation for scanning detection <small><a href="TST.html#TST-052">TST-052</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-051">TST-051</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>Configure <code>scanning_detection</code> parts in <code>/radar/config.yaml</code>. The simulation injects entries directly into the Apache access log, exercising RADAR rules 100800–100803.</li>
+<li>From the <code>radar/</code>, run:</li>
+</ol>
+<pre><code class="language-bash">./simulate-radar.sh scanning_detection --agent remote
+</code></pre>
+<h2>Expected outcome</h2>
+<p>2.1. The ansible playbook executes successfully.</p>
+<p>2.2. In the Wazuh Dashboard Discovery page, rule ID <code>1008*</code> is triggered for the remote agent.</p>
+<p>2.3. In Wazuh manager check alert tier:</p>
+<pre><code class="language-bash">grep &quot;Risk computed&quot; /var/ossec/logs/active-responses.log | tail -1
+</code></pre>
+<ul>
+<li>Expected <code>risk_score</code> range is between 0.0 and 1.0.</li>
+<li>If tier is:<ul>
+<li>Tier 0:<ul>
+<li>No email is received at <code>EMAIL_TO</code>.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 1:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 2:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier2</code> for <code>log_volume</code>).</li>
+</ul>
+</li>
+<li>Tier 3:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier3</code> for <code>log_volume</code>). Considering the mitigation check:<ul>
+<li><code>firewall-drop</code>: check the IP addresses are blocked in the agent</li>
+<li><code>lock_user_linux.sh</code>: check the user is locked in the agent</li>
+<li><code>terminate_service.sh</code>: check the service is terminated in the agent</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>Child links:</em> <a href="TRP.html#TRP-042">TRP-042 TCER: Detection validation for scanning detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Automated</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>1.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-053">3.12 Validate default scenario rules detection <small><a href="TST.html#TST-053">TST-053</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-041">TST-041</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>In the controller host, the working directory is required to be <code>radar</code>:</li>
+</ol>
+<pre><code>cd radar
+</code></pre>
+<ol start="2">
+<li>Build RADAR with any scenario, if <code>manager</code> is <code>local</code> then the command should be run with <code>sudo</code>:</li>
+</ol>
+<pre><code>./build-radar.sh suspicious_login --agent remote/local --manager remote/local --manager_exists true/false
+</code></pre>
+<p>In this step, please choose options according to your setup:</p>
+<ul>
+<li>
+<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
+</li>
+<li>
+<p><code>--manager</code>         Where manager lives:    local (docker-compose.core.yml)   | remote (SSH host)</p>
+</li>
+<li>
+<p><code>--manager_exists</code>  Whether the manager already exists at that location:</p>
+<ul>
+<li>true  : do not bootstrap a manager</li>
+<li>false : bootstrap a manager</li>
+</ul>
+</li>
+<li>
+<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
+</li>
+</ul>
+<ol start="3">
+<li>To clean up the test environment <strong>only after</strong> a <em>successful</em> test execution <strong>AND</strong> a successful execution of <a href="./TST.html#TST-054">TST-054</a>:</li>
+</ol>
+<ul>
+<li>In case the manager is chosen to be <code>local</code>, in the controller node/host,  run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --manager local
+</code></pre>
+<ul>
+<li>In case the manager is chosen to be <code>remote</code> and bootstrapped, in the controller node/host, run these commands:</li>
+</ul>
+<pre><code>./stop-radar.sh --manager remote
+</code></pre>
+<ul>
+<li>In case the agent is chosen to be <code>local</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>./stop-radar.sh --agent local
+</code></pre>
+<ul>
+<li>In case the agent is chosen to be <code>remote</code>, in the controller node/host, run this command:</li>
+</ul>
+<pre><code>./stop-radar.sh --agent remote
+</code></pre>
+<h2>Expected outcome</h2>
+<h4>In Wazuh Manager</h4>
+<p>Connect to the Wazuh manager:</p>
+<pre><code>docker exec -it wazuh.manager bash
+</code></pre>
+<ul>
+<li><strong>2.1</strong> RADAR rules for the default scenario are deployed:</li>
+</ul>
+<pre><code>cat /var/ossec/etc/rules/radar_rules.xml
+</code></pre>
+<p>to ensure rule IDs 100400-100405 are present.</p>
+<ul>
+<li><strong>2.2</strong> <code>ar.yaml</code> reflects the configured groups:</li>
+</ul>
+<pre><code>grep -A3 &quot;^  default:&quot; /var/ossec/active-response/ar.yaml
+</code></pre>
+<ul>
+<li><strong>2.3</strong> The active-response binding in <code>ossec.conf</code> includes both the exact IDs and the two groups:</li>
+</ul>
+<pre><code>grep -A6 'radar_ar_default' /var/ossec/etc/ossec.conf
+</code></pre>
+<p>to ensure <code>&lt;rules_id&gt;</code> lists 100401/100402/100404/100405/23503/23504/23505 and <code>&lt;rules_group&gt;</code> lists <code>authentication_failures</code>.</p>
+<ul>
+<li><strong>2.4</strong> Wazuh Manager is running after restart:</li>
+</ul>
+<pre><code>/var/ossec/bin/wazuh-control status
+</code></pre>
+<p>to ensure status output indicates <code>running</code> with no error messages.</p>
+<h4>Post-test cleanup</h4>
+<ul>
+<li><strong>3</strong> Check the cleanup after successful validations, the command output should be empty:</li>
+</ul>
+<pre><code>docker ps
+</code></pre>
+<p><em>Child links:</em> <a href="TRP.html#TRP-043">TRP-043 TCER: Validate default scenario rules detection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>Test (T)</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>1.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-054">3.13 DECIPHER-RADAR detection validation for Default rules <small><a href="TST.html#TST-054">TST-054</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>RADAR is setup according to <a href="./TST.html#TST-053">TST-053</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>From the <code>radar/</code>, run:</li>
+</ol>
+<pre><code class="language-bash">./simulate-radar.sh default --agent remote
+</code></pre>
+<p>In this step, please choose options according to your setup:</p>
+<ul>
+<li>
+<p><code>--agent</code>           Where agents live:      local (docker-compose.agents.yml) | remote (SSH endpoints)</p>
+</li>
+<li>
+<p><code>--ssh-key</code>         Optional: path to the SSH private key used for remote manager/agent access.
+                    If not provided, defaults to: <code>$HOME/.ssh/id_ed25519</code></p>
+</li>
+</ul>
+<h2>Expected outcome</h2>
+<p>1.1. Based on syscollector frequency after 60 minutes, at least one alert of rule IDs <code>23503</code>, <code>23504</code>, or <code>23505</code> is triggered for the remote agent.</p>
+<p>1.2. In Wazuh manager check alert tier:</p>
+<pre><code class="language-bash">grep &quot;Risk computed&quot; /var/ossec/logs/active-responses.log | tail -1
+</code></pre>
+<ul>
+<li>Expected <code>risk_score</code> range is between 0.0 and 1.0.</li>
+<li>If tier is:<ul>
+<li>Tier 0:<ul>
+<li>No email is received at <code>EMAIL_TO</code>.</li>
+<li>No FlowIntel case is created.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 1:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier, and FlowIntel case URL.</li>
+<li>A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</li>
+<li>The FlowIntel case contains relevant information about the suspicious login event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</li>
+<li>Open the FlowIntel case at the URL in the email. Verify that <code>misp_available: true</code> appears in the case description, confirming that DECIPHER's analysis was enriched with MISP data.</li>
+<li>The Flowintel case is tagged with low priority.</li>
+<li>No mitigation command appears in <code>/var/ossec/logs/active-responses.log</code>.</li>
+</ul>
+</li>
+<li>Tier 2:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier, and FlowIntel case URL.</li>
+<li>A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</li>
+<li>The FlowIntel case contains relevant information about the suspicious login event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</li>
+<li>Open the FlowIntel case at the URL in the email. Verify that <code>misp_available: true</code> appears in the case description, confirming that DECIPHER's analysis was enriched with MISP data.</li>
+<li>The Flowintel case is tagged with medium priority.</li>
+<li>Mitigation commands appear in <code>/var/ossec/logs/active-responses.log</code> (check mitigation commands in <code>ar.yaml</code> field <code>mitigations_tier2</code> for <code>suspicious_login</code>).</li>
+</ul>
+</li>
+<li>Tier 3:<ul>
+<li>The email address specified in <code>EMAIL_TO</code> (from <code>.env</code>) receives a RADAR alert notification, containing the risk score, tier, and FlowIntel case URL.</li>
+<li>A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</li>
+<li>The FlowIntel case contains relevant information about the suspicious login event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</li>
+<li>Open the FlowIntel case at the URL in the email. Verify that <code>misp_available: true</code> appears in the case description, confirming that DECIPHER's analysis was enriched with MISP data.</li>
+<li>The FlowIntel case is tagged with high priority.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><em>Child links:</em> <a href="TRP.html#TRP-044">TRP-044 TCER: DECIPHER-RADAR detection validation for Default rules</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>Test (T)</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>1.2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-055">3.14 GUI: Build &amp; validate <code>suspicious_login</code> scenario <small><a href="TST.html#TST-055">TST-055</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>A controller host/node is available:<ul>
+<li>A Linux machine/VM is available to the tester.</li>
+<li>OS: recent GNU/Linux distribution, preferably an Ubuntu distribution (22.04+).</li>
+</ul>
+</li>
+<li>A second test node (accessible via the controller node) is available: GNU/Linux distro e.g. Debian GNU/Linux 13 (trixie).<ul>
+<li>Python must be installed on this node.</li>
+</ul>
+</li>
+<li>Targeted Wazuh manager and agent versions: <code>4.14.1</code>.</li>
+<li>The values needed for <code>.env</code> are available. See <code>env.example</code> — each variable has a comment explaining what it's for and exactly what format/value it needs. At minimum for this scenario: <code>OS_URL</code>/<code>OS_USER</code>/<code>OS_PASS</code>, <code>WAZUH_API_URL</code>/<code>WAZUH_AUTH_USER</code>/<code>WAZUH_AUTH_PASS</code>, <code>WAZUH_MANAGER_ADDRESS</code>, and <code>MAXMIND_LICENSE_KEY</code> (see below).</li>
+<li>A MaxMind GeoLite2 license key is available (used by the manager to download the GeoIP databases needed for this scenario's own enrichment — country, region, city, ASN, velocity):<ul>
+<li>Create a free MaxMind account at <a href="https://www.maxmind.com/en/geolite2/signup">MaxMind GeoLite2 sign-up</a>.</li>
+<li>Once logged in, go to the account's <strong>My License Key</strong> page and generate a new license key.</li>
+<li>Keep this key ready to paste into <code>.env</code> as <code>MAXMIND_LICENSE_KEY</code> in the test steps below. Note that MaxMind's own sign-up flow may change over time — if the linked page doesn't match, use MaxMind's current account/license-key management page instead.</li>
+</ul>
+</li>
+<li>The DECIPHER Stack (DECIPHER, FlowIntel and MISP) is deployed and reachable from the Wazuh manager. The validated version is available in the <a href="https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher">DECIPHER folder of the SATRAP-DL repository</a>, tested against <code>v1.0</code> of SATRAP-DL. Once deployed, configure the <code>DECIPHER_BASE_URL</code> variable in <code>.env</code> to point to the running DECIPHER instance.</li>
+<li>
+<p>Regarding the environment variables set in <code>.env</code>:</p>
+<ol>
+<li>
+<p>Confirm the variable is actually set in <em>this</em> shell: <code>env | grep OS_URL</code></p>
+</li>
+<li>
+<p>If empty, set it explicitly and retest, e.g. <code>export OS_URL="https://&lt;your-opensearch-host-IP&gt;:9200"</code>, <code>export OS_USER="admin"</code>, <code>export OS_PASS="SecretPassword"</code></p>
+</li>
+<li>
+<p>Retest: <code>curl -u "$OS_USER:$OS_PASS" -k "$OS_URL/_index_template/radar-log-volume?pretty"</code></p>
+</li>
+</ol>
+</li>
+</ul>
+<h3>Optional: test the full pipeline including integration with DECIPHER</h3>
+<ul>
+<li>Bring the DECIPHER stack up following the corresponding steps in <a href="https://abstractionslab.github.io/satrap-dl/traceability/TST.html#TST-021">DECIPHER TST-021</a></li>
+<li>Configure the DECIPHER setting as per the setup actions in <a href="https://abstractionslab.github.io/satrap-dl/traceability/TST.html#TST-022">DECIPHER TST-022</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the controller host, prepare <code>.env</code>:</li>
+</ol>
+<pre><code class="language-bash">cd radar
+cp env.example .env
+</code></pre>
+<p>Edit it with the values described in Preconditions above.</p>
+<ol start="2">
+<li>Start the GUI:</li>
+</ol>
+<pre><code class="language-bash">./radar.sh gui
+</code></pre>
+<p>This creates a Python virtual environment and installs dependencies automatically on first run. Open the GUI in a browser at the printed host:port.</p>
+<ol start="3">
+<li>
+<p>In the GUI, go to <strong>Deployment → Scenario Management</strong> (default <strong>Deploy scenario</strong> sub-tab), select scenario <code>suspicious_login</code>, and click <strong>Deploy</strong>. If prompted for the sudo password, enter it.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Agent Management</strong> (default <strong>Onboard agent</strong> sub-tab). Select scenario <code>suspicious_login</code>, click <strong>Mint token</strong>, and copy the printed <code>bootstrap-agent.sh</code> command.</p>
+</li>
+<li>
+<p>On the agent host, download the <code>bootstrap-agent.sh</code> script and run the copied command exactly as printed, or by adding an <code>--agent-name</code> argument, under <code>sudo</code>:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp bootstrap-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x bootstrap-agent.sh
+</code></pre>
+<ol start="6">
+<li>
+<p>In the GUI, go to <strong>Deployment → Group Management</strong>. Enter the agent's IP/name, select scenario <code>suspicious_login</code>, and click <strong>Assign group</strong>.</p>
+</li>
+<li>
+<p>Check health of manager: in <strong>Deployment → Status</strong>, choose the Suspicious Login scenario and press <strong>Run health check</strong>.</p>
+</li>
+<li>
+<p>Copy the simulation script to the agent host and run it directly there:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp radar-test-framework/simulate/scenarios/suspicious_login.py &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+sudo python3 suspicious_login.py
+</code></pre>
+<p>This script is fully standalone.</p>
+<h2>Expected outcome</h2>
+<ol>
+<li>
+<p><code>.env</code> exists in the controller with the required variables set, including <code>MAXMIND_LICENSE_KEY</code>.</p>
+</li>
+<li>
+<p>The GUI is reachable in a browser, and the <strong>Deployment</strong> page shows <strong>Scenario Management</strong>, <strong>Agent Management</strong>, and <strong>Group Management</strong> tabs all present. On first run, a <code>.venv</code> directory is created under the RADAR root.</p>
+</li>
+<li>
+<p>Two items to verify:</p>
+<ul>
+<li>
+<p>(a) The command completes with <code>=== SUCCESS</code> in its output.</p>
+</li>
+<li>
+<p>(b) Confirm the GeoLite databases were downloaded:</p>
+</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-bash">    docker exec -it wazuh.manager bash -c 'ls -l /var/ossec/etc/radar/GeoLite2-*'
+</code></pre>
+<p>Both <code>GeoLite2-City.mmdb</code> and <code>GeoLite2-ASN.mmdb</code> should be present.</p>
+<ol start="4">
+<li>
+<p>A ready-to-run command of the form <code>sudo ./bootstrap-agent.sh --manager &lt;address&gt; --token &lt;token&gt; --group default --group suspicious_login</code> is printed.</p>
+</li>
+<li>
+<p>The command completes with <code>=== SUCCESS ===</code> in its output.</p>
+</li>
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong>. The agent should be assigned groups <code>suspicious_login</code> and <code>radar_shared</code>.</p>
+</li>
+<li>
+<p>No <code>FAIL</code> lines should be present in the health check.</p>
+</li>
+<li>
+<p>Three items to verify:</p>
+<ul>
+<li>
+<p>(a) <code>suspicious_login.py</code> is copied and runs on the agent host without error, printing "suspicious_login simulation completed".</p>
+</li>
+<li>
+<p>(b) Tail manager logs in a separate terminal (within 1 minute, confirm authentication events enriched with RADAR columns appear in the log): <code>docker exec -it wazuh.manager bash -c 'tail -F /var/ossec/logs/radar/enriched_auth.log'</code></p>
+</li>
+<li>
+<p>(c) A Wazuh rule for suspicious login <code>210***</code> appears in Wazuh Dashboard (<strong>Discovery</strong>).</p>
+</li>
+</ul>
+</li>
+</ol>
+<h2>Cleanup</h2>
+<ol>
+<li>After finishing tests, clean up using <strong>Deployment → Teardown</strong> in the GUI. In the event that the GUI teardown fails, you can use the following command on the server host:</li>
+</ol>
+<pre><code class="language-bash">    docker compose -f docker-compose.core.yml -f docker-compose.webhook.yml -f volumes.yml down -v --remove-orphans
+</code></pre>
+<ol start="2">
+<li>To clean agent host:</li>
+</ol>
+<pre><code class="language-bash">    scp uninstall-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+</code></pre>
+<pre><code class="language-bash">    ssh &lt;user&gt;@&lt;agent-host&gt;
+</code></pre>
+<pre><code class="language-bash">    chmod +x uninstall-agent.sh
+</code></pre>
+<pre><code class="language-bash">    sudo ./uninstall-agent.sh --purge-data
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-051">SRS-051 RADAR scenario: suspicious login</a>, <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-045">TRP-045 TCER: GUI: Build &amp; validate <code>suspicious_login</code> scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>stable</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>version</td>
+<td>2.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-056">3.15 GUI: Build &amp; validate <code>geoip_detection</code> scenario <small><a href="TST.html#TST-056">TST-056</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Same as <a href="./TST.html#TST-055">TST-055</a> (including the MaxMind GeoLite2 license key precondition — <code>geoip_detection</code> needs it too).</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the controller host, prepare <code>.env</code>:</li>
+</ol>
+<pre><code class="language-bash">cd radar
+cp env.example .env
+</code></pre>
+<p>Edit it with the values described in Preconditions (see <a href="./TST.html#TST-055">TST-055</a>).</p>
+<ol start="2">
+<li>Start the GUI:</li>
+</ol>
+<pre><code class="language-bash">./radar.sh gui
+</code></pre>
+<p>This creates a Python virtual environment and installs dependencies automatically on first run. Open the GUI in a browser at the printed host:port.</p>
+<ol start="3">
+<li>
+<p>In the GUI, go to <strong>Deployment → Scenario Management</strong> (default <strong>Deploy scenario</strong> sub-tab), select scenario <code>geoip_detection</code>, and click <strong>Deploy</strong>. If prompted for the sudo password, enter it.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Agent Management</strong> (default <strong>Onboard agent</strong> sub-tab). Select scenario <code>geoip_detection</code>, click <strong>Mint token</strong>, and copy the printed <code>bootstrap-agent.sh</code> command.</p>
+</li>
+<li>
+<p>On the agent host, download the <code>bootstrap-agent.sh</code> script and run the copied command exactly as printed, or by adding an <code>--agent-name</code> argument, under <code>sudo</code>:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp bootstrap-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x bootstrap-agent.sh
+</code></pre>
+<ol start="6">
+<li>
+<p>In the GUI, go to <strong>Deployment → Group Management</strong>. Enter the agent's IP/name, select scenario <code>geoip_detection</code>, and click <strong>Assign group</strong>.</p>
+</li>
+<li>
+<p>Check health of manager: in <strong>Deployment → Status</strong>, choose the GeoIP Detection scenario and press <strong>Run health check</strong>.</p>
+</li>
+<li>
+<p>Copy the simulation script to the agent host and run it directly there:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp radar-test-framework/simulate/scenarios/geoip_detection.py &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+sudo python3 geoip_detection.py
+</code></pre>
+<p>This script is fully standalone.</p>
+<ol start="9">
+<li>(Optional) If DECIPHER is configured, open Flowintel in browser.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>
+<p><code>.env</code> exists in the controller with the required variables set, including <code>MAXMIND_LICENSE_KEY</code>.</p>
+</li>
+<li>
+<p>The GUI is reachable in a browser, and the <strong>Deployment</strong> page shows <strong>Scenario Management</strong>, <strong>Agent Management</strong>, and <strong>Group Management</strong> tabs all present.</p>
+</li>
+<li>
+<p>Two items to verify:</p>
+</li>
+</ol>
+<ul>
+<li>
+<p>(a) The command completes with <code>=== SUCCESS</code> in its output.</p>
+</li>
+<li>
+<p>(b) Confirm the GeoLite databases were downloaded:</p>
+</li>
+</ul>
+<pre><code class="language-bash">docker exec -it wazuh.manager bash -c 'ls -l /var/ossec/etc/radar/GeoLite2-*'
+</code></pre>
+<p>Both <code>GeoLite2-City.mmdb</code> and <code>GeoLite2-ASN.mmdb</code> should be present.</p>
+<ol start="4">
+<li>
+<p>A ready-to-run command of the form <code>sudo ./bootstrap-agent.sh --manager &lt;address&gt; --token &lt;token&gt; --group default --group geoip_detection --group radar_shared</code> is printed.</p>
+</li>
+<li>
+<p>The command completes with <code>=== SUCCESS ===</code> in its output.</p>
+</li>
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong>. The agent should be assigned groups <code>geoip_detection</code> and <code>radar_shared</code>.</p>
+</li>
+<li>
+<p>No <code>FAIL</code> lines should be present in the health check.</p>
+</li>
+<li>
+<p>Two items to verify:</p>
+</li>
+</ol>
+<ul>
+<li>
+<p>(a) <code>geoip_detection.py</code> is copied and runs on the agent host without error, printing "geoip_detection simulation completed".</p>
+</li>
+<li>
+<p>(b) Tail manager logs in a separate terminal:</p>
+</li>
+</ul>
+<pre><code class="language-bash">docker exec -it wazuh.manager bash -c 'tail -F /var/ossec/logs/ossec.log /var/ossec/logs/active-responses.log /var/ossec/logs/radar/enrichment_errors.log'
+</code></pre>
+<p>Within 2 minutes, confirm:</p>
+<ul>
+<li>Rule <code>100900</code> (and/or <code>100901</code>) appears in Wazuh Dashboard (<strong>Discovery</strong>).</li>
+<li><code>radar_ar.py</code> wrote an active-response entry to <code>active-responses.log</code>.</li>
+<li>An email notification is delivered (check the SMTP relay logs or destination inbox).</li>
+<li><code>enrichment_errors.log</code> has no new entries.</li>
+</ul>
+<ol start="9">
+<li>
+<p>(Optional) Items to verify:</p>
+<ul>
+<li>
+<p>(a) A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</p>
+</li>
+<li>
+<p>(b) The FlowIntel case contains relevant information about the event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</p>
+</li>
+</ul>
+</li>
+</ol>
+<h2>Cleanup</h2>
+<ol>
+<li>
+<p>After finishing tests, clean up using <strong>Deployment → Teardown</strong> in the GUI.</p>
+</li>
+<li>
+<p>To clean agent host:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp uninstall-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x uninstall-agent.sh
+sudo ./uninstall-agent.sh --purge-data
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-055">SRS-055 RADAR scenario: Geo-IP AC via whitelisting</a>, <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-046">TRP-046 TCER: GUI: Build &amp; validate <code>geoip_detection</code> scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>stable</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>version</td>
+<td>2.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-057">3.16 GUI: Build &amp; validate <code>scanning_detection</code> scenario <small><a href="TST.html#TST-057">TST-057</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Same as <a href="./TST.html#TST-055">TST-055</a>. Ensure the Apache/Nginx log sources are configured on the agent host that will be targeted by the simulation.</li>
+</ul>
+<h3>Optional: test the full pipeline including integration with DECIPHER</h3>
+<ul>
+<li>Bring the DECIPHER stack up following the corresponding steps in <a href="https://abstractionslab.github.io/satrap-dl/traceability/TST.html#TST-021">DECIPHER TST-021</a></li>
+<li>Configure the DECIPHER setting as per the setup actions in <a href="https://abstractionslab.github.io/satrap-dl/traceability/TST.html#TST-022">DECIPHER TST-022</a></li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the controller host, prepare <code>.env</code>:</li>
+</ol>
+<pre><code class="language-bash">cd radar
+cp env.example .env
+</code></pre>
+<p>Edit it with the values described in Preconditions (see <a href="./TST.html#TST-055">TST-055</a>).</p>
+<ol start="2">
+<li>Start the GUI:</li>
+</ol>
+<pre><code class="language-bash">./radar.sh gui
+</code></pre>
+<p>This creates a Python virtual environment and installs dependencies automatically on first run. Open the GUI in a browser at the printed host:port.</p>
+<ol start="3">
+<li>
+<p>In the GUI, go to <strong>Deployment → Scenario Management</strong> (default <strong>Deploy scenario</strong> sub-tab), select scenario <code>scanning_detection</code>, and click <strong>Deploy</strong>. If prompted for the sudo password, enter it.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Agent Management</strong> (default <strong>Onboard agent</strong> sub-tab). Select scenario <code>scanning_detection</code>, click <strong>Mint token</strong>, and copy the printed <code>bootstrap-agent.sh</code> command.</p>
+</li>
+<li>
+<p>On the agent host, download the <code>bootstrap-agent.sh</code> script and run the copied command exactly as printed, or by adding an <code>--agent-name</code> argument, under <code>sudo</code>:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp bootstrap-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x bootstrap-agent.sh
+</code></pre>
+<ol start="6">
+<li>
+<p>In the GUI, go to <strong>Deployment → Group Management</strong>. Enter the agent's IP/name, select scenario <code>scanning_detection</code>, and click <strong>Assign group</strong>.</p>
+</li>
+<li>
+<p>Check health of manager: in <strong>Deployment → Status</strong>, choose the Scanning Detection scenario and press <strong>Run health check</strong>.</p>
+</li>
+<li>
+<p>Copy the simulation script to the agent host and run it directly there:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp radar-test-framework/simulate/scenarios/scanning_detection.py &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+sudo python3 scanning_detection.py
+</code></pre>
+<p>This script is fully standalone. It runs interactively by default: after each case it prints a hint block (source IP, time window, and the exact rule IDs expected present/absent), then pauses and waits for <code>[y]es / [n]ot yet / [q]uit</code> before moving to the next case, check the dashboard for that case before answering.</p>
+<p>To check what the script actually sent for a given case, use the <code>wazuh-archives-*</code> index in <strong>Discover</strong>. It captures every analyzed event, alert or not, which is useful for confirming an "expect absent" line in the hint. If that index pattern does not exist yet, create it once via <strong>Dashboards Management → Index Patterns → Create index pattern</strong>, matching <code>wazuh-archives-*</code> in Wazuh Dashboard.</p>
+<ol start="9">
+<li>(Optional) If DECIPHER is configured, open Flowintel in browser.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>
+<p><code>.env</code> exists in the controller with the required variables set.</p>
+</li>
+<li>
+<p>The GUI is reachable in a browser, and the <strong>Deployment</strong> page shows <strong>Scenario Management</strong>, <strong>Agent Management</strong>, and <strong>Group Management</strong> tabs all present. On first run, a <code>.venv</code> directory is created under the RADAR root.</p>
+</li>
+<li>
+<p>Two items to verify:</p>
+<ul>
+<li>
+<p>(a) The command completes with <code>=== SUCCESS</code> in its output.</p>
+</li>
+<li>
+<p>(b) Confirm the manager applied the scanning_detection config:</p>
+</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-bash">docker exec -it wazuh.manager cat /var/ossec/etc/ossec.conf | grep -A3 &quot;RADAR: scanning_detection&quot;
+</code></pre>
+<p>The marked block should be present.</p>
+<ol start="4">
+<li>
+<p>A ready-to-run command of the form <code>sudo ./bootstrap-agent.sh --manager &lt;address&gt; --token &lt;token&gt; --group default --group scanning_detection</code> is printed.</p>
+</li>
+<li>
+<p>The command completes with <code>=== SUCCESS ===</code> in its output.</p>
+</li>
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong>. The agent should be assigned group <code>scanning_detection</code>.</p>
+</li>
+<li>
+<p>No <code>FAIL</code> lines should be present in the health check.</p>
+</li>
+<li>
+<p>Three items to verify:</p>
+<ul>
+<li>
+<p>(a) <code>scanning_detection.py</code> is copied and runs on the agent host without error. It pauses after each case for confirmation — answer <code>y</code> for every case (after checking the dashboard) to reach the end; it then prints "scanning_detection simulation completed".</p>
+</li>
+<li>
+<p>(b) Within 2 minutes, scanning rules appear in Wazuh Dashboard (<strong>Discovery</strong>) for each case's <code>present</code> rule IDs.</p>
+</li>
+<li>
+<p>(c) For cases with an <code>absent</code> expectation, cross-check <code>wazuh-archives-*</code> in <strong>Discover</strong> (create the index pattern first via <strong>Dashboards Management → Index Patterns</strong> if it is not there yet), confirm the raw event was received by the manager but the listed rule ID(s) genuinely never fired.</p>
+</li>
+<li>
+<p>(d) Receive an email notification in cases where rule ID <code>100830</code> is expected to be triggered. The body includes, among other fields: <code>Context events</code> (the count of correlated indicator events found for this specific source IP within the confirmation window — should be 2 or more, not 0, for a <code>confirm_*</code> case), <code>Scenario details</code> (the scanning-specific <code>scan_src_ip</code>/<code>uri</code>/<code>http_method</code>/<code>user_agent</code> extracted from those events, not the generic <code>IOCs</code> line above it), <code>CTI score (T)</code>, <code>CTI labels</code>, and <code>Identified scanners</code>.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>(Optional) Items to verify:</p>
+<ul>
+<li>
+<p>(a) One or two FlowIntel cases may be created per confirmed scan: RADAR's own incident (tier ≥ 1, linked in the email's <code>FlowIntel case</code>/<code>Case URL</code>).</p>
+</li>
+<li>
+<p>(b) Open the case linked in the email and confirm its description contains: source metadata (<code>source</code>, <code>decision_id</code>, scenario/detection type, originating rule); a risk breakdown matching the email's <code>Components</code> line (score, tier, anomaly/signature/CTI sub-components); an <code>iocs</code> section plus, for <code>scanning_detection</code>, an <code>extras</code> section (<code>scan_src_ip</code>/<code>uri</code>/<code>http_method</code>/<code>user_agent</code>) matching the email's <code>Scenario details</code>; <code>misp_events</code>.</p>
+</li>
+<li>
+<p>(c) The description also contains the elements <code>misp_events</code> and <code>identified_scanners</code>, either carrying information or an empty value.</p>
+</li>
+<li>
+<p>(d) If the value for <code>misp_events</code> is a non-empty list, the <code>CTI score (T)</code> is non-zero.</p>
+</li>
+</ul>
+</li>
+</ol>
+<h2>Cleanup</h2>
+<ol>
+<li>
+<p>After finishing tests, clean up using <strong>Deployment → Teardown</strong> in the GUI.</p>
+</li>
+<li>
+<p>To clean agent host:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp uninstall-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x uninstall-agent.sh
+sudo ./uninstall-agent.sh --purge-data
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-047">TRP-047 TCER: GUI: Build &amp; validate <code>scanning_detection</code> scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>stable</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>version</td>
+<td>2.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-058">3.17 GUI: Build &amp; validate <code>log_volume</code> scenario <small><a href="TST.html#TST-058">TST-058</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Same generic preconditions as <a href="./TST.html#TST-055">TST-055</a>.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the controller host, prepare <code>.env</code>:</li>
+</ol>
+<pre><code class="language-bash">cd radar
+cp env.example .env
+</code></pre>
+<p>Edit it with the values described in Preconditions (see <a href="./TST.html#TST-055">TST-055</a>).</p>
+<ol start="2">
+<li>Start the GUI:</li>
+</ol>
+<pre><code class="language-bash">./radar.sh gui
+</code></pre>
+<p>This creates a Python virtual environment and installs dependencies automatically on first run. Open the GUI in a browser at the printed host:port.</p>
+<ol start="3">
+<li>
+<p>In the GUI, go to <strong>Deployment → Scenario Management</strong> (default <strong>Deploy scenario</strong> sub-tab), select scenario <code>log_volume</code>, and click <strong>Deploy</strong>. If prompted for the sudo password, enter it.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Agent Management</strong> (default <strong>Onboard agent</strong> sub-tab). Select scenario <code>log_volume</code>, click <strong>Mint token</strong>, and copy the printed <code>bootstrap-agent.sh</code> command.</p>
+</li>
+<li>
+<p>On the agent host, download the <code>bootstrap-agent.sh</code> script and run the copied command exactly as printed, or by adding an <code>--agent-name</code> argument, under <code>sudo</code>:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp bootstrap-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x bootstrap-agent.sh
+</code></pre>
+<ol start="6">
+<li>
+<p>In the GUI, go to <strong>Deployment → Group Management</strong>. Enter the agent's IP/name, select scenario <code>log_volume</code>, and click <strong>Assign group</strong>.</p>
+</li>
+<li>
+<p>On controller host, adjust the agent name <code>agent_name</code> under ingest variables <code>ingest</code> of <code>log_volume</code> part in <code>radar/config.yaml</code>. The agent name should be the same as the agent name represented in Wazuh Dashboard.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Anomaly Detector</strong> (card: <strong>Run Anomaly Detector</strong>), choose <code>Log Volume Growth</code>, check the ingest option, and press <strong>Run</strong>.</p>
+</li>
+<li>
+<p>Check health of manager: in <strong>Deployment → Status</strong>, choose the Log Volume Growth scenario and press <strong>Run health check</strong>.</p>
+</li>
+<li>
+<p>Wait 30 minutes for detector training, then copy the simulation script to the agent host and run it directly there:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp radar-test-framework/simulate/scenarios/log_volume.py &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+sudo python3 log_volume.py
+</code></pre>
+<p>This script is fully standalone.</p>
+<ol start="11">
+<li>(Optional) If DECIPHER is configured, open Flowintel in browser.</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>
+<p><code>.env</code> exists in the controller with the required variables set.</p>
+</li>
+<li>
+<p>The GUI is reachable in a browser, and the <strong>Deployment</strong> page shows <strong>Scenario Management</strong>, <strong>Agent Management</strong>, <strong>Group Management</strong>, and <strong>Anomaly Detector</strong> tabs all present. On first run, a <code>.venv</code> directory is created under the RADAR root.</p>
+</li>
+<li>
+<p>Two items to verify:</p>
+<ul>
+<li>
+<p>(a) The command completes with <code>=== SUCCESS</code> in its output.</p>
+</li>
+<li>
+<p>(b) On the manager side (i.e. server node), confirm the index template was applied:</p>
+</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-bash">curl -u &quot;$OS_USER:$OS_PASS&quot; -k &quot;$OS_URL/_index_template/radar-log-volume?pretty&quot;
+</code></pre>
+<p>The template should be returned, not a 404.</p>
+<ol start="4">
+<li>
+<p>A ready-to-run command of the form <code>sudo ./bootstrap-agent.sh --manager &lt;address&gt; --token &lt;token&gt; --group default --group log_volume</code> is printed.</p>
+</li>
+<li>
+<p>The command completes with <code>=== SUCCESS ===</code> in its output.</p>
+</li>
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong>. The agent should be assigned group <code>log_volume</code>.</p>
+</li>
+<li>
+<p>N/A</p>
+</li>
+<li>
+<p>Two items to verify:</p>
+<ul>
+<li>
+<p>(a) The streamed output completes without an <code>[ERROR]</code> line, and reports the detector was created and started. Checking the ingest option is required here — without it, the underlying index has no documents yet, and detector creation fails with an OpenSearch "Timestamp field... not found in index mapping" error.</p>
+</li>
+<li>
+<p>(b) Confirm the index now has data:</p>
+</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-bash">curl -u &quot;$OS_USER:$OS_PASS&quot; -k &quot;$OS_URL/_cat/indices/wazuh-ad-log-volume-*?v&quot;
+</code></pre>
+<p><code>docs.count</code> should be greater than <code>0</code>.</p>
+<ol start="9">
+<li>
+<p>No <code>FAIL</code> lines should be present in the health check.</p>
+</li>
+<li>
+<p>Three items to verify:</p>
+<ul>
+<li>
+<p>(a) <code>log_volume.py</code> is copied and runs on the agent host without error, printing "log_volume simulation completed".</p>
+</li>
+<li>
+<p>(b) A spike or anomaly event is detected and visible on the log volume detector page of the Anomaly Detection dashboard of Wazuh.</p>
+</li>
+<li>
+<p>(c) Active-response mitigation commands are logged in <code>active-responses.log</code>: <code>docker exec -it wazuh.manager bash -c 'tail -F /var/ossec/logs/ossec.log /var/ossec/logs/active-responses.log'</code></p>
+</li>
+<li>
+<p>(d) Confirm that rule <code>100309</code> (LogVolume-Growth-Detected) fires in Wazuh Dashboard (<strong>Discovery</strong>). And email notification is received.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>(Optional) Items to verify:</p>
+<ul>
+<li>
+<p>(a) A FlowIntel case is created and can be accessed at the Flowintel URL included in the email notification.</p>
+</li>
+<li>
+<p>(b) The FlowIntel case contains relevant information about the event, related events found in MISP, and a breakdown of the risk score including the assigned tier.</p>
+</li>
+</ul>
+</li>
+</ol>
+<h2>Cleanup</h2>
+<ol>
+<li>
+<p>After finishing tests, clean up using <strong>Deployment → Teardown</strong> in the GUI.</p>
+</li>
+<li>
+<p>To clean agent host:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp uninstall-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x uninstall-agent.sh
+sudo ./uninstall-agent.sh --purge-data
+</code></pre>
+<p><em>Parent links:</em> <a href="SRS.html#SRS-056">SRS-056 RADAR scenario: log size change</a>, <a href="SRS.html#SRS-061">SRS-061 RADAR: Tiered active response logic</a></p>
+<p><em>Child links:</em> <a href="TRP.html#TRP-048">TRP-048 TCER: GUI: Build &amp; validate <code>log_volume</code> scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Ubuntu+Debian)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>stable</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>2</td>
+</tr>
+<tr>
+<td>version</td>
+<td>2.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TST-059">3.18 GUI: Unenroll, undeploy, and deregister the <code>log_volume</code> scenario <small><a href="TST.html#TST-059">TST-059</a></small></h2>
+<h2>Preconditions and setup actions</h2>
+<ul>
+<li>Requires <a href="./TST.html#TST-058">TST-058</a>.</li>
+</ul>
+<h2>Test steps</h2>
+<ol>
+<li>On the controller host, start the GUI (if not already running):</li>
+</ol>
+<pre><code class="language-bash">cd radar
+./radar.sh gui
+</code></pre>
+<p>Open the GUI in a browser at the printed host:port.</p>
+<ol start="2">
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong> and note the agent's current group membership before making any changes.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Group Management</strong>. Enter the agent's IP/name, select scenario 'Log Volume Growth', and click <strong>Unenroll from groups</strong>.</p>
+</li>
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong> again and check the agent's group membership.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Group Management</strong> again. Enter the agent's IP/name, select scenario 'Log Volume Growth', and click <strong>Assign group</strong>, to re-enroll it before the next step.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Scenario Management</strong>, open the <strong>Undeploy scenario</strong> sub-tab, select scenario 'Log Volume Growth', and click <strong>Undeploy</strong>.</p>
+</li>
+<li>
+<p>In the GUI, open <strong>Deployment → Status</strong>, select scenario 'Log Volume Growth', and click <strong>Run health check</strong>.</p>
+</li>
+<li>
+<p>On the manager host, confirm directly that the scenario's <code>ossec.conf</code> block is gone:</p>
+</li>
+</ol>
+<pre><code class="language-bash">docker exec wazuh.manager grep -c &quot;RADAR: log_volume&quot; /var/ossec/etc/ossec.conf
+</code></pre>
+<ol start="9">
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong> once more and check the agent's group membership.</p>
+</li>
+<li>
+<p>In the GUI, go to <strong>Deployment → Agent Management</strong>, open the <strong>Deregister agent</strong> sub-tab, enter the agent's name, and click <strong>Deregister agent</strong>.</p>
+</li>
+<li>
+<p>On the Wazuh Dashboard, open <strong>Agents management → Summary</strong> and check whether the agent is still listed.</p>
+</li>
+</ol>
+<h2>Expected outcome</h2>
+<ol>
+<li>
+<p>The GUI is reachable in a browser, with <strong>Scenario Management</strong>, <strong>Agent Management</strong>, <strong>Group Management</strong>, and <strong>Status</strong> tabs all present under <strong>Deployment</strong>.</p>
+</li>
+<li>
+<p>The agent shows both the <code>default</code> and <code>log_volume</code> groups.</p>
+</li>
+<li>
+<p>The streamed output ends with a JSON result and a success line, of the form:</p>
+</li>
+</ol>
+<pre><code>=== SUCCESS: group unassignment for 'log_volume' completed ===
+</code></pre>
+<ol start="4">
+<li>
+<p>The agent now shows only the <code>default</code> group — <code>log_volume</code> has been removed, and <code>default</code> is untouched.</p>
+</li>
+<li>
+<p>The streamed output ends with a JSON result and a success line, of the form:</p>
+</li>
+</ol>
+<pre><code>=== SUCCESS: group assignment for 'log_volume' completed ===
+</code></pre>
+<p>and the agent is re-assigned to both <code>default</code> and <code>log_volume</code>.</p>
+<ol start="6">
+<li>The streamed output ends with:</li>
+</ol>
+<pre><code>=== SUCCESS: undo for 'log_volume' completed ===
+</code></pre>
+<p>with no <code>error</code> key present in either printed result.</p>
+<ol start="7">
+<li>Two items to verify:</li>
+</ol>
+<ul>
+<li>(a) The four <code>wazuh-*</code> daemon checks, and the OpenSearch/Webhook checks at the bottom, all still report <code>OK</code>.</li>
+<li>(b) The five checks for active-response wiring, group config, and the three decoder/rule files now report <code>FAIL</code>.</li>
+</ul>
+<ol start="8">
+<li>
+<p>The command returns <code>0</code>.</p>
+</li>
+<li>
+<p>The agent shows only the <code>default</code> group.</p>
+</li>
+<li>
+<p>The streamed output ends with JSON result followed by success message:</p>
+</li>
+</ol>
+<pre><code>=== SUCCESS: deregistration for '&lt;agent-name&gt;' completed ===
+</code></pre>
+<ol start="11">
+<li>The agent no longer appears in the agents list at all.</li>
+</ol>
+<h2>Cleanup</h2>
+<ol>
+<li>
+<p>After finishing tests, clean up using the <strong>Teardown</strong> tab in the GUI.</p>
+</li>
+<li>
+<p>The agent host is cleaned using the script:</p>
+</li>
+</ol>
+<pre><code class="language-bash">scp uninstall-agent.sh &lt;user&gt;@&lt;agent-host&gt;:~/
+ssh &lt;user&gt;@&lt;agent-host&gt;
+chmod +x uninstall-agent.sh
+sudo ./uninstall-agent.sh --purge-data
+</code></pre>
+<p><em>Child links:</em> <a href="TRP.html#TRP-049">TRP-049 TCER: GUI: Unenroll, undeploy, and deregister the <code>log_volume</code> scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>platform</td>
+<td>GNU/Linux (Dockerized C5-DEC deployment environment)</td>
+</tr>
+<tr>
+<td>execution_type</td>
+<td>Manual</td>
+</tr>
+<tr>
+<td>verification_method</td>
+<td>T</td>
+</tr>
+<tr>
+<td>release</td>
+<td>alpha</td>
+</tr>
+<tr>
+<td>complexity</td>
+<td>3</td>
+</tr>
+<tr>
+<td>test_data</td>
+<td>see referenced files</td>
+</tr>
+<tr>
+<td>version</td>
+<td>2.0</td>
 </tr>
 </tbody>
 </table>

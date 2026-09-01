@@ -1,4 +1,4 @@
-> **Note**: Please remember to populate this folder with the required SSL/TSL certificates, which can be generated as follows:
+> **Note**: `build-radar.sh` generates these certificates automatically (via `radar_deploy/manager-ensure-certs.sh`) the first time it runs, if this folder is empty — the manual steps below are only needed if you want to customize `config/certs.yml` yourself first, or generate the certificates standalone.
 1. Adapt `config/certs.yml` according to your endpoints (IP address or container name).
 2. Go back to `config` directory:
 ```bash

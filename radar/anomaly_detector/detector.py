@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, json, yaml, requests
+import os, sys, json, time, yaml, requests
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -104,7 +104,26 @@ def detector_spec(scn_name: str, scn: Dict[str, Any]) -> Dict[str, Any]:
         "rules": build_rules(scn),
     }
 
+def count_documents(sess: requests.Session, base: str, index_pattern: str, verify: bool, timeout: float) -> int:
+    r = sess.post(f"{base}/{index_pattern}/_count", json={"query": {"match_all": {}}}, verify=verify, timeout=timeout)
+    if r.status_code == 404:
+        return 0
+    r.raise_for_status()
+    return int(r.json().get("count", 0))
+
+def wait_for_documents(sess: requests.Session, base: str, index_pattern: str, verify: bool, timeout: float,
+                        attempts: int = 10, delay_seconds: float = 1.0) -> None:
+    for attempt in range(1, attempts + 1):
+        try:
+            if count_documents(sess, base, index_pattern, verify, timeout) > 0:
+                return
+        except requests.RequestException:
+            pass
+        if attempt < attempts:
+            time.sleep(delay_seconds)
+
 def create_detector(sess: requests.Session, base: str, spec: Dict[str, Any], verify: bool, timeout: float) -> str:
+    wait_for_documents(sess, base, spec["indices"][0], verify, timeout)
     r = sess.post(f"{base}/_plugins/_anomaly_detection/detectors", json=spec, verify=verify, timeout=timeout)
     if r.status_code != 201:
         die(f"Create failed: {r.status_code} {r.text}")

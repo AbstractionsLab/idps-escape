@@ -2,6 +2,7 @@ FROM ubuntu:24.04
 ARG WAZUH_AGENT_VERSION
 ARG WAZUH_MANAGER_ADDRESS
 ENV DEBIAN_FRONTEND=noninteractive
+ENV WAZUH_MANAGER_ADDRESS=${WAZUH_MANAGER_ADDRESS}
 
 # Install system dependencies, Python, and Wazuh Agent
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,11 +20,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 COPY --chown=appuser:appuser ad_alerts_webhook.py .
 COPY --chown=appuser:appuser ad-ossec.conf /tmp/ad-ossec.conf
+COPY --chown=root:root entrypoint.sh /entrypoint.sh
+RUN chmod 0755 /entrypoint.sh
 
 RUN cat /tmp/ad-ossec.conf >> /var/ossec/etc/ossec.conf && rm /tmp/ad-ossec.conf
 
 # Expose Flask port
 EXPOSE 8080
 
-# Start both the Wazuh agent and Flask webhook using supervisord
-CMD ["/bin/sh", "-c", "/var/ossec/bin/wazuh-control start && su -s /bin/sh appuser -c 'python3 /app/ad_alerts_webhook.py'"]
+CMD ["/entrypoint.sh"]

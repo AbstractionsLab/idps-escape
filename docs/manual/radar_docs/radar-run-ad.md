@@ -1,8 +1,8 @@
-# Run RADAR manual
+# Anomaly detector reference (`run-radar.sh`)
 
-## Overview
+Reference for `run-radar.sh`, the script that creates and configures the OpenSearch anomaly detector and its alerting monitor for a scenario. For the day-to-day command, see [Operations](./radar-operations.md#run-the-anomaly-detector); this page covers what each of its three stages actually does and how to configure them.
 
-`run-radar.sh` is an orchestration script that automates the deployment of anomaly detection scenarios in a Wazuh environment. It executes a three-stage pipeline: data ingestion (optional), detector creation/configuration, and monitoring setup.
+`run-radar.sh` executes a three-stage pipeline: data ingestion (optional), detector creation, and monitor creation.
 
 ### Execution Flow
 
@@ -29,32 +29,26 @@ run-radar.sh <scenario> [--ingest true|false]
 ```
 
 **Parameters:**
-- `<scenario>`: Name of the scenario to deploy (e.g., `suspicious_login`, `log_volume`)
-- `--ingest true|false`: Whether to ingest synthetic training data (default: `false`)
+- `<scenario>`: name of the scenario to deploy — in practice only `log_volume` (see [Supported scenarios](#supported-scenarios) below)
+- `--ingest true|false`: whether to ingest synthetic training data
 
-### Required Environment Variables
+> **The script's own `--help` text says the default is `true`; the code's actual default is `false`.** Pass `--ingest` explicitly rather than relying on either.
 
-- `OS_URL`: Wazuh Indexer endpoint
-- `OS_USER`: Wazuh Indexer authentication username
-- `OS_PASS`: Wazuh Indexer authentication password
-- `OS_VERIFY_SSL`: Wazuh Indexer TLS certificate verification
-- `DASHBOARD_URL`: Wazuh Dashboard endpoint
-- `DASHBOARD_USER`: Wazuh Dashboard authentication username
-- `DASHBOARD_PASS`: Wazuh Dashboard authentication password
-- `DASHBOARD_VERIFY_SSL`: Wazuh Dashboard TLS certificate verification
-- `WEBHOOK_URL`: Webhook endpoint (usually located in Wazuh Manager)
-- `WEBHOOK_NAME`: Webhook name
+### Required environment variables
+
+- `OS_URL`: OpenSearch/Wazuh Indexer endpoint — read directly by `detector.py`, `monitor.py`, `webhook.py`, and `wazuh_ingest.py`
+- `OS_USER` / `OS_PASS`: OpenSearch authentication
+- `OS_VERIFY_SSL`: TLS certificate verification for OpenSearch (`DASHBOARD_VERIFY_SSL` is accepted as a fallback if `OS_VERIFY_SSL` is unset, for historical reasons — set `OS_VERIFY_SSL` directly)
+- `WEBHOOK_URL`: webhook endpoint the monitor posts to (the `ad-webhook` container `build-radar.sh` brings up)
+- `WEBHOOK_NAME`: webhook destination name registered with OpenSearch (default: `RADAR Webhook`)
+
+> `DASHBOARD_URL`, `DASHBOARD_USER`, and `DASHBOARD_PASS` are not read by this pipeline — they configure the separate Dashboards connector tested on the GUI's Connectors page, unrelated to `run-radar.sh`.
+
+Note `radar_ar.py` (the active-response script) reads the same OpenSearch endpoint through a differently named variable, `WAZUH_INDEXER_HOST`, not `OS_URL` — both must point at the same instance. See SWD-032.
 
 ### Supported scenarios
 
-The script accepts these scenario names:
-
-- `suspicious_login`
-- `log_volume`
-
-**Note on archived scenarios:** The scenarios `insider_threat`, `ddos_detection`, and `malware_communication` are archived demo scenarios located in `/radar/archives/`. They require adaptation of indices, field mappings, and datasets to match your environment and are not production-ready. See the [main RADAR README](../../../radar/README.md) for scenario status details.
-
-**Note on GeoIP detection:** The `geoip_detection` scenario is not listed here because it uses signature-based detection only (Wazuh rules and decoders, no OpenSearch AD pipeline). It is deployed via Ansible during `build-radar.sh` and does not require the `run-radar.sh` data ingestion/detector/monitor setup. See [GeoIP Detection Guide](./radar-scenarios/geoip_detection_explained.md) for manual setup instructions.
+`log_volume` is the only scenario with a working detector/monitor pipeline in the current codebase.
 
 Each supported scenario has its own:
 
@@ -69,10 +63,8 @@ Before, ingestion and simulation parameters were in separate configuration files
 
 ### Container execution
 
-- The image `radar-cli:latest` is built as an environment for scripts
-- Data injection, detector and monitor setup are run in the image `radar-cli:latest`
-- Python scripts executed in isolated containers
-- Output IDs captured via stdout for pipeline chaining
+- The image `radar-cli:latest` is built (or rebuilt) on every run from `Dockerfile.radar-cli`, which bakes in `detector.py`, `monitor.py`, `webhook.py`, and the ingest script for the scenarios it knows about
+- Each stage runs as a separate, short-lived container; output IDs are captured from stdout to chain into the next stage
 
 ## About Data Ingestion
 
@@ -87,7 +79,7 @@ Data ingestion is **optional** and controlled by the `--ingest` flag.
 **When to skip ingestion (`--ingest false`, default):**
 - Detector operates on existing live data in OpenSearch
 - Real production logs are already flowing into the index
-- Using historical data from your environment
+- Using historical data already present in the environment
 - Fine-tuning detectors after initial deployment
 
 **Example scenarios:**
@@ -112,6 +104,8 @@ Data ingestion parameters are defined in `radar/config.yaml` under each scenario
 
 **Scenarios with `ingest:` configuration:**
 - `log_volume` — parameters like `agent_id`, `agent_name`, `log_path`, `history_minutes`, baseline calculation
+
+> **Important:** `agent_name`/`agent_id` here are placeholders (`"edge.vm"`/`"001"`) and must be customized to match the real, currently-enrolled agent that will actually be sending `log_volume` production data. Since the anomaly detector's `categorical_field` is `agent.name`, OpenSearch maintains a separate model per distinct agent name. If this placeholder doesn't match the real agent, the synthetic baseline gets seeded under a category that agent never reports under, and the ingest step provides no benefit at all for that agent's detection.
 
 Examples:
 

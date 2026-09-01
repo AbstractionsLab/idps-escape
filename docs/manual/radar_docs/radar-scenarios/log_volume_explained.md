@@ -12,11 +12,12 @@ Goal: Detect unusually high log volume on any endpoint, generate alerts, and ena
 
 ### Detection
 
-The detection process is implemented using three components:
+The detection process is implemented using these components:
 
-1. Local command monitoring (`ossec.conf`). A Wazuh localfile command periodically measures the size of `/var/log` in the agents.
-2. Custom decoders (`local_decoder.xml`) extract the relevant fields from the command output.
-3. An OpenSearch Anomaly Detector uses log volume to detect spikes.
+1. **Local metric collection** A systemd timer, installed once at agent onboarding time (automatically by `bootstrap-agent.sh --group log_volume`), runs `du -sb /var/log` every 30 seconds and appends a syslog-formatted line to a fixed local file (`/var/log/radar/log_volume_metric.log`). This deliberately avoids Wazuh's `full_command` mechanism in the group's `agent.conf`. 
+2. **Agent config** (`scenarios/agent_configs/log_volume/radar-log-volume-agent-snippet.xml`, delivered via the `log_volume` group) — an ordinary `<localfile>` watching that fixed path.
+3. **Custom decoders** (`scenarios/decoders/log_volume/0001-log-volume.xml`) extract `log_path`/`log_bytes` from the collected line.
+4. An **OpenSearch Anomaly Detector** uses `log_bytes` over time to detect spikes.
 
 ---
 
@@ -41,16 +42,65 @@ We distinguish between:
 
 #### Agent-side configuration
 
-1. Enable `/var/log` volume monitoring:
+If the agent was onboarded with `bootstrap-agent.sh --group log_volume` (recommended), this is done automatically — the script installs the systemd timer below, and the `log_volume` group's own `agent.conf` configures Wazuh to watch the resulting file. The steps below are only needed for a fully manual setup.
+
+1. Install the local metric collector, once, as root:
 ```bash
+mkdir -p /var/log/radar
+chmod 0755 /var/log/radar
+
+cat > /usr/local/bin/radar-log-volume-metric.sh << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+LOG_FILE="/var/log/radar/log_volume_metric.log"
+BYTES=$(du -sb /var/log 2>/dev/null | awk '{print $1}')
+printf '%s %s log_volume_metric: /var/log %s\n' \
+  "$(date '+%b %d %H:%M:%S')" "$(hostname)" "${BYTES:-0}" >> "$LOG_FILE"
+EOF
+chown root:root /usr/local/bin/radar-log-volume-metric.sh
+chmod 0750 /usr/local/bin/radar-log-volume-metric.sh
+```
+
+2. Install and start the systemd timer that runs it every 30 seconds:
+```bash
+cat > /etc/systemd/system/radar-log-volume.service << 'EOF'
+[Unit]
+Description=RADAR log_volume metric collector (one-shot)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/radar-log-volume-metric.sh
+EOF
+
+cat > /etc/systemd/system/radar-log-volume.timer << 'EOF'
+[Unit]
+Description=Run the RADAR log_volume metric collector every 30 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+Unit=radar-log-volume.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now radar-log-volume.timer
+```
+
+3. Configure the Wazuh agent to watch the resulting file:
+```
 nano /var/ossec/etc/ossec.conf
 ```
 And paste the content of `/radar/scenarios/agent_configs/log_volume/radar-log-volume-agent-snippet.xml` inside of `<ossec_config>` tag.
 
-2. Restart the agent:
+4. Restart the agent:
 ```
 systemctl restart wazuh-agent
 ```
+
+A logrotate config is recommended too, to keep `/var/log/radar/log_volume_metric.log` from growing unbounded.
 
 #### Manager-side configuration
 
@@ -174,4 +224,3 @@ In `log_volume-detector` Anomaly overview, set up alert:
         ```
         
 When the condition is met, this monitor will send structured JSON to the webhook.
-

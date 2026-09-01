@@ -1,15 +1,5 @@
 # Suspicious login
 
-## Objectives
-
-**Example Scenario:** A user logs in at 03:00 from a foreign IP address, deviating from their normal location and login schedule. Another user who typically logs in from Luxembourg starts showing login activity from multiple countries within a short time frame. These behaviors deviate from the user’s normal pattern and may indicate account compromise, credential theft, or malicious automation.
-
-The objective is to detect such deviations in login behavior by modeling typical login patterns (time, location, frequency) per user and identifying outliers indicative of suspicious or unauthorized access.
-
-**Categorical Features:** To improve detection accuracy, categorize anomalies by username or user ID. This ensures the model builds a separate baseline per user. Optional dimensions include user department, user role, or device ID if such metadata exists in the log source. Data should be sliced per user to model unique behavioral patterns.
-
-**Hybrid detection (AD + rules):** Alongside anomaly detection, this scenario also enables rule-based (signature) detection in Wazuh. Rules cover high-confidence patterns such as failed-login bursts, impossible travel, and a correlation of both. This hybrid approach gives fast, deterministic alerts (rules) while Anomaly Detector could handle subtle, behavior-based deviations.
-
 ## Signature-based approach
 
 This scenario implements a signature-based detection pipeline for suspicious SSH logins. It combines local log enrichment with Wazuh decoders, rules, and active responses.
@@ -17,59 +7,55 @@ This scenario implements a signature-based detection pipeline for suspicious SSH
 
 ### Log source
 
-The primary log source for this scenario is the Linux authentication log: `/var/log/auth.log`. This file contains raw SSH authentication events produced by `sshd` (both successful and failed login attempts).
+The primary log source for this scenario is the Linux authentication log: `/var/log/auth.log`, on the monitored agent. This file contains raw SSH authentication events produced by `sshd` (both successful and failed login attempts). The agent ships it to the manager via the shared `auth_log_enrichment` configuration (`scenarios/agent_configs/_shared/radar-shared-auth-log-agent-snippet.xml`).
 
 ### Log enrichment
 
-The enrichment step is performed by the `radar-helper/radar-helper.py` script located in the **radar** directory. The helper does:
-- Monitors `/var/log/auth.log` for new SSH authentication events.
-- Extracts relevant SSH login information (user, source IP, outcome, etc.).
-- Enriches each event with GeoIP-based context:
-  - **ASN** (Autonomous System Number) of the source IP.
-  - **Country** of the source IP.
-  - **Geo-velocity / speed of country change** compared to the previous login event associated with the same account (i.e., an approximation of “impossible travel”).
-- Writes the enriched events to a dedicated log file:
-  - `/var/log/suspicious_login.log`
+Enrichment happens entirely on the **manager side**, via a Wazuh integration — no agent-side helper process is involved. The pipeline works in two passes:
 
-This file is the **Wazuh-monitored** log source for the signature-based detection.
+1. Wazuh's own stock `sshd` decoder and rules first classify the raw `auth.log` line as an `authentication_success` or `authentication_failed` event. This triggers the `custom-radar-enrich` integration (registered in `scenarios/ossec/radar-shared-auth-log-ossec-snippet.xml`, implemented in `manager-enrichment/`).
+2. The integration script re-parses the alert's original log line independently of Wazuh's own decoding, looks up GeoIP/ASN context for the source IP via MaxMind databases (`manager-enrichment/geoip.py`), and tracks each user's recent login history to compute geo-velocity and ASN novelty (`manager-enrichment/state_store.py`). It then appends a `RADAR outcome='...' asn='...' country='...' geo_velocity_kmh='...' ...` tail to the original log line, and writes the result to `/var/ossec/logs/radar/enriched_auth.log`.
+
+Wazuh also monitors `enriched_auth.log` directly (via a second `<localfile>` block in the same shared snippet), so this enriched line gets decoded a second time — this second pass is what the `-with-radar` decoders below are for.
 
 ### Wazuh decoders
 
-The enriched entries in `/var/log/suspicious_login.log` are parsed by Wazuh using decoders defined in `/radar/scenarios/decoders/suspicious_login/0310-ssh.xml`. At the end of this file, specific decoders are defined to handle enriched SSH events:
+The enriched entries in `/var/ossec/logs/radar/enriched_auth.log` are parsed by Wazuh using decoders defined in `scenarios/decoders/suspicious_login/0310-ssh.xml`. At the end of this file, specific decoders are defined to handle enriched SSH events:
 - `sshd-success-with-radar`
 - `ssh-failed-with-radar`
 - `ssh-invfailed-with-radar`
 
-**Role of these decoders:** Parse the enriched log format produced by `radar-helper.py`. These extract both standard SSH fields (e.g., user, IP, port, result) and enrichment fields (ASN, country, geo-velocity, etc.).
+**Role of these decoders:** Parse the enriched log format produced by the manager-side enrichment integration. These extract both standard SSH fields (e.g., user, IP, port, result) and enrichment fields (ASN, country, geo-velocity, etc.).
 
 ### Detection logic
 
-The parsed events are then evaluated by rules defined in `/radar/scenarios/rules/suspicious_login/`, namely rules starting with `210XXX`. These rules implement the **signature-based detection logic**, including:
+The parsed events are then evaluated by rules defined in `scenarios/rules/suspicious_login/`, namely rules starting with `210XXX`. These rules implement the **signature-based detection logic**, including:
 
 - **Failed-login bursts**  
   Rules that detect repeated failed SSH authentication attempts within a defined time window (e.g., multiple failures for the same user in a short period).
 
 - **Impossible travel / abnormal geo-velocity**  
-  Rules that use the geo-velocity and country change information produced by `radar-helper.py` to detect login patterns that are not physically plausible (e.g., logins from distant countries within an unrealistically short time frame).
+  Rules that use the geo-velocity and country change information produced by the manager-side enrichment integration to detect login patterns that are not physically plausible (e.g., logins from distant countries within an unrealistically short time frame).
 
 When rule conditions are satisfied, Wazuh generates an alert for the corresponding suspicious login behavior.
 
 ### Active Response
 
-Once a rule from `/radar/scenarios/rules/suspicious_login` fires, Wazuh triggers the configured active response defined in `/radar/scenarios/ossec/radar-suspicious-login-ossec-snippet.xml`. This snippet binds the rule IDs starting with `210XXX` to email active-response command.
+Once a rule from `scenarios/rules/suspicious_login/` fires, Wazuh triggers the configured active response defined in `scenarios/ossec/radar-suspicious-login-ossec-snippet.xml`. This snippet binds the rule IDs starting with `210XXX` to the `radar_ar_suspicious_login` command, which dispatches to `scenarios/active_responses/radar_ar.py`.
 
-The email active response uses `/radar/scenarios/active_responses/radar_ar.py` to:
-  - Format contextual information about the suspicious login event.
-  - Deliver an email notification to the configured recipients, the configuration of SMTP information should be set in the `/radar/.env` file.
+`radar_ar.py` computes a risk score for the alert via the RADAR risk engine and dispatches the response tier configured in `ar.yaml`:
+  - At the lowest tier, it formats contextual information about the suspicious login event and delivers an email notification to the configured recipients — SMTP configuration is set in the `/radar/.env` file.
+  - At higher tiers it escalates to automated mitigations, `firewall-drop` and `lock_user_linux.sh`. In the shipped `ar.yaml`, `suspicious_login` has `allow_mitigation: true`, so these mitigations execute by default once the scenario is deployed. See [radar-active-response.md](../radar-active-response.md) for the full tiering model.
 
 ### End-to-end flow
 
-1. **Raw logs** are generated by `sshd` and written to `/var/log/auth.log`.
-2. **`radar-helper.py`** tails `/var/log/auth.log`, enriches SSH events with GeoIP data (ASN, country, geo-velocity), and writes them to `/var/log/suspicious_login.log`.
-3. **Wazuh** monitors `/var/log/suspicious_login.log`.
-4. **Decoders** in `0310-ssh.xml` (`sshd-success-with-radar`, `ssh-failed-with-radar`, `ssh-invfailed-with-radar`) parse enriched SSH events into structured fields.
-5. **Rules** in `/radar/scenarios/rules/suspicious_login/` apply signature-based logic to detect failed-login bursts and impossible travel patterns.
-6. **Active responses** configured in `/radar/scenarios/ossec/radar-suspicious-login-ossec-snippet.xml` are executed when rules fire, triggering email notifications via `radar_ar.py` script.
+1. **Raw logs** are generated by `sshd` and written to `/var/log/auth.log` on the agent, shipped to the manager.
+2. **Wazuh's stock decoders/rules** classify the event as `authentication_success`/`authentication_failed`, triggering the `custom-radar-enrich` integration on the manager.
+3. **The enrichment integration** (manager-side) looks up GeoIP/ASN context, computes geo-velocity and ASN novelty against the user's recent history, appends a `RADAR outcome=...` tail to the line, and writes it to `/var/ossec/logs/radar/enriched_auth.log`.
+4. **Wazuh** also monitors `enriched_auth.log`.
+5. **Decoders** in `0310-ssh.xml` (`sshd-success-with-radar`, `ssh-failed-with-radar`, `ssh-invfailed-with-radar`) parse this second pass of enriched SSH events into structured fields.
+6. **Rules** in `scenarios/rules/suspicious_login/` apply signature-based logic to detect failed-login bursts and impossible travel patterns.
+7. **Active responses** configured in `scenarios/ossec/radar-suspicious-login-ossec-snippet.xml` are executed when rules fire, dispatching to `radar_ar.py`, which scores the alert and triggers the response tier configured in `ar.yaml` — an email notification at the lowest tier, escalating to `firewall-drop` and `lock_user_linux.sh` at higher tiers.
 
 This completes the signature-based suspicious login detection path for the `suspicious_login` scenario.
 
@@ -86,54 +72,23 @@ We distinguish between:
 
 #### Prerequisites
 
-- A functioning Wazuh deployment (manager and agents). For deployment instructions, refer to the [SOAR RADAR README](/radar/README.md).
-- Python 3 installed on the Linux host running the SSH service (the Wazuh agent).
-- GeoIP databases available for use by `radar-helper/radar-helper.py`, the databases can be found in `/radar/geoip` directory.
+- A functioning Wazuh deployment (manager and agent). For deployment instructions, refer to the [SOAR RADAR README](/radar/README.md).
+- A MaxMind GeoLite2 license key in the manager's `.env` (`MAXMIND_LICENSE_KEY`) — the manager downloads the `GeoLite2-City`/`GeoLite2-ASN` databases itself during setup, nothing needs to be pre-installed on the agent.
 
 ---
 
 #### Agent-side setup
 
-1. Copy `/radar/radar-helper/radar-helper.py` to the target host into `/opt/radar/radar-helper.py`:
-```bash
-mkdir -p /opt/radar
-mkdir -p /opt/radar/venv
-chown user:user /opt/radar -R
-chmod 755 /opt/radar
-```
-2. Ensure required Python packages are installed (paths must match what radar-helper.py expects):
-```bash
-apt-get update
-apt-get install -y \
-  python3 \
-  python3-venv \
-  python3-pip
-python3 -m venv /opt/radar/venv
-/opt/radar/venv/bin/pip install --upgrade pip
-/opt/radar/venv/bin/pip install maxminddb
-```
-3. Ensure required GeoIP databases installed in the required paths:
-```
-mkdir -p /usr/share/GeoIP
-chown user:user /usr/share/GeoIP
-chmod 755 /usr/share/GeoIP
-cp ../geoip/GeoLite2-City.mmdb /usr/share/GeoIP/GeoLite2-City.mmdb
-cp GeoLite2-ASN.mmdb  /usr/share/GeoIP/GeoLite2-ASN.mmdb
-```
-4. Copy `radar-helper/radar-helper.service` service configurations and run it as a service so it continuously:
-```
-cp ../radar-helper/radar-helper.service /etc/systemd/system/radar-helper.service
-systemctl daemon-reload
-systemctl enable radar-helper.service
-systemctl start radar-helper.service
-```
-5. Configure Wazuh agent to monitor `/var/log/suspicious_login.log`:
+The agent side only needs the Wazuh agent itself installed and enrolled, with SSH log collection configured — no additional helper process runs on the agent; GeoIP enrichment happens entirely on the manager side (see below).
+
+1. Install and enroll the Wazuh agent (e.g. via `bootstrap-agent.sh`, or your own Wazuh agent installation/enrollment process).
+2. Configure the agent to monitor `/var/log/auth.log`:
 ```
 nano /var/ossec/etc/ossec.conf
 ```
-And paste the content of `/radar/scenarios/ossec/radar-suspicious-login-ossec-snippet.xml` into the end of file before the tag `</ossec_config>`
+And paste the content of `/radar/scenarios/agent_configs/_shared/radar-shared-auth-log-agent-snippet.xml` into the end of file before the tag `</ossec_config>`
 
-6. Save the file and restart the agent:
+3. Save the file and restart the agent:
 ```
 systemctl restart wazuh-agent
 ```
@@ -155,479 +110,16 @@ And add this line into the `ruleset` tag:
 <decoder_exclude>0310-ssh_decoders.xml</decoder_exclude>
 ```
 3. Copy the content of `/radar/scenarios/rules/suspicious_login` into the `/var/ossec/etc/rules/`
-4. Copy the `/radar/scenarios/active_responses/radar_ar.py` script into `/var/ossec/active-response/bin/` and ensure that it has proper permissions: 
+4. Copy the `/radar/scenarios/active_responses/radar_ar.py` dispatcher and the `lock_user_linux.sh` mitigation script it can invoke at the highest response tier into `/var/ossec/active-response/bin/`, and ensure that they have the proper permissions: 
 ```
 cp /radar/scenarios/active_responses/radar_ar.py /var/ossec/active-response/bin/radar_ar.py
-chmod 750 /var/ossec/active-response/bin/*.py
-chown root:wazuh /var/ossec/active-response/bin/*.py
+cp /radar/scenarios/active_responses/lock_user_linux.sh /var/ossec/active-response/bin/lock_user_linux.sh
+chmod 750 /var/ossec/active-response/bin/radar_ar.py /var/ossec/active-response/bin/lock_user_linux.sh
+chown root:wazuh /var/ossec/active-response/bin/radar_ar.py /var/ossec/active-response/bin/lock_user_linux.sh
 ```
-5. Add the content of `/radar/scenarios/ossec/radar-suspicious-login-ossec-snippet.xml` inside `<ossec_config>` in `/var/ossec/etc/ossec.conf`.
-6. Restart Wazuh manager:
+5. Download the `GeoLite2-City`/`GeoLite2-ASN` databases into `/var/ossec/etc/radar/` using your `MAXMIND_LICENSE_KEY`, and copy the manager-side enrichment integration script: `/radar/manager-enrichment/custom-radar-enrich` into `/var/ossec/integrations/`, and `/radar/manager-enrichment/geoip.py`, `/radar/manager-enrichment/state_store.py`, `/radar/manager-enrichment/enrichment.py` into `/var/ossec/integrations/radar_enrichment/`.
+6. Add the content of `/radar/scenarios/ossec/radar-suspicious-login-ossec-snippet.xml` inside `<ossec_config>` in `/var/ossec/etc/ossec.conf`.
+7. Restart Wazuh manager:
 ```
 /var/ossec/bin/wazuh-control restart
 ```
-
-
-## Behavior-based Approach
-
-> This approach should be tested in experimental environment. Improvements are needed for production environment usage.
-
-### Data Preparation & Ingestion
-
-#### Dataset Ingestion
-
-To simulate “today” data and feed Wazuh’s AD plugin, we shift each file’s dates into the last three days. The script is located in suspicious_login/wazuh_ingest.py. Run it from suspicious_login:
-
-```bash
-python3 /radar/archives/suspicious_login/wazuh_ingest.py
-```
-
-- **What it does:**
-    - Iterates offsets **–3…+3**
-    - Shifts each event’s date to `today + offset`
-    - Enriches with `@timestamp` (ISO), `event_hour`
-    - Bulk‐indexes into daily indices like `wazuh-ad-suspicious-login-2025.06.07`
-
----
-
-#### Index Pattern & Wazuh Integration
-
-1. **In Dashboards Management**, create an **Index Pattern** for `wazuh-ad-suspicious-login-*`.
-2. Confirm documents appear in **Discover** with fields:
-    - `@timestamp` (date)
-    - `User ID` (string)
-    - `Country`, `IP Address`, `event_hour`, etc.
-
----
-
-#### SSO system configuration
-
-1. In agent endpoint, run Keycloak:
-
-```bash
-docker run -d --name keycloak -p 8080:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=secret \
-  quay.io/keycloak/keycloak:24.0.1 start-dev
-```
-
-1. In Keycloak Admin Console (http://localhost:8080):
-    - Create Realm: `demo`
-    - Create Confidential Client: `wazuh` (enable Service Accounts)
-    - Assign roles from `realm-management`: `view-users`, `manage-users`
-2. In agent endpoint, run script for adding users from dataset. For this, first set environment variables:
-
-```bash
-export KC_BASE_URL=http://127.0.0.1:8080
-export KC_REALM=demo
-export KC_ADMIN_USER=admin
-export KC_ADMIN_PASSWORD=secret
-```
-Run the script to bulk create users:
-
-```bash
-python3 bulk_create_keycloak_users.py dataset/rba-dataset+0.csv
-```
-
-
-### Detection
-
-#### Anomaly Detector & Feature Configuration
-
-##### Create the Anomaly Detector
-
-1. **Navigate** in Wazuh Dashboards to **OpenSearch Plugins ➔ Anomaly Detection**.
-2. Click **Create detector** and fill out:
-    - **Name:** `suspicious-login-detector`
-    - **Description:** “Monitor per-user login”
-    - **Index:** `wazuh-ad-suspicious-login-*`
-    - **Time field:** `@timestamp`
-    - **Detection interval:** `5m` (with `1m` window delay)
-    - **Detector type:** Real-time (continuous)
-    - **Custom result index:** opensearch-ad-plugin-result-suspicious_login (!important)
-
----
-
-##### Define Features
-
-| Feature name | Method | Field | Notes |
-| --- | --- | --- | --- |
-| `login_count` | `value_count` | `User ID.keyword` | Counts total login events per user |
-| `distinct_geo_country` | Custom expression | — | See “Workaround for Cardinality” below |
-| `login_hour_cardinality` | Custom expression | — | See “Workaround for Cardinality” below |
-
----
-
-###### Workaround for Cardinality
-
-OpenSearch’s anomaly-detection UI doesn’t directly expose a `cardinality()` aggregation in the simple “Field value” mode, so we inject our two cardinality features via custom JSON expressions:
-
-```json
-{
-  "distinct_geo_country": {
-    "cardinality": {
-      "field": "Country.keyword"
-    }
-  }
-}
-```
-
-```json
-{
-  "login_hour_cardinality": {
-    "cardinality": {
-      "field": "event_hour"
-    }
-  }
-}
-```
-
-Each of these goes into the “Custom expression” section when you add a feature.
-
-##### Enable Categorical Field (per-user modelling)
-
-Under **Categorical field**, select the user identifier `User ID.keyword`.
-
-This ensures each user gets its own statistical model, preventing Alice’s behavior from obscuring Bob’s anomalies.
-
----
-
-##### Saving & Validation
-
-Click **Next** to **Review**.
-
-- The UI will validate your feature expressions and show sample anomaly scores if enough history exists.
-- Click **Create** to finalize.
-
-
-### Monitor, Webhook & Wazuh Rule Integration
-
-#### Create an OpenSearch Monitor
-
-In suspicious-login-detector Anomaly overview, set up alert: 
-
-1. This will create a monitor suspicious-login-detector-Monitor, which will create an alert when an anomaly is detected.
-2. **Trigger Configuration: Add trigger**
-    - **Trigger name:** `Suspicious-Login-Detected`
-    - **Severity:** High
-    - **Condition:**
-    
-    When choosing thresholds for firing alerts, you must balance **sensitivity** (catching real threats) against **precision** (avoiding false positives). A balanced strategy is to require:
-    
-    - **anomaly_grade ≥ 0.8:** captures the upper quintile of deviations without triggering on mild fluctuations, and
-    - **confidence ≥ 0.85:** ensures the model has seen enough data to trust its grade.
-    
-    Starting here helps minimize alerts on spikes. Particularly important in high-cardinality, per-user detectors where data volume per user can vary widely. Tuning can then adjust these up or down based on observed false-positive rates during the analysis.
-    
-3. Before following with an action, create a Notification Channel in Wazuh. Go to Menu, navigate to Notifications under Explore. And create a Channel:
-    - **Name**: RADAR
-    - **Channel type:** Custom webhook
-    - **Method:** POST
-    - **Webhook URL:** http://\<wazuh-manager\>:8080/notify
-4. **Action**
-    - **Action name:** `RADAR`
-    - **Channel**: RADAR
-    - **Message (must be JSON)**
-        
-        ```
-        {
-          "monitor": {
-            "name": "{{ctx.monitor.name}}"
-          },
-          "trigger": {
-            "name": "{{ctx.trigger.name}}"
-          },
-          "entity": "{{ctx.results.0.hits.hits.0._source.entity.0.value}}",
-          "periodStart": "{{ctx.periodStart}}",
-          "periodEnd":   "{{ctx.periodEnd}}"
-        }
-        ```
-        
-
-When the condition is met, this monitor will send structured JSON to the webhook.
-
----
-
-#### Webhook Script (`ad_alerts_webhook.py`)
-
-This [webhook](/radar/webhook/README.md) is a simple Flask application that receives the monitor's payload and appends a single line to `/var/log/ad_alerts.log`. To deploy the webhook in the Wazuh manager:
-
-1. Copy the [ad_alerts_webhook.py](/radar/webhook/ad_alerts_webhook.py) file from this repository into the Wazuh manager to a custom wazuh_webhook directory.
-
-2. Ensure execution permissions: chmod +x
-
-3. Run under a python3:
-```bash
-python3 ad_alerts_webhook.py
-```
-
-4. The resulted log file should be monitored by Wazuh, thus `/var/ossec/etc/ossec.conf` needs to be configured:
-
-```xml
-<localfile>
-    <log_format>syslog</log_format>
-    <location>/var/log/ad_alerts.log</location>
-</localfile>
-```
-
----
-
-#### Wazuh Decoder & Rule
-
-#### Local Decoder
-
-Add the content of the file `/radar/archives/suspicious_login/local_decoder.xml` in this repository into the file `/var/ossec/etc/decoders/local_decoder.xml` at the Wazuh manager.
-
-#### Local Rules 
-
-Add the content of the file `/radar/archives/suspicious_login/local_rules.xml` in this repository into the file `/var/ossec/etc/rules/local_rules.xml` at the Wazuh manager.
-
-- **Restart** Wazuh manager (`var/ossec/bin/wazuh-control restart` in Docker or `systemctl restart wazuh-manager`).
-- This ensures rule 100302 fires whenever our webhook writes a matching line to `/var/log/ad_alerts.log`.
-
----
-
-#### Binding the Manager-Side Active Response
-
-1. In **`ossec.conf`** on the manager, register and bind only the `ad_context_susplog_active_response.py` script. Script can be found in [Active Response directory](/radar/suspicious_login/active_responses).
-
-```xml
-<ossec_config>
-  <!-- 1) Command declaration -->
-  <command>                                                                                                             
-    <name>ad_enrich_suspicious_login</name>                                                                             
-    <executable>ad_context_susplog_active_response.py</executable>                                                        
-    <timeout_allowed>yes</timeout_allowed>                                                                              
-  </command>
-
-  <!-- 2) Active-response binding -->
-  <active-response>
-    <disabled>no</disabled>
-    <command>ad_enrich_suspicious_login</command>
-    <location>server</location>
-    <rules_id>100302</rules_id>
-  </active-response>
-</ossec_config>
-```
-
-- When Wazuh rule `100302` fires, it will run `ad_context_susplog_active_response.py`.
-
-2. Place the script itself in active-response directory to /var/ossec/active-response/bin in wazuh manager.
-3. Give permissions for execution:
-```bash
-chmod 750 /var/ossec/active-response/bin/ad_context_susplog_active_response.py
-chown root:wazuh /var/ossec/active-response/bin/ad_context_susplog_active_response.py
-```
-4. Install dependencies into Wazuh manager
-
-```bash
-python3 -m pip install requests
-```
-
-#### Binding the Agent-side Active Responses
-
-1. **Install `jq` for JSON parsing:**
-
-```bash
-sudo apt update
-sudo apt install -y jq
-```
-
-2. **Prepare enrichment log file:**
-
-```bash
-sudo touch /var/ossec/logs/ad_pc_enriched.log
-sudo chown root:wazuh /var/ossec/logs/ad_pc_enriched.log
-sudo chmod 664 /var/ossec/logs/ad_pc_enriched.log
-```
-
-3. **Deploy contextual logging script:**
-
-```bash
-sudo cp write_contextual_logs_susplog_active_response.sh /var/ossec/active-response/bin/
-sudo chown root:wazuh /var/ossec/active-response/bin/write_contextual_logs_susplog_active_response.sh
-sudo chmod 750 /var/ossec/active-response/bin/write_contextual_logs_susplog_active_response.sh
-```
-
-4. **Register command in `ossec.conf`:**
-
-```xml
-<command>
-  <name>write_contextual_logs_susplog_active_response.sh</name>
-  <executable>write_contextual_logs_susplog_active_response.sh</executable>
-  <timeout_allowed>yes</timeout_allowed>
-</command>
-```
-
-5. **Deploy Keycloak AR script:**
-
-```bash
-sudo cp disable_sso_user.py /var/ossec/active-response/bin/
-sudo chmod 750 /var/ossec/active-response/bin/disable_sso_user.py
-sudo chown root:wazuh /var/ossec/active-response/bin/disable_sso_user.py
-```
-
-6. **Set environment variables:**
-
-```bash
-export KC_BASE_URL=http://127.0.0.1:8080
-export KC_REALM=demo
-export KC_CLIENT_ID=wazuh
-export KC_CLIENT_SECRET=REPLACE_ME
-```
-
-7. **Register `disable-sso-user` command in `ossec.conf`:**
-
-```xml
-<command>
-  <name>disable_sso_user.py</name>
-  <executable>disable_sso_user.py</executable>
-  <timeout_allowed>no</timeout_allowed>
-</command>
-```
-
-8. **Enable remote command execution.** 
-
-Edit /var/ossec/etc/local_internal_options.conf:
-
-```
-wazuh_command.remote_commands=1
-```
-
-9. **Restart the Wazuh agent:**
-
-```bash
-sudo systemctl restart wazuh-agent
-```
-
-### Active Response Analysis (Suspicious Login)
-
-In a production environment, we recommend a **two-tier response** strategy for login anomalies:
-
-#### Tier 1: Alert Only (For Early Anomalies)
-
-- **Condition:** `anomaly_grade ≥ 0.7` and `confidence ≥ 0.8`
-- **Action:**
-    - Trigger alert in Wazuh
-    - Run `write_contextual_logs_susplog_active_response.sh` to store user behavior snapshots in `/var/ossec/logs/ad_pc_enriched.log`
-
-This tier gives visibility to analysts while avoiding premature blocking.
-
-#### Tier 2A: Disable SSO Account (User-Based Threats)
-
-- **Condition:** `anomaly_grade ≥ 0.9` and `confidence ≥ 0.9`
-- **Action:**
-    - Run `disable-sso-user` to lock the user in Keycloak
-
-**Use case:**
-
-- Credential theft or malicious automation
-- Suspicious access patterns per user (geo-jumping, midnight logins)
-- Internal compromise or insider misuse
-
-**Impact:** Prevents any future login attempts using the user’s SSO identity across all systems federated with Keycloak.
-
-**Recovery:** Admins can re-enable accounts manually after validation.
-
-#### Tier 2B: IP Firewall Block (Network-Based Threats)
-
-- **Condition:** `anomaly_grade ≥ 0.9` and `confidence ≥ 0.9`
-- **Action:**
-    - Run `firewall-drop` via Wazuh Active Response
-
-**Use case:**
-
-- Malicious IPs scanning or brute-forcing multiple users
-- Botnets with rotating credentials
-
-**Impact:** Temporarily drops packets from the attacker’s IP using IPTables (default expiration ~10 mins).
-
-**Recovery:** IP block expires automatically unless re-enforced.
-
-#### Considerations
-
-- Combine both actions in **multi-agent setups**, where IP block runs on proxies and SSO disable runs on user-specific agents.
-- Use `whitelist` logic in scripts to skip known corporate VPN IPs or admin users.
-- Ensure all AR scripts log to `/var/ossec/logs/active-responses.log` for auditability.
-
-This two-tier model balances visibility with rapid containment, reserving automated blocks for the highest-confidence scenarios and minimizing collateral disruption.
-
----
-
-#### Context Extraction & Active Response Flow
-
-Below is the end-to-end sequence when a suspicious login anomaly triggers Tier 2 containment:
-
-- **Trigger Parameters Passed**
-    - A Wazuh rule matched by the anomaly detector emits an alert.
-    - The alert includes key parameters extracted by the decoder:
-        - **`detector_name`**: `"Suspicious-Login-Detected"`
-        - **`user_keyword`**: (e.g., `"test_openbas"`)
-        - **`User ID`**: the SSO identity to be disabled (e.g., `4324475583306591935`)
-        - **`period_start`** / **`period_end`**: ISO timestamps bounding the anomaly window
-- **Script Invocation by `execd`**
-    - The Wazuh agent’s `execd` daemon triggers the relevant Active Response scripts using the wrapper JSON.
-    - Both `write_contextual_logs_susplog_active_response.sh` and `disable-sso-user` receive the alert data via `stdin` with `"command":"add"`.
-- **Contextual Enrichment (write_contextual_logs_susplog_active_response.sh)**
-    - The first script authenticates with the Wazuh API.
-    - It queries OpenSearch for **all login events** for the suspicious user within the given time window.
-    - Events are enriched and saved to `/var/log/suspicious_login_enriched.log` for forensic and audit purposes.
-- **Automated Containment**
-    - **Firewall IP Blocking**:
-        - Extracted events are grouped by `IP Address`.
-        - For each distinct source IP, the script triggers Wazuh’s `firewall-drop` Active Response:
-            
-            ```json
-            {
-              "command": "firewall-drop",
-              "arguments": ["1.2.3.4"],
-              "alert": { "data": { "srcip": "1.2.3.4" } }
-            }
-            ```
-            
-        - Wazuh immediately issues an IPTables DROP rule on the agent to block the offending IP.
-    - **SSO User Disabling**:
-        - The `disable-sso-user` script loads environment variables from `/var/ossec/.kc_env`.
-        - It authenticates with Keycloak using client credentials.
-        - Searches the realm for the provided `User ID`.
-        - If the user exists, the account is disabled by setting `enabled=false` to halt further SSO authentication.
-- **Audit & Logging**
-    - Each firewall block API call is logged in `/var/ossec/logs/active-responses.log` on the manager, capturing success or failure per IP.
-    - The `disable-sso-user` script logs user disablement actions to `/var/ossec/logs/active-responses/disable_sso_user.log`.
-    - These logs allow security analysts to verify that both containment actions (IP block and SSO lockout) executed successfully.
-
----
-
-#### False-Positive Safeguards
-
-- **Tier 1 thresholds** are set lower to catch suspicious but not definitive anomalies—analysts receive full context logs before any automated action.
-- **Tier 2 thresholds** are high enough to trigger blocking only on the most egregious outliers, reducing the risk of collateral denial-of-service for legitimate users.
-- **Whitelist handling**: The script can be extended to skip blocking on known safe IP ranges (e.g., corporate VPN egress points).
-- **Short rollback window** (e.g. 15–30 minutes) limits disruption if a benign IP is inadvertently blocked.
-
-### Dataset
-
-The dataset originates from [Kaggle - RBA-dataset](https://www.kaggle.com/datasets/dasgroup/rba-dataset).
-
-### Generalizing Suspicious Login Detection Beyond Keycloak
-
-While this setup uses **Keycloak** as the default SSO provider for demonstration purposes, the detection logic is **identity provider–agnostic** and can be adapted to SSH (`/var/log/auth.log`), Azure Active Directory, Okta, or any SAML-based SSO provider. The key is normalizing logs to include `User ID`, `timestamp`, `Country`, and `IP` fields and indexing them to OpenSearch before configuring the detector. For a full protocol-extension guide including field mapping tables, decoder templates, and rule examples, see the [Suspicious login extensibility guide](./suspicious-login-extensibility-guide.md).
-
-### Risk Analysis
-
-In the case of suspicious login activity, such as a user accessing the system at 03:00 from a foreign IP or from multiple countries within a short timeframe, risk is computed by the RADAR unified risk engine:
-
-$$
-R = w_A \cdot A + w_S \cdot S + w_T \cdot T
-$$
-
-where **A** = anomaly intensity (grade × confidence from the OpenSearch AD detector), **S** = signature-based risk (likelihood × impact from configured rules), and **T** = CTI score from DECIPHER. For `suspicious_login`, default weights are `w_A=0.3, w_S=0.4, w_T=0.3`. See [radar-risk-math.md](../radar-risk-math.md) for the full mathematical specification and [ar.yaml](../../../../radar/scenarios/active_responses/ar.yaml) for scenario weight configuration.
-
-In this context, potential consequences include **moderate confidentiality loss** (e.g., exposure of personal or customer data), but typically **no direct integrity or availability compromise**, assuming the attacker has not escalated privileges or performed destructive actions.
-
-According to our tiered thresholding automated response mechanism:
-
-- **Tier 2** → investigate suspicious login
-- **Tier 3** → contain or lock account
-
-This framework ensures that anomalous login behavior is escalated only when both the confidence is high and the potential business impact is non-trivial.

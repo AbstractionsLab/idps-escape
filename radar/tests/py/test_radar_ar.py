@@ -4,14 +4,13 @@ Unit tests for RADAR Active Response script (radar_ar.py)
 Tests the RiskEngine class and its risk calculation logic.
 """
 
-import sys
-import types
 import pytest
 import importlib.util
 import importlib.machinery
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 
 def load_radar_ar_module():
@@ -116,6 +115,45 @@ class TestRiskEngine:
         # With list config and missing rule, should return 0.0
         likelihood = risk_engine._signature_likelihood(cfg, alert)
         assert likelihood == 0.0
+
+    def test_signature_likelihood_rule_group_match(self, risk_engine):
+        """Test _signature_likelihood with list config and matching rule_group."""
+        cfg = {
+            "signature_likelihood": [
+                {"rule_group": "vulnerability-detector", "weight": 0.5},
+            ]
+        }
+        alert = {"rule": {"id": "23502", "groups": ["vulnerability-detector"]}}
+
+        likelihood = risk_engine._signature_likelihood(cfg, alert)
+        assert likelihood == 0.5
+
+    def test_signature_likelihood_rule_id_before_rule_group(self, risk_engine):
+        """Test _signature_likelihood picks a specific rule_id entry over a later, more general rule_group entry."""
+        cfg = {
+            "signature_likelihood": [
+                {"rule_id": "23506", "weight": 0.9},
+                {"rule_group": "vulnerability-detector", "weight": 0.5},
+            ]
+        }
+        alert = {"rule": {"id": "23506", "groups": ["vulnerability-detector"]}}
+
+        likelihood = risk_engine._signature_likelihood(cfg, alert)
+        assert likelihood == 0.9
+
+    def test_signature_likelihood_catch_all_default(self, risk_engine):
+        """Test _signature_likelihood falls back to a trailing entry with neither rule_id nor rule_group."""
+        cfg = {
+            "signature_likelihood": [
+                {"rule_id": "23506", "weight": 0.9},
+                {"rule_group": "vulnerability-detector", "weight": 0.5},
+                {"weight": 0.3},
+            ]
+        }
+        alert = {"rule": {"id": "999999", "groups": ["unrelated_group"]}}
+
+        likelihood = risk_engine._signature_likelihood(cfg, alert)
+        assert likelihood == 0.3
 
     def test_compute_signature_only(self, risk_engine, radar_ar):
         """Test compute with signature detection only (no AD)."""
@@ -628,6 +666,106 @@ class TestDecipherIncidentGate:
         if decipher.health_check() and decision["risk"]["tier"] >= 1:
             decipher.create_incident(decision)
         assert len(create_calls) == 1, f"create_incident must be called exactly once at tier {tier}"
+
+class TestScenarioIdentifier:
+    """Test suite for ScenarioIdentifier rule_id and rule_group matching."""
+
+    def test_identify_by_rule_group(self, radar_ar, mock_logger):
+        """Test identify matches a scenario by rule_group when the rule_id isn't individually listed."""
+        cfg = {
+            "scenarios": {
+                "default": {"signature": {"rule_groups": ["authentication_failures"]}},
+            }
+        }
+        identifier = radar_ar.ScenarioIdentifier(mock_logger, cfg)
+        result = identifier.identify({"rule": {"id": "5760", "groups": ["authentication_failures", "sshd"]}})
+        assert result["name"] == "default"
+        assert result["detection"] == "signature"
+        assert result["matched_by"] == "rule_group"
+        assert result["matched_group"] == "authentication_failures"
+
+
+class TestContextQueryRetry:
+    def test_retries_until_events_found(self, radar_ar, mock_logger, monkeypatch):
+        monkeypatch.setattr(radar_ar.time, "sleep", lambda _s: None)
+
+        os_client = Mock()
+        os_client.indices = "wazuh-alerts-*,wazuh-archives-*"
+        os_client.search.side_effect = [[], [], [{"rule": {"id": "100810"}}]]
+
+        strategy = radar_ar.BaseScenario(mock_logger, os_client)
+        strategy.context_query_attempts = 3
+        strategy.context_query_retry_seconds = 0
+
+        t_start = datetime(2026, 8, 27, 12, 40, tzinfo=timezone.utc)
+        t_end = datetime(2026, 8, 27, 12, 45, tzinfo=timezone.utc)
+        scenario = {"alert": {}, "config": {}, "name": "default", "detection": "signature"}
+        events = strategy._query_events_with_retry(scenario, t_start, t_end, "vm-intern-cyfort-1")
+
+        assert events == [{"rule": {"id": "100810"}}]
+        assert os_client.search.call_count == 3
+
+    def test_gives_up_after_configured_attempts(self, radar_ar, mock_logger, monkeypatch):
+        monkeypatch.setattr(radar_ar.time, "sleep", lambda _s: None)
+
+        os_client = Mock()
+        os_client.indices = "wazuh-alerts-*,wazuh-archives-*"
+        os_client.search.return_value = []
+
+        strategy = radar_ar.BaseScenario(mock_logger, os_client)
+        strategy.context_query_attempts = 2
+        strategy.context_query_retry_seconds = 0
+
+        t_start = datetime(2026, 8, 27, 12, 40, tzinfo=timezone.utc)
+        t_end = datetime(2026, 8, 27, 12, 45, tzinfo=timezone.utc)
+        scenario = {"alert": {}, "config": {}, "name": "default", "detection": "signature"}
+        events = strategy._query_events_with_retry(scenario, t_start, t_end, "vm-intern-cyfort-1")
+
+        assert events == []
+        assert os_client.search.call_count == 4
+
+    def test_retries_when_raw_hits_survive_no_filtered_events(self, radar_ar, mock_logger, monkeypatch):
+        monkeypatch.setattr(radar_ar.time, "sleep", lambda _s: None)
+
+        os_client = Mock()
+        os_client.indices = "wazuh-alerts-*,wazuh-archives-*"
+        unrelated = [{"rule": {"id": "1002", "groups": ["ossec"]}, "data": {}}]
+        relevant = [{"rule": {"id": "100810", "groups": ["radar_scanning"]}, "data": {"src_ip": "198.51.100.21"}}]
+        os_client.search.side_effect = [unrelated, unrelated, relevant]
+
+        strategy = radar_ar.ScanningDetection(mock_logger, os_client)
+        strategy.context_query_attempts = 3
+        strategy.context_query_retry_seconds = 0
+
+        t_start = datetime(2026, 8, 27, 12, 40, tzinfo=timezone.utc)
+        t_end = datetime(2026, 8, 27, 12, 45, tzinfo=timezone.utc)
+        alert = {"rule": {"id": "100830", "groups": []}, "data": {"src_ip": "198.51.100.21"}}
+        scenario = {"alert": alert, "config": {}, "name": "scanning_detection", "detection": "signature"}
+        events = strategy._query_events_with_retry(scenario, t_start, t_end, "vm-intern-cyfort-1")
+
+        assert events == relevant
+        assert os_client.search.call_count == 3
+
+
+class TestAuditLogFieldNames:
+    """SRS-062 requirement #7: the audit entry must carry exactly
+    decision_id, rule_id, source_ip, action, tier, result, reason."""
+
+    def test_write_uses_action_field_not_mitigation(self, radar_ar, mock_logger, tmp_path):
+        log_path = tmp_path / "active-responses.log"
+        audit = radar_ar.AuditLog(mock_logger, log_path)
+        audit.write(decision_id="d1", rule_id="100830", source_ip="198.51.100.22",
+                    action="firewall-drop", tier=2, result=radar_ar.AuditLog.RESULT_DECLINED,
+                    reason="allowlist")
+
+        content = log_path.read_text()
+        json_part = content.split(": ", 1)[1]
+        import json
+        entry = json.loads(json_part)
+        assert entry["action"] == "firewall-drop"
+        assert "mitigation" not in entry
+        assert entry["reason"] == "allowlist"
+        assert set(entry.keys()) >= {"decision_id", "rule_id", "source_ip", "action", "tier", "result", "reason"}
 
 
 if __name__ == "__main__":

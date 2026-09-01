@@ -1,0 +1,132 @@
+<var name="RADAR_SCANNER_UA">(?i)\b(sqlmap|nikto|nmap|masscan|nuclei|zgrab|gobuster|dirbuster|dirb|ffuf|feroxbuster|wfuzz|wpscan|joomscan|openvas|nessus|acunetix|burp|w3af|whatweb|arachni|skipfish)\b</var>
+<var name="RADAR_SRC_FIELD">src_ip</var>
+
+<group name="radar_scanning,">
+
+  <!-- Indicator 1: scanner User-Agent. Last in sibling order (most common). -->
+  <rule id="100810" level="3">
+    <if_group>ids</if_group>
+    <field name="http.http_user_agent" type="pcre2">$RADAR_SCANNER_UA</field>
+    <description>Web scanning indicator 1: scanner User-Agent from $(src_ip) ($(http.http_user_agent))</description>
+    <mitre>
+      <id>T1595.002</id>
+    </mitre>
+    <group>radar_scan_indicator,radar_ind_ua,web_scan,</group>
+  </rule>
+
+  <!-- Indicator 2: failed-request rate. event_type=http avoids double-counting and keeps the level 3 alert stream intact. CALIBRATE the threshold. -->
+  <rule id="100815" level="3">
+    <if_group>ids</if_group>
+    <field name="http.status" type="pcre2">^(401|403|404)$</field>
+    <description>Failed HTTP response $(http.status) for $(http.url) from $(src_ip)</description>
+    <group>radar_scan_failed_request,</group>
+  </rule>
+
+  <!-- Indicator 3: method abuse. First in sibling order (rarest). -->
+  <rule id="100820" level="6">
+    <if_group>ids</if_group>
+    <field name="http.http_method" type="pcre2">^(TRACE|TRACK|CONNECT)$</field>
+    <description>Web scanning indicator 3: HTTP method $(http.http_method) for $(http.url) from $(src_ip)</description>
+    <mitre>
+      <id>T1595.002</id>
+    </mitre>
+    <group>radar_scan_indicator,radar_ind_method,web_scan,</group>
+  </rule>
+
+  <!-- WebDAV subset, toggled off per vhost via etc/lists/radar_webdav_apps. -->
+  <rule id="100821" level="6">
+    <if_group>ids</if_group>
+    <field name="http.http_method" type="pcre2">^(PROPFIND|PROPPATCH|MKCOL|COPY|MOVE|LOCK|UNLOCK|SEARCH)$</field>
+    <field name="http.hostname">\.+</field>
+    <list field="http.hostname" lookup="not_match_key">etc/lists/radar_webdav_apps</list>
+    <description>Web scanning indicator 3: WebDAV method $(http.http_method) on $(http.hostname) for $(http.url) from $(src_ip)</description>
+    <mitre>
+      <id>T1595.002</id>
+    </mitre>
+    <group>radar_scan_indicator,radar_ind_method,web_scan,</group>
+  </rule>
+
+  <rule id="100825" level="10" frequency="20" timeframe="70">
+    <if_matched_sid>100815</if_matched_sid>
+    <same_field>$RADAR_SRC_FIELD</same_field>
+    <description>Web scanning indicator 2: failed request rate from $(src_ip)</description>
+    <mitre>
+      <id>T1595.002</id>
+      <id>T1595.003</id>
+    </mitre>
+    <group>radar_scan_indicator,radar_ind_rate,web_scan,</group>
+  </rule>
+
+  <!--correlation rules -->
+  <rule id="100826" level="3" timeframe="300">
+    <if_group>radar_ind_ua</if_group>
+    <if_matched_group type="pcre2">radar_ind_method</if_matched_group>
+    <same_field>$RADAR_SRC_FIELD</same_field>
+    <description>Scan confirmation anchor: tool signature corroborated</description>
+  </rule>
+
+  <rule id="100827" level="3" timeframe="300">
+    <if_group>radar_ind_rate</if_group>
+    <if_matched_group type="pcre2">radar_ind_ua</if_matched_group>
+    <same_field>$RADAR_SRC_FIELD</same_field>
+    <description>Scan confirmation anchor: failed request rate corroborated</description>
+  </rule>
+
+  <rule id="100832" level="3" timeframe="300">
+    <if_group>radar_ind_rate</if_group>
+    <if_matched_group type="pcre2">radar_ind_method</if_matched_group>
+    <same_field>$RADAR_SRC_FIELD</same_field>
+    <description>Scan confirmation anchor: failed request rate corroborated</description>
+  </rule>
+
+  <rule id="100828" level="3" timeframe="300">
+    <if_group>radar_ind_method</if_group>
+    <if_matched_group type="pcre2">radar_ind_ua</if_matched_group>
+    <same_field>$RADAR_SRC_FIELD</same_field>
+    <description>Scan confirmation anchor: method abuse corroborated</description>
+  </rule>
+
+  <rule id="100829" level="3" timeframe="300">
+    <if_group>radar_ind_ua</if_group>
+    <if_matched_sid>100825</if_matched_sid>
+    <same_field>$RADAR_SRC_FIELD</same_field>
+    <description>Scan confirmation anchor: tool signature corroborated (rate precedent)</description>
+  </rule>
+
+  <rule id="100831" level="3" timeframe="300">
+  <if_group>radar_ind_method</if_group>
+  <if_matched_sid>100825</if_matched_sid>
+  <same_field>$RADAR_SRC_FIELD</same_field>
+  <description>Scan confirmation anchor: method abuse corroborated (rate precedent)</description>
+</rule>
+
+  <!-- Sole trigger for notification and active response. -->
+  <rule id="100830" level="12">
+    <if_sid>100826,100827,100828,100829,100831,100832</if_sid>
+    <description>Web scanning confirmed: two or more indicators from $(src_ip) seen by $(hostname)</description>
+    <mitre>
+      <id>T1595.002</id>
+      <id>T1595.003</id>
+    </mitre>
+    <group>radar_scan_confirmed,web_scan,</group>
+  </rule>
+
+  <!--
+    radar_ar.py writes its audit entries into active-responses.log using the
+    same JSON shape native AR scripts use, so they decode via Wazuh's
+    shipped rule 650
+  -->
+  <rule id="100840" level="0">
+    <if_sid>650</if_sid>
+    <field name="decision_id">.+</field>
+    <description>RADAR active response audit entry</description>
+  </rule>
+
+  <rule id="100835" level="12">
+    <if_sid>100840</if_sid>
+    <field name="reason" type="pcre2">^allowlist_unreadable$</field>
+    <description>RADAR active response declined: allowlist unreadable ($(allowlist_path))</description>
+    <group>radar_operational,</group>
+  </rule>
+
+</group>

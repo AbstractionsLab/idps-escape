@@ -34,7 +34,7 @@
       <div class="ar-grid-2">
         <div class="ar-field">
           <label class="ar-label">URL</label>
-          <input class="ar-input mono" id="os-url" type="text" placeholder="https://192.168.0.28:9200"
+          <input class="ar-input mono" id="os-url" type="text" placeholder="https://203.0.113.10:9200"
                  value="{{ env.get('OS_URL', '') }}">
         </div>
         <div class="ar-field">
@@ -91,12 +91,12 @@
       <div class="ar-grid-2">
         <div class="ar-field">
           <label class="ar-label">API URL</label>
-          <input class="ar-input mono" id="wazuh-url" type="text" placeholder="https://192.168.0.28:55000"
+          <input class="ar-input mono" id="wazuh-url" type="text" placeholder="https://203.0.113.10:55000"
                  value="{{ env.get('WAZUH_API_URL', '') }}">
         </div>
         <div class="ar-field">
           <label class="ar-label">Manager address</label>
-          <input class="ar-input mono" id="wazuh-manager" type="text" placeholder="192.168.0.28"
+          <input class="ar-input mono" id="wazuh-manager" type="text" placeholder="203.0.113.10"
                  value="{{ env.get('WAZUH_MANAGER_ADDRESS', '') }}">
         </div>
         <div class="ar-field">
@@ -140,7 +140,7 @@
       <div class="ar-grid-2">
         <div class="ar-field">
           <label class="ar-label">URL</label>
-          <input class="ar-input mono" id="dashboard-url" type="text" placeholder="https://192.168.0.28"
+          <input class="ar-input mono" id="dashboard-url" type="text" placeholder="https://203.0.113.10"
                  value="{{ env.get('DASHBOARD_URL', '') }}">
         </div>
         <div class="ar-field">
@@ -288,6 +288,41 @@
     <div class="connector-result" id="result-decipher"></div>
   </div>
 
+  <div class="connector-card" id="card-maxmind">
+    <div class="connector-card__header">
+      <div class="connector-card__icon connector-card__icon--amber">MM</div>
+      <div>
+        <div class="connector-card__title">MaxMind GeoLite2</div>
+        <div class="connector-card__sub">GeoLite2-City / GeoLite2-ASN download key used for manager-side geoip/impossible-travel enrichment</div>
+      </div>
+      <div class="connector-card__status" id="status-maxmind">
+        <span class="status-dot status-dot--gray"></span>
+        <span class="status-text">Not tested</span>
+      </div>
+    </div>
+    <div class="connector-fields">
+      <div class="ar-grid-2">
+        <div class="ar-field">
+          <label class="ar-label">License key</label>
+          <div class="pw-wrap">
+            <input class="ar-input mono" id="maxmind-key" type="password"
+                   placeholder="{% if connector_status.get('maxmind-key') %}&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;{% else %}Enter license key{% endif %}"
+                   autocomplete="new-password">
+            {% if connector_status.get('maxmind-key') %}
+            <button class="pw-reveal-btn" onclick="revealPw('maxmind-key', 'MAXMIND_LICENSE_KEY', this)" type="button">Show</button>
+            {% endif %}
+          </div>
+          <div class="ar-hint-field">Only needed the first time the manager downloads the GeoIP databases (see roles/wazuh_manager/tasks/enrichment.yml). Free key: <a href="https://www.maxmind.com/en/geolite2/signup" target="_blank" rel="noopener">maxmind.com/en/geolite2/signup</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick="testConnector('maxmind')">Validate key</button>
+      <button class="btn btn--sm btn--primary" onclick="saveConnector('maxmind')">Save</button>
+    </div>
+    <div class="connector-result" id="result-maxmind"></div>
+  </div>
+
   <div class="connector-card" id="card-webhook">
     <div class="connector-card__header">
       <div class="connector-card__icon connector-card__icon--gray">WH</div>
@@ -309,7 +344,7 @@
         </div>
         <div class="ar-field">
           <label class="ar-label">Webhook URL</label>
-          <input class="ar-input mono" id="webhook-url" type="text" placeholder="http://192.168.0.28:8080/notify"
+          <input class="ar-input mono" id="webhook-url" type="text" placeholder="http://203.0.113.10:8080/notify"
                  value="{{ env.get('WEBHOOK_URL', '') }}">
         </div>
       </div>

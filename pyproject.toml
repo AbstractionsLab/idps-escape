@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "idps-escape"
-version = "1.0.0"
+version = "2.0.0"
 description = "IDPS-ESCAPE suite of tools and its subsystems SONAR and RADAR, all part of project CyFORT."
 authors = ["Arash Atashpendar <arash@abstractionslab.lu>", "Gulsezim Duisen <duisen@itrust.lu>", "Agnese Gini <agnese@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>", "Itzel Vazquez Sandoval <itzel@abstractionslab.lu>"]
 readme = "README.md"

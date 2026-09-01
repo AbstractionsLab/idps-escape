@@ -1,0 +1,73 @@
+#!/var/ossec/framework/python/bin/python3
+"""
+Deployment layout (see roles/wazuh_manager/tasks/enrichment.yml):
+  /var/ossec/integrations/custom-radar-web-enrich
+  /var/ossec/integrations/radar_enrichment/geoip.py
+  /var/ossec/integrations/radar_enrichment/web_enrichment.py
+"""
+import json
+import os
+import sys
+import traceback
+from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "radar_enrichment"))
+
+ENRICHED_LOG_PATH = "/var/ossec/logs/radar/enriched_web_access.log"
+ERROR_LOG_PATH = "/var/ossec/logs/radar/enrichment_errors.log"
+CITY_DB_PATH = "/var/ossec/etc/radar/GeoLite2-City.mmdb"
+ASN_DB_PATH = "/var/ossec/etc/radar/GeoLite2-ASN.mmdb"
+
+
+def log_error(msg: str) -> None:
+    try:
+        os.makedirs(os.path.dirname(ERROR_LOG_PATH), exist_ok=True)
+        with open(ERROR_LOG_PATH, "a") as f:
+            f.write(f"{datetime.now(timezone.utc).isoformat()} {msg}\n")
+        os.chmod(ERROR_LOG_PATH, 0o660)
+    except Exception:
+        pass
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        log_error("no alert file argument received (web-enrich)")
+        return
+
+    try:
+        with open(sys.argv[1]) as f:
+            alert = json.load(f)
+    except Exception as e:
+        log_error(f"could not read/parse alert file {sys.argv[1]} (web-enrich): {e}")
+        return
+
+    full_log = alert.get("full_log", "") or ""
+    if 'RADAR country="' in full_log:
+        return
+
+    try:
+        import maxminddb
+
+        from web_enrichment import enrich_web_access
+
+        city_reader = maxminddb.open_database(CITY_DB_PATH)
+        asn_reader = maxminddb.open_database(ASN_DB_PATH)
+        tail = enrich_web_access(city_reader, asn_reader, full_log)
+    except Exception:
+        log_error(f"web enrichment failed for alert {alert.get('id')}:\n{traceback.format_exc()}")
+        return
+
+    if tail is None:
+        return
+
+    try:
+        os.makedirs(os.path.dirname(ENRICHED_LOG_PATH), exist_ok=True)
+        with open(ENRICHED_LOG_PATH, "a") as f:
+            f.write(full_log + tail + "\n")
+        os.chmod(ENRICHED_LOG_PATH, 0o660)
+    except Exception as e:
+        log_error(f"could not write enriched web log for alert {alert.get('id')}: {e}")
+
+
+if __name__ == "__main__":
+    main()

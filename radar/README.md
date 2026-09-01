@@ -12,24 +12,23 @@ We leverage [OpenSearch's latest advances](https://opensearch.org/anomaly-detect
 
 | Document | Description |
 |----------|-------------|
-| [RADAR Architecture](/docs/manual/radar_docs/radar-architecture.md) | System architecture, design principles, component diagrams, data flows |
 | [Getting Started](/docs/manual/radar_docs/radar-getting-started.md) | Prerequisites, setup instructions, deployment modes, configuration |
-| [Ansible Playbook](/docs/manual/radar_docs/radar-manager-ansible-playbook.md) | Detailed breakdown of the Wazuh manager automation pipeline |
 | [Run RADAR (AD Workflow)](/docs/manual/radar_docs/radar-run-ad.md) | Detector and monitor creation workflow via `run-radar.sh` |
 | [Detection Rules](/docs/manual/radar_docs/radar-rules.md) | Wazuh rule definitions for each scenario |
 | [Scenarios overview and configuration](/radar/scenarios/README.md) | Detailed documentation of the scenarios folder artifacts |
 | [Webhook](/radar/webhook/README.md) | Webhook service deployment and configuration |
-| [Active Response](/docs/manual/radar_docs/radar-active-response.md) | Active Response logic flow |
-| [Health check](/docs/manual/radar_docs/radar-health-check.md) | Detailed documentation of RADAR health check |
 | [Web Interface User Manual](/docs/manual/radar_docs/radar-gui-user-manual.md) | User manual of RADAR Web Interface |
+| [Operations](/docs/manual/radar_docs/radar-operations.md) | Command-line reference, health checks, and routine administration |
+| [Tuning](/docs/manual/radar_docs/radar-tuning.md) | Risk weights, tier thresholds, mitigations, and detector sensitivity |
+| [Troubleshooting](/docs/manual/radar_docs/radar-troubleshooting.md) | Diagnosis and resolution of common failures |
 
 ## RADAR scenarios
 
-Currently, anomaly detection coupled with automated response is implemented for the RADAR scenarios listed below. Each scenario integrates a detector, monitor, webhook, decoder, rule, and active response in a deployable solution. They also come with a dataset ingestor (`wazuh_ingest.py`) aimed at populating the Wazuh indexer.
+Currently, four production scenarios are implemented, each integrating a decoder, rule, and active response in a deployable solution. **Log Volume Growth** additionally has an OpenSearch detector, monitor, webhook and dataset ingestor (`wazuh_ingest.py`), since it is the only scenario driven by anomaly detection rather than signatures alone.
 
 ### Default rules
 
-The **Default** rules provides a low-friction framework for rapid threat detection without prerequisite data preparation. Unlike scenario-specific detections (which may require custom decoders, radar-helper enrichment, or index schema modifications), Default rules operate on existing Wazuh data structures and standard event formats. This enables:
+The **Default** rules provides a low-friction framework for rapid threat detection without prerequisite data preparation. Unlike scenario-specific detections (which may require custom decoders, manager-side enrichment integrations, or index schema modifications), Default rules operate on existing Wazuh data structures and standard event formats. This enables:
 
 - Deploy immediately on any standard Wazuh installation with Sysmon
 - Baseline alerts feed directly into DECIPHER for IOC scoring and threat intelligence enrichment
@@ -41,16 +40,11 @@ Current rule set focuses on command shell execution detection (PowerShell, CMD.e
 |----------|--------|-------------|----------------|---------------|
 | **Default** | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-rules.md#0-default-threat-detection) |
 | **GeoIP Detection** | ✅ Production | Real Wazuh (SSH + Apache/Nginx) | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md) |
-| **Log Volume Monitoring** | ✅ Production | Real Wazuh | RRCF-based | [Guide](/docs/manual/radar_docs/radar-scenarios/log_volume_explained.md) |
-| **Suspicious Login** (Signature) | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md#signature-based-approach) |
-| **Insider Threat** | 🧪 Demo | Synthetic | RRCF-based | [README](/radar/archives/insider_threat/README.md) |
-| **Suspicious Login** (Behavior) | 🧪 Demo | Synthetic | RRCF-based | [Guide](/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md#behavior-based-approach) |
-| **DDoS Detection** | 🧪 Demo | Synthetic | RRCF-based | [README](/radar/archives/ddos_detection/README.md) |
-| **C2 Malware Communication** | 🧪 Demo | Synthetic | RRCF-based | [README](/radar/archives/malware_communication/README.md) |
+| **Log Volume Growth** | ✅ Production | Real Wazuh | RRCF-based | [Guide](/docs/manual/radar_docs/radar-scenarios/log_volume_explained.md) |
+| **Suspicious Login** | ✅ Production | Real Wazuh | Signature[^1] | [Guide](/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md#signature-based-approach) |
+| **Web Scanning Detection** | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/scanning_detection_explained.md) |
 
-> **Important:** Demo scenarios are not production-ready. Deployment requires adaptation of indices/aliases, field mappings, time/category fields, decoders/ingest pipelines, TLS/hostnames, and detector/monitor parameters to align with your organization's log schema and infrastructure.
-
-> **CTI enrichment and incident case creation via DECIPHER** are currently supported for the **Suspicious Login** scenario. When DECIPHER is reachable, RADAR queries the DECIPHER analyze endpoint to obtain a CTI score used in risk computation, and creates a FlowIntel incident case for all Tier 1 and above responses. See the [**DECIPHER deployment guide**](https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher) for setup instructions.
+> **CTI enrichment and incident case creation via DECIPHER** run for every production scenario, not only Suspicious Login: `radar_ar.py` queries DECIPHER's analyze endpoint on every alert regardless of which scenario matched, and creates a FlowIntel incident case whenever DECIPHER is reachable and the computed tier is 1 or above. See the [**DECIPHER deployment guide**](https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher) for setup instructions.
 
 ---
 
@@ -60,8 +54,9 @@ Here we provide a screenshot of a successful run of the Suspicious Login detecti
 
 ![Wazuh Dashboard Discover RADAR geo IP detection](/docs/manual/_figures/RADAR-wazuh-dashboard.png "Wazuh Dashboard Discover RADAR Geo IP detection")
 
-The currently implemented active response sends an email to a designated recipient.
-![](/docs/manual/_figures/RADAR-email-suspicious-login.png)
+The active response sends an email to a designated recipient at every tier from Tier 1 upward, and, depending on the tier and the scenario's `ar.yaml` configuration, can also execute an automated mitigation — blocking the source IP (`firewall-drop`), locking the implicated Linux account (`lock_user_linux.sh`), or terminating the offending service (`terminate_service.sh`). Automated mitigation execution is governed per scenario by `allow_mitigation`.
+
+![](/docs/manual/_figures/RADAR-email-scanning-detection.png)
 
 Additionally, the active response component creates a case in FlowIntel on high risk alerts via the DECIPHER service.
 
@@ -71,13 +66,11 @@ To compute the threat context for that response, RADAR calls DECIPHER's dedicate
 
 ![FlowIntel case created by RADAR via DECIPHER](/docs/manual/_figures/RADAR-FlowIntel-case.png)
 
-The RADAR GUI provides a browser-based control panel for the full operational lifecycle - deploying scenarios, managing infrastructure, tuning active response parameters, and monitoring health.
+The RADAR GUI provides a browser-based control panel for the full operational lifecycle across three pages - **RADAR Scenarios** (risk weights, tiers, mitigations), **Connectors** (external service credentials), and **Deployment** (scenario deployment, agent onboarding, the anomaly detector, and health checks).
 
 ![RADAR GUI - RADAR Scenarios page](/docs/website/assets/RADAR_GUI_RADAR_Scenarios.png "RADAR GUI RADAR Scenarios page showing risk weight configuration and tier thresholds")
 
-![RADAR GUI - Deploy page](/docs/website/assets/RADAR_GUI_Deploy.png "RADAR GUI Deploy page: scenario selection and live Ansible output streaming")
-
-![RADAR GUI — Infrastructure page](/docs/website/assets/RADAR_GUI_Infrastructure.png "RADAR GUI Infrastructure page: Wazuh manager and agent inventory management")
+![RADAR GUI - Deployment page](/docs/website/assets/RADAR_GUI_Deploy.png "RADAR GUI Deployment page: scenario selection and live output streaming")
 
 ![RADAR Demonstration](/docs/manual/_figures/RADAR_GUI.gif)
 
@@ -86,9 +79,12 @@ The RADAR GUI provides a browser-based control panel for the full operational li
 ## RADAR automated test framework
 
 The RADAR subsystem comes with a dedicated test framework aimed at automating the experimentation and validation chain of activities.
-More precisely, powered by Ansible, we provide a pipeline automating the ingestion of datasets, preprocessing, 
-training and ML model baseline establishment, attack simulation, data collection, followed by post-processing and 
-computation of statistical measures, which are then reported to the user.
+More precisely, we provide a pipeline automating the ingestion of datasets, preprocessing,
+training and ML model baseline establishment, attack simulation, data collection, followed by post-processing and
+computation of statistical measures, which are then reported to the user. Attack simulation runs as standalone
+Python scripts (`radar-test-framework/simulate/scenarios/<scenario>.py`) executed directly on the target agent
+endpoint, writing agent-realistic attack artifacts so the full Wazuh decoder/rule/active-response pipeline is
+exercised the same way it would be in production.
 
 See [RADAR test framework](/radar/radar-test-framework/README.md) for more details.
 

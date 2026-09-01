@@ -1,3 +1,75 @@
+# 2.0.0 (2026-09-01)
+
+- **Documentation restructuring & consolidation**:
+  - Reorganized deployment documentation: moved custom deployment guides from `/deployment/` to `/docs/manual/custom_deployments/`
+  - Removed legacy Ansible playbooks and deprecated Wazuh installation guides
+  - Streamlined and consolidated RADAR operational and user documentation
+  - Updated specifications and web assets for improved clarity
+  - Cleaned up obsolete CI/CD workflows and deployment scripts
+- **Scanning detection scenario**:
+  - Updated the scanning-detection rules, agent configuration, and manager snippets according to SRS-066.
+  - Reworked scanning simulation and its tests with interactive execution, verification-aware waits.
+  - Added DECIPHER integration for DECIPHER CTI score use in RADAR risk score computation and case creation in Flowintel.
+- **Manager Enrichment & Architecture**:
+  - Enrichment redesign: Moved enrichment logic into the manager; added a new manager-enrichment package (`enrichment.py`, `web_enrichment.py`, `geoip.py`, `state_store.py`) to centralize enrichment processing.
+  - Enrichment integration: Enrichment processing is integrated with manager workflows and web endpoints; enrichment responsibilities moved out of previous components.
+  - Migrating an existing `suspicious_login`/`geoip_detection` deployment: agents now ship raw `/var/log/auth.log` directly instead of running a per-endpoint enrichment helper/venv/systemd service; set `MAXMIND_LICENSE_KEY` in the manager's `.env`, redeploy the scenario with `sudo ./build-radar.sh suspicious_login`/`geoip_detection`, then re-run `bootstrap-agent.sh` on every existing endpoint (manager and agent updates must land together per endpoint). This also fixes per-user velocity/ASN state previously being tracked separately per endpoint instead of centrally.
+- **Manager APIs & Integration**:
+  - API redesign: Major API changes and integrator fixes to support the new manager-centric enrichment flow and related operations.
+  - Wazuh API client & CLI: Added `wazuh_api` module to provide programmatic and CLI access to manager operations.
+- **Deployment & Orchestration**:
+  - Manager deployment scripts: Added manager helper scripts under `radar_deploy` (apply-scenario, assign-agent-group, ensure-certs, health, local-agent, mint-token, and helper libs) and top-level `radar.sh` and `bootstrap-agent.sh`.
+- **Enrollment authentication & agent management**:
+  - Enrollment hardening: Added `manager-harden-enrollment.sh` to secure Wazuh manager enrollment with password protection (`use_password=yes`), purge disabled (`purge=no`), and cluster key management.
+  - Enrollment window control: Added `manager-enrollment-window.sh` to manage time-limited enrollment windows via firewall rules (port 1515).
+  - Webhook enrollment: Webhook deployment now mints a short-lived registration token when needed, reuses an existing enrollment, persists the agent state, and fails clearly when a token is unavailable.
+  - Agent lifecycle management: New scripts for agent operations: `manager-deregister-agent.sh` (deregister agents), `manager-unassign-agent-group.sh` (unassign groups), and `manager-undo-scenario.sh` (undo scenarios and remove associated rules/decoders/lists).
+  - Wazuh API enhancements: Improved health checks, scenario operations, and token minting functionality via `wazuh_api` module.
+- **RADAR GUI**:
+  - Deploy, Infrastructure and Connector pages adapted to support new manager flows and deployment interactions.
+  - Each action has a corresponding undo action (deregister agent, undo deployment, unassign agent group).
+- **Test specifications & Documentation**:
+  - New tests: unit/integration tests were added according to code changes.
+  - Specifications: Added spec documents `TST-055.md` through `TST-058.md`.
+  - RADAR manuals and specifications: Updated RADAR documentation for the redesign.
+- **Ansible / Roles & Cleanup**:
+  - Role removals & refactor: Removed Ansible role tasks and playbooks (health_check, wazuh_agent playbooks, multiple wazuh_manager tasks) as part of the redesigned manager workflow.
+  - Code cleanup: General duplicates removal, tests fixes, and layer/fix adjustments across the repo.
+  - Archived scenarios removal: Removed unmaintained archived scenarios (DDoS detection, GeoIP detection, insider threat) from `radar/archives/` to streamline the codebase.
+- **Simulation Changes**:
+  - Simulate scenarios: Updated radar simulation scenarios to run standalone on the endpoint without depending on Ansible automation.
+- **Log-volume monitoring**:
+  - Endpoint collection: `bootstrap-agent.sh --group log_volume` now installs and enables a systemd service/timer that records `/var/log` size every 30 seconds, while the Wazuh agent watches the resulting file.
+  - Lifecycle cleanup: `uninstall-agent.sh` removes the collector, timer, logrotate configuration, and optionally its data.
+- **Build & project layout cleanup**:
+  - Per-component Dockerfiles and run scripts relocated into their own subdirectories: `sonar/Dockerfile.sonar`, `adbox/Dockerfile.adbox`, `adbox/Dockerfile.test`, `adbox/adbox.sh`, `adbox/run_test.sh`, `sonar/sonar.sh` (replacing the former root-level `sonar.Dockerfile`, `adbox.Dockerfile`, `test.Dockerfile`, `sonar.sh`, `adbox.sh`, `run_test.sh`); `build.sh` and all documentation/spec references updated accordingly.
+  - Removed the root-level `radar.Dockerfile` (superseded by `radar/Dockerfile.radar-cli` and `radar/Dockerfile.test`) and the per-component `.devcontainer/adbox` and `.devcontainer/radar` dev container configs, consolidating on the single root `.devcontainer/devcontainer.json`.
+  
+
+# 1.1.0 (2026-05-19)
+
+## Added
+
+- **Web scanning detection scenario**: New production-ready RADAR scenario for detecting web-layer attacks:
+  - **Signature-based detection** on Apache/Nginx HTTP access logs using built-in `web-log` decoder
+  - **Automated response** with firewall-drop active response and email notifications for high-risk detections
+  - **Full documentation**: Scenario guide ([scanning_detection_explained.md](docs/manual/radar_docs/radar-scenarios/scanning_detection_explained.md)) with objectives, detection methodology, manual setup, and deployment instructions
+  - **System requirements and testing specification**: Formal requirement specification for web scanning detection with acceptance criteria and test specification are delivered
+  - **Test report**: Added test report execution for `scanning_detection` scenario
+- **RADAR default-rule support**: 
+  - **Default active response and rule mapping**: Updated `radar/scenarios/active_responses/ar.yaml` and `radar/scenarios/ossec/radar-default-ossec-snippet.xml` to include the new default warning rule IDs `23503`, `23504`, and `23505`, and to use `authentication_failures` rule group
+  - **Test and validation coverage**: Added test specifications and execution reports for the default-rule flow, active response handling, and simulation behavior across `TST-053` and `TST-054`
+  - Added a new `default` simulation so the default Wazuh ruleset can be exercised end to end from the existing simulation entrypoints
+  - `default` is now an explicit scenario option and is restricted to `--agent remote`
+  - Added `scenarios.default.simulate` configuration support in `radar/config.yaml`
+  - Extended `radar/roles/wazuh_agent/playbooks/simulate.yml` with a new `default` block that downgrades to vulnerable version and schedules an independent safety-net restore after `safety_net_minutes`
+
+## Modified
+
+- **Rule group support**: Consolidated RADAR Active Response script with the support of rule group additional to rule ID.
+- **Unit test updates**: Adjusted `radar/tests/py/test_radar_ar.py` to cover the canonical rule group naming and accurate scenario identification behavior.
+
+
 # 1.0.0 (2026-05-05)
 
 ## Added

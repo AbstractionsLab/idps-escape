@@ -1,6 +1,10 @@
 <agent_config os="Linux">
 <localfile>
-    <location>/var/log/suspicious_login.log</location>
+    <location>/var/log/apache2/access.log</location>
+    <log_format>syslog</log_format>
+</localfile>
+<localfile>
+    <location>/var/log/apache2/other_vhosts_access.log</location>
     <log_format>syslog</log_format>
 </localfile>
 </agent_config>

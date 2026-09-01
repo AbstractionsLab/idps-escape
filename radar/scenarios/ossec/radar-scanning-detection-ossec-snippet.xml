@@ -1,0 +1,15 @@
+<command>
+    <name>radar_ar_scanning</name>
+    <executable>radar_ar.py</executable>
+</command>
+<active-response>
+    <disabled>no</disabled>
+    <command>radar_ar_scanning</command>
+    <location>server</location>
+    <rules_id>100830</rules_id>
+</active-response>
+
+<localfile>
+    <location>/var/ossec/logs/radar/radar_ar_audit.log</location>
+    <log_format>json</log_format>
+</localfile>

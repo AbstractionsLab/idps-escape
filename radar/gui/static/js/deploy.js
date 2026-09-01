@@ -7,12 +7,31 @@ function switchTab(tab) {
   document.querySelectorAll(".subnav__item").forEach(el => {
     el.classList.toggle("subnav__item--active", el.dataset.tab === tab);
   });
-  ["build", "run", "health", "status"].forEach(t => {
+  ["build", "run", "health", "onboard", "groups", "teardown"].forEach(t => {
     const panel = document.getElementById(`tab-${t}`);
     if (panel) panel.style.display = t === tab ? "" : "none";
   });
   const logCard = document.getElementById("deploy-log-card");
   if (logCard) logCard.style.display = tab === "status" ? "none" : "";
+}
+
+function switchSubTab(parentTab, subtab) {
+  const parent = document.getElementById(`tab-${parentTab}`);
+  if (!parent) return;
+  parent.querySelectorAll(".subtabs__item").forEach(el => {
+    el.classList.toggle("subtabs__item--active", el.dataset.subtab === subtab);
+  });
+  parent.querySelectorAll(".subtab-panel").forEach(el => {
+    el.style.display = el.id === `subtab-${parentTab}-${subtab}` ? "" : "none";
+  });
+}
+
+function toggleCoreOnly() {
+  const coreOnly = document.getElementById("b-core-only").checked;
+  const scenarioGroup = document.getElementById("b-scenario-group");
+  const scenarioSelect = document.getElementById("b-scenario");
+  if (scenarioGroup) scenarioGroup.style.opacity = coreOnly ? "0.45" : "";
+  if (scenarioSelect) scenarioSelect.disabled = coreOnly;
 }
 
 function _toast(msg, kind) {
@@ -33,15 +52,11 @@ function _selectedAgents() {
 
 function _collectSpec(action) {
   if (action === "build") {
-    const selected = _selectedAgents();
+    const coreOnly = document.getElementById("b-core-only").checked;
     return {
       action: "build",
-      scenario: document.getElementById("b-scenario").value,
-      agent_mode: document.getElementById("b-agent").value,
-      manager_mode: document.getElementById("b-manager").value,
-      manager_exists: document.getElementById("b-manager-exists").checked,
-      ssh_key: document.getElementById("b-ssh-key").value.trim(),
-      limit_agents: selected.length > 0 ? selected : null,
+      core_only: coreOnly,
+      scenario: coreOnly ? "" : document.getElementById("b-scenario").value,
     };
   }
   if (action === "run") {
@@ -52,12 +67,12 @@ function _collectSpec(action) {
     };
   }
   if (action === "health") {
+    const scenarioEl = document.getElementById("h-scenario");
+    const agentNamesEl = document.getElementById("h-agent-names");
     return {
       action: "health",
-      scenario: document.getElementById("h-scenario").value,
-      agent_mode: document.getElementById("h-agent").value,
-      manager_mode: document.getElementById("h-manager").value,
-      ssh_key: document.getElementById("h-ssh-key").value.trim(),
+      scenario: scenarioEl ? scenarioEl.value : "all",
+      agent_names: agentNamesEl ? agentNamesEl.value.trim() : "",
     };
   }
   return {};
@@ -89,19 +104,113 @@ async function previewCmd(action) {
   }
 }
 
+async function previewUndoScenario() {
+  const target = document.getElementById("ub-preview");
+  const scenario = document.getElementById("ub-scenario").value;
+  if (!target) return;
+  target.textContent = "Resolving…";
+  try {
+    const res = await fetch("/api/deploy/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "undo-scenario", scenario }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      target.textContent = "$ " + data.cmd;
+      target.classList.remove("deploy-preview--err");
+    } else {
+      target.textContent = data.error || "preview failed";
+      target.classList.add("deploy-preview--err");
+    }
+  } catch (e) {
+    target.textContent = e.message;
+    target.classList.add("deploy-preview--err");
+  }
+}
+
+async function undoScenario() {
+  const scenario = document.getElementById("ub-scenario").value;
+  if (!scenario) {
+    _toast("Select a scenario first", "warn");
+    return;
+  }
+  if (!confirm(`Undo the deploy for "${scenario}"? This resets its group config and removes its `
+             + `active-response wiring. Shared files/blocks are left in place. Safe to re-run.`)) {
+    return;
+  }
+
+  await _streamPost(
+    "/api/deploy/undo-scenario",
+    { scenario },
+    "undoscenario",
+    {
+      startMsg: `Undoing deploy for '${scenario}'…`,
+      doneToast: "Scenario undo complete",
+      failToast: "Undo failed",
+    }
+  );
+}
+
 function _setRunning(action, running) {
-  const runBtn = document.getElementById({
-    build: "b-run-btn", run: "r-run-btn", health: "h-run-btn",
-  }[action]);
+  const runBtnIds = {
+    build: "b-run-btn", run: "r-run-btn", health: "h-run-btn", onboard: "o-run-btn", assigngroup: "ga-run-btn",
+    unassigngroup: "ga-unassign-btn", deregister: "dr-run-btn", undoscenario: "ub-run-btn", teardown: "td-run-btn",
+    enrollmentwindow: ["ew-open-btn", "ew-close-btn"],
+  }[action];
   const stopBtn = document.getElementById({
-    build: "b-stop-btn", run: "r-stop-btn", health: "h-stop-btn",
+    build: "b-stop-btn", run: "r-stop-btn", health: "h-stop-btn", onboard: "o-stop-btn", assigngroup: "ga-stop-btn",
+    unassigngroup: "ga-stop-btn", deregister: "dr-stop-btn", undoscenario: "ub-stop-btn", teardown: "td-stop-btn",
+    enrollmentwindow: "ew-stop-btn",
   }[action]);
-  if (runBtn) runBtn.disabled = running;
+  (Array.isArray(runBtnIds) ? runBtnIds : [runBtnIds]).forEach(id => {
+    const btn = id && document.getElementById(id);
+    if (btn) btn.disabled = running;
+  });
   if (stopBtn) stopBtn.style.display = running ? "" : "none";
   document.querySelectorAll(".subnav__item").forEach(el => {
     el.style.pointerEvents = running ? "none" : "";
     el.style.opacity = running ? "0.55" : "";
   });
+}
+
+function _copyText(text) {
+  if (!text) {
+    _toast("Nothing to copy", "warn");
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => _toast("Copied", "ok"),
+      () => _fallbackCopy(text)
+    );
+  } else {
+    // navigator.clipboard is only exposed in secure contexts (HTTPS, or
+    // http://localhost). Plain HTTP on a LAN address -- a common way to
+    // reach this GUI -- leaves navigator.clipboard undefined, and calling
+    // .writeText on it throws synchronously, before any .then/.catch ever
+    // runs. That's a silent failure from the user's point of view: no
+    // toast, nothing copied. Fall back to the older selection-based copy.
+    _fallbackCopy(text);
+  }
+}
+
+function _fallbackCopy(text) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    ta.style.top = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    _toast(ok ? "Copied" : "Copy failed -- select the text and copy manually", ok ? "ok" : "fail");
+  } catch (e) {
+    _toast("Copy failed -- select the text and copy manually", "fail");
+  }
 }
 
 function clearLog() {
@@ -112,10 +221,7 @@ function clearLog() {
 function copyLog() {
   const log = document.getElementById("deploy-log");
   if (!log) return;
-  navigator.clipboard.writeText(log.textContent).then(
-    () => _toast("Copied", "ok"),
-    () => _toast("Copy failed", "fail")
-  );
+  _copyText(log.textContent);
 }
 
 function stopStream() {
@@ -158,16 +264,434 @@ async function runAction(action) {
 
     if (res.status === 403) {
       const body = await res.json().catch(() => ({}));
-      if (body.need_ssh) {
-        const ok = await window.RADAR.promptSSHPassphrase();
+      if (body.need_sudo) {
+        const ok = await window.RADAR.promptSudoPassword();
         if (ok) { _setRunning(action, false); runAction(action); return; }
-        _appendLog("[cancelled — SSH passphrase not set]\n");
+        _appendLog("[cancelled — sudo password not set]\n");
         return;
       }
-      if (body.need_vault) {
-        const ok = await window.RADAR.promptVaultUnlock();
-        if (ok) { _setRunning(action, false); runAction(action); return; }
-        _appendLog("[cancelled — vault not unlocked]\n");
+    }
+
+    if (!res.ok || !res.body) {
+      const txt = await res.text().catch(() => "");
+      _appendLog(`[HTTP ${res.status}] ${txt}\n`);
+      _toast("Request failed", "fail");
+      return;
+    }
+
+    const reader = res.body.getReader();
+    _currentReader = reader;
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      _appendLog(chunk);
+    }
+    _appendLog(`\n[${new Date().toLocaleTimeString()}] Done.\n`);
+    const failed = /\[ERROR\]|\[!\]/.test(fullText);
+    _toast(failed ? `${action} failed` : `${action} finished`, failed ? "fail" : "ok");
+  } catch (e) {
+    if (e.name === "AbortError") {
+      _appendLog("\n[stream aborted by user]\n");
+      _toast("Stopped", "warn");
+    } else {
+      _appendLog(`\n[error] ${e.message}\n`);
+      _toast(`${action} failed`, "fail");
+    }
+  } finally {
+    _currentReader = null;
+    _currentAbortController = null;
+    _setRunning(action, false);
+  }
+}
+
+async function _streamPost(url, body, runningKey, { startMsg, doneToast, failToast } = {}) {
+  clearLog();
+  _appendLog(`[${new Date().toLocaleTimeString()}] ${startMsg || "Working…"}\n\n`);
+  _setRunning(runningKey, true);
+  _currentAbortController = new AbortController();
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: _currentAbortController.signal,
+    });
+
+    if (!res.ok || !res.body) {
+      const txt = await res.text().catch(() => "");
+      _appendLog(`[HTTP ${res.status}] ${txt}\n`);
+      _toast("Request failed", "fail");
+      return;
+    }
+
+    const reader = res.body.getReader();
+    _currentReader = reader;
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      _appendLog(chunk);
+    }
+    _appendLog(`\n[${new Date().toLocaleTimeString()}] Done.\n`);
+
+    // The backend can complete the HTTP request "successfully" while still
+    // reporting that nothing actually happened (e.g. an agent name that
+    // didn't resolve to anything on the manager) -- don't claim success
+    // unless the content actually says so.
+    const failed = /\[ERROR\]|\[!\]|"resolved":\s*false/.test(fullText);
+    _toast(failed ? (failToast || "Failed") : (doneToast || "Done"), failed ? "fail" : "ok");
+  } catch (e) {
+    if (e.name === "AbortError") {
+      _appendLog("\n[stream aborted by user]\n");
+      _toast("Stopped", "warn");
+    } else {
+      _appendLog(`\n[error] ${e.message}\n`);
+      _toast(failToast || "Failed", "fail");
+    }
+  } finally {
+    _currentReader = null;
+    _currentAbortController = null;
+    _setRunning(runningKey, false);
+  }
+}
+
+async function mintToken() {
+  const scenarioSelect = document.getElementById("o-scenario");
+  const scenario = scenarioSelect.value;
+  const isShared = scenarioSelect.selectedOptions[0]?.dataset.shared === "true";
+  const expiryMinutes = parseInt(document.getElementById("o-expiry").value, 10) || 60;
+  const managerAddress = document.getElementById("o-manager-address").value.trim();
+
+  let groups = `default,${scenario}`;
+  if (isShared) {
+    groups += ",radar_shared";
+  }
+
+  const copyWrap = document.getElementById("o-cmd-copy-wrap");
+  if (copyWrap) copyWrap.style.display = "none";
+
+  clearLog();
+  _appendLog(`[${new Date().toLocaleTimeString()}] Minting enrollment token…\n\n`);
+  _setRunning("onboard", true);
+  _currentAbortController = new AbortController();
+
+  try {
+    const res = await fetch("/api/deploy/mint-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ groups, expiry_minutes: expiryMinutes, manager_address: managerAddress }),
+      signal: _currentAbortController.signal,
+    });
+
+    if (res.status === 403) {
+      const body = await res.json().catch(() => ({}));
+      if (body.need_sudo) {
+        const ok = await window.RADAR.promptSudoPassword();
+        if (ok) { _setRunning("onboard", false); mintToken(); return; }
+        _appendLog("[cancelled — sudo password not set]\n");
+        return;
+      }
+    }
+
+    if (!res.ok || !res.body) {
+      const txt = await res.text().catch(() => "");
+      _appendLog(`[HTTP ${res.status}] ${txt}\n`);
+      _toast("Request failed", "fail");
+      return;
+    }
+
+    const reader = res.body.getReader();
+    _currentReader = reader;
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      _appendLog(chunk);
+    }
+    _appendLog(`\n[${new Date().toLocaleTimeString()}] Done.\n`);
+    const failed = /\[ERROR\]|\[!\]/.test(fullText);
+    _toast(failed ? "Mint token failed" : "Token minted", failed ? "fail" : "ok");
+    _extractBootstrapCmd();
+  } catch (e) {
+    if (e.name === "AbortError") {
+      _appendLog("\n[stream aborted by user]\n");
+      _toast("Stopped", "warn");
+    } else {
+      _appendLog(`\n[error] ${e.message}\n`);
+      _toast("Mint token failed", "fail");
+    }
+  } finally {
+    _currentReader = null;
+    _currentAbortController = null;
+    _setRunning("onboard", false);
+  }
+}
+
+function _extractBootstrapCmd() {
+  const log = document.getElementById("deploy-log");
+  const copyWrap = document.getElementById("o-cmd-copy-wrap");
+  const copyText = document.getElementById("o-cmd-copy-text");
+  if (!log || !copyWrap || !copyText) return;
+  const match = log.textContent.match(/^\s*sudo\s+\.\/bootstrap-agent\.sh.*$/m);
+  if (match) {
+    const cmd = match[0].trim();
+    copyText.textContent = cmd;
+    copyWrap.style.display = "";
+  } else {
+    console.warn("[deploy] could not find the bootstrap-agent.sh line in mint-token output; showing full log only");
+    copyWrap.style.display = "none";
+  }
+}
+
+function copyBootstrapCmd() {
+  const copyText = document.getElementById("o-cmd-copy-text");
+  if (!copyText) return;
+  _copyText(copyText.textContent);
+}
+
+async function assignAgentGroup() {
+  const agentName = document.getElementById("ga-agent-name").value.trim();
+  const scenario = document.getElementById("ga-scenario").value;
+  const agentIp = document.getElementById("ga-agent-ip").value.trim();
+
+  clearLog();
+  _appendLog(`[${new Date().toLocaleTimeString()}] Assigning agent to groups…\n\n`);
+  _setRunning("assigngroup", true);
+  _currentAbortController = new AbortController();
+
+  try {
+    const res = await fetch("/api/deploy/assign-agent-group", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agent_name: agentName, scenario, agent_ip: agentIp }),
+      signal: _currentAbortController.signal,
+    });
+
+    if (!res.ok || !res.body) {
+      const txt = await res.text().catch(() => "");
+      _appendLog(`[HTTP ${res.status}] ${txt}\n`);
+      _toast("Request failed", "fail");
+      return;
+    }
+
+    const reader = res.body.getReader();
+    _currentReader = reader;
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      _appendLog(chunk);
+    }
+    _appendLog(`\n[${new Date().toLocaleTimeString()}] Done.\n`);
+    const failed = /\[ERROR\]|\[!\]|"resolved":\s*false/.test(fullText);
+    _toast(failed ? "Assign group failed" : "Group assigned", failed ? "fail" : "ok");
+  } catch (e) {
+    if (e.name === "AbortError") {
+      _appendLog("\n[stream aborted by user]\n");
+      _toast("Stopped", "warn");
+    } else {
+      _appendLog(`\n[error] ${e.message}\n`);
+      _toast("Assign group failed", "fail");
+    }
+  } finally {
+    _currentReader = null;
+    _currentAbortController = null;
+    _setRunning("assigngroup", false);
+  }
+}
+
+async function unassignAgentGroup() {
+  const agentName = document.getElementById("ga-agent-name").value.trim();
+  const scenario = document.getElementById("ga-scenario").value;
+  const agentIp = document.getElementById("ga-agent-ip").value.trim();
+
+  if (!agentName && !agentIp) {
+    _toast("Enter an agent name or IP first", "warn");
+    return;
+  }
+  if (!scenario) {
+    _toast("Select a scenario first", "warn");
+    return;
+  }
+
+  await _streamPost(
+    "/api/deploy/unassign-agent-group",
+    { agent_name: agentName, scenario, agent_ip: agentIp },
+    "unassigngroup",
+    {
+      startMsg: "Removing agent from scenario groups…",
+      doneToast: "Group unassigned",
+      failToast: "Unassign group failed",
+    }
+  );
+}
+
+async function deregisterAgent() {
+  const agentName = document.getElementById("dr-agent-name").value.trim();
+  const agentIp = document.getElementById("dr-agent-ip").value.trim();
+  const noPurge = document.getElementById("dr-no-purge").checked;
+
+  if (!agentName) {
+    _toast("Enter an agent name first", "warn");
+    return;
+  }
+  if (!confirm(`Deregister agent "${agentName}" from the manager? This can be re-run safely if it's already gone.`)) {
+    return;
+  }
+
+  await _streamPost(
+    "/api/deploy/deregister-agent",
+    { agent_name: agentName, agent_ip: agentIp, no_purge: noPurge },
+    "deregister",
+    {
+      startMsg: "Deregistering agent…",
+      doneToast: "Agent deregistered",
+      failToast: "Deregister failed",
+    }
+  );
+}
+
+async function enrollmentWindowAction(action) {
+  const minutes = parseInt(document.getElementById("ew-minutes").value, 10) || 30;
+  const spec = { action, minutes };
+  const labels = { open: "Opening", close: "Closing", status: "Checking" }[action];
+
+  clearLog();
+  _appendLog(`[${new Date().toLocaleTimeString()}] ${labels} enrollment window…\n\n`);
+  _setRunning("enrollmentwindow", true);
+  _currentAbortController = new AbortController();
+
+  try {
+    const res = await fetch("/api/deploy/enrollment-window", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(spec),
+      signal: _currentAbortController.signal,
+    });
+
+    if (res.status === 403) {
+      const body = await res.json().catch(() => ({}));
+      if (body.need_sudo) {
+        const ok = await window.RADAR.promptSudoPassword();
+        if (ok) { _setRunning("enrollmentwindow", false); enrollmentWindowAction(action); return; }
+        _appendLog("[cancelled — sudo password not set]\n");
+        return;
+      }
+    }
+
+    if (!res.ok || !res.body) {
+      const txt = await res.text().catch(() => "");
+      _appendLog(`[HTTP ${res.status}] ${txt}\n`);
+      _toast("Request failed", "fail");
+      return;
+    }
+
+    const reader = res.body.getReader();
+    _currentReader = reader;
+    const decoder = new TextDecoder("utf-8");
+    let fullText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      _appendLog(chunk);
+    }
+    _appendLog(`\n[${new Date().toLocaleTimeString()}] Done.\n`);
+    const failed = /\[ERROR\]|\[!\]|ERROR:/.test(fullText);
+    _toast(failed ? "Failed" : "Done", failed ? "fail" : "ok");
+  } catch (e) {
+    if (e.name === "AbortError") {
+      _appendLog("\n[stream aborted by user]\n");
+      _toast("Stopped", "warn");
+    } else {
+      _appendLog(`\n[error] ${e.message}\n`);
+      _toast("Failed", "fail");
+    }
+  } finally {
+    _currentReader = null;
+    _currentAbortController = null;
+    _setRunning("enrollmentwindow", false);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const cb = document.getElementById("td-confirm");
+  const btn = document.getElementById("td-run-btn");
+  const removeDataCb = document.getElementById("td-remove-data");
+  const label = document.getElementById("td-confirm-label");
+
+  const syncConfirmLabel = () => {
+    if (!label || !removeDataCb) return;
+    label.textContent = removeDataCb.checked
+      ? "I understand this permanently deletes all manager data and cannot be undone."
+      : "I understand this stops the manager stack (data is kept on disk).";
+  };
+
+  if (cb && btn) {
+    cb.addEventListener("change", () => { btn.disabled = !cb.checked; });
+  }
+  if (removeDataCb) {
+    removeDataCb.addEventListener("change", () => {
+      syncConfirmLabel();
+      // Force re-confirmation any time the destructiveness of the action changes.
+      if (cb) cb.checked = false;
+      if (btn) btn.disabled = true;
+    });
+  }
+  syncConfirmLabel();
+});
+
+async function teardownStack() {
+  const confirmed = document.getElementById("td-confirm").checked;
+  if (!confirmed) return;
+
+  const removeData = document.getElementById("td-remove-data").checked;
+  const warning = removeData
+    ? "This permanently deletes all manager data (indices, dashboards, agent enrollment state, certs) and cannot be undone. Continue?"
+    : "This stops and removes the manager containers. Data on disk is left in place. Continue?";
+  if (!confirm(warning)) {
+    return;
+  }
+
+  clearLog();
+  _appendLog(`[${new Date().toLocaleTimeString()}] Tearing down the manager stack${removeData ? " (removing data)" : ""}…\n\n`);
+  _setRunning("teardown", true);
+  _currentAbortController = new AbortController();
+
+  try {
+    const res = await fetch("/api/deploy/teardown", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: true, remove_data: removeData }),
+      signal: _currentAbortController.signal,
+    });
+
+    if (res.status === 403) {
+      const body = await res.json().catch(() => ({}));
+      if (body.need_sudo) {
+        const ok = await window.RADAR.promptSudoPassword();
+        if (ok) { _setRunning("teardown", false); teardownStack(); return; }
+        _appendLog("[cancelled — sudo password not set]\n");
         return;
       }
     }
@@ -186,173 +710,27 @@ async function runAction(action) {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      _appendLog(chunk);
+      _appendLog(decoder.decode(value, { stream: true }));
     }
     _appendLog(`\n[${new Date().toLocaleTimeString()}] Done.\n`);
-    _toast(`${action} finished`, "ok");
+    _toast("Teardown complete", "ok");
   } catch (e) {
     if (e.name === "AbortError") {
       _appendLog("\n[stream aborted by user]\n");
       _toast("Stopped", "warn");
     } else {
       _appendLog(`\n[error] ${e.message}\n`);
-      _toast(`${action} failed`, "fail");
+      _toast("Teardown failed", "fail");
     }
   } finally {
     _currentReader = null;
     _currentAbortController = null;
-    _setRunning(action, false);
+    _setRunning("teardown", false);
+    // _setRunning unconditionally re-enables the button; re-apply the
+    // checkbox's own state so it doesn't become clickable again without
+    // re-confirming.
+    const cb = document.getElementById("td-confirm");
+    const btn = document.getElementById("td-run-btn");
+    if (cb && btn) btn.disabled = !cb.checked;
   }
 }
-
-function _overallIcon(overall) {
-  if (overall === "ok") return '<span class="hc-icon hc-icon--ok">✓</span>';
-  if (overall === "fail") return '<span class="hc-icon hc-icon--fail">✗</span>';
-  if (overall === "warn") return '<span class="hc-icon hc-icon--warn">!</span>';
-  return '<span class="hc-icon" style="color:var(--text-muted)">?</span>';
-}
-
-function _overallClass(overall) {
-  if (overall === "ok") return "hc-overall--ok";
-  if (overall === "fail") return "hc-overall--fail";
-  return "hc-overall--warn";
-}
-
-function _checkIcon(status) {
-  if (status === "ok") return '<span class="hc-icon hc-icon--ok">✓</span>';
-  if (status === "fail") return '<span class="hc-icon hc-icon--fail">✗</span>';
-  return '<span class="hc-icon hc-icon--warn">!</span>';
-}
-
-function _renderStatusResults(results, boundScenarios) {
-  const body = document.getElementById("status-body");
-  if (!results || results.length === 0) {
-    body.innerHTML = '<div class="status-empty">No nodes found in inventory.</div>';
-    return;
-  }
-
-  const managers = results.filter(r => r.type === "manager");
-  const agents = results.filter(r => r.type === "agent");
-
-  let html = "";
-
-  if (managers.length > 0) {
-    html += `<div class="status-section-label">Managers</div>`;
-    for (const node of managers) {
-      html += _renderStatusCard(node, boundScenarios);
-    }
-  }
-
-  if (agents.length > 0) {
-    html += `<div class="status-section-label" style="margin-top:18px">Agents</div>`;
-    for (const node of agents) {
-      html += _renderStatusCard(node, boundScenarios);
-    }
-  }
-
-  body.innerHTML = html;
-}
-
-function _renderStatusCard(node, boundScenarios) {
-  const overall = node.overall || "unknown";
-  const checks = node.checks || [];
-  const okCount = node.ok || 0;
-  const warnCount = node.warn || 0;
-  const failCount = node.fail || 0;
-
-  const summaryBadges = [
-    failCount > 0 ? `<span class="status-tally status-tally--fail">${failCount} fail</span>` : "",
-    warnCount > 0 ? `<span class="status-tally status-tally--warn">${warnCount} warn</span>` : "",
-    okCount > 0 ? `<span class="status-tally status-tally--ok">${okCount} ok</span>` : "",
-  ].filter(Boolean).join("");
-
-  const nodeIcon = node.type === "manager" ? "M" : "A";
-  const nodeColor = node.type === "manager" ? "var(--blue)" : "var(--green)";
-
-  let checksHtml = "";
-  if (checks.length === 0) {
-    checksHtml = `<div class="status-check-empty">No check data returned.</div>`;
-  } else {
-    for (const c of checks) {
-      const detail = (c.detail || "").replace(/^(OK|WARN|FAIL)\s*[-–]?\s*/i, "");
-      checksHtml += `
-        <div class="status-check-row status-check-row--${c.status}">
-          ${_checkIcon(c.status)}
-          <span class="status-check-detail">${_escHtml(detail)}</span>
-        </div>`;
-    }
-  }
-
-  return `
-    <div class="status-node-card status-node-card--${overall}">
-      <div class="status-node-header">
-        <div class="status-node-icon" style="background:${nodeColor}20;color:${nodeColor};border:1px solid ${nodeColor}40">${nodeIcon}</div>
-        <div class="status-node-name mono">${_escHtml(node.name)}</div>
-        <div class="hc-overall ${_overallClass(overall)}" style="margin-left:8px">${overall.toUpperCase()}</div>
-        <div class="status-tally-row">${summaryBadges}</div>
-      </div>
-      <div class="status-checks">${checksHtml}</div>
-    </div>`;
-}
-
-function _escHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-async function refreshStatus() {
-  const btn = document.getElementById("status-refresh-btn");
-  const body = document.getElementById("status-body");
-  if (btn) btn.disabled = true;
-  body.innerHTML = '<div class="status-empty" style="color:var(--text-muted)">Checking nodes…</div>';
-
-  try {
-    const res = await fetch("/api/deploy/status", { credentials: "same-origin" });
-
-    if (res.status === 403) {
-      const b = await res.json().catch(() => ({}));
-      if (b.need_ssh) {
-        body.innerHTML = '<div class="status-empty">SSH passphrase required — set it using the key icon in the header, then refresh.</div>';
-        await window.RADAR.promptSSHPassphrase();
-        return;
-      }
-      if (b.need_vault) {
-        body.innerHTML = '<div class="status-empty">Vault locked — unlock it using the lock icon in the header, then refresh.</div>';
-        await window.RADAR.promptVaultUnlock();
-        return;
-      }
-    }
-
-    const data = await res.json();
-    if (!data.ok) {
-      body.innerHTML = `<div class="status-empty" style="color:var(--red-text)">${_escHtml(data.error || "Unknown error")}</div>`;
-      return;
-    }
-    _renderStatusResults(data.results, data.bound_scenarios || []);
-  } catch (e) {
-    body.innerHTML = `<div class="status-empty" style="color:var(--red-text)">${_escHtml(e.message)}</div>`;
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-/*document.addEventListener("DOMContentLoaded", () => {
-  const agentMode = document.getElementById("b-agent");
-  const agentSelectWrap = document.getElementById("b-agent-select-wrap");
-  const agentListLocal = document.getElementById("b-agent-list-local");
-  const agentListRemote = document.getElementById("b-agent-list-remote");
-  if (agentMode && agentSelectWrap) {
-    agentMode.addEventListener("change", () => {
-      const isRemote = agentMode.value === "remote";
-      const isLocal = agentMode.value === "local";
-      agentSelectWrap.style.display = (isRemote || isLocal) ? "" : "none";
-      if (agentListLocal) agentListLocal.style.display = isLocal ? "" : "none";
-      if (agentListRemote) agentListRemote.style.display = isRemote ? "" : "none";
-      document.querySelectorAll(".agent-select-cb").forEach(cb => { cb.checked = false; });
-    });
-  }
-});*/

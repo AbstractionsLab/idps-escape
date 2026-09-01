@@ -1,0 +1,89 @@
+#!/var/ossec/framework/python/bin/python3
+"""
+Deployment layout (see roles/wazuh_manager/tasks/enrichment.yml):
+  /var/ossec/integrations/custom-radar-enrich
+  /var/ossec/integrations/radar_enrichment/geoip.py
+  /var/ossec/integrations/radar_enrichment/state_store.py
+  /var/ossec/integrations/radar_enrichment/enrichment.py
+"""
+import json
+import os
+import sys
+import traceback
+from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "radar_enrichment"))
+
+ENRICHED_LOG_PATH = "/var/ossec/logs/radar/enriched_auth.log"
+ERROR_LOG_PATH = "/var/ossec/logs/radar/enrichment_errors.log"
+CITY_DB_PATH = "/var/ossec/etc/radar/GeoLite2-City.mmdb"
+ASN_DB_PATH = "/var/ossec/etc/radar/GeoLite2-ASN.mmdb"
+
+
+def log_error(msg: str) -> None:
+    try:
+        os.makedirs(os.path.dirname(ERROR_LOG_PATH), exist_ok=True)
+        with open(ERROR_LOG_PATH, "a") as f:
+            f.write(f"{datetime.now(timezone.utc).isoformat()} {msg}\n")
+        os.chmod(ERROR_LOG_PATH, 0o660)
+    except Exception:
+        pass
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        log_error("no alert file argument received")
+        return
+
+    try:
+        with open(sys.argv[1]) as f:
+            alert = json.load(f)
+    except Exception as e:
+        log_error(f"could not read/parse alert file {sys.argv[1]}: {e}")
+        return
+
+    full_log = alert.get("full_log", "") or ""
+    if "RADAR outcome=" in full_log:
+        return
+
+    from enrichment import parse_auth_line
+    parsed = parse_auth_line(full_log)
+    if parsed is None:
+        return
+    event_ts, username, srcip, outcome = parsed
+
+    try:
+        import maxminddb
+
+        from enrichment import RadarEnricher
+        from state_store import UserStateStore
+
+        store = UserStateStore()
+        city_reader = maxminddb.open_database(CITY_DB_PATH)
+        asn_reader = maxminddb.open_database(ASN_DB_PATH)
+        result = RadarEnricher(store, city_reader, asn_reader).enrich(username, srcip, event_ts, outcome)
+    except Exception:
+        log_error(f"enrichment failed for alert {alert.get('id')}:\n{traceback.format_exc()}")
+        return
+
+    try:
+        os.makedirs(os.path.dirname(ENRICHED_LOG_PATH), exist_ok=True)
+    except Exception:
+        pass
+
+    try:
+        with open(ENRICHED_LOG_PATH, "a") as f:
+            f.write(full_log + result["tail"] + "\n")
+    except Exception as e:
+        log_error(f"could not write enriched log for alert {alert.get('id')}: {e}")
+    else:
+        try:
+            os.chmod(ENRICHED_LOG_PATH, 0o660)
+        except PermissionError:
+            pass
+        except Exception:
+            pass
+
+
+if __name__ == "__main__":
+    main()

@@ -1,12 +1,13 @@
 # RADAR GUI
 
-A Flask-based web interface for managing, deploying, and monitoring RADAR scenarios. It covers the full operational lifecycle: connector configuration, infrastructure inventory, active response tuning, deployment, and health checking.
+A Flask-based web interface for managing, deploying, and monitoring RADAR scenarios. It covers the operational lifecycle: connector configuration, active response tuning, deployment, agent/group management, and health checking.
 
 ## Table of contents
 
 - [Running the GUI](#running-the-gui)
 - [Pages](#pages)
 - [Architecture](#architecture)
+- [REST API](#rest-api)
 
 ---
 
@@ -19,19 +20,10 @@ A Flask-based web interface for managing, deploying, and monitoring RADAR scenar
 
 ### Setup
 
-Create and activate a virtual environment, then install the dependencies:
+From RADAR root `radar/`:
 
 ```bash
-cd radar/gui
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-### Starting the server
-
-```bash
-python app.py
+./radar.sh gui
 ```
 
 The server listens on `http://localhost:5000` by default. 
@@ -53,10 +45,6 @@ Configures the active response logic per bound scenario. Settings cover:
 
 All changes are saved immediately to `ar.yaml` on submit.
 
-### Infrastructure (`/infrastructure`)
-
-Displays the full Ansible inventory: managers and agents, their connection type, IP, and credential status. Provides forms for adding, editing, and deleting managers and agents. For remote nodes, you can store an Ansible `become` password encrypted in an Ansible Vault file under `host_vars/`.
-
 ### Connectors (`/connectors`)
 
 Manages credentials and URLs for all external integrations. Values are written to the `.env` file at `RADAR_ROOT`. TLS certificates are stored under `.certs/`. Connectors:
@@ -74,13 +62,25 @@ Each connector has a **Test** button that performs a live connectivity check.
 
 ### Deploy (`/deploy`)
 
-Three sub-tabs:
+Six tabs, two of which have their own second-level sub-tabs:
 
-**Build & deploy** - runs `build-radar.sh` to deploy a scenario via Ansible. Selects manager location (local docker-compose or remote SSH) and agent location (local containers or SSH agents). Streams Ansible output in real time.
+**Scenario Management** — *Deploy scenario* sub-tab runs `build-radar.sh` for the selected scenario (with a **Plain Wazuh only** option for `--core-only`, no scenario applied). *Undeploy scenario* sub-tab reverses a scenario's manager-side deployment (group config, `ossec.conf` block, and any decoder/rule/list file no longer shared by another deployed scenario).
 
-**Run Anomaly Detector** - runs `run-radar.sh` to create the OpenSearch detector and monitor for a hybrid or ML scenario. Optionally ingests the training dataset first.
+**Agent Management** — *Onboard agent* sub-tab mints a short-lived enrollment token (also opening the port 1515 firewall window for its lifetime) and shows a ready-to-run `bootstrap-agent.sh` command with a copy button. *Deregister agent* sub-tab removes an agent's registration from the manager entirely. *Enrollment Window* sub-tab opens/closes/checks the port 1515 firewall rule independently.
 
-**Status** - polls all inventory nodes for health and shows per-check results inline.
+**Group Management** — assigns an already-enrolled agent to a scenario's group(s) from the manager side (no SSH needed), or unenrolls it (leaving `default` untouched).
+
+**Anomaly Detector** — runs `run-radar.sh` to create the OpenSearch detector and monitor for a Hybrid or Anomaly ML scenario. Optionally ingests the training dataset first. Only scenarios that use the OpenSearch AD pipeline appear here.
+
+**Status** — runs `health-radar.sh` (filesystem/container checks plus Wazuh API checks) and streams the result.
+
+**Teardown** — stops (and optionally purges) the manager/indexer/dashboard/webhook containers.
+
+Deploying/undeploying, minting a token, opening/closing the enrollment window, and tearing down all need the sudo password — the GUI prompts for it once per session and holds it in memory only.
+
+### Not currently reachable: Infrastructure (`/infrastructure`)
+
+`templates/infrastructure.html` and `static/js/infrastructure.js` still exist on disk, but the `/infrastructure` route and every `/api/infrastructure/*` endpoint are commented out in `app.py`.
 
 ---
 
@@ -92,29 +92,28 @@ gui/
 ├── requirements.txt        Python dependencies
 ├── templates/              Jinja2 HTML templates
 │   ├── base.html
-│   ├── infrastructure.html
 │   ├── active_responses.html
 │   ├── connectors.html
-│   └── deploy.html
+│   ├── deploy.html
+│   └── infrastructure.html
 ├── static/
 │   ├── js/                 Frontend JavaScript
-│   │   ├── main.js         Vault / SSH modal logic, global nav
-│   │   ├── infrastructure.js
+│   │   ├── main.js         Sudo-password / vault modal logic, global nav, SSH badge
 │   │   ├── active_responses.js
 │   │   ├── connectors.js
-│   │   └── deploy.js
+│   │   ├── deploy.js
+│   │   └── infrastructure.js
 │   └── css/
 │       └── main.css
 └── orchestrator/           Backend modules
-    ├── inventory.py        Read/write inventory.yaml
     ├── ar_config.py        Read/write ar.yaml
     ├── connectors.py       Read/write .env, connectivity tests
-    ├── deploy.py           Build command assembly, process streaming
-    ├── health.py           Per-node health checks
-    └── vault.py            Ansible Vault encryption, SSH passphrase session store
+    ├── deploy.py           Command assembly, process streaming, Wazuh API calls for some steps
+    ├── health.py           Per-node health checks (used by the dead /infrastructure page's own health button; the live Status tab under Deploy calls into wazuh_api directly instead)
+    └── vault.py            Sudo-password session store (used for all privileged Deploy-page actions)
 ```
 
-Vault passwords and SSH passphrases are held in a short-lived in-process session dictionary keyed by a random cookie (`radar_vault_sid`). They are never written to disk.
+The sudo password is held in a short-lived in-process session dictionary keyed by a random cookie (`radar_vault_sid`). They are never written to disk.
 
 ---
 
@@ -128,7 +127,4 @@ The GUI exposes a JSON REST API under `/api/`. All endpoints are served by the s
 |--------|---------------|
 | `/api/scenarios` | List scenarios, read and write AR config, bind / unbind |
 | `/api/connectors` | Read, write, and test connector settings |
-| `/api/infrastructure` | CRUD for managers and agents, credential management, health checks |
-| `/api/deploy` | Build, run AD, health-check, preview, and stream status |
-| `/api/vault` | Vault status, create, unlock, lock |
-| `/api/ssh` | SSH passphrase status, set, clear |
+| `/api/deploy` | Build, undeploy, onboard/deregister agent, assign/unassign group, enrollment window, run AD, health-check, teardown, preview, and stream status for each |

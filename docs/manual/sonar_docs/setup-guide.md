@@ -325,7 +325,7 @@ SONAR is included in the main IDPS-ESCAPE stack:
 
 ```bash
 # Build container
-docker build -f sonar.Dockerfile -t sonar:latest .
+docker build -f sonar/Dockerfile.sonar -t sonar:latest .
 
 # Run in docker-compose stack
 docker-compose up -d sonar

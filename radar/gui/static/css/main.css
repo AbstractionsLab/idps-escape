@@ -162,6 +162,25 @@ input, select, textarea { font-family: var(--font); }
 .subnav__item:hover { color: var(--text-primary); }
 .subnav__item--active { color: var(--text-primary); border-bottom-color: var(--blue); font-weight: 500; }
 
+/* ── Sub-tabs (secondary, nested within a top-level panel) ── */
+.subtabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.subtabs__item {
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.subtabs__item:hover { color: var(--text-primary); }
+.subtabs__item--active { color: var(--text-primary); border-bottom-color: var(--blue); font-weight: 500; }
+
 /* ── Content ── */
 .content { padding: 24px 28px; flex: 1; }
 
@@ -663,19 +682,19 @@ tr.row--hidden { display: none; }
   display: flex; align-items: center; gap: 10px;
   padding: 9px 12px; border-radius: var(--radius); border: 1px solid var(--border);
 }
+.tier-row--0 { background: #f8f9fa; border-color: #d1d5db; }
 .tier-row--1 { background: var(--blue-light); border-color: var(--blue-border); }
 .tier-row--2 { background: var(--amber-light); border-color: var(--amber-border); }
-.tier-row--3 { background: #faf5ff; border-color: var(--purple-border); }
-.tier-row--4 { background: var(--red-light); border-color: var(--red-border); }
+.tier-row--3 { background: var(--red-light); border-color: var(--red-border); }
 .tier-badge {
   width: 24px; height: 24px; border-radius: 3px;
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700; flex-shrink: 0; letter-spacing: 0.02em;
 }
+.tier-badge--0 { background: #6b7280; color: #fff; }
 .tier-badge--1 { background: var(--blue); color: #fff; }
 .tier-badge--2 { background: var(--amber); color: #fff; }
-.tier-badge--3 { background: var(--purple); color: #fff; }
-.tier-badge--4 { background: var(--red); color: #fff; }
+.tier-badge--3 { background: var(--red); color: #fff; }
 .tier-row__body { flex: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .tier-row__label { font-size: 12px; color: var(--text-secondary); }
 .tier-row__range { display: flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 12px; }
@@ -705,10 +724,10 @@ tr.row--hidden { display: none; }
   border: 1px solid var(--border); border-radius: var(--radius);
 }
 .tier-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.tier-dot--0 { background: #6b7280; }
 .tier-dot--1 { background: var(--blue); }
 .tier-dot--2 { background: var(--amber); }
-.tier-dot--3 { background: var(--purple); }
-.tier-dot--4 { background: var(--red); }
+.tier-dot--3 { background: var(--red); }
 
 /* ── AR rules section ── */
 .rule-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

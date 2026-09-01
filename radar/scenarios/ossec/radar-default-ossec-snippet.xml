@@ -7,5 +7,13 @@
     <disabled>no</disabled>
     <command>radar_ar_default</command>
     <location>server</location>
-    <rules_id>100401,100402,100404,100405</rules_id>
+    <rules_id>100401,100402,100404,100405,23503,23504,23505</rules_id>
+</active-response>
+
+<active-response>
+    <disabled>no</disabled>
+    <command>radar_ar_default</command>
+    <location>server</location>
+    <rules_group>authentication_failures,</rules_group>
+<!--authentication_failures,|vulnerability-detector,-->
 </active-response>

@@ -4,6 +4,7 @@ import sys
 import json
 import os
 import re
+import time
 import yaml
 import smtplib
 import ssl
@@ -73,6 +74,19 @@ def _get_tier_boundaries(cfg: dict):
     if t1_max > 1.0:
         t1_max = 1.0
     return t1_min, t1_max, t2_max
+
+
+def _dotted_get(data: dict, path: str):
+    if not isinstance(data, dict):
+        return None
+    if path in data:
+        return data[path]
+    node = data
+    for part in path.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
 
 
 class EnvLoader:
@@ -182,26 +196,63 @@ class ScenarioIdentifier:
         self.logger = logger
         self.scenarios = cfg.get("scenarios") or {}
 
+    @staticmethod
+    def _rule_ids(block: dict) -> set:
+        return {str(x) for x in (block.get("rule_ids") or [])}
+
+    @staticmethod
+    def _rule_groups(block: dict) -> set:
+        return {str(g).strip().lower() for g in (block.get("rule_groups") or []) if _safe_str(g).strip()}
+
     def identify(self, alert: dict):
-        rule_id = _safe_str((alert.get("rule") or {}).get("id"))
+        rule = alert.get("rule") or {}
+        rule_id = _safe_str(rule.get("id"))
+        alert_groups = {str(g).strip().lower() for g in (rule.get("groups") or []) if _safe_str(g).strip()}
+
         for scenario_name, scfg in self.scenarios.items():
-            ad_rules = [str(x) for x in (((scfg.get("ad") or {}).get("rule_ids")) or [])]
-            sig_rules = [str(x) for x in (((scfg.get("signature") or {}).get("rule_ids")) or [])]
-            is_ad = rule_id in ad_rules
-            is_sig = rule_id in sig_rules
-            if not (is_ad or is_sig):
+            is_ad = rule_id in self._rule_ids(scfg.get("ad") or {})
+            is_sig = rule_id in self._rule_ids(scfg.get("signature") or {})
+            if is_ad or is_sig:
+                detection = "hybrid" if (is_ad and is_sig) else ("ad" if is_ad else "signature")
+                self.logger.log("INFO", "Scenario identified", scenario=scenario_name,
+                                 detection=detection, rule_id=rule_id, matched_by="rule_id")
+                return {"name": scenario_name, "detection": detection, "config": scfg,
+                        "alert": alert, "matched_by": "rule_id", "matched_group": None}
+
+        candidates = []
+        for scenario_name, scfg in self.scenarios.items():
+            ad_groups = self._rule_groups(scfg.get("ad") or {})
+            sig_groups = self._rule_groups(scfg.get("signature") or {})
+            ad_hit = bool(alert_groups & ad_groups)
+            sig_hit = bool(alert_groups & sig_groups)
+            if not (ad_hit or sig_hit):
                 continue
-            detection = "ad" if is_ad and not is_sig else "signature" if is_sig and not is_ad else "hybrid"
-            self.logger.log("INFO", "Scenario identified", scenario=scenario_name, detection=detection, rule_id=rule_id)
-            return {"name": scenario_name, "detection": detection, "config": scfg, "alert": alert}
-        self.logger.log("WARNING", "No scenario matched", rule_id=rule_id)
-        return None
+            detection = "hybrid" if (ad_hit and sig_hit) else ("ad" if ad_hit else "signature")
+            matched_group = sorted(alert_groups & (ad_groups if ad_hit else sig_groups))[0]
+            candidates.append((scenario_name, scfg, detection, matched_group))
+
+        if not candidates:
+            self.logger.log("WARNING", "No scenario matched", rule_id=rule_id, rule_groups=sorted(alert_groups))
+            return None
+
+        scenario_name, scfg, detection, matched_group = candidates[0]
+        if len(candidates) > 1:
+            self.logger.log(
+                "WARNING", "Multiple scenarios matched by rule_group; using first-listed in ar.yaml",
+                rule_id=rule_id, rule_groups=sorted(alert_groups),
+                candidates=[c[0] for c in candidates], chosen=scenario_name,
+            )
+
+        self.logger.log("INFO", "Scenario identified", scenario=scenario_name, detection=detection,
+                         rule_id=rule_id, matched_by="rule_group", matched_group=matched_group)
+        return {"name": scenario_name, "detection": detection, "config": scfg,
+                "alert": alert, "matched_by": "rule_group", "matched_group": matched_group}
 
 
 class OpenSearchClient:
     def __init__(self, logger: Logger):
         self.logger = logger
-        self.url = os.environ.get("OS_URL", "https://localhost:9200").rstrip("/")
+        self.url = os.environ.get("WAZUH_INDEXER_HOST", "https://localhost:9200").rstrip("/")
         self.user = os.environ.get("OS_USER", "admin")
         self.password = os.environ.get("OS_PASS", "")
         self.verify = _parse_bool(os.environ.get("OS_VERIFY_SSL", "false"), False)
@@ -304,6 +355,8 @@ class BaseScenario:
         self.logger = logger
         self.os = os_client
         self.iocs = IOCExtractor()
+        self.context_query_attempts = max(1, int(os.environ.get("AR_CONTEXT_QUERY_ATTEMPTS", "4")))
+        self.context_query_retry_seconds = _to_float(os.environ.get("AR_CONTEXT_QUERY_RETRY_SECONDS"), 1.5)
 
     def resolve_time_window(self, scenario: dict):
         alert = scenario["alert"]
@@ -351,20 +404,62 @@ class BaseScenario:
             raise ValueError("Missing/invalid alert timestamp; cannot build context window")
 
         effective_agent = self.resolve_effective_agent_name(scenario, [])
-        events = []
-        q = self.build_query(self.build_filters(t_start, t_end, effective_agent))
-        events = self.os.search(self.os.indices, q)
-
-        if not events and effective_agent:
-            filters_kw = [{"range": {"@timestamp": {"gte": t_start.isoformat(), "lte": t_end.isoformat()}}}, {"term": {"agent.name.keyword": effective_agent}}]
-            q2 = self.build_query(filters_kw)
-            events = self.os.search(self.os.indices, q2)
+        events = self._query_events_with_retry(scenario, t_start, t_end, effective_agent)
 
         iocs = self.iocs.extract(alert, events)
         resolved_effective_agent = self.resolve_effective_agent_name(scenario, events)
         window = {"start": t_start.isoformat(), "end": t_end.isoformat()}
         self.logger.log("INFO", "Events", events=events, iocs=iocs)
         return {"events": events, "event_count": len(events), "iocs": iocs, "window": window, "effective_agent": resolved_effective_agent}
+
+    def _query_events_with_retry(self, scenario: dict, t_start: datetime, t_end: datetime, effective_agent: str) -> list:
+        for attempt in range(1, self.context_query_attempts + 1):
+            q = self.build_query(self.build_filters(t_start, t_end, effective_agent))
+            raw = self.os.search(self.os.indices, q)
+            self.logger.log("INFO", "Context query attempt", attempt=attempt, query="agent.name",
+                             agent=effective_agent, hits=len(raw))
+
+            if not raw and effective_agent:
+                filters_kw = [
+                    {"range": {"@timestamp": {"gte": t_start.isoformat(), "lte": t_end.isoformat()}}},
+                    {"term": {"agent.name.keyword": effective_agent}},
+                ]
+                q2 = self.build_query(filters_kw)
+                raw = self.os.search(self.os.indices, q2)
+                self.logger.log("INFO", "Context query attempt", attempt=attempt, query="agent.name.keyword",
+                                 agent=effective_agent, hits=len(raw))
+
+            if raw:
+                return raw
+
+            if attempt < self.context_query_attempts:
+                time.sleep(self.context_query_retry_seconds)
+
+        self.logger.log(
+            "WARNING", "Context query returned no events after retries",
+            attempts=self.context_query_attempts, agent=effective_agent,
+            window_start=t_start.isoformat(), window_end=t_end.isoformat(),
+        )
+        return []
+
+    SOURCE_IP_FIELDS = ("srcip",)
+    _dotted_get = staticmethod(_dotted_get)
+
+    def _resolve_ip_from_data(self, data: dict) -> str:
+        for field in self.SOURCE_IP_FIELDS:
+            value = _safe_str(self._dotted_get(data, field)).strip()
+            if value:
+                return value
+        return ""
+
+    def resolve_target_ip(self, scenario: dict, context: dict):
+        alert = scenario.get("alert") or {}
+        ip = self._resolve_ip_from_data(alert.get("data") or {})
+        if ip:
+            return ip
+
+        ips = (context.get("iocs") or {}).get("ip") or []
+        return _safe_str(ips[0]).strip() if ips else None
 
     def resolve_ad_scores(self, scenario: dict):
         data = scenario["alert"].get("data") or {}
@@ -382,13 +477,33 @@ class BaseScenario:
 
         return grade_float, confidence_float
 
+    def build_analyze_payload(self, scenario: dict, context: dict) -> dict:
+        alert = scenario["alert"]
+        return {
+            "target_host": _safe_str((alert.get("agent") or {}).get("name")).strip(),
+            "timestamp": _safe_str(alert.get("timestamp")),
+        }
+
+    def build_display_extras(self, scenario: dict, context: dict) -> dict:
+        return {}
+
 
 class GeoipDetection(BaseScenario):
     pass
 
 
 class SuspiciousLogin(BaseScenario):
-    pass
+    def build_analyze_payload(self, scenario: dict, context: dict) -> dict:
+        alert = scenario["alert"]
+        iocs = context.get("iocs") or {}
+        users = iocs.get("user") or []
+        return {
+            "title":       "RADAR: suspicious login attempts",
+            "username":    users[0] if users else None,
+            "target_host": _safe_str((alert.get("agent") or {}).get("name")).strip(),
+            "src_ips":     iocs.get("ip") or [],
+            "timestamp":   _safe_str(alert.get("timestamp")),
+        }
 
 
 class LogVolume(BaseScenario):
@@ -408,6 +523,86 @@ class LogVolume(BaseScenario):
         return super().resolve_effective_agent_name(scenario, context_events)
 
 
+class ScanningDetection(BaseScenario):
+    SOURCE_IP_FIELDS = ("http.xff", "src_ip")
+
+    def _extract_http_fields(self, events: list) -> dict:
+        src_ips, uris, methods, agents = set(), set(), set(), set()
+        target_host = None
+        for ev in events:
+            data = ev.get("data") or {}
+            ip = self._resolve_ip_from_data(data)
+            if ip:
+                src_ips.add(ip)
+            v = _safe_str(self._dotted_get(data, "http.url")).strip()
+            if v:
+                uris.add(v)
+            v = _safe_str(self._dotted_get(data, "http.http_method")).strip()
+            if v:
+                methods.add(v)
+            v = _safe_str(self._dotted_get(data, "http.http_user_agent")).strip()
+            if v:
+                agents.add(v)
+            if not target_host:
+                v = _safe_str(self._dotted_get(data, "http.hostname")).strip()
+                if v:
+                    target_host = v
+        return {
+            "src_ip": sorted(src_ips), "uri": sorted(uris),
+            "http_method": sorted(methods), "user_agent": sorted(agents),
+            "target_host": target_host,
+        }
+
+    def build_analyze_payload(self, scenario: dict, context: dict) -> dict:
+        alert = scenario["alert"]
+        events = context.get("events") or []
+        fields = self._extract_http_fields(events)
+
+        src_ip = fields["src_ip"]
+        if not src_ip:
+            target_ip = self.resolve_target_ip(scenario, context)
+            if target_ip:
+                src_ip = [target_ip]
+
+        chain = []
+        for ev in sorted(events, key=lambda e: _safe_str(e.get("timestamp"))):
+            rule = ev.get("rule") or {}
+            rule_id = rule.get("id")
+            rule_desc = _safe_str(rule.get("description")).strip()
+            if rule_id is None or not rule_desc:
+                continue
+            try:
+                chain.append((int(rule_id), rule_desc))
+            except (TypeError, ValueError):
+                continue
+
+        fallback_host = _safe_str((alert.get("agent") or {}).get("name")).strip()
+        return {
+            "src_ip":          src_ip,
+            "uri":             fields["uri"],
+            "user_agents":     fields["user_agent"],
+            "http_method":     fields["http_method"] or None,
+            "target_host":     fields["target_host"] or fallback_host or None,
+            "timestamp":       _safe_str(alert.get("timestamp")),
+            "detection_chain": chain or None,
+        }
+
+    def build_display_extras(self, scenario: dict, context: dict) -> dict:
+        events = context.get("events") or []
+        fields = self._extract_http_fields(events)
+        src_ip = fields["src_ip"]
+        if not src_ip:
+            target_ip = self.resolve_target_ip(scenario, context)
+            if target_ip:
+                src_ip = [target_ip]
+        return {
+            "scan_src_ip": src_ip,
+            "uri":         fields["uri"],
+            "http_method": fields["http_method"],
+            "user_agent":  fields["user_agent"],
+        }
+
+
 class Registry:
     def __init__(self, logger: Logger, os_client: OpenSearchClient):
         self._default = BaseScenario(logger, os_client)
@@ -415,6 +610,7 @@ class Registry:
             "geoip_detection": GeoipDetection(logger, os_client),
             "suspicious_login": SuspiciousLogin(logger, os_client),
             "log_volume": LogVolume(logger, os_client),
+            "scanning_detection": ScanningDetection(logger, os_client),
             "default": BaseScenario(logger, os_client),
         }
 
@@ -425,10 +621,11 @@ class Registry:
 class DecipherClient:
 
     ANALYZE_ENDPOINTS = {
-        "suspicious_login": "/api/v0.1/analyze/suspicious_login",
+        "suspicious_login": "/api/v1/analyze/suspicious_login",
+        "scanning_detection": "/api/v1/analyze/suspicious_nt_scanning",
     }
     HEALTH_ENDPOINT = "/health"
-    INCIDENT_ENDPOINT = "/api/v0.1/incident"
+    INCIDENT_ENDPOINT = "/api/v1/incident"
     TIER_PRIORITY = {
         1: "priority-level:low",
         2: "priority-level:medium",
@@ -437,10 +634,17 @@ class DecipherClient:
 
     def __init__(self, logger: Logger):
         self.logger = logger
-        self.base_url = os.environ.get("DECIPHER_BASE_URL", "").strip().rstrip("/")
+        raw_base_url = os.environ.get("DECIPHER_BASE_URL", "").strip().rstrip("/")
+        self.base_url = raw_base_url
+        if raw_base_url and not re.match(r"^https?://", raw_base_url, re.IGNORECASE):
+            self.base_url = f"http://{raw_base_url}"
+            self.logger.log(
+                "WARNING", "DECIPHER_BASE_URL missing scheme; assuming http://",
+                configured=raw_base_url, using=self.base_url,
+            )
         self.verify_ssl = _parse_bool(os.environ.get("DECIPHER_VERIFY_SSL", "false"), False)
         self.timeout = int(os.environ.get("DECIPHER_TIMEOUT_SEC", "30"))
-        self._available: Optional[bool] = None  # None = not yet checked
+        self._available: Optional[bool] = None
 
         try:
             import requests
@@ -460,7 +664,10 @@ class DecipherClient:
             method=method, url=url, json=json_data,
             headers=headers, timeout=self.timeout, verify=self.verify_ssl,
         )
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except self._requests.exceptions.HTTPError as e:
+            raise RuntimeError(f"{e}: {resp.text}") from e
         return resp.json()
 
     def health_check(self) -> bool:
@@ -483,10 +690,10 @@ class DecipherClient:
             self._available = False
         return self._available
 
-    def analyze(self, scenario_name: str, iocs: dict, alert: dict) -> dict:
+    def analyze(self, scenario_name: str, payload: dict) -> dict:
         null_result = {
             "ok": False, "cti_score_T": 0.0, "labels": [],
-            "misp_events": [],
+            "misp_events": [], "identified_scanners": None,
             "case_id": None, "case_url": None, "raw": None,
         }
         endpoint = self.ANALYZE_ENDPOINTS.get(scenario_name)
@@ -498,24 +705,29 @@ class DecipherClient:
             )
             return null_result
 
-        payload = self._build_analyze_payload(scenario_name, iocs, alert)
+        self.logger.log("INFO", "DECIPHER analyze request payload", scenario=scenario_name, endpoint=endpoint, payload=payload)
         try:
             raw = self._request("POST", endpoint, json_data=payload)
             cti_score_T = _to_float(raw.get("severity"), 0.0)
             report = raw.get("report") or {}
             labels = list(report.get("log_summary") or [])
             misp_events = list(report.get("misp_events_found") or [])
+            identified_scanners = report.get("identified-scanners")
+            if identified_scanners is not None:
+                identified_scanners = list(identified_scanners)
             created_case = raw.get("created_case") or {}
             case_id = _safe_str(created_case.get("id"))
             case_url = _safe_str(created_case.get("link"))
             self.logger.log(
                 "INFO", "DECIPHER analyze completed",
                 scenario=scenario_name, cti_score_T=cti_score_T,
+                labels=labels, misp_events=misp_events, identified_scanners=identified_scanners,
+                report_keys=sorted(report.keys()),
                 case_id=case_id, case_url=case_url,
             )
             return {
                 "ok": True, "cti_score_T": cti_score_T, "labels": labels,
-                "misp_events": misp_events,
+                "misp_events": misp_events, "identified_scanners": identified_scanners,
                 "case_id": case_id, "case_url": case_url, "raw": raw,
             }
         except Exception as e:
@@ -524,22 +736,6 @@ class DecipherClient:
                 scenario=scenario_name, error=str(e),
             )
             return null_result
-
-    def _build_analyze_payload(self, scenario_name: str, iocs: dict, alert: dict) -> dict:
-        ts = _safe_str(alert.get("timestamp"))
-        target_host = _safe_str((alert.get("agent") or {}).get("name")).strip()
-
-        if scenario_name == "suspicious_login":
-            users = iocs.get("user") or []
-            return {
-                "title":       "RADAR: suspicious login attempts",
-                "username":    users[0] if users else None,
-                "target_host": target_host,
-                "src_ips":     iocs.get("ip") or [],
-                "timestamp":   ts,
-            }
-
-        return {"target_host": target_host, "timestamp": ts}
 
     def create_incident(self, decision: dict) -> dict:
         null_result = {"ok": False, "case_id": None, "case_url": None, "raw": None}
@@ -570,7 +766,6 @@ class DecipherClient:
         return {
             "priority_level": priority_level,
             "title": self._incident_title(scenario["name"]),
-            "template_id": scenario["name"],
             "description": {
                 "source": "RADAR",
                 "decision_id": _safe_str(decision.get("decision_id")),
@@ -607,6 +802,7 @@ class DecipherClient:
                     },
                 },
                 "misp_events": list(cti.get("misp_events") or []),
+                "identified_scanners": cti.get("identified_scanners"),
                 "iocs": {
                     "ip": list(iocs.get("ip") or []),
                     "user": list(iocs.get("user") or []),
@@ -617,6 +813,7 @@ class DecipherClient:
                     "country": list(iocs.get("country") or []),
                     "agent": list(iocs.get("agent") or []),
                 },
+                "extras": dict(decision.get("extras") or {}),
             },
         }
 
@@ -625,6 +822,7 @@ class DecipherClient:
             "suspicious_login": "RADAR: suspicious login attempts",
             "geoip_detection": "RADAR: suspicious geographic access",
             "log_volume": "RADAR: abnormal log volume",
+            "scanning_detection": "RADAR: scanning detected",
             "default": "RADAR: security incident detected",
         }
         return titles.get(scenario_name, f"RADAR: {scenario_name}")
@@ -635,30 +833,44 @@ class RiskEngine:
         self.logger = logger
 
     def _signature_likelihood(self, cfg: dict, alert: dict) -> float:
-        """Extract likelihood from config (scalar or rule-based list)."""
         likelihood_cfg = cfg.get("signature_likelihood", 0.0)
 
         if isinstance(likelihood_cfg, (int, float)):
             return _to_float(likelihood_cfg, 0.0)
 
-        rule_id = _safe_str((alert.get("rule") or {}).get("id")).strip()
-        if not rule_id:
+        if not isinstance(likelihood_cfg, list):
             return 0.0
 
-        if isinstance(likelihood_cfg, list):
-            for item in likelihood_cfg:
-                if not isinstance(item, dict):
-                    continue
-                rule_ids = item.get("rule_id")
-                if isinstance(rule_ids, list):
-                    rule_ids = [_safe_str(x).strip() for x in rule_ids]
-                elif rule_ids is not None:
-                    rule_ids = [_safe_str(rule_ids).strip()]
-                else:
-                    rule_ids = []
+        rule = alert.get("rule") or {}
+        rule_id = _safe_str(rule.get("id")).strip()
+        rule_groups = {_safe_str(g).strip().lower() for g in (rule.get("groups") or []) if _safe_str(g).strip()}
 
-                if rule_id in rule_ids:
-                    return _to_float(item.get("weight"), 0.0)
+        for item in likelihood_cfg:
+            if not isinstance(item, dict):
+                continue
+
+            raw_ids = item.get("rule_id")
+            if isinstance(raw_ids, list):
+                ids = [_safe_str(x).strip() for x in raw_ids]
+            elif raw_ids is not None:
+                ids = [_safe_str(raw_ids).strip()]
+            else:
+                ids = []
+
+            raw_groups = item.get("rule_group")
+            if isinstance(raw_groups, list):
+                groups = {_safe_str(x).strip().lower() for x in raw_groups}
+            elif raw_groups is not None:
+                groups = {_safe_str(raw_groups).strip().lower()}
+            else:
+                groups = set()
+
+            if rule_id and rule_id in ids:
+                return _to_float(item.get("weight"), 0.0)
+            if groups and (rule_groups & groups):
+                return _to_float(item.get("weight"), 0.0)
+            if not ids and not groups:
+                return _to_float(item.get("weight"), 0.0)
 
         return 0.0
 
@@ -777,15 +989,25 @@ class EmailNotifier:
         ctx = decision["context"]
         cti = decision["cti"]
 
+        identified_scanners = cti.get("identified_scanners")
+        if identified_scanners is None:
+            identified_scanners_display = "not searched"
+        elif not identified_scanners:
+            identified_scanners_display = "(none)"
+        else:
+            identified_scanners_display = ", ".join(identified_scanners)
+
         lines = [
             f"Scenario: {scenario['name']}",
             f"Detection: {scenario['detection']}",
+            f"Matched by: {scenario.get('matched_by', '')} {scenario.get('matched_group') or ''}".strip(),
             "",
             f"Timestamp: {alert.get('timestamp', '')}",
             f"Effective agent: {ctx.get('effective_agent', '')}",
             f"Alert agent: {agent.get('name', '')} (id={agent.get('id', '')})",
             f"Rule: {rule.get('id', '')} - {rule.get('description', '')}",
             f"Level: {rule.get('level', '')}",
+            f"Groups: {', '.join(rule.get('groups') or [])}",
             "",
             f"Risk score: {risk['risk_score']}",
             f"Tier: {risk['tier']}",
@@ -794,12 +1016,17 @@ class EmailNotifier:
             "",
             f"CTI score (T): {(risk.get('components') or {}).get('cti_score_T', 0.0)}",
             f"CTI labels: {', '.join(cti.get('labels') or [])}",
+            f"Identified scanners: {identified_scanners_display}",
             "",
             f"Context window: {json.dumps(ctx.get('window', {}), ensure_ascii=False)}",
             f"Context events: {ctx.get('event_count', 0)}",
             f"IOCs: {json.dumps(ctx.get('iocs', {}), ensure_ascii=False)}",
             "",
         ]
+
+        extras = decision.get("extras") or {}
+        if any(extras.values()):
+            lines += [f"Scenario details: {json.dumps(extras, ensure_ascii=False)}", ""]
 
         incident = decision.get("incident") or {}
         case_id = _safe_str(incident.get("case_id"))
@@ -895,7 +1122,7 @@ class ActionPlanner:
         tier = int(risk["tier"])
         allow_mitigation = bool(scfg.get("allow_mitigation", False))
 
-        planned = {"notify_email": tier >= 1, "mitigations": []}
+        planned = {"notify_email": tier >= 1, "mitigations": [], "withheld_reason": None}
 
         would_be_mitigations = []
         if tier == 2:
@@ -906,21 +1133,178 @@ class ActionPlanner:
         if allow_mitigation:
             planned["mitigations"] = would_be_mitigations
 
-        self.logger.log("INFO", "Actions planned", tier=tier, allow_mitigation=allow_mitigation, mitigations=planned["mitigations"], would_be_mitigations=would_be_mitigations)
+        if not planned["mitigations"]:
+            if not allow_mitigation:
+                planned["withheld_reason"] = "mitigation_disabled"
+            elif not would_be_mitigations:
+                planned["withheld_reason"] = "tier_out_of_mitigation_range"
+
+        self.logger.log("INFO", "Actions planned", tier=tier, allow_mitigation=allow_mitigation, mitigations=planned["mitigations"], would_be_mitigations=would_be_mitigations, withheld_reason=planned["withheld_reason"])
         return planned
 
 
+class AllowlistDecision:
+    """Outcome of the allowlist check for one target."""
+
+    ALLOWED = "allowed"
+    DECLINED = "declined"
+
+    REASON_ALLOWLIST = "allowlist"
+    REASON_UNREADABLE = "allowlist_unreadable"
+
+    def __init__(self, outcome: str, reason: Optional[str] = None, error: str = ""):
+        self.outcome = outcome
+        self.reason = reason
+        self.error = error
+
+    @property
+    def allowed(self) -> bool:
+        return self.outcome == self.ALLOWED
+
+
+class AllowlistGuard:
+    """Enforced only here, not in detection rules; an allowlisted source
+    still alerts. Unreadable is treated the same as allowlisted-declined,
+    fail-closed, since a missed block is recoverable and a bad one isn't."""
+
+    def __init__(self, logger: Logger, path: Optional[Path]):
+        self.logger = logger
+        self.path = path
+
+    @staticmethod
+    def _parse_cdb(text: str) -> set:
+        keys = set()
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            key = line.split(":", 1)[0].strip()
+            if key:
+                keys.add(key)
+        return keys
+
+    def check(self, target: str) -> AllowlistDecision:
+        if not self.path:
+            return AllowlistDecision(AllowlistDecision.ALLOWED)
+
+        try:
+            text = self.path.read_text(encoding="utf-8")
+        except Exception as e:
+            self.logger.log("ERROR", "Allowlist unreadable; declining active response",
+                             file=str(self.path), error=str(e))
+            return AllowlistDecision(AllowlistDecision.DECLINED, AllowlistDecision.REASON_UNREADABLE, str(e))
+
+        if _safe_str(target).strip() in self._parse_cdb(text):
+            self.logger.log("INFO", "Target is an authorized source; declining active response",
+                             target=target, file=str(self.path))
+            return AllowlistDecision(AllowlistDecision.DECLINED, AllowlistDecision.REASON_ALLOWLIST)
+
+        return AllowlistDecision(AllowlistDecision.ALLOWED)
+
+
+class AuditLog:
+    """Writes one JSON entry per AR decision into active-responses.log,
+    using the same line shape native AR scripts use, so it decodes via
+    Wazuh's shipped ar_log_json decoder (rule 650) with no custom file."""
+
+    RESULT_EXECUTED = "executed"
+    RESULT_DECLINED = "declined"
+
+    def __init__(self, logger: Logger, path: Path, ar_name: str = "active-response/bin/radar_ar.py"):
+        self.logger = logger
+        self.path = path
+        self.ar_name = ar_name
+
+    def write(self, *, decision_id: str, rule_id: str, source_ip: str, action: str,
+              tier: int, result: str, reason: Optional[str] = None, **extra) -> None:
+        entry = {
+            "decision_id": _safe_str(decision_id),
+            "rule_id": _safe_str(rule_id),
+            "source_ip": _safe_str(source_ip),
+            "action": _safe_str(action),
+            "tier": int(tier),
+            "result": _safe_str(result),
+        }
+        if reason:
+            entry["reason"] = _safe_str(reason)
+        for k, v in extra.items():
+            if v not in (None, ""):
+                entry[k] = v
+
+        ts = _utc_now().strftime("%Y/%m/%d %H:%M:%S")
+        line = f"{ts} {self.ar_name}: " + json.dumps(entry, separators=(",", ":"), ensure_ascii=False)
+        try:
+            with self.path.open("a", encoding="utf-8") as f:
+                f.write(line + "\n")
+        except Exception as e:
+            self.logger.log("ERROR", "Audit entry write failed", file=str(self.path), error=str(e))
+
+
 class ActionExecutor:
-    def __init__(self, logger: Logger, wazuh_api: WazuhApiClient):
+    def __init__(self, logger: Logger, wazuh_api: WazuhApiClient,
+                 guard: Optional[AllowlistGuard] = None,
+                 audit: Optional[AuditLog] = None):
         self.logger = logger
         self.wazuh_api = wazuh_api
+        self.guard = guard
+        self.audit = audit
 
     def execute(self, decision: dict, planned: dict) -> dict:
-        results = {"mitigations": []}
-        for cmd in planned.get("mitigations") or []:
-            for res in self._execute_mitigation(decision, cmd):
+        results = {"mitigations": [], "allowlist": None}
+
+        rule_id = _safe_str((decision["scenario"]["alert"].get("rule") or {}).get("id"))
+        tier = int((decision.get("risk") or {}).get("tier") or 0)
+        decision_id = _safe_str(decision.get("decision_id"))
+        target = _safe_str(decision.get("target_ip"))
+
+        mitigations = planned.get("mitigations") or []
+
+        # Nothing planned: still a decision, so still an audit entry.
+        if not mitigations:
+            self._audit(decision_id=decision_id, rule_id=rule_id, source_ip=target,
+                        action="none", tier=tier, result=AuditLog.RESULT_DECLINED,
+                        reason=planned.get("withheld_reason") or "no_mitigation_configured")
+            return results
+
+        # Allowlist is checked once per decision, before anything is dispatched.
+        guard_decision = self.guard.check(target) if self.guard else AllowlistDecision(AllowlistDecision.ALLOWED)
+        results["allowlist"] = guard_decision.outcome
+
+        if not guard_decision.allowed:
+            extra = {}
+            if guard_decision.reason == AllowlistDecision.REASON_UNREADABLE:
+                extra = {
+                    "allowlist_path": str(self.guard.path) if self.guard else "",
+                    "error": guard_decision.error,
+                }
+            for cmd in mitigations:
+                self._audit(decision_id=decision_id, rule_id=rule_id, source_ip=target,
+                            action=cmd, tier=tier, result=AuditLog.RESULT_DECLINED,
+                            reason=guard_decision.reason, **extra)
+            results["declined_reason"] = guard_decision.reason
+            return results
+
+        for cmd in mitigations:
+            executed = self._execute_mitigation(decision, cmd)
+            for res in executed:
                 results["mitigations"].append(res)
+                self._audit(
+                    decision_id=decision_id, rule_id=rule_id,
+                    source_ip=(res.get("args") or [target])[0],
+                    action=cmd, tier=tier,
+                    result=(AuditLog.RESULT_DECLINED if res.get("error") else AuditLog.RESULT_EXECUTED),
+                    reason=("dispatch_failed" if res.get("error") else None),
+                    error=res.get("error"),
+                )
+            if not executed:
+                self._audit(decision_id=decision_id, rule_id=rule_id, source_ip=target,
+                            action=cmd, tier=tier, result=AuditLog.RESULT_DECLINED,
+                            reason="unresolved_target")
         return results
+
+    def _audit(self, **kwargs) -> None:
+        if self.audit:
+            self.audit.write(**kwargs)
 
     def _execute_mitigation(self, decision: dict, command: str) -> list:
         scenario = decision["scenario"]
@@ -933,7 +1317,7 @@ class ActionExecutor:
             self.logger.log("ERROR", "Mitigation skipped, agent_id unresolved", command=command)
             return []
 
-        args_list = self._build_args(command, scenario, iocs)
+        args_list = self._build_args(command, scenario, iocs, _safe_str(decision.get("target_ip")))
         if not args_list:
             self.logger.log("ERROR", "Mitigation skipped, args unresolved", command=command)
             return []
@@ -961,14 +1345,16 @@ class ActionExecutor:
                     error=str(e),
                 )
                 resolved = None
-            
+
             if resolved:
                 return resolved
         alert_agent_id = _safe_str((scenario["alert"].get("agent") or {}).get("id")).strip()
         return alert_agent_id or None
 
-    def _build_args(self, command: str, scenario: dict, iocs: dict) -> list:
+    def _build_args(self, command: str, scenario: dict, iocs: dict, target_ip: str = "") -> list:
         if command == "firewall-drop":
+            if target_ip:
+                return [[target_ip]]
             ips = iocs.get("ip") or []
             return [[ips[0]]] if ips else []
 
@@ -1017,7 +1403,27 @@ class RadarActiveResponse:
         self.email = EmailNotifier(self.logger)
         self.wazuh_api = WazuhApiClient(self.logger)
         self.planner = ActionPlanner(self.logger)
+        # Guard/audit are attached per scenario in run(), once known.
         self.executor = ActionExecutor(self.logger, self.wazuh_api)
+
+    def _build_audit(self, scenario: dict) -> Optional[AuditLog]:
+        # Opt-in via allowlist_file: only a scenario that checks an
+        # allowlist needs the decision recorded.
+        scfg = scenario.get("config") or {}
+        if not _safe_str(scfg.get("allowlist_file")).strip():
+            return None
+        path = os.environ.get("AR_LOG_FILE", "/var/ossec/logs/active-responses.log")
+        return AuditLog(self.logger, Path(path))
+
+    def _build_guard(self, scenario: dict) -> AllowlistGuard:
+        scfg = scenario.get("config") or {}
+        configured = _safe_str(scfg.get("allowlist_file")).strip()
+        if not configured:
+            return AllowlistGuard(self.logger, None)
+        path = Path(configured)
+        if not path.is_absolute():
+            path = Path(os.environ.get("AR_OSSEC_ROOT", "/var/ossec")) / path
+        return AllowlistGuard(self.logger, path)
 
     def run(self) -> int:
         self.logger.log("INFO", "RADAR Active Response started")
@@ -1036,9 +1442,11 @@ class RadarActiveResponse:
         context = strategy.collect_context(scenario)
 
         if self.decipher.health_check():
-            cti = self.decipher.analyze(scenario["name"], context.get("iocs") or {}, alert)
+            payload = strategy.build_analyze_payload(scenario, context)
+            cti = self.decipher.analyze(scenario["name"], payload)
         else:
             cti = {"ok": False, "cti_score_T": 0.0, "labels": [],
+                   "misp_events": [], "identified_scanners": None,
                    "case_id": None, "case_url": None, "raw": None}
 
         ad_grade = None
@@ -1049,7 +1457,10 @@ class RadarActiveResponse:
         risk = self.risk_engine.compute(scenario, cti["cti_score_T"], ad_grade, ad_conf)
 
         decision_id = DecisionId.build(scenario, context)
-        decision = {"decision_id": decision_id, "scenario": scenario, "context": context, "cti": cti, "risk": risk}
+        target_ip = strategy.resolve_target_ip(scenario, context)
+        extras = strategy.build_display_extras(scenario, context)
+        decision = {"decision_id": decision_id, "scenario": scenario, "context": context,
+                    "cti": cti, "risk": risk, "target_ip": target_ip, "extras": extras}
 
         if self.decipher.health_check() and risk["tier"] >= 1:
             incident = self.decipher.create_incident(decision)
@@ -1057,6 +1468,8 @@ class RadarActiveResponse:
 
         planned = self.planner.plan(decision)
 
+        self.executor.guard = self._build_guard(scenario)
+        self.executor.audit = self._build_audit(scenario)
         exec_results = self.executor.execute(decision, planned)
         decision["exec_results"] = exec_results
 

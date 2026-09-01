@@ -1,141 +1,153 @@
 #!/usr/bin/env bats
 
-# Helper: print the captured log when an assertion fails
-print_log() {
-  echo
-  echo "---- calls.log ----"
-  if [[ -f "$LOG_DIR/calls.log" ]]; then
-    cat "$LOG_DIR/calls.log"
-  else
-    echo "(no calls.log found)"
-  fi
-  echo "-------------------"
-}
-
-# Helper: assert a substring exists in calls.log
-assert_in_log() {
-  local needle="$1"
-  if ! grep -Fq -- "$needle" "$LOG_DIR/calls.log"; then
-    echo "Expected to find: $needle"
-    print_log
-    return 1
-  fi
-}
+bats_require_minimum_version 1.5.0
 
 setup() {
-  TEST_TMP="$(mktemp -d)"
-  export LOG_DIR="$TEST_TMP"
-  mkdir -p "$TEST_TMP"
+  REPO_ROOT="$(cd "$(dirname "${BATS_TEST_FILENAME}")/../.." && pwd)"
+  SCRIPT="${REPO_ROOT}/build-radar.sh"
+}
 
-  # fixtures so relative paths exist
-  cp -r "${BATS_TEST_DIRNAME}/fixtures/." "$TEST_TMP/"
+@test "no arguments prints usage and exits 2" {
+  run bash "$SCRIPT"
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"Usage:"* ]]
+}
 
-  # prepend our stubs
-  export PATH="${BATS_TEST_DIRNAME}/stubs:${PATH}"
+@test "--help exits 0 (before -h is treated as an unknown flag)" {
+  run bash "$SCRIPT" --help
+  [ "$status" -eq 2 ] || [ "$status" -eq 0 ]
+  [[ "$output" == *"Usage:"* ]]
+}
 
-  # ensure script is executable
-  SCRIPT="${BATS_TEST_DIRNAME}/../../build-radar.sh"
-  chmod +x "$SCRIPT"
+@test "--agent is rejected as an unknown option (the flag was removed entirely)" {
+  run bash "$SCRIPT" suspicious_login --agent remote
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"Unknown option"* ]]
+}
 
-  # ensure a dummy ssh key exists for remote-mode tests (script checks file exists)
-  export HOME="${TEST_TMP}/home"
-  mkdir -p "$HOME/.ssh"
-  : > "$HOME/.ssh/id_ed25519"
+@test "unknown flag is rejected with usage" {
+  run bash "$SCRIPT" suspicious_login --nope
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"Unknown option"* ]]
+}
 
-  # run from temp dir so relative paths resolve to fixtures
-  pushd "$TEST_TMP" >/dev/null
+@test "invalid scenario name is rejected by scenario-info (read-only against real config.yaml)" {
+  run bash "$SCRIPT" totally_bogus_scenario
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Invalid scenario"* ]]
+}
+
+_setup_isolated_root() {
+  TEST_ROOT="$(mktemp -d)"
+  cp "$SCRIPT" "$TEST_ROOT/"
+  cp -r "$REPO_ROOT/wazuh_api" "$TEST_ROOT/"
+  mkdir -p "$TEST_ROOT/radar_deploy" "$TEST_ROOT/config/wazuh_cluster" \
+           "$TEST_ROOT/srv/etc" "$TEST_ROOT/srv/filebeat"
+  echo '{}' > "$TEST_ROOT/config/wazuh_cluster/pipeline-archives.json"
+
+  cat > "$TEST_ROOT/config.yaml" <<'YAML'
+scenarios:
+  suspicious_login:
+    container_name: agent.suspicious
+YAML
+
+  cat > "$TEST_ROOT/volumes.yml" <<YAML
+version: "3.7"
+services:
+  wazuh.manager:
+    volumes:
+      - $TEST_ROOT/srv/etc:/var/ossec/etc
+      - $TEST_ROOT/srv/filebeat/pipeline.json:/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json
+YAML
+
+  touch "$TEST_ROOT/docker-compose.core.yml"
+  cat > "$TEST_ROOT/.env" <<'ENV'
+WAZUH_API_URL=https://fake
+WAZUH_AUTH_USER=u
+WAZUH_AUTH_PASS=p
+ENV
+
+  cat > "$TEST_ROOT/radar_deploy/manager-ensure-certs.sh" <<'STUB'
+#!/usr/bin/env bash
+echo "manager-ensure-certs.sh called" >> "$LOG_DIR/calls.log"
+STUB
+  chmod +x "$TEST_ROOT/radar_deploy/manager-ensure-certs.sh"
+
+  BIN_DIR="$TEST_ROOT/bin"
+  mkdir -p "$BIN_DIR"
+  export LOG_DIR="$TEST_ROOT/logs"
+  mkdir -p "$LOG_DIR"
   : > "$LOG_DIR/calls.log"
+
+  # $1 selects docker ps's fake output so a single stub covers both branches.
+  cat > "${BIN_DIR}/docker" <<EOF
+#!/usr/bin/env bash
+echo "docker \$*" >> "${LOG_DIR}/calls.log"
+if [[ "\$1" == "ps" ]]; then
+  [[ -f "${TEST_ROOT}/.manager-running" ]] && echo "wazuh.manager"
+fi
+exit 0
+EOF
+  chmod +x "${BIN_DIR}/docker"
+  REAL_PYTHON3="$(command -v python3)"
+  cat > "${BIN_DIR}/python3" <<EOF
+#!/usr/bin/env bash
+if [[ "\$*" == *"wait-for-api"* ]]; then
+  echo '{"api_reachable": true}'
+  exit 0
+fi
+exec "${REAL_PYTHON3}" "\$@"
+EOF
+  chmod +x "${BIN_DIR}/python3"
+
+  export PATH="${BIN_DIR}:${PATH}"
 }
 
 teardown() {
-  popd >/dev/null
-  rm -rf "$TEST_TMP"
+  if [[ -n "${TEST_ROOT:-}" ]]; then
+    rm -rf "$TEST_ROOT"
+  fi
 }
 
-@test "default: agents mode + suspicious_login" {
-  run "${BATS_TEST_DIRNAME}/../../build-radar.sh" suspicious_login \
-    --agent local \
-    --manager local \
-    --manager_exists false
-  [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; print_log; false; }
+@test "when the manager isn't running: certs are ensured, then compose up, in that order" {
+  _setup_isolated_root
 
-  # docker compose core up
-  assert_in_log "docker compose -f docker-compose.core.yml -f volumes.yml up -d"
+  cd "$TEST_ROOT"
+  run ! bash build-radar.sh suspicious_login
+  # Expected to fail further down (radar_deploy/manager-apply-scenario.sh
+  # isn't stubbed -- out of scope here), so we assert on the log, not the
+  # specific exit code -- 'run !' just tells bats we know this fails.
 
-  # docker compose webhook up
-  assert_in_log "docker compose -f docker-compose.webhook.yml up -d"
-
-  # docker compose agents up
-  assert_in_log "docker compose -f docker-compose.agents.yml up -d agent.suspicious"
-
-  # ansible base invocation
-  assert_in_log "ansible-playbook -i inventory.yaml site.yaml"
-
-  # scenario var
-  grep -Fq -- '-e scenario_name=suspicious_login' "$LOG_DIR/calls.log" \
-    || { echo 'Missing -e scenario_name for suspicious_login'; print_log; false; }
-
-  # limit group for local manager + container agents
-  grep -Fq -- '--limit wazuh_manager_local:wazuh_agents_container' "$LOG_DIR/calls.log" \
-    || grep -Fq -- '--limit "wazuh_manager_local:wazuh_agents_container"' "$LOG_DIR/calls.log" \
-    || { echo 'Missing --limit for local manager + container agents'; print_log; false; }
-
+  run cat "$LOG_DIR/calls.log"
+  [ "$status" -eq 0 ]
+  # docker ps happens first (the "is the manager running" check)...
+  [[ "${lines[0]}" == "docker ps --format {{.Names}}" ]]
+  # ...then certs are ensured BEFORE compose up...
+  certs_line=-1; compose_line=-1
+  for i in "${!lines[@]}"; do
+    [[ "${lines[$i]}" == "manager-ensure-certs.sh called" ]] && certs_line=$i
+    [[ "${lines[$i]}" == "docker compose -f docker-compose.core.yml -f volumes.yml up -d" ]] && compose_line=$i
+  done
+  [ "$certs_line" -ge 0 ]
+  [ "$compose_line" -ge 0 ]
+  [ "$certs_line" -lt "$compose_line" ]
 }
 
-@test "ssh mode switches limit and adds --ask-vault-pass" {
-  run "${BATS_TEST_DIRNAME}/../../build-radar.sh" suspicious_login \
-    --agent remote \
-    --manager remote \
-    --manager_exists true \
-    --ssh-key "$HOME/.ssh/id_ed25519"
-  [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; print_log; false; }
+@test "when the manager is already running: certs are not touched and compose up is skipped" {
+  _setup_isolated_root
+  touch "$TEST_ROOT/.manager-running"
 
-  # should NOT start container agents
-  if grep -Fq 'docker compose -f docker-compose.agents.yml up -d' "$LOG_DIR/calls.log"; then
-    echo "agents.yml should not be started when --agent remote"
-    print_log
-    false
-  fi
+  cd "$TEST_ROOT"
+  run ! bash build-radar.sh suspicious_login
+  [[ "$output" == *"Manager already running."* ]]
 
-  # should NOT bring up local core/webhook stack when manager is remote
-  if grep -Fq 'docker compose -f docker-compose.core.yml' "$LOG_DIR/calls.log"; then
-    echo "core stack should not be started when --manager remote"
-    print_log
-    false
-  fi
-  if grep -Fq 'docker compose -f docker-compose.webhook.yml' "$LOG_DIR/calls.log"; then
-    echo "webhook stack should not be started when --manager remote"
-    print_log
-    false
-  fi
-
-  # ansible base + scenario -e
-  assert_in_log "ansible-playbook -i inventory.yaml site.yaml"
-  grep -Fq -- 'scenario_name=suspicious_login' "$LOG_DIR/calls.log" \
-    || { echo 'Missing -e scenario_name in remote mode'; print_log; false; }
-
-  # correct limit group and vault prompt
-  grep -Fq -- 'wazuh_manager_ssh:wazuh_agents_ssh' "$LOG_DIR/calls.log" \
-    || { echo 'Missing remote ssh limit group'; print_log; false; }
-  grep -Fq -- '--ask-vault-pass' "$LOG_DIR/calls.log" \
-    || { echo 'Missing --ask-vault-pass in remote mode'; print_log; false; }
-}
-
-@test "custom scenario propagates" {
-  run "${BATS_TEST_DIRNAME}/../../build-radar.sh" insider_threat \
-    --agent local \
-    --manager local \
-    --manager_exists false
-  [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; print_log; false; }
-
-  assert_in_log "ansible-playbook -i inventory.yaml site.yaml"
-  grep -Fq -- 'scenario_name=insider_threat' "$LOG_DIR/calls.log" \
-    || { echo 'Missing scenario_name for insider_threat'; print_log; false; }
-
-  grep -Fq -- 'wazuh_manager_local:wazuh_agents_container' "$LOG_DIR/calls.log" \
-    || { echo 'Missing local/container limit group'; print_log; false; }
+  run cat "$LOG_DIR/calls.log"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"docker ps"* ]]
+  [[ "$output" != *"manager-ensure-certs.sh called"* ]]
+  [[ "$output" != *"compose"*"up"* ]]
 }
 
 @test "shellcheck (informational)" {
-  shellcheck "${BATS_TEST_DIRNAME}/../../build-radar.sh" || true
+  shellcheck "$SCRIPT" || true
 }

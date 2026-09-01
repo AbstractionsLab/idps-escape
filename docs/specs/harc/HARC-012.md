@@ -19,11 +19,12 @@ The risk engine receives three input streams:
 - **Signature risk (S)**: Calculated from rule-based detection (likelihood × impact values from scenario configuration)
 - **CTI score (T)**: Aggregated from threat intelligence indicators (IP blacklists, malicious hashes, domain reputation)
 
-The weighted combination produces a normalized risk score $R \in [0,1]$, which drives tier-based response actions:
+The weighted combination produces a normalized risk score $R \in [0,1]$, which drives tier-based response actions. Four tiers are defined, delimited by the three configurable boundaries `tier1_min`, `tier1_max` and `tier2_max`; the normative tier semantics are specified in SRS-061.
 
-- Low tier (0.0-0.33): Email notification only
-- Medium tier (0.33-0.66): Email + case creation + light mitigation
-- High tier (0.66-1.0): Full response + strong containment actions
+- **Tier 0** (`R < tier1_min`, default boundary 0.0): audit logging only, no notification
+- **Tier 1** (`tier1_min ≤ R < tier1_max`, default boundary 0.33): email notification and Flowintel case creation
+- **Tier 2** (`tier1_max ≤ R < tier2_max`, default boundary 0.66): Tier 1 actions plus scenario mitigations, subject to `allow_mitigation`
+- **Tier 3** (`R ≥ tier2_max`): Tier 2 actions plus the scenario's strong containment mitigations
 
 ## Architecture Diagram
 

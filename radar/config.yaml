@@ -1,150 +1,24 @@
-default_scenario: insider_threat
+default_scenario: scanning_detection
+
+# Scenarios that share the radar_shared Wazuh group and its enrichment config
+shared_scenarios:
+  - suspicious_login
+  - geoip_detection
+
+# Scenarios needing the whitelist_countries CDB list deployed.
+whitelist_scenarios:
+  - geoip_detection
 
 # ---------------------------------------------------------------------------
 # Scenario definitions
 # Each scenario may carry optional sub-keys:
 #   ingest:   config for radar/scenarios/ingest_scripts/<scenario>/wazuh_ingest.py
-#   simulate: config for radar-test-framework/simulate/scenarios/<scenario>.py
 # ---------------------------------------------------------------------------
 scenarios:
-  insider_threat:
-    container_name: agent.insider
-    index_prefix: wazuh-ad-insider-threat
-    result_index: opensearch-ad-plugin-result-insider_threat
-    label_csv_path: insider_threat/dataset/answers*.csv
-    time_field: "@timestamp"
-    shingle_size: 8
-    categorical_field: "user.keyword"
-    detector_interval: 5
-    delay_minutes: 1
-    monitor_name: "InsiderThreat-Monitor"
-    trigger_name: "Insider-Threat-Detected"
-    anomaly_grade_threshold: 0.1
-    confidence_threshold: 0.1
-    features:
-      - feature_name: file_access_count
-        feature_enabled: true
-        aggregation_query:
-          file_access_count:
-            value_count:
-              field: user.keyword
-
-      - feature_name: volume_bytes
-        feature_enabled: true
-        aggregation_query:
-          volume_bytes:
-            sum:
-              field: content_bytes
-
-      - feature_name: distinct_file_count
-        feature_enabled: true
-        aggregation_query:
-          distinct_file_count:
-            cardinality:
-              field: filename.keyword
-
-  ddos_detection:
-    container_name: agent.ddos
-    container_port: 8800
-    index_prefix: wazuh-ad-ddos-detection
-    result_index: opensearch-ad-plugin-result-ddos_detection
-    label_csv_path: ddos_detection/dataset/Syn.csv
-    time_field: "@timestamp"
-    categorical_field: "Destination_IP.keyword"
-    detector_interval: 10
-    delay_minutes: 1
-    monitor_name: "DDoS-Monitor"
-    trigger_name: "DDoS-Attack-Detected"
-    anomaly_grade_threshold: 0.7
-    confidence_threshold: 0.7
-    features:
-      - feature_name: flow_packets_per_second
-        feature_enabled: true
-        aggregation_query:
-          flow_packets_per_second:
-            avg:
-              field: Flow_Packets_s
-
-      - feature_name: flow_bytes_per_second
-        feature_enabled: true
-        aggregation_query:
-          flow_bytes_per_second:
-            avg:
-              field: Flow_Bytes_s
-
-      - feature_name: syn_flag_count
-        feature_enabled: true
-        aggregation_query:
-          syn_flag_count:
-            sum:
-              field: SYN_Flag_Count
-
-      - feature_name: packet_length_average
-        feature_enabled: true
-        aggregation_query:
-          packet_length_average:
-            avg:
-              field: Packet_Length_Mean
-
-      - feature_name: total_bwd_packets
-        feature_enabled: true
-        aggregation_query:
-          total_bwd_packets:
-            avg:
-              field: Total_Backward_Packets
-
-  malware_communication:
-    container_name: agent.malcom
-    index_prefix: wazuh-ad-malware-c2
-    result_index: opensearch-ad-plugin-result-malware_communication
-    log_index_pattern: wazuh-ad-malware-c2-*
-    dataset_dir: malware_communication/dataset
-    time_field: "@timestamp"
-    categorical_field: "id.orig_h.keyword"
-    detector_interval: 10
-    delay_minutes: 1
-    monitor_name: "MalwareCommunication-Monitor"
-    trigger_name: "Malware-Communication-Detected"
-    anomaly_grade_threshold: 0.8
-    confidence_threshold: 0.85
-    features:
-      - feature_name: conn_count
-        feature_enabled: true
-        aggregation_query:
-          conn_count:
-            value_count:
-              field: uid.keyword
-
-      - feature_name: bytes_sent
-        feature_enabled: true
-        aggregation_query:
-          bytes_sent:
-            sum:
-              field: orig_bytes
-
-      - feature_name: bytes_received
-        feature_enabled: true
-        aggregation_query:
-          bytes_received:
-            sum:
-              field: resp_bytes
-
-      - feature_name: unique_dst_ips
-        feature_enabled: true
-        aggregation_query:
-          unique_dst_ips:
-            cardinality:
-              field: id.resp_h.keyword
-
-      - feature_name: unique_dst_ports
-        feature_enabled: true
-        aggregation_query:
-          unique_dst_ports:
-            cardinality:
-              field: id.resp_p.keyword
-
   log_volume:
-    container_name: agent.logvolume
+    display_name: "Log Volume Growth"
+    description: "Unusual spikes in log generation."
+    gui_visible: true
     index_prefix: wazuh-ad-log-volume-*
     result_index: opensearch-ad-plugin-result-log-volume
     log_index_pattern: wazuh-ad-log-volume-*
@@ -207,132 +81,17 @@ scenarios:
       # live documents exist at all. Should reflect the host's typical log size.
       baseline_bytes: 228654752
 
-    simulate:
-      # Timezone offset applied to ISO-format log timestamps.
-      timezone_offset: "+01:00"
-      # Hostname written into generated log lines.
-      hostname: "edge.vm"
-      # Directory where the spike file is created. Should be monitored by Wazuh
-      # so the size change is picked up and forwarded to OpenSearch.
-      target_dir: "/var/log"
-      # Name of the temporary file that is grown to simulate a log volume spike.
-      spike_filename: "ratf_log_volume_spike.log"
-      # Number of growth steps performed before the simulation ends.
-      steps: 10
-      # Bytes appended in the very first step. Each subsequent step multiplies
-      # this by growth_factor, producing exponential growth.
-      start_bytes: 268435456     # 256 MB
-      # Multiplier applied to the previous step's size at each iteration.
-      growth_factor: 1.5
-      # Seconds to sleep between steps, giving Wazuh time to ingest each increment.
-      sleep_seconds: 1
-      # Absolute ceiling on total bytes written across all steps combined.
-      # Acts as a safety guard against runaway disk consumption.
-      max_total_bytes: 10000000000  # 10 GB
-      # Per-step byte cap. Prevents any single step from writing an
-      # unreasonably large chunk regardless of growth_factor.
-      max_step_bytes: 1500000000   # 1.5 GB
-      # Internal I/O chunk size (bytes) used when appending to the spike file.
-      # Larger values are faster but consume more memory during the write.
-      write_chunk_bytes: 1048576   # 1 MB
-      # Minutes after the simulation completes before the spike file is deleted.
-      # Set to 0 to leave the file in place for manual inspection.
-      cleanup_minutes: 5
-
   suspicious_login:
-    container_name: agent.suspicious
-    index_prefix: wazuh-ad-suspicious-login
-    result_index: opensearch-ad-plugin-result-suspicious_login
-    log_index_pattern: wazuh-ad-suspicious-login-*
-    dataset_dir: suspicious_login/dataset
-    time_field: "@timestamp"
-    shingle_size: 8
-    categorical_field: "User ID.keyword"
-    detector_interval: 10
-    delay_minutes: 1
-    monitor_name: "SuspiciousLogin-Monitor"
-    trigger_name: "Suspicious-Login-Detected"
-    anomaly_grade_threshold: 0.8
-    confidence_threshold: 0.85
-    features:
-      - feature_name: login_count
-        feature_enabled: true
-        aggregation_query:
-          login_count:
-            value_count:
-              field: User ID.keyword
-
-      - feature_name: distinct_geo_country
-        feature_enabled: true
-        aggregation_query:
-          distinct_geo_country:
-            cardinality:
-              field: Country.keyword
-
-      - feature_name: login_hour_cardinality
-        feature_enabled: true
-        aggregation_query:
-          login_hour_cardinality:
-            cardinality:
-              field: event_hour
-
-    simulate:
-      # IANA timezone offset applied to ISO-format log timestamps.
-      timezone_offset: "+01:00"
-      # Hostname written into generated sshd log lines.
-      hostname: "edge.vm"
-      # Path to the auth log file where simulated sshd lines are appended.
-      log_path: "/var/log/auth.log"
-      # When true, appends to the log via `sudo tee -a` so the script can write
-      # to root-owned log files without running as root itself.
-      sudo_tee: true
-      # Linux username used in the simulated Accepted/Failed sshd log lines.
-      user: "test01"
-      # PID written into the sshd log lines. Use the real sshd PID on the host
-      # if you want the lines to blend with genuine sshd output.
-      sshd_pid: 1169457
-      # Source port used in the simulated failed login attempts.
-      fail_port: 1045
-      # Source port used in the simulated successful login at the end.
-      success_port: 60850
-      # Key fingerprint written into failed login log lines.
-      key_fingerprint_fail: "ED25519 SHA256:A."
-      # Key fingerprint written into the successful login log line.
-      key_fingerprint_success: "ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-      # List of source IPs cycled through for the failed attempts. Each IP
-      # produces one "Failed password" line. The first IP is also reused for
-      # the final successful login.
-      ip_pool:
-        - "8.8.8.8"
-        - "1.0.136.99"
-        - "89.31.143.90"
-        - "47.91.170.222"
-        - "150.95.255.38"
-        - "84.32.84.32"
-      # Total duration (seconds) over which failed attempts are spread before
-      # the final successful login is injected at the end of the window.
-      window_seconds: 60
+    display_name: "Suspicious Login"
+    description: "Brute force and impossible travel detection using signature + RCF baseline."
+    gui_visible: true
 
   geoip_detection:
-    container_name: agent.geoip
-    simulate:
-      # Timezone offset applied to ISO-format log timestamps.
-      timezone_offset: "+01:00"
-      # Hostname written into the generated sshd log line.
-      hostname: "edge.vm"
-      # Path to the auth log file where the simulated sshd line is appended.
-      log_path: "/var/log/auth.log"
-      # When true, appends to the log via `sudo tee -a` so the script can write
-      # to root-owned log files without running as root itself.
-      sudo_tee: true
-      # Linux username used in the simulated Accepted publickey log line.
-      user: "test01"
-      # PID written into the sshd log line.
-      sshd_pid: 1169457
-      # Source port written into the simulated successful login line.
-      success_port: 60850
-      # Source IP written into the log line. Should be a foreign IP that will
-      # be flagged as geographically anomalous by the detection rule.
-      ip: "8.8.8.8"
-      # Key fingerprint written into the successful login log line.
-      key_fingerprint_success: "ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    display_name: "GeoIP Detection"
+    description: "Detects logins from non-approved countries via whitelist comparison."
+    gui_visible: true
+
+  scanning_detection:
+    display_name: "Scanning Detection"
+    description: "Detects web-layer scanning and vulnerability scanner probes."
+    gui_visible: true

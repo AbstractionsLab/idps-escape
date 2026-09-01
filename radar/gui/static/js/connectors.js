@@ -94,7 +94,7 @@ async function saveConnector(name) {
   const sslPrefixMap = {
     opensearch: "os",
     dashboard: "dashboard",
-    flowintel: "flowintel",
+    decipher: "decipher",
   };
   const sslPrefix = sslPrefixMap[name];
   if (sslPrefix) {
@@ -140,7 +140,7 @@ async function testConnector(name) {
 }
 
 async function testAllConnectors() {
-  const connectors = ["opensearch", "wazuh-api", "dashboard", "smtp", "flowintel", "webhook"];
+  const connectors = ["opensearch", "wazuh-api", "dashboard", "smtp", "decipher", "maxmind", "webhook"];
   for (const name of connectors) {
     await testConnector(name);
   }

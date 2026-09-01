@@ -16,8 +16,8 @@ Detection relies on **custom rules, decoders, and whitelists**:
 
 - **Rules (`/radar/scenarios/rules/geoip_detection/a2-geoip-detection.xml`)**
     - Match log events with unusual geographic origin.
-    - **SSH login monitoring** (rules 100900–100903): Detects SSH authentication and Apache connection attempts from non-whitelisted countries.
-    - **Web access log monitoring** (rule 100902): Detects HTTP/HTTPS requests from non-whitelisted countries (Apache, Nginx).
+    - **SSH login monitoring** (rules 100900, 100901): Detects successful SSH authentication from non-whitelisted countries.
+    - **Web access log monitoring** (rule 100902, correlated by rule 100903): Detects HTTP/HTTPS requests from non-whitelisted countries (Apache, Nginx), with 100903 raising a higher-severity alert when 100902 recurs 300 times within 300 seconds. Active response is bound to 100900, 100901 and 100903 — a single rule 100902 match is recorded but does not by itself trigger a response.
 - **Decoders**
     - Standard SSH decoder for authentication logs.
     - Apache/Nginx web accesslog decoder: Parses web server access logs and enriches them with GeoIP country information.
@@ -29,8 +29,9 @@ Detection relies on **custom rules, decoders, and whitelists**:
 
 Active responses handle detected suspicious events:
 
-- **Email Notification (`/radar/scenarios/active_responses/radar_ar.py`)**
-    - Sends alert emails when a scenario rule is triggered.
+- **`/radar/scenarios/active_responses/radar_ar.py`**
+    - Computes a risk score for the alert via the RADAR risk engine and dispatches the response tier configured in `ar.yaml` — starting with an email notification at the lowest tier, and escalating to automated mitigations (`firewall-drop`) at higher tiers.
+    - In the shipped `ar.yaml`, `geoip_detection` has `allow_mitigation: true`, so automated mitigations execute by default once this scenario is deployed. See [radar-active-response.md](../radar-active-response.md) for the full tiering model.
 
 ### Manual setup
 
@@ -45,46 +46,18 @@ We distinguish between:
 
 #### Agent-side setup
 
-1. Copy `/radar/radar-helper/radar-helper.py` to the target host into `/opt/radar/radar-helper.py`:
-```bash
-mkdir -p /opt/radar
-mkdir -p /opt/radar/venv
-chown user:user /opt/radar -R
-chmod 755 /opt/radar
-```
-2. Ensure required Python packages are installed (paths must match what radar-helper.py expects):
-```bash
-apt-get update
-apt-get install -y \
-  python3 \
-  python3-venv \
-  python3-pip
-python3 -m venv /opt/radar/venv
-/opt/radar/venv/bin/pip install --upgrade pip
-/opt/radar/venv/bin/pip install maxminddb
-```
-3. Ensure required GeoIP databases installed in the required paths:
-```
-mkdir -p /usr/share/GeoIP
-chown user:user /usr/share/GeoIP
-chmod 755 /usr/share/GeoIP
-cp ../geoip/GeoLite2-City.mmdb /usr/share/GeoIP/GeoLite2-City.mmdb
-cp GeoLite2-ASN.mmdb  /usr/share/GeoIP/GeoLite2-ASN.mmdb
-```
-4. Copy `radar/radar-helper/radar-helper.service` service configurations and run it as a service so it continuously:
-```
-cp ../radar-helper/radar-helper.service /etc/systemd/system/radar-helper.service
-systemctl daemon-reload
-systemctl enable radar-helper.service
-systemctl start radar-helper.service
-```
-5. Configure Wazuh agent to monitor `/var/log/suspicious_login.log`:
+> **Enrichment is manager-side, not agent-side.** Earlier revisions of RADAR ran a `radar-helper.py` process on each agent to perform GeoIP enrichment locally. That process no longer exists — enrichment now happens once, centrally, on the manager (see step 4 in Manager-side Setup below). The agent only needs the Wazuh agent itself, shipping its raw logs unmodified.
+
+1. Install and enroll the Wazuh agent (e.g. via `bootstrap-agent.sh`, or your own Wazuh agent installation/enrollment process).
+2. Configure the agent to monitor `/var/log/apache2/access.log` and `/var/log/apache2/other_vhosts_access.log`:
 ```
 nano /var/ossec/etc/ossec.conf
 ```
 And paste the content of `/radar/scenarios/agent_configs/geoip_detection/radar-geoip-detection-agent-snippet.xml` into the end of file before the tag `</ossec_config>`
 
-6. Save the file and restart the agent:
+3. For SSH-based detection (rules 100900/100901), also paste the content of `/radar/scenarios/agent_configs/_shared/radar-shared-auth-log-agent-snippet.xml`, which ships `/var/log/auth.log`.
+
+4. Save the file and restart the agent:
 ```
 systemctl restart wazuh-agent
 ```
@@ -129,8 +102,9 @@ cp /radar/scenarios/active_responses/radar_ar.py /var/ossec/active-response/bin/
 chmod 750 /var/ossec/active-response/bin/*.py
 chown root:wazuh /var/ossec/active-response/bin/*.py
 ```
-6. Add the content of `/radar/scenarios/ossec/radar-geoip-detection-ossec-snippet.xml` inside `<ossec_config>` in `/var/ossec/etc/ossec.conf`.
-7. Restart Wazuh manager:
+6. Download the `GeoLite2-City`/`GeoLite2-ASN` databases into `/var/ossec/etc/radar/` using your `MAXMIND_LICENSE_KEY`, and copy the manager-side enrichment integration scripts: `/radar/manager-enrichment/custom-radar-enrich` and `/radar/manager-enrichment/custom-radar-web-enrich` into `/var/ossec/integrations/`, and `/radar/manager-enrichment/geoip.py`, `/radar/manager-enrichment/state_store.py`, `/radar/manager-enrichment/enrichment.py`, `/radar/manager-enrichment/web_enrichment.py` into `/var/ossec/integrations/radar_enrichment/`.
+7. Add the content of `/radar/scenarios/ossec/radar-geoip-detection-ossec-snippet.xml` inside `<ossec_config>` in `/var/ossec/etc/ossec.conf`. If SSH-based detection is also in use, add `/radar/scenarios/ossec/radar-shared-auth-log-ossec-snippet.xml` as well, which registers `custom-radar-enrich`.
+8. Restart Wazuh manager:
 ```
 /var/ossec/bin/wazuh-control restart
 ```

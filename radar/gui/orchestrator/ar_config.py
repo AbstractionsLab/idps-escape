@@ -92,6 +92,14 @@ def unbind_scenario(radar_root: str | Path, scenario_id: str) -> None:
             _write(p, data)
 
 
+def is_deployed(radar_root: str | Path, scenario_id: str) -> bool:
+    return bool(get_scenario(radar_root, scenario_id).get("active"))
+
+
+def mark_deployed(radar_root: str | Path, scenario_id: str, deployed: bool) -> None:
+    update_scenario(radar_root, scenario_id, {"active": deployed})
+
+
 def update_scenario(radar_root: str | Path, scenario_id: str, patch: dict) -> None:
     p = _ar_path(radar_root)
     with _lock:

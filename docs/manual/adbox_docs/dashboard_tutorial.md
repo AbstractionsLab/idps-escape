@@ -82,7 +82,7 @@ $ ./build-adbox.sh
 Run ADBox with the shipping option/flag:
 
 ```sh
-$ ./adbox.sh -u 13 -s
+$ ./adbox/adbox.sh -u 13 -s
 ```
 ![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_1-uc-13.png)
 
@@ -158,7 +158,7 @@ prediction:
 - **Tip 3**: Start the realtime prediction immediately after training, to avoid losing data points. If not, you can use a tailored historical use case to retrieve the missing windows.
 
 #### Start prediction
-Run `./adbox.sh -u 13 -s`
+Run `./adbox/adbox.sh -u 13 -s`
 
 ![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_27-realtime-2.png)
 ![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_28-realtime-3.png)

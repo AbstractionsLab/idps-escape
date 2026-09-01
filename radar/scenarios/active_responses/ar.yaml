@@ -6,20 +6,36 @@ scenarios:
         - "100402"
         - "100404"
         - "100405"
+        - "23503"
+        - "23504"
+        - "23505"
+      rule_groups:
+        - "authentication_failures"
     w_ad: 0.0
     w_sig: 0.7
     w_cti: 0.3
-    signature_likelihood: 0.6
+    signature_likelihood:
+      - rule_id: ["100401", "100402", "100404", "100405"]
+        weight: 0.6
+      - rule_id: "23503"
+        weight: 0.001
+      - rule_id: "23504"
+        weight: 0.005
+      - rule_id: "23505"
+        weight: 0.01
+      - rule_group: "authentication_failures"
+        weight: 0.3
     signature_impact: 0.5
     delta_signature_minutes: 5
     tiers:
-      tier1_min: 0.0
+      tier1_min: 0.15
       tier1_max: 0.33
       tier2_max: 0.66
     allow_mitigation: false
 
 
   geoip_detection:
+    active: false
     ad:
       rule_ids: []
     signature:
@@ -50,6 +66,7 @@ scenarios:
     allow_mitigation: true
   
   suspicious_login:
+    active: false
     ad:
       rule_ids: []
     signature:
@@ -84,6 +101,7 @@ scenarios:
     allow_mitigation: true
   
   log_volume:
+    active: false
     ad:
       rule_ids:
         - "100309"
@@ -104,3 +122,30 @@ scenarios:
     mitigations_tier3:
       - terminate_service.sh
     allow_mitigation: true
+
+  scanning_detection:
+    active: false
+    ad:
+      rule_ids: []
+    signature:
+      rule_ids:
+        - "100830"
+    w_ad: 0.0
+    w_sig: 0.7
+    w_cti: 0.3
+    delta_ad_minutes: 0
+    delta_signature_minutes: 5
+    signature_impact: 0.6
+    signature_likelihood:
+      - rule_id: ["100830"]
+        weight: 0.9
+    tiers:
+      tier1_min: 0.0
+      tier1_max: 0.33
+      tier2_max: 0.66
+    mitigations_tier2:
+      - firewall-drop
+    mitigations_tier3:
+      - firewall-drop
+    allowlist_file: etc/lists/radar_scanning_allowlist
+    allow_mitigation: false

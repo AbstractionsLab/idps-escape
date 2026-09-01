@@ -22,17 +22,13 @@
          class="nav-item {% if request.endpoint == 'active_responses' %}nav-item--active{% endif %}">
         RADAR Scenarios
       </a>
-      <a href="{{ url_for('infrastructure') }}"
-         class="nav-item {% if request.endpoint == 'infrastructure' %}nav-item--active{% endif %}">
-        Infrastructure
-      </a>
       <a href="{{ url_for('connectors') }}"
          class="nav-item {% if request.endpoint == 'connectors' %}nav-item--active{% endif %}">
         Connectors
       </a>
       <a href="{{ url_for('deploy') }}"
          class="nav-item {% if request.endpoint == 'deploy' %}nav-item--active{% endif %}">
-        Deploy
+        Deployment
       </a>
     </nav>
   </aside>
@@ -45,8 +41,6 @@
         {% block page_subtitle %}{% endblock %}
       </div>
       <div class="page-header__right">
-        <span id="ssh-badge" class="vault-badge" style="display:none"></span>
-        <span id="vault-badge" class="vault-badge" style="display:none"></span>
         {% block page_actions %}{% endblock %}
       </div>
     </div>

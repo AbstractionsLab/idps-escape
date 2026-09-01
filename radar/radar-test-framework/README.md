@@ -9,11 +9,11 @@ This document presents the design and implementation of the **RADAR Test Framewo
 - **Suspicious Logins**: Unauthorized or anomalous authentication attempts, including brute force and impossible travel patterns.
 - **Non-whitelist GeoIP Detection**: Authentication events originating from countries outside a configured whitelist.
 - **Log Volume Growth**: Anomalous spikes in filesystem log volume indicative of DDoS, malware outbreak, or data exfiltration.
+- **Web Scanning Detection**: Volumetric requests, suspicious HTTP methods, and other web scanning/enumeration patterns.
 
-The following scenarios are archived and not production-ready:
+The following scenarios have no dedicated simulation script currently and are not production-ready:
 
 - **Insider Threats**: Malicious or negligent activities by authorized users.
-- **Suspicious Logins**: Unauthorized or anomalous authentication attempts in Single Sign-On (SSO) environments.
 - **Distributed Denial-of-Service (DDoS)** Attacks: Sudden surges in traffic aimed at exhausting system resources.
 - **Malware Communication**: Covert communication with external command-and-control (C2) servers, typically through beaconing behavior.
 
@@ -24,8 +24,8 @@ Each of these scenarios is implemented as an isolated module following a consist
 3. **Simulate**: Execution of scenario-specific attack behaviours through agent-realistic artefact generation. This is the currently implemented phase within RATF. See [RADAR simulation](/radar/radar-test-framework/simulate/README.md)
 4. **Evaluate**: Analysis of detection outputs against ground truth. This phase is not yet implemented in RATF and is planned for a future release.
 
-The simulation component is orchestrated through `simulate-radar.sh`, which dispatches scenario scripts to local container agents or remote SSH endpoints.
+Each simulation phase is a standalone Python script (`radar-test-framework/simulate/scenarios/<scenario>.py`), run directly on the target agent endpoint.
 
 ## Configuration
 
-Simulation parameters are unified in `radar/config.yaml` under each scenario's optional `simulate:` section. This consolidates configuration across ingestion, detection setup, and testing workflows. See [Configuration guide](/docs/manual/radar_docs/radar-getting-started.md#4-configure-scenario-specifications-for-ml-based-detection) for details.
+Each simulation script has its own parameters as a `CONFIG` dictionary at the top of the file, edited directly to match your environment (target hostname, log paths, IP pools, etc.) — see [RADAR simulation](/radar/radar-test-framework/simulate/README.md#configuration) for details.

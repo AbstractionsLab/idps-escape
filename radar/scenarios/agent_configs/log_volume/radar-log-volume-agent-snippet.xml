@@ -1,9 +1,6 @@
 <agent_config os="Linux">
 <localfile>
-    <log_format>full_command</log_format>
-    <command>echo /var/log $(du -sb /var/log 2>/dev/null | awk '{print $1}')</command>
-    <alias>log_volume_metric</alias>
-    <out_format>$(timestamp) $(hostname) log_volume_metric: $(log)</out_format>
-    <frequency>30</frequency>
+    <location>/var/log/radar/log_volume_metric.log</location>
+    <log_format>syslog</log_format>
 </localfile>
 </agent_config>

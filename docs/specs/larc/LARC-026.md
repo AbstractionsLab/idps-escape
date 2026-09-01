@@ -84,17 +84,12 @@ Algorithm: Extract IOCs from alert and correlated events
   Return: deduplicated IOC collection
 ```
 
-### 5. CTI enrichment (SATRAP integration)
-For each extracted IOC:
-
-- Query SATRAP CTI database via REST API
-- Check threat intelligence feeds:
-    - IP reputation (blacklists, malicious ASNs)
-    - Domain reputation (phishing, malware delivery)
-    - Hash reputation (known malware signatures)
-    - User compromise flags
-- Aggregate CTI indicators with weights
-- Calculate T score: `T = 1 - ∏(1 - wᵢ)` over n indicators
+### 5. CTI enrichment (DECIPHER integration)
+- Check DECIPHER health (cached for the remainder of this process; not retried, per SRS-061 §4(i))
+- If healthy and the scenario has a mapped DECIPHER analyze endpoint: build the scenario-specific payload (`build_analyze_payload()`, including extracted IOCs) and call the analyze endpoint
+- DECIPHER performs its own IOC lookups (e.g. via MISP) and returns a single normalized CTI score, `cti_score_T` ∈ [0,1], plus labels and confidence
+- If DECIPHER is unreachable, or the scenario has no analyze endpoint mapped: `cti_score_T = 0.0`, logged as a WARNING
+- No local aggregation of individual IOC indicators occurs in `radar_ar.py` — the score used by the risk engine (step 6) is exactly the value DECIPHER returned (or 0.0)
 
 ### 6. Risk calculation
 Apply risk engine formula (see LARC-021):
@@ -112,14 +107,14 @@ Algorithm: Calculate composite risk score
 Weights loaded from scenario configuration in `ar.yaml`.
 
 ### 7. Decision ID generation
-Create unique identifier for idempotency tracking:
+Create a unique identifier for audit correlation, per SRS-061 §6(i):
 ```
 Algorithm: Generate deterministic decision ID
-  decision_id ← SHA256(alert.id + ":" + alert.timestamp + ":" + scenario_name)
-  decision_id ← first_16_hex_chars(decision_id)
+  components ← {alert_id, timestamp, rule_id, agent_id, scenario, detection, window, effective_agent}
+  decision_id ← SHA256(JSON.dumps(components, sort_keys=True))   // full hex digest
 ```
 
-Check if decision already processed (prevents duplicate actions on alert re-ingestion).
+The decision ID is used for audit-log correlation and as the DECIPHER incident reference — not for deduplication. `radar_ar.py` maintains no decision cache; re-delivery of the same alert is not itself suppressed by this script (SWD-027).
 
 ### 8. Tier assignment and action planning
 Map risk score to tier using per-scenario boundaries from `ar.yaml`:
@@ -296,5 +291,5 @@ end note
 See [radar/scenarios/active_responses/radar_ar.py](../../../radar/scenarios/active_responses/radar_ar.py) for complete implementation.
 
 ## See also
-- `/docs/manual/radar_docs/radar-active-response.md` for comprehensive documentation
+- SWD-027 for the normative software design specification of this pipeline
 - LARC-016 for simplified flow diagram

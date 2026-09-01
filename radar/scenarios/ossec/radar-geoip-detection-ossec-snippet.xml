@@ -9,3 +9,14 @@
     <location>server</location>
     <rules_id>100900,100901,100903</rules_id>
 </active-response>
+
+<integration>
+    <name>custom-radar-web-enrich</name>
+    <group>accesslog</group>
+    <alert_format>json</alert_format>
+</integration>
+ 
+<localfile>
+    <location>/var/ossec/logs/radar/enriched_web_access.log</location>
+    <log_format>syslog</log_format>
+</localfile>

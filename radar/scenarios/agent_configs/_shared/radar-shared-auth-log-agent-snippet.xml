@@ -1,0 +1,6 @@
+<agent_config os="Linux">
+<localfile>
+    <location>/var/log/auth.log</location>
+    <log_format>syslog</log_format>
+</localfile>
+</agent_config>

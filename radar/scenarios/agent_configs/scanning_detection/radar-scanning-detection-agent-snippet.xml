@@ -1,0 +1,18 @@
+<agent_config os="Linux">
+<localfile>
+    <location>/var/log/apache2/access.log</location>
+    <log_format>apache</log_format>
+</localfile>
+<localfile>
+    <location>/var/log/apache2/other_vhosts_access.log</location>
+    <log_format>apache</log_format>
+</localfile>
+<localfile>
+    <location>/var/log/nginx/access.log</location>
+    <log_format>apache</log_format>
+</localfile>
+<localfile>
+    <location>/var/log/suricata/eve.json</location>
+    <log_format>json</log_format>
+</localfile>
+</agent_config>
