@@ -11,6 +11,7 @@ import sys
 
 from . import config as config_module
 from . import fleet as fleet_module
+from . import infra as infra_module
 from .client import WazuhAPIClient, WazuhAPIError
 from .groups import (
     assign_agent_to_groups,
@@ -21,7 +22,14 @@ from .groups import (
     resolve_agent,
     upload_group_config_from_file,
 )
-from .manager_config import wait_for_api, wait_for_opensearch
+from .manager_config import (
+    apply_tag_value,
+    get_raw_config,
+    restart_manager,
+    update_raw_config,
+    wait_for_api,
+    wait_for_opensearch,
+)
 from .scenario_ops import (
     assign_hosts_to_scenario_groups,
     deploy_manager_config,
@@ -192,11 +200,16 @@ def cmd_deregister_agent(args: argparse.Namespace) -> int:
 def cmd_deploy_manager_config(args: argparse.Namespace) -> int:
     client = _client_from_env()
     try:
+        indexer_host = os.environ.get("WAZUH_INDEXER_HOST", "https://wazuh.indexer:9200")
+        try:
+            indexer_host = infra_module.address(".", "indexer")
+        except infra_module.NotConfigured as e:
+            print(f"[!] {e}; falling back to {indexer_host}", file=sys.stderr)
         result = deploy_manager_config(
             client, args.scenario, args.scenarios_dir,
             wait_for_restart=not args.no_wait,
             restart_timeout=args.restart_timeout,
-            indexer_host=os.environ.get("WAZUH_INDEXER_HOST", "https://wazuh.indexer:9200"),
+            indexer_host=indexer_host,
         )
         print(json.dumps(result))
         if result["restart_triggered"] and not result.get("api_back_up", True):
@@ -340,6 +353,53 @@ def cmd_agent_health(args: argparse.Namespace) -> int:
     return 1 if had_failure else 0
 
 
+def cmd_ensure_password_auth(args: argparse.Namespace) -> int:
+    client = _client_from_env()
+    try:
+        content = get_raw_config(client)
+        new_content, changed = apply_tag_value(content, "use_password", "yes")
+        if changed:
+            update_raw_config(client, new_content)
+        print(json.dumps({"changed": changed}))
+        return 0
+    except WazuhAPIError as e:
+        print(f"[!] {e}", file=sys.stderr)
+        return 1
+
+
+def cmd_manager_container(args: argparse.Namespace) -> int:
+    name = infra_module.container_for(".", "manager")
+    if not name:
+        print("[!] 'manager' has no container_name configured", file=sys.stderr)
+        return 1
+    print(name)
+    return 0
+
+
+def cmd_manager_containers(args: argparse.Namespace) -> int:
+    nodes = infra_module.list_nodes(".", "manager")
+    if not nodes:
+        print("[!] no manager nodes registered", file=sys.stderr)
+        return 1
+    for n in sorted(nodes, key=lambda n: not n["primary"]):
+        print(n["container_name"])
+    return 0
+
+
+def cmd_core_volumes_overlay(args: argparse.Namespace) -> int:
+    sys.stdout.write(config_module.core_volumes_overlay_yaml("."))
+    return 0
+
+
+def cmd_manager_volume_path(args: argparse.Namespace) -> int:
+    path = config_module.manager_volume_host_path_for(".", args.container_path, service=args.container or None)
+    if not path:
+        print(f"[!] volumes.yml has no bind mount for {args.container_path}", file=sys.stderr)
+        return 1
+    print(path)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Wazuh API operations for RADAR (groups/agents)")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -436,6 +496,12 @@ def build_parser() -> argparse.ArgumentParser:
                                help="Keep the agent's entry reserved instead of freeing its name/IP for reuse")
     p_deregister.set_defaults(func=cmd_deregister_agent)
 
+    p_pwauth = sub.add_parser("ensure-password-auth",
+                               help="Set <use_password>yes</use_password> on this manager if it isn't already -- "
+                                    "needed before password-based enrollment (RADAR's webhook, bootstrap-agent.sh) "
+                                    "will work against a manager RADAR didn't build itself.")
+    p_pwauth.set_defaults(func=cmd_ensure_password_auth)
+
     p_ensure = sub.add_parser("ensure-group", help="Create a Wazuh agent group if it doesn't already exist")
     p_ensure.add_argument("--group", required=True)
     p_ensure.set_defaults(func=cmd_ensure_group)
@@ -472,6 +538,31 @@ def build_parser() -> argparse.ArgumentParser:
     p_agent_health.add_argument("--agent-name", required=True, help="Comma-separated agent name(s)")
     p_agent_health.add_argument("--scenario", default="all")
     p_agent_health.set_defaults(func=cmd_agent_health)
+
+    p_mgr_container = sub.add_parser("manager-container",
+                                      help="Print the registered container name for the manager, from infra.yaml")
+    p_mgr_container.set_defaults(func=cmd_manager_container)
+
+    p_mgr_containers = sub.add_parser("manager-containers",
+                                       help="Print every registered manager node's container name, primary first "
+                                            "(one per line) -- for a manager cluster, not just the primary.")
+    p_mgr_containers.set_defaults(func=cmd_manager_containers)
+
+    p_core_overlay = sub.add_parser("core-volumes-overlay",
+                                     help="Print the docker-compose-safe subset of volumes.yml to stdout, for "
+                                          "piping into `docker compose -f docker-compose.core.yml -f -` -- "
+                                          "volumes.yml itself may contain entries compose can't handle "
+                                          "(manager/indexer nodes RADAR didn't build).")
+    p_core_overlay.set_defaults(func=cmd_core_volumes_overlay)
+
+    p_mgr_volpath = sub.add_parser("manager-volume-path",
+                                    help="Print volumes.yml's host-side bind-mount path for a manager container "
+                                         "path, keyed by infra.yaml's registered manager container name")
+    p_mgr_volpath.add_argument("container_path")
+    p_mgr_volpath.add_argument("--container", default="",
+                                help="volumes.yml service key to use instead of the primary manager node "
+                                     "(for running against a specific node in a manager cluster)")
+    p_mgr_volpath.set_defaults(func=cmd_manager_volume_path)
 
     return parser
 

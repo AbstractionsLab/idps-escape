@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import re
 import os
 import sys
 import json
+import time
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -19,15 +21,48 @@ def _get_ingest_cfg(cfg, scenario):
     return cfg["scenarios"][scenario]["ingest"]
 
 
+def _parse_env_value(raw: str):
+    raw = raw.strip()
+    if raw.startswith("'"):
+        end = raw.find("'", 1)
+        if end < 0:
+            return None
+        rest = raw[end + 1:].strip()
+        return raw[1:end] if (not rest or rest.startswith("#")) else None
+    if raw.startswith('"'):
+        out, i = [], 1
+        while i < len(raw):
+            ch = raw[i]
+            if ch == "\\" and i + 1 < len(raw) and raw[i + 1] in '\\"$`':
+                out.append(raw[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                rest = raw[i + 1:].strip()
+                return "".join(out) if (not rest or rest.startswith("#")) else None
+            out.append(ch)
+            i += 1
+        return None
+    return re.split(r"\s+#", raw, maxsplit=1)[0].strip()
+# end _parse_env_value
+
+
+_ENV_LINE_RE = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
+
 def load_env(env_path: Path) -> None:
     if not env_path.exists():
         return
     for line in env_path.read_text().splitlines():
         line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+        if not line or line.startswith("#"):
             continue
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip())
+        m = _ENV_LINE_RE.match(line)
+        if not m:
+            continue
+        value = _parse_env_value(m.group(2))
+        if value is not None:
+            os.environ.setdefault(m.group(1), value)
 
 
 def iso(dt: datetime) -> str:
@@ -46,6 +81,29 @@ def os_post(url, auth, verify_tls, body):
     if r.status_code not in (200, 201):
         raise RuntimeError(f"OpenSearch POST failed {r.status_code}: {r.text}")
     return r.json()
+
+
+def _extract_log_bytes(hit):
+    v = hit.get("_source", {}).get("data", {}).get("log_bytes", None)
+    return None if v is None else int(v)
+
+
+def query_last_values(os_url, auth, verify, index_pattern, agent_name, size):
+    for field in ("agent.name", "agent.name.keyword"):
+        search_body = {
+            "size": size,
+            "sort": [{"@timestamp": {"order": "desc"}}],
+            "_source": ["data.log_bytes"],
+            "query": {"bool": {"filter": [
+                {"term": {field: agent_name}},
+            ]}},
+        }
+        stats = os_post(f"{os_url}/{index_pattern}/_search", auth, verify, search_body)
+        hits = stats.get("hits", {}).get("hits", [])
+        if hits:
+            return hits
+    return []
+
 
 def main():
     load_env(Path(".env"))
@@ -69,53 +127,71 @@ def main():
     index_prefix       = str(lv["index_prefix"])
     minutes            = int(lv["history_minutes"])
     step_s             = int(lv["step_seconds"])
-    delta_query_window = str(lv["delta_query_window"])
     delta_min_docs     = int(lv["delta_min_docs"])
     fallback_delta     = int(lv["fallback_delta"])
     first_value_seed   = int(lv["baseline_bytes"])
 
     index_pattern = f"{index_prefix}-*"
+    auth = HTTPBasicAuth(os_user, os_pass)
 
-    search_body = {
-        "size": delta_min_docs,
-        "sort": [{"@timestamp": {"order": "desc"}}],
-        "_source": ["data.log_bytes"],
-        "query": {"bool": {"filter": [
-            {"range": {"@timestamp": {"gte": delta_query_window}}},
-            {"term": {"agent.name": agent_name}},
-        ]}},
-    }
+    hits = query_last_values(os_url, auth, os_verify, index_pattern, agent_name, delta_min_docs)
 
-    stats = os_post(
-        f"{os_url}/{index_pattern}/_search",
-        HTTPBasicAuth(os_user, os_pass),
-        os_verify,
-        search_body,
-    )
-
-    first_value = first_value_seed
-    hits = stats.get("hits", {}).get("hits", [])
-    if len(hits) < delta_min_docs:
+    if not hits:
         print(
-            f"Need at least {delta_min_docs} recent docs in {delta_query_window} to compute delta. Falling back.",
+            f"No existing data.log_bytes found yet for agent '{agent_name}' in "
+            f"'{index_pattern}' -- waiting 60s and checking once more...",
             file=sys.stderr,
         )
+        time.sleep(60)
+        hits = query_last_values(os_url, auth, os_verify, index_pattern, agent_name, delta_min_docs)
+
+    if not hits:
+        print(
+            f"ERROR: still no data.log_bytes for agent '{agent_name}' in '{index_pattern}' "
+            f"after waiting 60s. This scenario needs real log_volume_metric events already "
+            f"flowing before it can continue their pattern. Check:\n"
+            f"  1. Is '{agent_name}' actually enrolled in the log_volume Wazuh group? "
+            f"(python3 -m wazuh_api.cli resolve-agent --name {agent_name})\n"
+            f"  2. Has the manager-side log_volume deploy fully applied? "
+            f"(bash radar_deploy/manager-health.sh)\n"
+            f"  3. Is the agent's radar-log-volume.timer actually running and writing to "
+            f"/var/log/radar/log_volume_metric.log on the endpoint?\n"
+            f"Falling back to the static baseline_bytes seed for now, but this almost "
+            f"certainly means the scenario isn't wired up correctly yet.",
+            file=sys.stderr,
+        )
+        first_value = first_value_seed
         delta = fallback_delta
         second_value = first_value + delta
-    else:
-        v1 = hits[0].get("_source", {}).get("data", {}).get("log_bytes", None)
-        v2 = hits[1].get("_source", {}).get("data", {}).get("log_bytes", None)
+    elif len(hits) >= 2:
+        v1 = _extract_log_bytes(hits[0])
+        v2 = _extract_log_bytes(hits[1])
         if v1 is None or v2 is None:
-            print("Missing data.log_bytes in recent docs. Falling back.", file=sys.stderr)
+            print("Missing data.log_bytes in the most recent docs. Falling back.", file=sys.stderr)
+            first_value = first_value_seed
             delta = fallback_delta
             second_value = first_value + delta
         else:
-            first_value = int(v1)
-            second_value = int(v2)
+            first_value = v1
+            second_value = v2
             delta = first_value - second_value
             if delta <= 0:
                 delta = fallback_delta
                 second_value = first_value + delta
+    else:
+        v1 = _extract_log_bytes(hits[0])
+        if v1 is None:
+            print("Only one recent doc found and it has no data.log_bytes. Falling back.", file=sys.stderr)
+            first_value = first_value_seed
+        else:
+            print(
+                "Only one recent doc found -- using its value as the baseline and "
+                "fallback_delta as the growth rate (can't compute a real delta from a single point).",
+                file=sys.stderr,
+            )
+            first_value = v1
+        delta = fallback_delta
+        second_value = first_value + delta
 
     now = datetime.now(timezone.utc)
     start = now - timedelta(minutes=minutes)
@@ -153,7 +229,7 @@ def main():
         bulk_url,
         data=payload.encode("utf-8"),
         headers={"Content-Type": "application/x-ndjson"},
-        auth=HTTPBasicAuth(os_user, os_pass),
+        auth=auth,
         verify=os_verify,
         timeout=30,
     )

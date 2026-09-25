@@ -26,6 +26,10 @@
          class="nav-item {% if request.endpoint == 'connectors' %}nav-item--active{% endif %}">
         Connectors
       </a>
+      <a href="{{ url_for('infrastructure') }}"
+         class="nav-item {% if request.endpoint == 'infrastructure' %}nav-item--active{% endif %}">
+        Infrastructure
+      </a>
       <a href="{{ url_for('deploy') }}"
          class="nav-item {% if request.endpoint == 'deploy' %}nav-item--active{% endif %}">
         Deployment

@@ -3,6 +3,7 @@
   <!-- 1) Catch-all for any OpenSearch AD alert -->
   <rule id="100300" level="5">
     <decoded_as>opensearch_ad</decoded_as>
+    <location>/var/log/ad_alerts.log$</location>
     <description>OpenSearch AD alert received</description>
   </rule>
 
@@ -13,7 +14,5 @@
     <description>OpenSearch AD: Log Volume Growth Detected</description>
   </rule>
 </group>
-
-
 
 

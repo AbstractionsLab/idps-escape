@@ -9,6 +9,7 @@ import yaml
 import smtplib
 import ssl
 import hashlib
+import ipaddress
 import traceback
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
@@ -24,6 +25,64 @@ def _parse_bool(v, default=False):
 
 def _safe_str(v):
     return "" if v is None else str(v)
+
+
+# Active-response targets come from alert fields that log writers control, so
+# they are validated before being sent to an agent (the agent scripts check again).
+_AR_USERNAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9._-]{0,31}$")
+_AR_SERVICE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9@._:-]*$")
+
+
+def _strip_service_suffix(name: str) -> str:
+    return name[:-len(".service")] if name.endswith(".service") else name
+
+
+def _is_remote_ipv4(v: str) -> bool:
+    try:
+        ip = ipaddress.IPv4Address(v)
+    except ValueError:
+        return False
+    return not (ip.is_loopback or ip.is_unspecified or ip.is_multicast or ip == ipaddress.IPv4Address("255.255.255.255"))
+
+
+class NeverBlock:
+
+    DEFAULTS = ("127.0.0.0/8", "::1/128", "169.254.0.0/16", "fe80::/10", "0.0.0.0/8", "::/128",
+                "224.0.0.0/4", "ff00::/8", "255.255.255.255/32")
+
+    def __init__(self, logger=None, cfg: Optional[dict] = None, use_env: bool = True):
+        self.logger = logger
+        entries = list(self.DEFAULTS)
+        entries += list(((cfg or {}).get("global") or {}).get("never_block") or [])
+        if use_env:
+            entries += self._own_addresses()
+        self.networks = []
+        for entry in entries:
+            try:
+                self.networks.append(ipaddress.ip_network(_safe_str(entry).strip(), strict=False))
+            except ValueError:
+                if logger:
+                    logger.log("WARNING", "Ignoring invalid never_block entry", entry=_safe_str(entry))
+
+    @staticmethod
+    def _own_addresses() -> list:
+        out = [a.strip() for a in _safe_str(os.environ.get("RADAR_MANAGER_ADDRESS")).split(",") if a.strip()]
+        for key in ("OS_URL", "WAZUH_API_URL"):
+            host = re.sub(r"^[a-z]+://", "", _safe_str(os.environ.get(key)).strip(), flags=re.I)
+            host = host.split("/", 1)[0].rsplit(":", 1)[0].strip("[]")
+            try:
+                ipaddress.ip_address(host)
+                out.append(host)
+            except ValueError:
+                pass
+        return out
+
+    def contains(self, ip: str) -> bool:
+        try:
+            addr = ipaddress.ip_address(_safe_str(ip).strip())
+        except ValueError:
+            return True
+        return any(addr.version == n.version and addr in n for n in self.networks)
 
 
 def _utc_now():
@@ -89,19 +148,36 @@ def _dotted_get(data: dict, path: str):
     return node
 
 
-class EnvLoader:
-    @staticmethod
-    def _strip_inline_comment(s: str) -> str:
-        in_single = in_double = False
-        for i, ch in enumerate(s):
-            if ch == "'" and not in_double:
-                in_single = not in_single
-            elif ch == '"' and not in_single:
-                in_double = not in_double
-            elif ch == "#" and not in_single and not in_double:
-                return s[:i].rstrip()
-        return s.rstrip()
+def _parse_env_value(raw: str):
+    raw = raw.strip()
+    if raw.startswith("'"):
+        end = raw.find("'", 1)
+        if end < 0:
+            return None
+        rest = raw[end + 1:].strip()
+        return raw[1:end] if (not rest or rest.startswith("#")) else None
+    if raw.startswith('"'):
+        out, i = [], 1
+        while i < len(raw):
+            ch = raw[i]
+            if ch == "\\" and i + 1 < len(raw) and raw[i + 1] in '\\"$`':
+                out.append(raw[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                rest = raw[i + 1:].strip()
+                return "".join(out) if (not rest or rest.startswith("#")) else None
+            out.append(ch)
+            i += 1
+        return None
+    return re.split(r"\s+#", raw, maxsplit=1)[0].strip()
+# end _parse_env_value
 
+
+_ENV_LINE_RE = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
+
+class EnvLoader:
     @staticmethod
     def load():
         candidates = [
@@ -114,19 +190,20 @@ class EnvLoader:
         with env_file.open(encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
+                if not line or line.startswith("#"):
                     continue
-                key, value = line.split("=", 1)
-                key = key.strip()
-                value = EnvLoader._strip_inline_comment(value.strip())
-                value = value.strip().strip('"').strip("'")
-                if key:
-                    os.environ.setdefault(key, value)
+                m = _ENV_LINE_RE.match(line)
+                if not m:
+                    continue
+                value = _parse_env_value(m.group(2))
+                if value is not None:
+                    os.environ.setdefault(m.group(1), value)
 
 
 class Logger:
     def __init__(self, logfile: str):
         self.logfile = logfile
+        self.debug_log = _parse_bool(os.environ.get("AR_DEBUG_LOG"), default=True)
 
     def log(self, level: str, msg: str, **ctx) -> None:
         ts = _utc_now().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -137,6 +214,16 @@ class Logger:
                 f.write(line)
         except Exception:
             sys.stderr.write(line)
+
+    def log_debug(self, level: str, msg: str, **ctx) -> None:
+        """For rule-chain / contextual-event dumps that can get very large
+        (raw OpenSearch hits, DECIPHER payloads). Gated by AR_DEBUG_LOG in
+        active_responses.env -- defaults to yes (unchanged behavior); set
+        to no to stop writing these specific entries. Everything else
+        (decisions, errors, the audit trail) always logs regardless."""
+        if not self.debug_log:
+            return
+        self.log(level, msg, **ctx)
 
 
 class ConfigLoader:
@@ -252,7 +339,7 @@ class ScenarioIdentifier:
 class OpenSearchClient:
     def __init__(self, logger: Logger):
         self.logger = logger
-        self.url = os.environ.get("WAZUH_INDEXER_HOST", "https://localhost:9200").rstrip("/")
+        self.url = os.environ.get("OS_URL", "https://localhost:9200").rstrip("/")
         self.user = os.environ.get("OS_USER", "admin")
         self.password = os.environ.get("OS_PASS", "")
         self.verify = _parse_bool(os.environ.get("OS_VERIFY_SSL", "false"), False)
@@ -409,7 +496,7 @@ class BaseScenario:
         iocs = self.iocs.extract(alert, events)
         resolved_effective_agent = self.resolve_effective_agent_name(scenario, events)
         window = {"start": t_start.isoformat(), "end": t_end.isoformat()}
-        self.logger.log("INFO", "Events", events=events, iocs=iocs)
+        self.logger.log_debug("INFO", "Events", events=events, iocs=iocs)
         return {"events": events, "event_count": len(events), "iocs": iocs, "window": window, "effective_agent": resolved_effective_agent}
 
     def _query_events_with_retry(self, scenario: dict, t_start: datetime, t_end: datetime, effective_agent: str) -> list:
@@ -455,11 +542,7 @@ class BaseScenario:
     def resolve_target_ip(self, scenario: dict, context: dict):
         alert = scenario.get("alert") or {}
         ip = self._resolve_ip_from_data(alert.get("data") or {})
-        if ip:
-            return ip
-
-        ips = (context.get("iocs") or {}).get("ip") or []
-        return _safe_str(ips[0]).strip() if ips else None
+        return ip or None
 
     def resolve_ad_scores(self, scenario: dict):
         data = scenario["alert"].get("data") or {}
@@ -508,12 +591,29 @@ class SuspiciousLogin(BaseScenario):
 
 class LogVolume(BaseScenario):
     def resolve_time_window(self, scenario: dict):
-        data = scenario["alert"].get("data") or {}
+        alert = scenario["alert"]
+        data = alert.get("data") or {}
         ps = _parse_iso(data.get("period_start"))
         pe = _parse_iso(data.get("period_end"))
-        if ps and pe:
-            return ps, pe
-        return super().resolve_time_window(scenario)
+        if not (ps and pe):
+            return super().resolve_time_window(scenario)
+        scfg = scenario.get("config") or {}
+        delta = timedelta(minutes=max(1, int(scfg.get("delta_ad_minutes", 10))))
+        alert_ts = _parse_iso(alert.get("timestamp"))
+        cps, cpe = ps, pe
+        if alert_ts and cpe > alert_ts:
+            cpe = alert_ts
+        if cpe - cps > delta:
+            cps = cpe - delta
+        if cps >= cpe:
+            self.logger.log("WARNING", "AD period unusable; using default window",
+                            period_start=_safe_str(data.get("period_start")),
+                            period_end=_safe_str(data.get("period_end")))
+            return super().resolve_time_window(scenario)
+        if (cps, cpe) != (ps, pe):
+            self.logger.log("INFO", "AD period clamped", requested_start=ps.isoformat(),
+                            requested_end=pe.isoformat(), start=cps.isoformat(), end=cpe.isoformat())
+        return cps, cpe
 
     def resolve_effective_agent_name(self, scenario: dict, context_events: list) -> str:
         data = scenario["alert"].get("data") or {}
@@ -524,7 +624,44 @@ class LogVolume(BaseScenario):
 
 
 class ScanningDetection(BaseScenario):
-    SOURCE_IP_FIELDS = ("http.xff", "src_ip")
+    SOURCE_IP_FIELDS = ("src_ip",)
+
+    def __init__(self, logger, os_client):
+        super().__init__(logger, os_client)
+        self._trusted_proxies = []
+
+    def _set_trusted_proxies(self, scenario: dict) -> None:
+        nets = []
+        for entry in (scenario.get("config") or {}).get("trusted_proxies") or []:
+            try:
+                nets.append(ipaddress.ip_network(_safe_str(entry).strip(), strict=False))
+            except ValueError:
+                self.logger.log("WARNING", "Ignoring invalid trusted_proxies entry", entry=_safe_str(entry))
+        self._trusted_proxies = nets
+
+    def _is_trusted_proxy(self, ip: str) -> bool:
+        try:
+            addr = ipaddress.ip_address(_safe_str(ip).strip())
+        except ValueError:
+            return False
+        return any(addr.version == n.version and addr in n for n in self._trusted_proxies)
+
+    def _resolve_ip_from_data(self, data: dict) -> str:
+        peer = _safe_str(self._dotted_get(data, "src_ip")).strip()
+        xff = _safe_str(self._dotted_get(data, "http.xff")).strip()
+        if xff and peer and self._is_trusted_proxy(peer):
+            for hop in reversed([h.strip() for h in xff.split(",") if h.strip()]):
+                try:
+                    ipaddress.ip_address(hop)
+                except ValueError:
+                    break
+                if not self._is_trusted_proxy(hop):
+                    return hop
+        return peer
+
+    def resolve_target_ip(self, scenario: dict, context: dict):
+        self._set_trusted_proxies(scenario)
+        return super().resolve_target_ip(scenario, context)
 
     def _extract_http_fields(self, events: list) -> dict:
         src_ips, uris, methods, agents = set(), set(), set(), set()
@@ -554,6 +691,7 @@ class ScanningDetection(BaseScenario):
         }
 
     def build_analyze_payload(self, scenario: dict, context: dict) -> dict:
+        self._set_trusted_proxies(scenario)
         alert = scenario["alert"]
         events = context.get("events") or []
         fields = self._extract_http_fields(events)
@@ -588,6 +726,7 @@ class ScanningDetection(BaseScenario):
         }
 
     def build_display_extras(self, scenario: dict, context: dict) -> dict:
+        self._set_trusted_proxies(scenario)
         events = context.get("events") or []
         fields = self._extract_http_fields(events)
         src_ip = fields["src_ip"]
@@ -705,7 +844,7 @@ class DecipherClient:
             )
             return null_result
 
-        self.logger.log("INFO", "DECIPHER analyze request payload", scenario=scenario_name, endpoint=endpoint, payload=payload)
+        self.logger.log_debug("INFO", "DECIPHER analyze request payload", scenario=scenario_name, endpoint=endpoint, payload=payload)
         try:
             raw = self._request("POST", endpoint, json_data=payload)
             cti_score_T = _to_float(raw.get("severity"), 0.0)
@@ -1243,11 +1382,32 @@ class AuditLog:
 class ActionExecutor:
     def __init__(self, logger: Logger, wazuh_api: WazuhApiClient,
                  guard: Optional[AllowlistGuard] = None,
-                 audit: Optional[AuditLog] = None):
+                 audit: Optional[AuditLog] = None,
+                 never_block: Optional[NeverBlock] = None):
         self.logger = logger
         self.wazuh_api = wazuh_api
         self.guard = guard
         self.audit = audit
+        self.never_block = never_block or NeverBlock(logger, use_env=False)
+        self.last_refusal = None
+
+    def _ip_target_ok(self, command: str, ip: str, ipv4_only: bool = False) -> bool:
+        ip = _safe_str(ip).strip()
+        try:
+            addr = ipaddress.ip_address(ip)
+        except ValueError:
+            self.last_refusal = "invalid_target"
+            self.logger.log("WARNING", "Mitigation target is not an IP address; refusing", command=command, target=ip)
+            return False
+        if ipv4_only and addr.version != 4:
+            self.last_refusal = "invalid_target"
+            return False
+        if self.never_block.contains(ip):
+            self.last_refusal = "never_block"
+            self.logger.log("WARNING", "Mitigation target is on the never_block list; refusing",
+                            command=command, target=ip)
+            return False
+        return True
 
     def execute(self, decision: dict, planned: dict) -> dict:
         results = {"mitigations": [], "allowlist": None}
@@ -1258,6 +1418,7 @@ class ActionExecutor:
         target = _safe_str(decision.get("target_ip"))
 
         mitigations = planned.get("mitigations") or []
+        self.last_refusal = None
 
         # Nothing planned: still a decision, so still an audit entry.
         if not mitigations:
@@ -1299,7 +1460,7 @@ class ActionExecutor:
             if not executed:
                 self._audit(decision_id=decision_id, rule_id=rule_id, source_ip=target,
                             action=cmd, tier=tier, result=AuditLog.RESULT_DECLINED,
-                            reason="unresolved_target")
+                            reason=self.last_refusal or "unresolved_target")
         return results
 
     def _audit(self, **kwargs) -> None:
@@ -1325,7 +1486,8 @@ class ActionExecutor:
         out = []
         for args in args_list:
             try:
-                resp = self.wazuh_api.send_active_response(agent_id, f"!{command}", args, alert.get("data") or {})
+                alert_data = {"srcip": args[0]} if command == "firewall-drop" else {}
+                resp = self.wazuh_api.send_active_response(agent_id, f"!{command}", args, alert_data)
                 out.append({"command": command, "agent_id": agent_id, "args": args, "result": resp})
             except Exception as e:
                 self.logger.log("ERROR", "Mitigation execution failed", command=command, agent_id=agent_id, error=str(e))
@@ -1353,23 +1515,51 @@ class ActionExecutor:
 
     def _build_args(self, command: str, scenario: dict, iocs: dict, target_ip: str = "") -> list:
         if command == "firewall-drop":
-            if target_ip:
-                return [[target_ip]]
-            ips = iocs.get("ip") or []
-            return [[ips[0]]] if ips else []
+            if target_ip and self._ip_target_ok(command, target_ip):
+                return [[_safe_str(target_ip).strip()]]
+            if not target_ip:
+                self.last_refusal = "no_alert_source_ip"
+            return []
+
+        cfg = scenario.get("config") or {}
 
         if command == "lock_user_linux.sh":
-            return [[u] for u in (iocs.get("user") or []) if u and u.lower() != "root"]
+            protected = {"root"} | {_safe_str(u).lower() for u in (cfg.get("protected_users") or [])}
+            return [[u] for u in (iocs.get("user") or [])
+                    if _AR_USERNAME_RE.match(u) and u.lower() not in protected]
 
         if command == "terminate_service.sh":
-            services = iocs.get("service") or []
-            if services:
-                return [[services[0]]]
-            ips = iocs.get("ip") or []
-            if ips:
-                return [[ips[0]]]
+            allowed = {_strip_service_suffix(_safe_str(s).strip()) for s in (cfg.get("terminable_services") or [])}
+            for svc in iocs.get("service") or []:
+                name = _strip_service_suffix(svc)
+                if _AR_SERVICE_RE.match(name) and name in allowed:
+                    return [[name]]
+            if target_ip and _is_remote_ipv4(target_ip) and self._ip_target_ok(command, target_ip, ipv4_only=True):
+                return [[_safe_str(target_ip).strip()]]
+            if not target_ip:
+                self.last_refusal = "no_alert_source_ip"
         return []
 
+
+class AdAlertOrigin:
+
+    @staticmethod
+    def expected():
+        agent = _safe_str(os.environ.get("WEBHOOK_AGENT_NAME")).strip() or "ad-webhook"
+        location = _safe_str(os.environ.get("AD_ALERTS_LOCATION")).strip() or "/var/log/ad_alerts.log"
+        return agent, location
+
+    @staticmethod
+    def verify(alert: dict, logger) -> bool:
+        exp_agent, exp_location = AdAlertOrigin.expected()
+        agent = _safe_str((alert.get("agent") or {}).get("name")).strip()
+        location = _safe_str(alert.get("location")).strip()
+        ok = agent == exp_agent and (location == exp_location or location.endswith("->" + exp_location))
+        if not ok:
+            logger.log("WARNING", "AD alert rejected: not from the webhook agent's log",
+                       agent=agent, location=location,
+                       expected_agent=exp_agent, expected_location=exp_location)
+        return ok
 
 
 class DecisionId:
@@ -1438,6 +1628,10 @@ class RadarActiveResponse:
             self.logger.log("INFO", "No scenario match, exiting")
             return 0
 
+        if scenario["detection"] in ("ad", "hybrid") and not AdAlertOrigin.verify(alert, self.logger):
+            self.logger.log("INFO", "Untrusted AD alert, exiting without scoring or action")
+            return 0
+
         strategy = self.strategies.get(scenario["name"])
         context = strategy.collect_context(scenario)
 
@@ -1468,6 +1662,7 @@ class RadarActiveResponse:
 
         planned = self.planner.plan(decision)
 
+        self.executor.never_block = NeverBlock(self.logger, cfg)
         self.executor.guard = self._build_guard(scenario)
         self.executor.audit = self._build_audit(scenario)
         exec_results = self.executor.execute(decision, planned)

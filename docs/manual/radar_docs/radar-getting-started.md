@@ -69,7 +69,21 @@ cp env.example .env
 ./radar.sh gui
 ```
 
-Open `http://localhost:5000`, go to **Connectors**, fill in each card.
+Open the login URL printed in the terminal (`http://127.0.0.1:5000/?token=…`),
+go to **Connectors**, fill in each card.
+
+The GUI only accepts connections from the machine it runs on. Open it from a
+browser on your own workstation, not on the RADAR host: open an SSH tunnel
+first, then use the same URL. The README's
+[security assumptions](/radar/README.md#security-assumptions-and-recommendations)
+explain why.
+
+```bash
+ssh -L 5000:127.0.0.1:5000 <user>@<radar-host>
+```
+
+Leave the indexer, dashboard, and Wazuh API passwords empty: the first
+deployment generates unique ones and saves them in `.env`.
 
 `.env` can be edited directly instead of `env.example`. `env.example` documents every key.
 
@@ -81,10 +95,10 @@ Pick one:
 
 | Scenario | Detects |
 |----------|---------|
-| [`suspicious_login`](./radar-scenarios/suspicious_login.md) | Brute force and impossible travel |
-| [`geoip_detection`](./radar-scenarios/geoip_detection.md) | Logins from non-approved countries |
-| [`log_volume`](./radar-scenarios/log_volume.md) | Unusual spikes in log generation |
-| [`scanning_detection`](./radar-scenarios/scanning_detection.md) | Web-layer scanning and vulnerability probes |
+| [`suspicious_login`](./radar-scenarios/suspicious_login_explained.md) | Brute force and impossible travel |
+| [`geoip_detection`](./radar-scenarios/geoip_detection_explained.md) | Logins from non-approved countries |
+| [`log_volume`](./radar-scenarios/log_volume_explained.md) | Unusual spikes in log generation |
+| [`scanning_detection`](./radar-scenarios/scanning_detection_explained.md) | Web-layer scanning and vulnerability probes |
 
 **GUI:** Deployment → Scenario Management → **Deploy scenario**.
 
@@ -100,6 +114,9 @@ scenario's decoders, rules, active responses, and enrichment to the manager. Use
 
 `sudo` is needed for the bind mounts under `/srv/wazuh/`, and to apply the
 firewall rule that closes agent-enrollment port 1515 by default.
+
+If an existing deployment still uses the stock Wazuh passwords, the build warns
+you. Replace them with `sudo ./radar.sh rotate-credentials`.
 
 ---
 
@@ -126,7 +143,7 @@ Both print a ready-to-run `bootstrap-agent.sh` command and open the port-1515
 enrollment window for the token's lifetime.
 
 The token is a one-time shared password. It is revoked automatically when it
-expires — a background job overwrites it and restarts Wazuh.
+expires, even if the manager or the host restarts in the meantime.
 
 ### Run the bootstrap script on the endpoint
 
@@ -212,24 +229,39 @@ RADAR ships with automatic mitigation **disabled** for the baseline scenario. Se
 
 ---
 
+## 7. Secure the deployment
+
+Before using RADAR outside a lab, read [Security assumptions and recommendations](/radar/README.md#security-assumptions-and-recommendations):
+which ports to restrict with firewall rules, and which settings to review for
+your site.
+
+---
+
 ## Working with an existing Wazuh installation
 
-RADAR can enhance an existing manager rather than bootstrapping a new one. Two
+RADAR can enhance an existing manager rather than bootstrapping a new one. Three
 things need to match the existing setup:
 
+- **[Infrastructure](./radar-gui-user-manual.md#infrastructure)** — register the
+  existing manager, indexer, dashboard, and webhook with their real addresses
+  and container names. RADAR resolves between them using what is registered
+  here, falling back to the container name if a declared address is not
+  reachable from another component.
+- **Connectors** — enter the existing installation's own indexer and Wazuh API
+  credentials. RADAR generates passwords only for a stack it deploys itself.
 - **`volumes.yml`** — the bind mounts RADAR uses to reach manager files. If the
-  manager uses different host paths, update the left side of each mapping.
+  manager uses different host paths, update the left side of each mapping. For
+  named Docker volumes, use the host paths shown by `docker inspect <manager-container>`.
   These container paths must be bind-mounted or deployment fails validation:
 
   | Container path | Used for |
   |---|---|
   | `/var/ossec/etc` | `ossec.conf`, decoders, rules, CDB lists |
   | `/var/ossec/logs` | Reading `active-responses.log` and enrichment output from the host |
+  | `/var/ossec/integrations` | Enrichment integration scripts |
   | `/var/ossec/active-response/bin` | `radar_ar.py` and the mitigation scripts |
   | `/etc/filebeat` | Filebeat configuration |
   | `/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json` | Archive ingest pipeline — `build-radar.sh` aborts if this one is missing |
 - **Existing agents** — enroll them into the scenario group with
   [Group Management](./radar-gui-user-manual.md#group-management) rather than
   re-bootstrapping.
-
-> In this release this feature is not supported.

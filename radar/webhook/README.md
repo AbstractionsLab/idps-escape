@@ -35,7 +35,7 @@ Edit the top of `ad_alerts_webhook.py` if you need to change:
 - `LOG_FILE` — path to the log file  
 - `HOST` / `PORT` — which interface and port Flask should bind to  
 
-By default, the script runs on `0.0.0.0:8888`.
+By default, the script runs on `0.0.0.0:8080`.
 
 ## Running the Webhook
 ```bash

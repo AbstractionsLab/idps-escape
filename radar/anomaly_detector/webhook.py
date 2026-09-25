@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import os, sys, json, requests
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -8,15 +9,48 @@ def die(msg: str, code: int = 1) -> None:
     print(msg, file=sys.stderr)
     sys.exit(code)
 
+def _parse_env_value(raw: str):
+    raw = raw.strip()
+    if raw.startswith("'"):
+        end = raw.find("'", 1)
+        if end < 0:
+            return None
+        rest = raw[end + 1:].strip()
+        return raw[1:end] if (not rest or rest.startswith("#")) else None
+    if raw.startswith('"'):
+        out, i = [], 1
+        while i < len(raw):
+            ch = raw[i]
+            if ch == "\\" and i + 1 < len(raw) and raw[i + 1] in '\\"$`':
+                out.append(raw[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                rest = raw[i + 1:].strip()
+                return "".join(out) if (not rest or rest.startswith("#")) else None
+            out.append(ch)
+            i += 1
+        return None
+    return re.split(r"\s+#", raw, maxsplit=1)[0].strip()
+# end _parse_env_value
+
+
+_ENV_LINE_RE = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
+
 def load_env(path: Path) -> None:
     if not path.exists():
         return
     for line in path.read_text().splitlines():
         line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+        if not line or line.startswith("#"):
             continue
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip())
+        m = _ENV_LINE_RE.match(line)
+        if not m:
+            continue
+        value = _parse_env_value(m.group(2))
+        if value is not None:
+            os.environ.setdefault(m.group(1), value)
 
 def make_session(user: str, pwd: str) -> requests.Session:
     s = requests.Session()
@@ -32,7 +66,10 @@ def notif_list(session: requests.Session, os_base: str, verify: bool) -> List[Di
     data = r.json() if r.text else {}
     return data.get("config_list") or []
 
-def notif_find_id(session: requests.Session, os_base: str, name: str, verify: bool, url: Optional[str] = None) -> Optional[str]:
+TOKEN_HEADER = "X-RADAR-Webhook-Token"
+
+
+def notif_find(session: requests.Session, os_base: str, name: str, verify: bool, url: Optional[str] = None) -> Optional[Dict]:
     for item in notif_list(session, os_base, verify):
         cfg = item.get("config") or {}
         if (cfg.get("name") or "").strip() != name:
@@ -43,22 +80,31 @@ def notif_find_id(session: requests.Session, os_base: str, name: str, verify: bo
             wh = cfg.get("webhook") or {}
             if (wh.get("url") or "").strip() != url:
                 continue
-        return item.get("config_id") or item.get("id")
+        return item
     return None
 
-def notif_create(session: requests.Session, os_base: str, name: str, url: str, description: str, verify: bool) -> str:
-    payload = {
+
+def notif_find_id(session: requests.Session, os_base: str, name: str, verify: bool, url: Optional[str] = None) -> Optional[str]:
+    item = notif_find(session, os_base, name, verify, url=url)
+    return (item.get("config_id") or item.get("id")) if item else None
+
+
+def _channel_config(name: str, url: str, description: str, headers: Optional[Dict[str, str]]) -> Dict:
+    webhook = {"url": url}
+    if headers:
+        webhook["header_params"] = dict(headers)
+    return {
         "name": name,
-        "config": {
-            "name": name,
-            "description": description,
-            "config_type": "webhook",
-            "is_enabled": True,
-            "webhook": {
-                "url": url
-            }
-        }
+        "description": description,
+        "config_type": "webhook",
+        "is_enabled": True,
+        "webhook": webhook,
     }
+
+
+def notif_create(session: requests.Session, os_base: str, name: str, url: str, description: str, verify: bool,
+                 headers: Optional[Dict[str, str]] = None) -> str:
+    payload = {"name": name, "config": _channel_config(name, url, description, headers)}
     r = session.post(f"{os_base.rstrip('/')}/_plugins/_notifications/configs", json=payload, verify=verify)
     if r.status_code not in (200, 201):
         die(f"Create notification failed: {r.status_code} {r.text}")
@@ -70,15 +116,34 @@ def notif_create(session: requests.Session, os_base: str, name: str, url: str, d
         die(f"Create notification succeeded but no id returned: {r.text}")
     return cid
 
-def ensure_webhook(os_base: str, user: str, pwd: str, verify: bool, name: str, url: str, description: str = "") -> str:
+
+def notif_update(session: requests.Session, os_base: str, config_id: str, name: str, url: str, description: str,
+                 verify: bool, headers: Optional[Dict[str, str]]) -> None:
+    payload = {"config": _channel_config(name, url, description, headers)}
+    r = session.put(f"{os_base.rstrip('/')}/_plugins/_notifications/configs/{config_id}", json=payload, verify=verify)
+    if r.status_code not in (200, 201):
+        die(f"Update notification failed: {r.status_code} {r.text}")
+
+
+def webhook_headers() -> Optional[Dict[str, str]]:
+    secret = os.environ.get("WEBHOOK_SHARED_SECRET", "").strip()
+    return {TOKEN_HEADER: secret} if secret else None
+
+
+def ensure_webhook(os_base: str, user: str, pwd: str, verify: bool, name: str, url: str, description: str = "",
+                   headers: Optional[Dict[str, str]] = None) -> str:
     session = make_session(user, pwd)
     os_base = os_base.rstrip("/")
 
-    existing = notif_find_id(session, os_base, name, verify, url=url)
+    existing = notif_find(session, os_base, name, verify, url=url)
     if existing:
-        return existing
+        cid = existing.get("config_id") or existing.get("id")
+        current = ((existing.get("config") or {}).get("webhook") or {}).get("header_params") or {}
+        if headers and any(current.get(k) != v for k, v in headers.items()):
+            notif_update(session, os_base, cid, name, url, description, verify, headers)
+        return cid
 
-    return notif_create(session, os_base, name, url, description, verify)
+    return notif_create(session, os_base, name, url, description, verify, headers=headers)
 
 
 def main() -> None:
@@ -91,7 +156,7 @@ def main() -> None:
     url  = os.environ.get("WEBHOOK_URL", "")
     if not base or not url:
         die("Set OS_URL and WEBHOOK_URL in env")
-    cid = ensure_webhook(base, user, pwd, verify, name, url)
+    cid = ensure_webhook(base, user, pwd, verify, name, url, headers=webhook_headers())
     print(cid)
 
 if __name__ == "__main__":

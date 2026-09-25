@@ -6,7 +6,7 @@ ENV WAZUH_MANAGER_ADDRESS=${WAZUH_MANAGER_ADDRESS}
 
 # Install system dependencies, Python, and Wazuh Agent
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl gnupg apt-transport-https lsb-release procps python3 python3-pip python3-flask \
+    curl gnupg apt-transport-https lsb-release procps python3 python3-pip python3-flask python3-gunicorn \
  && curl -fsSL https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import \
  && chmod 644 /usr/share/keyrings/wazuh.gpg \
  && echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee /etc/apt/sources.list.d/wazuh.list \

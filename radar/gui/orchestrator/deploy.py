@@ -10,6 +10,7 @@ from . import ar_config as ar_module
 from . import connectors as conn_module
 from . import vault as vault_module
 from wazuh_api import config as config_module
+from wazuh_api import infra as infra_module
 
 
 def _validate_scenario(scenario: str, radar_root: str) -> None:
@@ -27,16 +28,23 @@ def _prep_env(radar_root: str) -> dict:
     return env
 
 
-def _stream_process(cmd: list[str], cwd: str, env: dict, result: dict | None = None) -> Iterator[str]:
+def _stream_process(cmd: list[str], cwd: str, env: dict, result: dict | None = None,
+                     stdin_data: str | None = None) -> Iterator[str]:
     yield f"$ {' '.join(shlex.quote(x) for x in cmd)}\n"
     try:
-        proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        proc = subprocess.Popen(cmd, cwd=cwd, env=env,
+                                 stdin=subprocess.PIPE if stdin_data is not None else None,
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                  bufsize=1, text=True)
     except FileNotFoundError as e:
         yield f"[ERROR] executable not found: {e}\n"
         if result is not None:
             result["rc"] = 127
         return
+    if stdin_data is not None:
+        assert proc.stdin is not None
+        proc.stdin.write(stdin_data)
+        proc.stdin.close()
     assert proc.stdout is not None
     try:
         for line in iter(proc.stdout.readline, ""):
@@ -89,7 +97,7 @@ def preview(radar_root: str, spec: dict) -> dict:
                 return {"ok": True, "cmd": "\n".join(steps)}
             scenario = spec.get("scenario", "")
             _validate_scenario(scenario, radar_root)
-            steps = [f"radar_deploy/manager-apply-scenario.sh {scenario}",
+            steps = [f"radar_deploy/manager-apply-scenario-all.sh {scenario}",
                      "wazuh_api: deploy_scenario_config, deploy_manager_config (direct calls)"]
             return {"ok": True, "cmd": "\n".join(steps)}
         if action == "undo-scenario":
@@ -160,7 +168,8 @@ def stream_build(radar_root: str, spec: dict, vault_session_id: str | None = Non
     try:
         ps_out = subprocess.run(["docker", "ps", "--format", "{{.Names}}"],
                                  capture_output=True, text=True, timeout=15)
-        manager_running = "wazuh.manager" in ps_out.stdout.splitlines()
+        registered_manager = infra_module.container_for(radar_root, "manager")
+        manager_running = registered_manager in ps_out.stdout.splitlines()
     except Exception as e:
         yield f"[ERROR] could not check docker ps: {e}\n"
         return
@@ -185,7 +194,7 @@ def stream_build(radar_root: str, spec: dict, vault_session_id: str | None = Non
 
             pipeline_container_path = "/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json"
             pipeline_host_path = config_module.manager_volume_host_path_for(
-                radar_root, pipeline_container_path, "wazuh.manager"
+                radar_root, pipeline_container_path, service="wazuh.manager"
             )
             if not pipeline_host_path:
                 yield (f"[ERROR] volumes.yml has no bind mount for {pipeline_container_path}.\n")
@@ -205,25 +214,47 @@ def stream_build(radar_root: str, spec: dict, vault_session_id: str | None = Non
                 yield "[ERROR] Failed to seed the filebeat pipeline file -- see the exit code above.\n"
                 return
 
-            yield ">>> Bringing up local core stack (docker-compose.core.yml)...\n"
+            yield ">>> Ensuring per-deployment credentials (no stock defaults)...\n"
             proc_result = {}
             yield from _stream_process(
-                ["sudo", "-A", "docker", "compose", "-f", "docker-compose.core.yml", "-f", "volumes.yml", "up", "-d"],
+                ["sudo", "-A", "env", f"PYTHONPATH={root}", "python3", "-m", "wazuh_api.credentials",
+                 "ensure", "--radar-root", str(root)],
                 radar_root, sudo_env, proc_result,
+            )
+            if proc_result.get("rc", 0) != 0:
+                yield "[ERROR] Could not prepare credentials -- see the output above.\n"
+                return
+
+            yield ">>> Bringing up local core stack (docker-compose.core.yml)...\n"
+            overlay_yaml = config_module.core_volumes_overlay_yaml(radar_root)
+            proc_result = {}
+            yield from _stream_process(
+                ["sudo", "-A", "docker", "compose", "-f", "docker-compose.core.yml", "-f", "-", "up", "-d"],
+                radar_root, sudo_env, proc_result, stdin_data=overlay_yaml,
             )
             if proc_result.get("rc", 0) != 0:
                 yield "[ERROR] Core stack failed to come up -- see the docker compose output above for the actual cause (e.g. a missing/misconfigured cert bind-mount). Stopping here rather than continuing to a misleading downstream failure.\n"
                 return
+
+    infra_module.ensure_radar_components_registered(radar_root)
 
     if not core_only and (root / "docker-compose.webhook.yml").is_file():
         yield ">>> Building webhook locally...\n"
         if not (vault_session_id and vault_module.has_sudo_password(vault_session_id)):
             yield "[ERROR] sudo password required to bring up the webhook.\n"
             return
+        from wazuh_api import envfile as _envfile
+        _envfile.ensure_secret(Path(radar_root) / ".env", "WEBHOOK_SHARED_SECRET")
         with vault_module.sudo_askpass_env(vault_session_id, env) as sudo_env:
+            sudo_env = dict(sudo_env)
+            detected_ip = infra_module.detect_local_ip() or sudo_env.get("WAZUH_MANAGER_ADDRESS", "")
+            manager_address = infra_module.resolve_manager_host(radar_root, "host", detected_ip)
+            sudo_env["WAZUH_MANAGER_ADDRESS"] = manager_address
+            yield f"OK - webhook will enroll against {manager_address}\n"
             try:
                 already_enrolled = subprocess.run(
-                    ["sudo", "-A", "docker", "compose", "-f", "docker-compose.webhook.yml",
+                    ["sudo", "-A", "env", f"WAZUH_MANAGER_ADDRESS={manager_address}",
+                     "docker", "compose", "-f", "docker-compose.webhook.yml",
                      "run", "--rm", "--no-deps", "--build", "--entrypoint", "sh", "webhook",
                      "-c", "test -s /var/ossec/etc/client.keys"],
                     cwd=radar_root, env=sudo_env, capture_output=True, timeout=120,
@@ -231,7 +262,6 @@ def stream_build(radar_root: str, spec: dict, vault_session_id: str | None = Non
             except Exception:
                 already_enrolled = False
 
-            sudo_env = dict(sudo_env)
             if already_enrolled:
                 yield "OK - webhook already enrolled; no new token needed\n"
             else:
@@ -257,9 +287,9 @@ def stream_build(radar_root: str, spec: dict, vault_session_id: str | None = Non
                     return
                 sudo_env["WAZUH_REGISTRATION_TOKEN"] = token
 
-            webhook_up_cmd = ["sudo", "-A"]
+            webhook_up_cmd = ["sudo", "-A", "env", f"WAZUH_MANAGER_ADDRESS={manager_address}"]
             if sudo_env.get("WAZUH_REGISTRATION_TOKEN"):
-                webhook_up_cmd += ["env", f"WAZUH_REGISTRATION_TOKEN={sudo_env['WAZUH_REGISTRATION_TOKEN']}"]
+                webhook_up_cmd += [f"WAZUH_REGISTRATION_TOKEN={sudo_env['WAZUH_REGISTRATION_TOKEN']}"]
             webhook_up_cmd += ["docker", "compose", "-f", "docker-compose.webhook.yml", "up", "-d", "--build"]
 
             proc_result = {}
@@ -306,10 +336,10 @@ def stream_build(radar_root: str, spec: dict, vault_session_id: str | None = Non
     with vault_module.sudo_askpass_env(vault_session_id, env) as sudo_env:
         proc_result = {}
         yield from _stream_process([
-            "sudo", "-A", "bash", str(Path(radar_root) / "radar_deploy" / "manager-apply-scenario.sh"), scenario
+            "sudo", "-A", "bash", str(Path(radar_root) / "radar_deploy" / "manager-apply-scenario-all.sh"), scenario
         ], radar_root, sudo_env, proc_result)
         if proc_result.get("rc", 0) != 0:
-            yield "[ERROR] manager-apply-scenario.sh failed or was interrupted (exit code above) -- the manager container may be unhealthy. Check 'docker ps' and the container's own logs before retrying.\n"
+            yield "[ERROR] manager-apply-scenario-all.sh failed on the primary manager (exit code above) -- the manager container may be unhealthy. Check 'docker ps' and the container's own logs before retrying.\n"
             return
 
     yield f">>> Deploying '{scenario}' group/agent.conf via Wazuh API...\n"
@@ -317,8 +347,13 @@ def stream_build(radar_root: str, spec: dict, vault_session_id: str | None = Non
     yield f"{result}\n"
 
     yield ">>> Deploying decoders/rules/lists and ossec.conf via Wazuh API...\n"
+    try:
+        indexer_host = infra_module.address(radar_root, "indexer")
+    except infra_module.NotConfigured as e:
+        indexer_host = dotenv.get("WAZUH_INDEXER_HOST", "https://wazuh.indexer:9200")
+        yield f"[WARN] {e}; falling back to {indexer_host}\n"
     result = deploy_manager_config(client, scenario, str(Path(radar_root) / "scenarios"),
-                                    indexer_host=dotenv.get("WAZUH_INDEXER_HOST", "https://wazuh.indexer:9200"))
+                                    indexer_host=indexer_host)
     yield f"{result}\n"
 
     verification = result.get("list_verification")
@@ -430,14 +465,15 @@ def stream_teardown(radar_root: str, spec: dict, vault_session_id: str | None = 
         yield "[ERROR] sudo password required to tear down the manager stack.\n"
         return
 
-    host_paths = config_module.manager_volume_host_paths(radar_root, "wazuh.manager") if remove_data else []
+    host_paths = config_module.manager_volume_host_paths(radar_root, service="wazuh.manager") if remove_data else []
 
     with vault_module.sudo_askpass_env(vault_session_id, env) as sudo_env:
         yield ">>> Bringing down containers" + (" and volumes" if remove_data else "") + "...\n"
+        overlay_yaml = config_module.core_volumes_overlay_yaml(radar_root)
         compose_files = ["docker-compose.core.yml"]
         if (root / "docker-compose.webhook.yml").is_file():
             compose_files.append("docker-compose.webhook.yml")
-        compose_files.append("volumes.yml")
+        compose_files.append("-")
 
         cmd = ["sudo", "-A", "docker", "compose"]
         for f in compose_files:
@@ -447,7 +483,7 @@ def stream_teardown(radar_root: str, spec: dict, vault_session_id: str | None = 
             cmd.append("-v")
 
         proc_result = {}
-        yield from _stream_process(cmd, radar_root, sudo_env, proc_result)
+        yield from _stream_process(cmd, radar_root, sudo_env, proc_result, stdin_data=overlay_yaml)
         if proc_result.get("rc", 0) != 0:
             yield "[ERROR] docker compose down failed: see the output above.\n"
             return

@@ -79,7 +79,7 @@
     <type>web-log</type>
     <parent>web-accesslog</parent>
     <prematch>RADAR country="</prematch>
-    <regex>^(\S+) \S+ \S+ \.*[\S+ \S\d+] "(\w+) (\S+) HTTP\S+" (\d+) \.+RADAR country="(\.+)" region="(\.+)" city="(\.+)"</regex>
+    <regex>^(\S+) \S+ \S+ \.*[\S+ \S\d+] "(\w+) (\S+) HTTP\S+" (\d+) \.+RADAR country="(\S*)" region="(\S*)" city="(\S*)"</regex>
     <order>srcip, protocol, url, id, radar_country, radar_region, radar_city</order>
 </decoder>
 

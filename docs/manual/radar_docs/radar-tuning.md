@@ -115,12 +115,31 @@ Available actions:
 
 | Value in `ar.yaml` | Effect | Think twice when |
 |--------------------|--------|------------------|
-| `firewall-drop` | Blocks the source IP on the affected agent | The source could be a NAT gateway, VPN concentrator, or your own office egress IP |
-| `lock_user_linux.sh` | Locks the Linux account in the alert (never `root`) | The account is a service account or a shared admin account |
-| `terminate_service.sh` | Terminates the suspicious process or service | The process is something production depends on |
+| `firewall-drop` | Blocks the alert's source IP on the affected agent | The source could be a NAT gateway, VPN concentrator, or your own office egress IP |
+| `lock_user_linux.sh` | Locks the Linux account in the alert (never `root`, system accounts with UID < 1000, or protected users) | The account is a shared admin account (add it to `protected_users`) |
+| `terminate_service.sh` | Stops the alert's service if it is allowlisted; otherwise kills processes connected to the alert's own source IP | The service or connection is something production depends on |
 
 Assign them per tier on the RADAR Scenarios page (**+ Add action**). T0 and T1
 cannot have actions.
+
+Mitigation targets are taken from alert fields that anyone who can write a log
+line can influence (a forged syslog program name, failed logins under a chosen
+username). They are therefore restricted on both sides. An IP address that
+merely appears in the logs is never used as a target: only the source IP of the
+alert itself.
+
+| Where | Setting | Effect |
+|-------|---------|--------|
+| Manager, `ar.yaml` (per scenario) | `terminable_services: [nginx, …]` | Only these services are ever sent to `terminate_service.sh`. Empty (default) = no service is stopped. |
+| Manager, `ar.yaml` (per scenario) | `protected_users: [admin, …]` | These accounts are never sent to `lock_user_linux.sh`. `root` is always protected. |
+| Agent | `/var/ossec/etc/radar-terminable-services` | One service per line; written by `bootstrap-agent.sh --allow-service <name>`. The agent refuses any service not listed. |
+| Agent | `/var/ossec/etc/radar-protected-users` | Optional; one account per line that the agent never locks. |
+| Manager, `ar.yaml` (top level) | `global.never_block: [10.0.0.1, 10.20.0.0/24, …]` | Addresses no mitigation may target. Add gateways, DNS servers, and admin subnets. Loopback, link-local, and the manager's own address are always protected. |
+| Manager, `ar.yaml` (`scanning_detection`) | `trusted_proxies: [10.0.0.5, …]` | Reverse proxies or load balancers in front of your web servers. `X-Forwarded-For` is ignored unless the request came through one of them. |
+
+A service must be in **both** lists to be stopped. Core services (`wazuh-*`,
+`sshd`, `auditd`, `systemd-*`, firewall and syslog services) are never stopped,
+whatever the lists say. Both agent scripts need `jq`, and refuse to act without it.
 
 **`allow_mitigation`** is the master switch per scenario. Off means plan-and-log
 only.

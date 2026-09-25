@@ -9,13 +9,18 @@ from typing import Tuple
 
 import requests
 
-from .client import WazuhAPIClient
+from .client import WazuhAPIClient, WazuhAPIError
 
 CONFIG_INVALID_ERROR = 1125
 
 
 def get_raw_config(client: WazuhAPIClient) -> str:
     resp = client.get("/manager/configuration", params={"raw": "true"})
+    return resp.text
+
+
+def get_raw_config_for_node(client: WazuhAPIClient, node_name: str) -> str:
+    resp = client.get(f"/cluster/{node_name}/configuration", params={"raw": "true"})
     return resp.text
 
 
@@ -28,9 +33,62 @@ def update_raw_config(client: WazuhAPIClient, content: str) -> str:
     return resp.json().get("message", "")
 
 
+def update_raw_config_for_node(client: WazuhAPIClient, node_name: str, content: str) -> str:
+    resp = client.put(
+        f"/cluster/{node_name}/configuration",
+        data=content.encode("utf-8"),
+        headers={"Content-Type": "application/octet-stream"},
+    )
+    return resp.json().get("message", "")
+
+
 def restart_manager(client: WazuhAPIClient) -> str:
     resp = client.put("/manager/restart")
     return resp.json().get("message", "")
+
+
+def _yesish(v) -> bool:
+    if isinstance(v, bool):
+        return v
+    return _safe_str(v).strip().lower() in ("yes", "true", "1")
+
+
+def cluster_status(client: WazuhAPIClient) -> dict:
+    resp = client.get("/cluster/status")
+    data = resp.json().get("data") or {}
+    return {
+        "enabled": _yesish(data.get("enabled")),
+        "running": _yesish(data.get("running")),
+        "raw": data,
+    }
+
+
+def cluster_node_names(client: WazuhAPIClient) -> list:
+    resp = client.get("/cluster/nodes")
+    items = (resp.json().get("data") or {}).get("affected_items") or []
+    return [n["name"] for n in items if n.get("name")]
+
+
+def cluster_nodes(client: WazuhAPIClient) -> list:
+    resp = client.get("/cluster/nodes")
+    items = (resp.json().get("data") or {}).get("affected_items") or []
+    return [{"name": n["name"], "type": n.get("type", "")} for n in items if n.get("name")]
+
+
+def restart_cluster(client: WazuhAPIClient, nodes_list: list = None) -> str:
+    params = {"nodes_list": ",".join(nodes_list)} if nodes_list else {}
+    resp = client.put("/cluster/restart", params=params)
+    return resp.json().get("message", "")
+
+
+def restart_manager_or_cluster(client: WazuhAPIClient) -> dict:
+    try:
+        status = cluster_status(client)
+    except WazuhAPIError as e:
+        return {"mode": "manager", "reason": f"/cluster/status failed: {e}", "message": restart_manager(client)}
+    if status.get("enabled"):
+        return {"mode": "cluster", "cluster_status": status, "message": restart_cluster(client)}
+    return {"mode": "manager", "reason": f"cluster not enabled ({status.get('raw')})", "message": restart_manager(client)}
 
 
 def get_ruleset_validation(client: WazuhAPIClient) -> dict:

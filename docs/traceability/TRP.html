@@ -63,12 +63,13 @@
 <li><a href="#TRP-041">2.10 TCER: Build scanning detection</a></li>
 <li><a href="#TRP-042">2.11 TCER: Detection validation for scanning detection</a></li>
 <li><a href="#TRP-043">2.12 TCER: Validate default scenario rules detection</a></li>
-<li><a href="#TRP-044">2.13 TCER: DECIPHER-RADAR detection validation for Default rules</a></li>
-<li><a href="#TRP-045">2.14 TCER: GUI: Build &amp; validate <code>suspicious_login</code> scenario</a></li>
-<li><a href="#TRP-046">2.15 TCER: GUI: Build &amp; validate <code>geoip_detection</code> scenario</a></li>
-<li><a href="#TRP-047">2.16 TCER: GUI: Build &amp; validate <code>scanning_detection</code> scenario</a></li>
-<li><a href="#TRP-048">2.17 TCER: GUI: Build &amp; validate <code>log_volume</code> scenario</a></li>
-<li><a href="#TRP-049">2.18 TCER: GUI: Unenroll, undeploy, and deregister the <code>log_volume</code> scenario</a></li>
+<li><a href="#TRP-044">2.13 TCER: DECIPHER-RADAR detection validation for default rules</a></li>
+<li><a href="#TRP-045">2.14 TCER: GUI: Build &amp; validate <code>suspicious_login</code></a></li>
+<li><a href="#TRP-046">2.15 TCER: GUI: Build &amp; validate <code>geoip_detection</code></a></li>
+<li><a href="#TRP-047">2.16 TCER: GUI: Build &amp; validate <code>scanning_detection</code></a></li>
+<li><a href="#TRP-048">2.17 TCER: GUI: Build &amp; validate <code>log_volume</code></a></li>
+<li><a href="#TRP-049">2.18 TCER: GUI: Unenroll, undeploy, and deregister <code>log_volume</code></a></li>
+<li><a href="#TRP-050">2.19 TCER: GUI: Deploy scenario on pre-existing SN Wazuh</a></li>
 </ul>
 </li>
 <li><a href="#TRP-039">3.0 SONAR test case execution results</a><ul>
@@ -258,6 +259,10 @@
 <tr>
 <td>defect-category</td>
 <td><span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
 </tr>
 <tr>
 <td>passed-steps</td>
@@ -2993,7 +2998,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 </tbody>
 </table>
-<h2 id="TRP-044">2.13 TCER: DECIPHER-RADAR detection validation for Default rules <small><a href="TRP.html#TRP-044">TRP-044</a></small></h2>
+<h2 id="TRP-044">2.13 TCER: DECIPHER-RADAR detection validation for default rules <small><a href="TRP.html#TRP-044">TRP-044</a></small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running GNU/Linux (Dockerized C5-DEC deployment environment)</li>
@@ -3029,7 +3034,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<p><em>Parent links:</em> <a href="TST.html#TST-054">TST-054 DECIPHER-RADAR detection validation for Default rules</a></p>
+<p><em>Parent links:</em> <a href="TST.html#TST-054">TST-054 DECIPHER-RADAR detection validation for default rules</a></p>
 <table>
 <thead>
 <tr>
@@ -3072,7 +3077,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 </tbody>
 </table>
-<h2 id="TRP-045">2.14 TCER: GUI: Build &amp; validate <code>suspicious_login</code> scenario <small><a href="TRP.html#TRP-045">TRP-045</a></small></h2>
+<h2 id="TRP-045">2.14 TCER: GUI: Build &amp; validate <code>suspicious_login</code> <small><a href="TRP.html#TRP-045">TRP-045</a></small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running GNU/Linux (Ubuntu) and second test node running Debian GNU/Linux 13 (trixie); Wazuh manager/agent version <code>4.14.1</code>; DECIPHER Stack (DECIPHER, FlowIntel, MISP) deployed per SATRAP-DL <code>v1.0</code></li>
@@ -3108,7 +3113,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<p><em>Parent links:</em> <a href="TST.html#TST-055">TST-055 GUI: Build &amp; validate <code>suspicious_login</code> scenario</a></p>
+<p><em>Parent links:</em> <a href="TST.html#TST-055">TST-055 GUI: Build &amp; validate <code>suspicious_login</code></a></p>
 <table>
 <thead>
 <tr>
@@ -3151,7 +3156,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 </tbody>
 </table>
-<h2 id="TRP-046">2.15 TCER: GUI: Build &amp; validate <code>geoip_detection</code> scenario <small><a href="TRP.html#TRP-046">TRP-046</a></small></h2>
+<h2 id="TRP-046">2.15 TCER: GUI: Build &amp; validate <code>geoip_detection</code> <small><a href="TRP.html#TRP-046">TRP-046</a></small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running GNU/Linux (Ubuntu) and second test node running Debian GNU/Linux 13 (trixie); Wazuh manager/agent version <code>4.14.1</code>; DECIPHER Stack (DECIPHER, FlowIntel, MISP) deployed per SATRAP-DL <code>v1.0</code></li>
@@ -3186,7 +3191,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<p><em>Parent links:</em> <a href="TST.html#TST-056">TST-056 GUI: Build &amp; validate <code>geoip_detection</code> scenario</a></p>
+<p><em>Parent links:</em> <a href="TST.html#TST-056">TST-056 GUI: Build &amp; validate <code>geoip_detection</code></a></p>
 <table>
 <thead>
 <tr>
@@ -3229,7 +3234,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 </tbody>
 </table>
-<h2 id="TRP-047">2.16 TCER: GUI: Build &amp; validate <code>scanning_detection</code> scenario <small><a href="TRP.html#TRP-047">TRP-047</a></small></h2>
+<h2 id="TRP-047">2.16 TCER: GUI: Build &amp; validate <code>scanning_detection</code> <small><a href="TRP.html#TRP-047">TRP-047</a></small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running GNU/Linux (Ubuntu) and second test node running Debian GNU/Linux 13 (trixie); Wazuh manager/agent version <code>4.14.1</code>; Apache/Nginx log sources configured on the targeted agent host</li>
@@ -3264,7 +3269,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<p><em>Parent links:</em> <a href="TST.html#TST-057">TST-057 GUI: Build &amp; validate <code>scanning_detection</code> scenario</a></p>
+<p><em>Parent links:</em> <a href="TST.html#TST-057">TST-057 GUI: Build &amp; validate <code>scanning_detection</code></a></p>
 <table>
 <thead>
 <tr>
@@ -3307,7 +3312,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 </tbody>
 </table>
-<h2 id="TRP-048">2.17 TCER: GUI: Build &amp; validate <code>log_volume</code> scenario <small><a href="TRP.html#TRP-048">TRP-048</a></small></h2>
+<h2 id="TRP-048">2.17 TCER: GUI: Build &amp; validate <code>log_volume</code> <small><a href="TRP.html#TRP-048">TRP-048</a></small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running GNU/Linux (Ubuntu) and second test node running Debian GNU/Linux 13 (trixie); Wazuh manager/agent version <code>4.14.1</code></li>
@@ -3335,11 +3340,11 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <ul>
 <li>(a) script completed without error, printing "log_volume simulation completed" — <span style="color:green"><strong>0 = flawless</strong></span></li>
 <li>(b) A spike or anomaly event is detected and visible on the log volume detector page of the Anomaly Detection dashboard of Wazuh. — <span style="color:green"><strong>0 = flawless</strong></span></li>
-<li>(c) active-response mitigation commands logged in <code>active-responses.log</code> — <span style="color:DarkOrange"><strong>3 = major defect</strong></span></li>
-<li>(d) rule <code>100309</code> (LogVolume-Growth-Detected) fired in Wazuh Dashboard <strong>Discovery</strong>, and an email notification was received — <span style="color:DarkOrange"><strong>3 = major defect</strong></span></li>
+<li>(c) active-response mitigation commands logged in <code>active-responses.log</code> — <span style="color:green"><strong>0 = flawless</strong></span></li>
+<li>(d) rule <code>100309</code> (LogVolume-Growth-Detected) fired in Wazuh Dashboard <strong>Discovery</strong>, and an email notification was received — <span style="color:green"><strong>0 = flawless</strong></span></li>
 </ul>
 <h3>Defect summary description</h3>
-<p>Defect-free test execution, i.e., defect category: <span style="color:DarkOrange"><strong>3 = major defect</strong></span></p>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
 <h3>Text execution evidence</h3>
 <p>See linked files (if any), e.g., screenshots, logs, etc.</p>
 <h3>Comments</h3>
@@ -3349,7 +3354,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<p><em>Parent links:</em> <a href="TST.html#TST-058">TST-058 GUI: Build &amp; validate <code>log_volume</code> scenario</a></p>
+<p><em>Parent links:</em> <a href="TST.html#TST-058">TST-058 GUI: Build &amp; validate <code>log_volume</code></a></p>
 <table>
 <thead>
 <tr>
@@ -3360,7 +3365,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <tbody>
 <tr>
 <td>test-date</td>
-<td>2026-08-19</td>
+<td>2026-09-21</td>
 </tr>
 <tr>
 <td>tester</td>
@@ -3368,7 +3373,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 <tr>
 <td>defect-category</td>
-<td><span style="color:DarkOrange"><strong>3 = major defect</strong></span></td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
 </tr>
 <tr>
 <td>passed-steps</td>
@@ -3384,7 +3389,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 <tr>
 <td>release-version</td>
-<td>2.0</td>
+<td>2.1</td>
 </tr>
 <tr>
 <td>verification-method</td>
@@ -3392,7 +3397,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 </tbody>
 </table>
-<h2 id="TRP-049">2.18 TCER: GUI: Unenroll, undeploy, and deregister the <code>log_volume</code> scenario <small><a href="TRP.html#TRP-049">TRP-049</a></small></h2>
+<h2 id="TRP-049">2.18 TCER: GUI: Unenroll, undeploy, and deregister <code>log_volume</code> <small><a href="TRP.html#TRP-049">TRP-049</a></small></h2>
 <h2>Relevant test environment and configuration details</h2>
 <ul>
 <li>Software deviations: aligned with test case specification, with controller node running GNU/Linux (Ubuntu) and second test node running Debian GNU/Linux 13 (trixie); Wazuh manager/agent version <code>4.14.1</code></li>
@@ -3426,7 +3431,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<p><em>Parent links:</em> <a href="TST.html#TST-059">TST-059 GUI: Unenroll, undeploy, and deregister the <code>log_volume</code> scenario</a></p>
+<p><em>Parent links:</em> <a href="TST.html#TST-059">TST-059 GUI: Unenroll, undeploy, and deregister <code>log_volume</code></a></p>
 <table>
 <thead>
 <tr>
@@ -3462,6 +3467,86 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <tr>
 <td>release-version</td>
 <td>2.0</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-050">2.19 TCER: GUI: Deploy scenario on pre-existing SN Wazuh <small><a href="TRP.html#TRP-050">TRP-050</a></small></h2>
+<p>Note that in the instructions below, the term "right" (e.g. the right scenario names) refers to the name of each scenario being tested for and its associated artefacts; this is because this test case validates a certain property for multiple RADAR scenarios.</p>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification, with controller node running GNU/Linux (Ubuntu) and a pre-existing single-node Wazuh v4.14.4 manager/indexer/dashboard stack brought up independently via Wazuh's official docker-compose files</li>
+<li>Hardware deviations: aligned with test case specification</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>.env</code> prepared on the controller host, pointing at the existing Wazuh stack's addresses — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: GUI started via <code>./radar.sh gui</code>; reachable in the browser at the printed host:port — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: Infrastructure page shows the manager, indexer, and dashboard registered with the existing stack's real container names</p>
+<ul>
+<li>(a) <code>WEBHOOK_INTERNAL_PORT</code> confirmed free before use; <code>WEBHOOK_URL</code> and the registered webhook port match it — <span style="color:green"><strong>0 = flawless</strong></span></li>
+</ul>
+<p><strong>Test case step 4</strong>: <strong>Test link</strong> run on the Infrastructure page; reports all three components reachable — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 5</strong>: <code>volumes.yml</code> confirmed to have a complete entry keyed by the manager's exact container name, covering all six required container paths (<code>/var/ossec/etc</code>, <code>/var/ossec/logs</code>, <code>/var/ossec/integrations</code>, <code>/var/ossec/active-response/bin</code>, <code>/etc/filebeat</code>, <code>/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json</code>) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 6</strong>: Scenarios <code>suspicious_login</code>, <code>log_volume</code>, <code>scanning_detection</code> and <code>geoip_detection</code> deployed via <strong>Deployment → Scenario Management → Deploy</strong>; command completed with <code>=== SUCCESS</code> in its output — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 7</strong>: Token minted for scenarios listed in the previous steps via <strong>Deployment → Agent Management</strong>; ready-to-run <code>bootstrap-agent.sh</code> command printed, carrying the group name — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 8</strong>: <code>bootstrap-agent.sh</code> downloaded and run under <code>sudo</code> on the agent host, exactly as printed; command completed with <code>=== SUCCESS ===</code> in its output — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 9</strong>: Agent IP/name entered and scenario selected via <strong>Deployment → Group Management → Assign group</strong>; Wazuh Dashboard <strong>Agents management → Summary</strong> shows the agent assigned the right group name — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 10</strong>: Remaining steps of respective scenarios listed in <a href="./TST.html#TST-060">TST-060</a> completed against the right container names</p>
+<ul>
+<li>(a) health check run for the Suspicious Login scenario in the <strong>Status</strong> tab; no <code>FAIL</code> lines present — <span style="color:green"><strong>0 = flawless</strong></span></li>
+<li>(b) scenario simulation run on the agent host, completing without error and printing "<scenario> simulation completed"; rule, log, and email checks all passed — <span style="color:green"><strong>0 = flawless</strong></span></li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>See linked files (if any), e.g., screenshots, logs, etc.</p>
+<h3>Comments</h3>
+<p>All steps completed successfully, matching the expected outcome in <a href="./TST.html#TST-060">TST-060</a>. Cleanup performed via <strong>Deployment → Teardown</strong> in the GUI and <code>uninstall-agent.sh --purge-data</code> on the agent host.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-060">TST-060 GUI: Deploy scenario on pre-existing SN Wazuh</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-09-21</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>10</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.1</td>
 </tr>
 <tr>
 <td>verification-method</td>

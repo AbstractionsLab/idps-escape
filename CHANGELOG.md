@@ -1,3 +1,66 @@
+# 2.1.0 (2026-09-26)
+
+- **IP resolution fallback**:
+  - Fixed the webhook trigger issue in log volume: reachability of the webhook address is now checked before its notification config is created, falling back to the registered container name if the declared address is unreachable. The same fix applies to all core stack connections (e.g. manager–indexer), not just the webhook.
+- **Infrastructure-aware IP resolution**:
+  - Adds support for existing Wazuh instances (multi-node and single-node).
+  - Connection address resolution falls back to the registered container name when the declared host is unreachable, instead of failing outright.
+  - Added the Infrastructure page to the manuals documentation.
+- **Active response hardening (security)**:
+  - Mitigation targets (usernames, service names, IPs) come from alert fields that anyone able to write a log line can influence, e.g. forged syslog program names or failed logins under a chosen username. Both the manager (`radar_ar.py`) and the agent scripts now validate them before acting.
+  - `terminate_service.sh` stops only services listed in the agent's `/var/ossec/etc/radar-terminable-services` (set with the new `bootstrap-agent.sh --allow-service <name>` option) *and* in the scenario's new `terminable_services` list in `ar.yaml`. Both lists start empty, so **no service is stopped until you configure them**. Core services (`wazuh-*`, `sshd`, `auditd`, `systemd-*`, the firewall and syslog) are never stopped, even if listed.
+  - `terminate_service.sh` no longer runs `/etc/init.d/<name>` directly, which allowed path traversal (`../../tmp/x`) to run any executable as root. Service names containing `/` or starting with `-` are rejected.
+  - `terminate_service.sh` connection kill: it now matches the exact remote address (`ss dst <ip>`) instead of a substring (`10.0.0.1` also matched `10.0.0.10`). It also reads process IDs correctly; before, it silently killed nothing. It never kills PID 1, itself or Wazuh processes, and refuses loopback, `0.*` and broadcast addresses.
+  - `terminate_service.sh` no longer repeats the stop/kill when the active response times out (`delete`).
+  - `lock_user_linux.sh` unlocks only on `delete`. Before, any command other than `add`, including malformed input, unlocked the account. Usernames must be well-formed and exist on the host. Accounts with UID < 1000 and `nobody` are never locked or unlocked, nor is anything in the optional `/var/ossec/etc/radar-protected-users` or the scenario's new `protected_users` list in `ar.yaml`.
+  - Both scripts refuse to act if `jq` is missing, and `bootstrap-agent.sh` now installs `jq` for the `suspicious_login` and `log_volume` groups.
+  - The standalone copies in `radar/scenarios/active_responses/` used for manual setup now match the scripts `bootstrap-agent.sh` installs, and a unit test keeps them in sync.
+  - Added unit tests for the manager-side target filtering.
+  - **Upgrading**: re-run `bootstrap-agent.sh` on existing `suspicious_login`/`log_volume` endpoints (adding `--allow-service` where services should be stoppable), or copy the updated scripts into `/var/ossec/active-response/bin/`, and redeploy `ar.yaml` to the manager.
+- **Simulation coverage**:
+  - Matched the simulation scripts to actually cover the acceptance criteria in SRS-051 and SRS-055.
+  - Updated corresponding unit tests.
+- **GUI access control**:
+  - The GUI now listens on `127.0.0.1` only, with the debugger off. Reach it from another machine with an SSH tunnel (`ssh -L 5000:127.0.0.1:5000 <user>@<radar-host>`). `RADAR_GUI_HOST`, `RADAR_GUI_PORT` and `RADAR_GUI_DEBUG=1` override the defaults.
+  - A login token is printed when the GUI starts; open the printed URL once to log in. `RADAR_GUI_TOKEN` keeps the token across restarts, and `RADAR_GUI_AUTH=off` disables the check behind an authenticating reverse proxy.
+  - The sudo password is checked when entered and forgotten after 15 minutes without use. Showing a stored password on the Connectors page now asks for it.
+  - Requests from other websites and from unexpected host names are refused. `RADAR_GUI_ALLOWED_HOSTS` adds host names the GUI accepts.
+  - The Connectors page no longer sends stored secrets to the browser. Before, only five passwords were withheld, so the webhook shared secret, the dashboard's indexer password and the cluster key were visible to any logged-in session.
+  - Changing where a stored password is sent now asks for the sudo password. This covers the indexer URL, the Wazuh API URL, the SMTP host, port and STARTTLS setting, and the webhook URL. Before, a logged-in session could point a connector at another server and press **Test** to receive the password, which the save also passed on to the active response. No prompt appears when you enter a new password in the same save.
+  - Adding, editing, removing or promoting an indexer on the Infrastructure page also asks for the sudo password, since the primary indexer's address is where RADAR sends the indexer password.
+  - Open the GUI in a browser on your own workstation, through the SSH tunnel, and not in a browser on the RADAR host. Browsers share cookies across ports on the same host, so any local user there could read the login and sudo session cookies.
+- **Configuration handling**:
+  - `.env` is read as plain data and never executed, by the GUI, the deploy scripts, the active response and the anomaly detector alike. It is written with owner-only permissions.
+  - Values entered in the GUI (hosts, container names, ports, URLs, passwords) are validated and can no longer be interpreted as shell commands.
+  - `run-radar.sh` passes the needed settings to its containers instead of mounting `.env`.
+- **Credentials**:
+  - New deployments get unique passwords for the indexer, the dashboard and the Wazuh API, generated on the first build and stored in `.env`. The default demo indexer users are no longer created.
+  - New `sudo ./radar.sh rotate-credentials` command replaces the passwords of a running deployment.
+  - The build warns when a deployment still uses the default Wazuh passwords.
+- **Anomaly detection webhook**:
+  - The webhook requires a shared secret (`WEBHOOK_SHARED_SECRET`, generated on the first build), which `run-radar.sh` adds to the OpenSearch notification channel.
+  - Alert fields are validated, request size is limited, and the webhook runs under gunicorn. The GUI's ping test no longer writes a test alert.
+  - Anomaly alerts are accepted only from the webhook's own log, so a line forged with `logger` on an endpoint no longer triggers a response. The alert's time window is capped to the scenario's `delta_ad_minutes`.
+  - `WEBHOOK_BIND_ADDRESS` and `RADAR_MGMT_BIND_ADDRESS` set the host address the webhook, indexer and Wazuh API ports are published on.
+  - **Upgrading**: after rebuilding, run `./radar.sh run log_volume` once so the existing notification channel gets the secret.
+- **Active response targeting**:
+  - IP-based mitigations (`firewall-drop`, `terminate_service.sh`) act only on the source IP of the alert itself, never on addresses found elsewhere in the logs. Without an allowlisted service, `log_volume` tier 3 therefore notifies without mitigating.
+  - New `global.never_block` list in `ar.yaml` for addresses that are never blocked (gateways, DNS servers, admin subnets). Loopback, link-local and the manager's own address are always protected.
+  - SSH source addresses can no longer be spoofed through the username, for `suspicious_login` and `geoip_detection`.
+  - New `trusted_proxies` list for `scanning_detection`: `X-Forwarded-For` is used only for requests coming through a listed proxy.
+  - `firewall-drop` now blocks exactly the IP RADAR checked against `never_block`. Before, it blocked the alert's raw `srcip` and ignored the checked IP, so for `scanning_detection` it blocked nothing or an address that was never checked.
+- **Manager hardening**:
+  - Builds no longer make the manager's mounted directories world-writable. Permissions left by older builds are repaired on the next deployment, or with the new `sudo ./radar.sh repair-permissions` command.
+  - The active response now receives only the settings it needs, in a read-only file.
+  - Enrollment tokens are revoked from the host when they expire, even if the manager restarts. After a host reboot, the next health check or build revokes an expired token. Token lifetimes must be between 1 and 1440 minutes.
+- **Documentation and specifications**:
+  - Updated documentations and manuals with the IP resolution fallback and Infrastructure-aware architecture.
+  - Added TST for cases supporting the existing Wazuh infrastructure.
+  - Reviewed and corrected documentation.
+  - Actualized `radar-rules.md`, `ar.yaml` and related documentation (the ossec snippets, and the scenario explanation docs) to match what was verified against the real Wazuh rules and decoders.
+  - Added a "Security assumptions and recommendations" section to the README, with the ports to restrict by firewall and the requirement to reach the GUI through an SSH tunnel.
+  - Updated the getting started guide, GUI manual, operations, tuning, troubleshooting, anomaly detector reference and log volume pages.
+
 # 2.0.0 (2026-09-01)
 
 - **Documentation restructuring & consolidation**:

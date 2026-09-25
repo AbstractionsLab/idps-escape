@@ -1,3 +1,6 @@
+global:
+  never_block: []
+
 scenarios:
   default:
     signature:
@@ -71,7 +74,6 @@ scenarios:
       rule_ids: []
     signature:
       rule_ids:
-        - "210012"
         - "210013"
         - "210020"
         - "210021"
@@ -85,7 +87,7 @@ scenarios:
     delta_signature_minutes: 1
     signature_impact: 0.7
     signature_likelihood: 
-      - rule_id: [210012, 210013, 210030, 210031]
+      - rule_id: [210013, 210030, 210031]
         weight: 0.6
       - rule_id: [210020, 210021]
         weight: 0.4
@@ -98,6 +100,8 @@ scenarios:
     mitigations_tier3:
       - firewall-drop
       - lock_user_linux.sh
+    # Accounts lock_user_linux.sh must never lock (root is always protected).
+    protected_users: []
     allow_mitigation: true
   
   log_volume:
@@ -121,6 +125,8 @@ scenarios:
     mitigations_tier2: []
     mitigations_tier3:
       - terminate_service.sh
+    # (/var/ossec/etc/radar-terminable-services, set via --allow-service).
+    terminable_services: []
     allow_mitigation: true
 
   scanning_detection:
@@ -148,4 +154,5 @@ scenarios:
     mitigations_tier3:
       - firewall-drop
     allowlist_file: etc/lists/radar_scanning_allowlist
+    trusted_proxies: []
     allow_mitigation: false

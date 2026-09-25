@@ -57,18 +57,31 @@ if [[ ! -f .env ]]; then
   echo "[!] .env not found. Copy env.example to .env and fill in the required values." >&2
   exit 1
 fi
-set -a
-# shellcheck disable=SC1091
-source .env
-set +a
+# shellcheck source=radar_deploy/_lib.sh
+source "$SCRIPT_DIR/radar_deploy/_lib.sh"
+radar_load_env "$SCRIPT_DIR"
 
 # --- manager: bring up local core stack if not already running ---
-if ! docker ps --format '{{.Names}}' | grep -qx wazuh.manager; then
+MANAGER_CONTAINER="$(python3 -m wazuh_api.cli manager-container 2>/dev/null)" || MANAGER_CONTAINER="wazuh.manager"
+if ! docker ps --format '{{.Names}}' | grep -qx "$MANAGER_CONTAINER"; then
   echo ">>> Ensuring indexer/manager/dashboard TLS certs exist..."
   bash "radar_deploy/manager-ensure-certs.sh"
 
+  echo ">>> Ensuring per-deployment credentials (no stock defaults)..."
+  python3 -m wazuh_api.credentials ensure --radar-root "$SCRIPT_DIR"
+  radar_load_env "$SCRIPT_DIR"
+
+  OVERLAY_YAML="$(python3 -m wazuh_api.cli core-volumes-overlay)"
+
+  echo ">>> Ensuring host-side bind-mount paths exist before first container creation..."
+  while IFS= read -r line; do
+    [[ "$line" =~ ^[[:space:]]*-[[:space:]]*(/.+)$ ]] || continue
+    host_side="${BASH_REMATCH[1]%%:*}"
+    [[ -e "$host_side" ]] || install -d -m 0750 "$host_side"
+  done <<< "$OVERLAY_YAML"
+
   PIPELINE_CONTAINER_PATH='/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json'
-  PIPELINE_HOST_PATH=$(grep -E ":${PIPELINE_CONTAINER_PATH//\//\\/}\$" volumes.yml | head -1 | sed -E 's/^ *- *//; s/:[^:]*$//')
+  PIPELINE_HOST_PATH="$(python3 -m wazuh_api.cli manager-volume-path "$PIPELINE_CONTAINER_PATH" --container wazuh.manager 2>/dev/null)" || true
   if [[ -z "$PIPELINE_HOST_PATH" ]]; then
     echo "[!] volumes.yml has no bind mount for $PIPELINE_CONTAINER_PATH on service wazuh.manager" >&2
     echo "    Add that mapping (see radar-getting-started.md's \"Configure volume mappings\" section) and re-run." >&2
@@ -76,21 +89,29 @@ if ! docker ps --format '{{.Names}}' | grep -qx wazuh.manager; then
   fi
   if [[ ! -e "$PIPELINE_HOST_PATH" || -d "$PIPELINE_HOST_PATH" || ! -s "$PIPELINE_HOST_PATH" ]]; then
     echo ">>> Seeding ${PIPELINE_HOST_PATH} with default content before first container creation..."
-    mkdir -p "$(dirname "$PIPELINE_HOST_PATH")"
     [[ -d "$PIPELINE_HOST_PATH" ]] && (rmdir "$PIPELINE_HOST_PATH" 2>/dev/null || rm -rf "$PIPELINE_HOST_PATH")
     cp config/wazuh_cluster/pipeline-archives.json "$PIPELINE_HOST_PATH"
     chmod 644 "$PIPELINE_HOST_PATH"
   fi
 
   echo ">>> Bringing up local core stack (docker-compose.core.yml)..."
-  docker compose -f docker-compose.core.yml -f volumes.yml up -d
+  echo "$OVERLAY_YAML" | docker compose -f docker-compose.core.yml -f - up -d
 else
   echo ">>> Manager already running."
+  bash "radar_deploy/manager-revoke-token.sh" --if-expired
 fi
+
+python3 -m wazuh_api.infra register-radar-components >/dev/null 2>&1 || true
 
 # --- webhook (RADAR's AD-alerts integration; not part of plain Wazuh) ---
 if [[ "$CORE_ONLY" != true && -f docker-compose.webhook.yml ]]; then
   echo ">>> Building webhook locally..."
+  python3 -m wazuh_api.envfile ensure-secret WEBHOOK_SHARED_SECRET .env
+  radar_load_env "$SCRIPT_DIR"
+  DETECTED_ADDRESS="$(detect_manager_address)"
+  export WAZUH_MANAGER_ADDRESS="$(PYTHONPATH="$PWD" python3 -m wazuh_api.infra resolve-manager-host host "$DETECTED_ADDRESS" 2>/dev/null)" || export WAZUH_MANAGER_ADDRESS="$DETECTED_ADDRESS"
+  echo "OK - webhook will enroll against ${WAZUH_MANAGER_ADDRESS}"
+
   WAZUH_REGISTRATION_TOKEN=""
   if docker compose -f docker-compose.webhook.yml run --rm --no-deps --entrypoint sh webhook \
        -c 'test -s /var/ossec/etc/client.keys' >/dev/null 2>&1; then
@@ -143,7 +164,7 @@ echo ">>> Waiting for OpenSearch to become reachable..."
 python3 -m wazuh_api.cli wait-for-opensearch --timeout 120
 
 echo ">>> Applying manager-side scenario config (active responses, enrichment, filebeat)..."
-bash "radar_deploy/manager-apply-scenario.sh" "$SCENARIO_NAME"
+bash "radar_deploy/manager-apply-scenario-all.sh" "$SCENARIO_NAME"
 
 echo ">>> Deploying '${SCENARIO_NAME}' group/agent.conf via Wazuh API..."
 python3 -m wazuh_api.cli deploy-scenario-config \

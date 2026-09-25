@@ -35,7 +35,7 @@ The parsed events are then evaluated by rules defined in `scenarios/rules/suspic
   Rules that detect repeated failed SSH authentication attempts within a defined time window (e.g., multiple failures for the same user in a short period).
 
 - **Impossible travel / abnormal geo-velocity**  
-  Rules that use the geo-velocity and country change information produced by the manager-side enrichment integration to detect login patterns that are not physically plausible (e.g., logins from distant countries within an unrealistically short time frame).
+  Rules that use the geo-velocity information produced by the manager-side enrichment integration to detect login patterns that are not physically plausible (e.g., logins from distant countries within an unrealistically short time frame).
 
 When rule conditions are satisfied, Wazuh generates an alert for the corresponding suspicious login behavior.
 
@@ -117,6 +117,7 @@ cp /radar/scenarios/active_responses/lock_user_linux.sh /var/ossec/active-respon
 chmod 750 /var/ossec/active-response/bin/radar_ar.py /var/ossec/active-response/bin/lock_user_linux.sh
 chown root:wazuh /var/ossec/active-response/bin/radar_ar.py /var/ossec/active-response/bin/lock_user_linux.sh
 ```
+`lock_user_linux.sh` needs `jq`, and refuses to act without it. It never locks or unlocks `root`, accounts with UID < 1000, `nobody`, or accounts listed one per line in the optional `/var/ossec/etc/radar-protected-users`. To keep shared admin accounts from being locked, also list them under `protected_users` for `suspicious_login` in `ar.yaml`. Endpoints onboarded with `bootstrap-agent.sh --group suspicious_login` get the script and `jq` installed automatically. See [Mitigations](../radar-tuning.md#mitigations).
 5. Download the `GeoLite2-City`/`GeoLite2-ASN` databases into `/var/ossec/etc/radar/` using your `MAXMIND_LICENSE_KEY`, and copy the manager-side enrichment integration script: `/radar/manager-enrichment/custom-radar-enrich` into `/var/ossec/integrations/`, and `/radar/manager-enrichment/geoip.py`, `/radar/manager-enrichment/state_store.py`, `/radar/manager-enrichment/enrichment.py` into `/var/ossec/integrations/radar_enrichment/`.
 6. Add the content of `/radar/scenarios/ossec/radar-suspicious-login-ossec-snippet.xml` inside `<ossec_config>` in `/var/ossec/etc/ossec.conf`.
 7. Restart Wazuh manager:

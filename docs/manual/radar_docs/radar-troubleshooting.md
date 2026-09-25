@@ -1,5 +1,13 @@
 # Troubleshooting
 
+## GUI access
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| Page does not load from another computer | The GUI accepts local connections only | Use an SSH tunnel: `ssh -L 5000:127.0.0.1:5000 <user>@<radar-host>` |
+| "Not logged in" | Opened without the login token, or the GUI was restarted | Open the login URL printed in the GUI's terminal again |
+| "Host … is not allowed" | Browsed by a name or address the GUI does not accept | Use `127.0.0.1:5000`, or add the name to `RADAR_GUI_ALLOWED_HOSTS` |
+
 ## Connectors
 
 | Symptom | Likely cause | Fix |
@@ -14,17 +22,34 @@ Connector values live in `.env`.
 
 ## Deployment
 
-**Deployment fails on volume validation.** These three container paths must be
-bind-mounted: `/var/ossec/etc`, `/var/ossec/active-response/bin`,
-`/etc/filebeat`. Update `volumes.yml` to match your manager — see
+**Deployment fails on volume validation.** These container paths must be
+bind-mounted: `/var/ossec/etc`, `/var/ossec/logs`, `/var/ossec/integrations`,
+`/var/ossec/active-response/bin`, `/etc/filebeat`, and
+`/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json`. Update
+`volumes.yml` to match your manager — see
 [Working with an existing Wazuh installation](./radar-getting-started.md#working-with-an-existing-wazuh-installation).
 
 **`sudo` is requested even though the stack is already running.** Expected.
 Applying a scenario's configuration to the manager needs `sudo` regardless of
 whether the containers are up.
 
-**The sudo password is asked for again.** It is held in memory for the browser
-session only. Restarting the Flask server clears it.
+**The sudo password is asked for again.** It is checked when you enter it, kept
+in memory only, and forgotten after 15 minutes without use or when the GUI
+restarts.
+
+**The build warns "stock default credentials still in use".** The deployment
+still uses the stock Wazuh passwords. Run `sudo ./radar.sh rotate-credentials`.
+
+**The Wazuh dashboard shows error 500 after a rebuild or credential change.**
+The browser is sending an old login cookie. Open the dashboard in a private
+window, or clear the site's data, then log in with the new `OS_PASS`.
+
+## Anomaly detection
+
+**No `log_volume` alerts arrive, and `docker logs ad-webhook` shows 401.** The
+indexer's notification channel does not send the webhook's shared secret yet,
+typically on a deployment set up before this was required. Run
+`./radar.sh run log_volume` once to update the channel.
 
 ## Agents
 
@@ -58,7 +83,7 @@ Re-run `bootstrap-agent.sh --group log_volume` on that endpoint.
 docker ps                                    # what is running
 docker logs wazuh.manager                    # manager container
 docker logs ad-webhook                       # webhook service
-curl -k -u admin:<pass> https://localhost:9200/_cat/indices   # indices
+curl -k -u admin:<OS_PASS> https://localhost:9200/_cat/indices   # indices
 tail -f /srv/wazuh/manager/logs/active-responses.log          # AR decisions
 tail -f /srv/wazuh/manager/logs/ossec.log                     # manager log
 ```

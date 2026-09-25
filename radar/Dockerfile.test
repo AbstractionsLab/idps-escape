@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends bash ca-certificates bats  \
- && pip install --no-cache-dir pytest responses pyyaml requests \
+ && pip install --no-cache-dir pytest responses pyyaml requests "flask>=3.0,<4" \
  && useradd -r -m -s /bin/bash testuser \
  && mkdir -p /workspace \
  && chown testuser:testuser /workspace \

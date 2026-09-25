@@ -8,7 +8,8 @@ VOLUMES_YML="$RADAR_ROOT/volumes.yml"
 source "$RADAR_ROOT/radar_deploy/_lib.sh"
 radar_load_env "$RADAR_ROOT"
 
-hostpath() { grep -E ":${1//\//\\/}\$" "$VOLUMES_YML" | head -1 | sed -E 's/^ *- *//; s/:[^:]*$//'; }
+CONTAINER="${1:-$(radar_manager_container "$RADAR_ROOT")}"
+hostpath() { radar_hostpath "$RADAR_ROOT" "$1" "$CONTAINER"; }
 OSSEC_ETC=$(hostpath '/var/ossec/etc')
 OSSEC_CONF="$OSSEC_ETC/ossec.conf"
 

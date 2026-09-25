@@ -4,6 +4,8 @@ Unit tests for RADAR Active Response script (radar_ar.py)
 Tests the RiskEngine class and its risk calculation logic.
 """
 
+import json
+
 import pytest
 import importlib.util
 import importlib.machinery
@@ -724,29 +726,6 @@ class TestContextQueryRetry:
         assert events == []
         assert os_client.search.call_count == 4
 
-    def test_retries_when_raw_hits_survive_no_filtered_events(self, radar_ar, mock_logger, monkeypatch):
-        monkeypatch.setattr(radar_ar.time, "sleep", lambda _s: None)
-
-        os_client = Mock()
-        os_client.indices = "wazuh-alerts-*,wazuh-archives-*"
-        unrelated = [{"rule": {"id": "1002", "groups": ["ossec"]}, "data": {}}]
-        relevant = [{"rule": {"id": "100810", "groups": ["radar_scanning"]}, "data": {"src_ip": "198.51.100.21"}}]
-        os_client.search.side_effect = [unrelated, unrelated, relevant]
-
-        strategy = radar_ar.ScanningDetection(mock_logger, os_client)
-        strategy.context_query_attempts = 3
-        strategy.context_query_retry_seconds = 0
-
-        t_start = datetime(2026, 8, 27, 12, 40, tzinfo=timezone.utc)
-        t_end = datetime(2026, 8, 27, 12, 45, tzinfo=timezone.utc)
-        alert = {"rule": {"id": "100830", "groups": []}, "data": {"src_ip": "198.51.100.21"}}
-        scenario = {"alert": alert, "config": {}, "name": "scanning_detection", "detection": "signature"}
-        events = strategy._query_events_with_retry(scenario, t_start, t_end, "vm-intern-cyfort-1")
-
-        assert events == relevant
-        assert os_client.search.call_count == 3
-
-
 class TestAuditLogFieldNames:
     """SRS-062 requirement #7: the audit entry must carry exactly
     decision_id, rule_id, source_ip, action, tier, result, reason."""
@@ -766,6 +745,225 @@ class TestAuditLogFieldNames:
         assert "mitigation" not in entry
         assert entry["reason"] == "allowlist"
         assert set(entry.keys()) >= {"decision_id", "rule_id", "source_ip", "action", "tier", "result", "reason"}
+
+
+@pytest.mark.parametrize("name", ["lock_user_linux.sh", "terminate_service.sh"])
+def test_standalone_ar_script_matches_bootstrap_copy(name):
+    """The manual-setup copy must not drift from what bootstrap-agent.sh installs."""
+    import re
+    radar_root = Path(__file__).resolve().parents[2]
+    bootstrap = (radar_root / "bootstrap-agent.sh").read_text()
+    match = re.search(rf"write_ar_script {re.escape(name)} <<'AR_SCRIPT_EOF'\n(.*?)^AR_SCRIPT_EOF$",
+                      bootstrap, re.S | re.M)
+    assert match, f"{name} heredoc not found in bootstrap-agent.sh"
+    standalone = (radar_root / "scenarios" / "active_responses" / name).read_text()
+    assert standalone == match.group(1)
+
+
+class TestBuildArgsTargetValidation:
+    """Mitigation targets come from attacker-influenced alert fields."""
+
+    @staticmethod
+    def _build(radar_ar, mock_logger, command, iocs, config=None):
+        executor = radar_ar.ActionExecutor(mock_logger, Mock())
+        return executor._build_args(command, {"config": config or {}}, iocs)
+
+    def test_lock_user_drops_root_protected_and_malformed_names(self, radar_ar, mock_logger):
+        iocs = {"user": ["alice", "ROOT", "admin", "-ohax", "bob; rm -rf /", "../x", "carol.smith"]}
+        args = self._build(radar_ar, mock_logger, "lock_user_linux.sh", iocs,
+                           {"protected_users": ["Admin"]})
+        assert args == [["alice"], ["carol.smith"]]
+
+    def test_terminate_service_refuses_services_not_allowlisted(self, radar_ar, mock_logger):
+        iocs = {"service": ["sshd", "wazuh-agent"], "ip": []}
+        assert self._build(radar_ar, mock_logger, "terminate_service.sh", iocs) == []
+
+    def test_terminate_service_picks_allowlisted_service(self, radar_ar, mock_logger):
+        iocs = {"service": ["sshd", "nginx.service"], "ip": ["203.0.113.7"]}
+        args = self._build(radar_ar, mock_logger, "terminate_service.sh", iocs,
+                           {"terminable_services": ["nginx"]})
+        assert args == [["nginx"]]
+
+    def test_terminate_service_never_uses_scraped_ips(self, radar_ar, mock_logger):
+        iocs = {"service": ["sshd"], "ip": ["127.0.0.1", "0.0.0.0", "not-an-ip", "203.0.113.7"]}
+        args = self._build(radar_ar, mock_logger, "terminate_service.sh", iocs,
+                           {"terminable_services": ["nginx"]})
+        assert args == []
+
+    def test_terminate_service_uses_alert_own_ip(self, radar_ar, mock_logger):
+        executor = radar_ar.ActionExecutor(mock_logger, Mock())
+        iocs = {"service": [], "ip": ["198.51.100.1"]}
+        assert executor._build_args("terminate_service.sh", {"config": {}}, iocs, "203.0.113.7") == [["203.0.113.7"]]
+        assert executor._build_args("terminate_service.sh", {"config": {}}, iocs, "127.0.0.1") == []
+
+    def test_terminate_service_rejects_path_like_service_even_if_listed(self, radar_ar, mock_logger):
+        iocs = {"service": ["../../tmp/x"], "ip": []}
+        args = self._build(radar_ar, mock_logger, "terminate_service.sh", iocs,
+                           {"terminable_services": ["../../tmp/x"]})
+        assert args == []
+
+
+class TestNeverBlockAndAlertOwnTarget:
+
+    def _executor(self, radar_ar, mock_logger, cfg=None, env=None, monkeypatch=None):
+        if monkeypatch:
+            for k in ("RADAR_MANAGER_ADDRESS", "OS_URL", "WAZUH_API_URL"):
+                monkeypatch.delenv(k, raising=False)
+            for k, v in (env or {}).items():
+                monkeypatch.setenv(k, v)
+        nb = radar_ar.NeverBlock(mock_logger, cfg or {}, use_env=bool(env))
+        return radar_ar.ActionExecutor(mock_logger, Mock(), never_block=nb)
+
+    def test_firewall_drop_uses_alert_ip(self, radar_ar, mock_logger):
+        ex = self._executor(radar_ar, mock_logger)
+        assert ex._build_args("firewall-drop", {"config": {}}, {"ip": ["198.51.100.9"]}, "203.0.113.7") == [["203.0.113.7"]]
+
+    def test_firewall_drop_never_uses_scraped_ip(self, radar_ar, mock_logger):
+        ex = self._executor(radar_ar, mock_logger)
+        assert ex._build_args("firewall-drop", {"config": {}}, {"ip": ["198.51.100.9"]}, "") == []
+        assert ex.last_refusal == "no_alert_source_ip"
+
+    @pytest.mark.parametrize("ip", ["127.0.0.1", "169.254.1.1", "0.0.0.0", "224.0.0.1", "::1", "fe80::1", "not-an-ip"])
+    def test_firewall_drop_refuses_protected_defaults(self, radar_ar, mock_logger, ip):
+        ex = self._executor(radar_ar, mock_logger)
+        assert ex._build_args("firewall-drop", {"config": {}}, {}, ip) == []
+
+    def test_configured_never_block_cidr(self, radar_ar, mock_logger):
+        ex = self._executor(radar_ar, mock_logger, {"global": {"never_block": ["10.0.0.0/24", "2001:db8::/32"]}})
+        assert ex._build_args("firewall-drop", {"config": {}}, {}, "10.0.0.1") == []
+        assert ex.last_refusal == "never_block"
+        assert ex._build_args("firewall-drop", {"config": {}}, {}, "2001:db8::5") == []
+        assert ex._build_args("firewall-drop", {"config": {}}, {}, "10.0.1.1") == [["10.0.1.1"]]
+
+    def test_manager_and_indexer_addresses_are_protected(self, radar_ar, mock_logger, monkeypatch):
+        ex = self._executor(radar_ar, mock_logger, env={"RADAR_MANAGER_ADDRESS": "192.0.2.10",
+                                                        "OS_URL": "https://192.0.2.11:9200",
+                                                        "WAZUH_API_URL": "https://localhost:55000"},
+                            monkeypatch=monkeypatch)
+        for ip in ("192.0.2.10", "192.0.2.11"):
+            assert ex._build_args("firewall-drop", {"config": {}}, {}, ip) == []
+
+    def test_terminate_service_ip_path_respects_never_block(self, radar_ar, mock_logger):
+        ex = self._executor(radar_ar, mock_logger, {"global": {"never_block": ["203.0.113.0/24"]}})
+        assert ex._build_args("terminate_service.sh", {"config": {}}, {"service": [], "ip": []}, "203.0.113.7") == []
+
+    def test_resolve_target_ip_has_no_scraped_fallback(self, radar_ar, mock_logger):
+        strat = radar_ar.BaseScenario(mock_logger, Mock())
+        scenario = {"alert": {"data": {}}}
+        assert strat.resolve_target_ip(scenario, {"iocs": {"ip": ["203.0.113.7"]}}) is None
+
+    def test_invalid_config_entry_is_ignored(self, radar_ar, mock_logger):
+        nb = radar_ar.NeverBlock(mock_logger, {"global": {"never_block": ["nonsense", "10.1.0.0/16"]}}, use_env=False)
+        assert nb.contains("10.1.2.3") and not nb.contains("10.2.0.1")
+
+
+class TestScanningXff:
+    @pytest.mark.parametrize("proxies,data,expected", [
+        ([], {"src_ip": "198.51.100.1", "http": {"xff": "10.0.0.1"}}, "198.51.100.1"),
+        (["198.51.100.0/24"], {"src_ip": "198.51.100.1", "http": {"xff": "203.0.113.9"}}, "203.0.113.9"),
+        (["198.51.100.0/24"], {"src_ip": "198.51.100.1", "http": {"xff": "10.0.0.1, 203.0.113.9"}}, "203.0.113.9"),
+        (["198.51.100.0/24"], {"src_ip": "198.51.100.1", "http": {"xff": "203.0.113.9, 198.51.100.2"}}, "203.0.113.9"),
+        (["198.51.100.0/24"], {"src_ip": "192.0.2.50", "http": {"xff": "10.0.0.1"}}, "192.0.2.50"),
+        (["198.51.100.0/24"], {"src_ip": "198.51.100.1", "http": {"xff": "garbage"}}, "198.51.100.1"),
+    ])
+    def test_xff_only_from_trusted_proxy(self, radar_ar, mock_logger, proxies, data, expected):
+        strat = radar_ar.ScanningDetection(mock_logger, Mock())
+        scenario = {"alert": {"data": data}, "config": {"trusted_proxies": proxies}}
+        assert strat.resolve_target_ip(scenario, {}) == expected
+
+
+class TestAdAlertOrigin:
+
+    @pytest.mark.parametrize("agent,location,ok", [
+        ("ad-webhook", "/var/log/ad_alerts.log", True),
+        ("ad-webhook", "(ad-webhook) any->/var/log/ad_alerts.log", True),
+        ("db01", "/var/log/auth.log", False),
+        ("db01", "/var/log/ad_alerts.log", False),
+        ("ad-webhook", "/var/log/syslog", False),
+        ("ad-webhook", "/tmp/var/log/ad_alerts.log.x", False),
+        ("", "", False),
+    ])
+    def test_verify(self, radar_ar, mock_logger, monkeypatch, agent, location, ok):
+        monkeypatch.delenv("WEBHOOK_AGENT_NAME", raising=False)
+        alert = {"agent": {"name": agent}, "location": location}
+        assert radar_ar.AdAlertOrigin.verify(alert, mock_logger) is ok
+
+    def test_agent_name_is_configurable(self, radar_ar, mock_logger, monkeypatch):
+        monkeypatch.setenv("WEBHOOK_AGENT_NAME", "hook2")
+        alert = {"agent": {"name": "hook2"}, "location": "/var/log/ad_alerts.log"}
+        assert radar_ar.AdAlertOrigin.verify(alert, mock_logger)
+
+
+class TestLogVolumeWindowClamp:
+    def _window(self, radar_ar, mock_logger, ps, pe, ts="2026-09-24T12:00:00+00:00", delta=10):
+        strat = radar_ar.LogVolume(mock_logger, Mock())
+        scenario = {"alert": {"timestamp": ts, "data": {"period_start": ps, "period_end": pe}},
+                    "config": {"delta_ad_minutes": delta}, "detection": "ad"}
+        return strat.resolve_time_window(scenario)
+
+    def test_normal_period_is_kept(self, radar_ar, mock_logger):
+        s, e = self._window(radar_ar, mock_logger, "2026-09-24T11:50:00Z", "2026-09-24T11:59:00Z")
+        assert (s.minute, e.minute) == (50, 59)
+
+    def test_long_period_is_capped_at_delta(self, radar_ar, mock_logger):
+        s, e = self._window(radar_ar, mock_logger, "2026-09-01T00:00:00Z", "2026-09-24T11:59:00Z")
+        assert e - s == radar_ar.timedelta(minutes=10)
+
+    def test_future_end_is_clamped_to_alert_time(self, radar_ar, mock_logger):
+        s, e = self._window(radar_ar, mock_logger, "2026-09-24T11:55:00Z", "2027-01-01T00:00:00Z")
+        assert e.isoformat() == "2026-09-24T12:00:00+00:00"
+
+    def test_inverted_period_falls_back(self, radar_ar, mock_logger):
+        s, e = self._window(radar_ar, mock_logger, "2026-09-24T11:59:00Z", "2026-09-24T11:00:00Z")
+        assert e.isoformat() == "2026-09-24T12:00:00+00:00" and e - s == radar_ar.timedelta(minutes=10)
+
+
+def test_rule_100300_is_restricted_to_webhook_log():
+    import xml.etree.ElementTree as ET
+    root = Path(__file__).resolve().parents[2]
+    text = next((root / "scenarios" / "rules" / "log_volume").glob("*.xml")).read_text()
+    tree = ET.fromstring("<r>" + text + "</r>")
+    rule = next(r for r in tree.iter("rule") if r.get("id") == "100300")
+    assert rule.findtext("location") == "/var/log/ad_alerts.log$"
+
+
+
+class TestActiveResponsePayload:
+    def _run(self, radar_ar, mock_logger, command, target_ip, iocs=None):
+        api = Mock()
+        api.get_agent_id_by_name.return_value = "002"
+        ex = radar_ar.ActionExecutor(mock_logger, api)
+        decision = {
+            "scenario": {"config": {}, "alert": {"agent": {"id": "002", "name": "web01"},
+                                                 "data": {"src_ip": "198.51.100.9", "srcip": "10.0.0.9",
+                                                          "http": {"xff": "10.0.0.8"}}}},
+            "context": {"iocs": iocs or {}, "effective_agent": "web01"},
+            "target_ip": target_ip,
+        }
+        ex._execute_mitigation(decision, command)
+        return api.send_active_response.call_args
+
+    def test_firewall_drop_receives_only_the_checked_ip(self, radar_ar, mock_logger):
+        call = self._run(radar_ar, mock_logger, "firewall-drop", "203.0.113.7")
+        agent_id, command, args, alert_data = call.args
+        assert (agent_id, command, args) == ("002", "!firewall-drop", ["203.0.113.7"])
+        assert alert_data == {"srcip": "203.0.113.7"}
+
+    def test_other_commands_receive_no_alert_data(self, radar_ar, mock_logger):
+        call = self._run(radar_ar, mock_logger, "lock_user_linux.sh", "", {"user": ["bob"]})
+        assert call.args[2] == ["bob"] and call.args[3] == {}
+
+    def test_payload_shape(self, radar_ar, mock_logger):
+        client = radar_ar.WazuhApiClient.__new__(radar_ar.WazuhApiClient)
+        client.base_url, client.verify_ssl, client.timeout = "https://m:55000", False, 5
+        client.logger = mock_logger
+        client._authenticate = lambda: "tok"
+        client._requests = Mock()
+        client._requests.put.return_value.json.return_value = {}
+        client.send_active_response("002", "!firewall-drop", ["203.0.113.7"], {"srcip": "203.0.113.7"})
+        body = json.loads(client._requests.put.call_args.kwargs["data"])
+        assert body == {"command": "!firewall-drop", "arguments": ["203.0.113.7"],
+                        "alert": {"data": {"srcip": "203.0.113.7"}}}
 
 
 if __name__ == "__main__":

@@ -13,8 +13,8 @@ agent endpoint.
 
 | Scenario | Script | Method | Target rules |
 |----------|--------|--------|--------------|
-| `geoip_detection` | `scenarios/geoip_detection.py` | SSH success log entry from non-whitelisted IP | 100900, 100901 |
-| `suspicious_login` | `scenarios/suspicious_login.py` | SSH failure burst + success from diverse IPs | 210012, 210013, 210020, 210021 |
+| `geoip_detection` | `scenarios/geoip_detection.py` | SSH success log entry from non-whitelisted IP | 100900, 100901, 100902, 100903 |
+| `suspicious_login` | `scenarios/suspicious_login.py` | SSH failure burst + success from diverse IPs | 210013, 210020, 210021, 210022 |
 | `log_volume` | `scenarios/log_volume.py` | Exponential filesystem growth in monitored directory | 100309 |
 | `scanning_detection` | `scenarios/scanning_detection.py` | Volumetric requests, suspicious HTTP method, from distinct IPs | web scanning/enumeration rules |
 
@@ -43,12 +43,17 @@ Each script has its own parameters hardcoded as a `CONFIG` dictionary at the top
 
 ```python
 CONFIG = {
-    "timezone_offset": "+01:00",
-    "hostname": "edge.vm",
     "log_path": "/var/log/auth.log",
-    "user": "test01",
-    "ip_pool": ["8.8.8.8", "1.0.136.99", "89.31.143.90", "47.91.170.222", "150.95.255.38", "84.32.84.32"],
-    "window_seconds": 60,
+    "hostname": "edge.vm",
+    "sshd_pid": 1169457,
+    "fail_port": 1045,
+    "success_port": 60850,
+    "key_fail": "ED25519 SHA256:A.",
+    "key_success": "ED25519 SHA256:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "fail_threshold": 5,
+    "fail_margin": 1,
+    "burst_window_seconds": 60,
+    "case_gap_seconds": 2,
     "sudo_tee": False,
 }
 ```
@@ -58,16 +63,16 @@ CONFIG = {
 Copy the script for your scenario to the target agent endpoint (or run it directly if you're already on that machine), then run it with no arguments:
 
 ```bash
-python3 suspicious_login.py
+sudo python3 suspicious_login.py
 ```
 
 ### Examples
 
 ```bash
-python3 geoip_detection.py
-python3 suspicious_login.py
-python3 log_volume.py
-python3 scanning_detection.py
+sudo python3 geoip_detection.py
+sudo python3 suspicious_login.py
+sudo python3 log_volume.py
+sudo python3 scanning_detection.py
 ```
 
 Each script prints a completion message (e.g. `suspicious_login simulation completed`) on success, or an `ERROR: ...` message and a non-zero exit code on failure. Set `RATF_DEBUG=1` in the environment to get the full Python traceback instead of the short error message.
@@ -76,7 +81,7 @@ Each script prints a completion message (e.g. `suspicious_login simulation compl
 
 | Scenario | What is generated | Cleanup |
 |----------|-------------------|---------|
-| `geoip_detection` | Entry appended to `auth_log_path` (default `/var/log/auth.log`) | Not removed; persists in the auth log |
+| `geoip_detection` | Entries appended to `auth_log_path` (default `/var/log/auth.log`) and `web_log_path` (default `/var/log/apache2/access.log`) | Not removed; persists in the auth/access logs |
 | `suspicious_login` | Entries appended to `log_path` (default `/var/log/auth.log`) | Not removed; persists in the auth log |
 | `log_volume` | Spike file created in `target_dir` | Removed automatically after `cleanup_minutes` (a detached background process spawned by the script itself; set to `0` to disable and clean up manually) |
 | `scanning_detection` | Entries appended to `log_path` (default `/var/log/apache2/access.log`) | Not removed; persists in the access log |

@@ -1,15 +1,60 @@
 #!/usr/bin/env python3
-import csv, glob, json, os, math, hashlib, random
+import csv, glob, json, os, math, hashlib, random, re
+from pathlib import Path
 from collections import defaultdict, deque
 from datetime import datetime, date, timedelta, timezone
 import requests
 from requests.auth import HTTPBasicAuth
 
+def _parse_env_value(raw: str):
+    raw = raw.strip()
+    if raw.startswith("'"):
+        end = raw.find("'", 1)
+        if end < 0:
+            return None
+        rest = raw[end + 1:].strip()
+        return raw[1:end] if (not rest or rest.startswith("#")) else None
+    if raw.startswith('"'):
+        out, i = [], 1
+        while i < len(raw):
+            ch = raw[i]
+            if ch == "\\" and i + 1 < len(raw) and raw[i + 1] in '\\"$`':
+                out.append(raw[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                rest = raw[i + 1:].strip()
+                return "".join(out) if (not rest or rest.startswith("#")) else None
+            out.append(ch)
+            i += 1
+        return None
+    return re.split(r"\s+#", raw, maxsplit=1)[0].strip()
+# end _parse_env_value
+
+
+_ENV_LINE_RE = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
+
+def load_env(env_path: Path) -> None:
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        m = _ENV_LINE_RE.match(line)
+        if not m:
+            continue
+        value = _parse_env_value(m.group(2))
+        if value is not None:
+            os.environ.setdefault(m.group(1), value)
+
 # ────────────────────────────
 # Config
 # ────────────────────────────
-ES_URL = "https://wazuh.indexer:9200"
-AUTH = HTTPBasicAuth("admin", "SecretPassword")
+load_env(Path(".env"))
+ES_URL = (os.environ.get("OS_URL") or "https://wazuh.indexer:9200").rstrip("/")
+AUTH = HTTPBasicAuth(os.environ.get("OS_USER", "admin"), os.environ.get("OS_PASS", ""))
 CA_CERT = "config/wazuh_indexer_ssl_certs/root-ca.pem"
 CHUNK_SIZE = 200
 REQUEST_TIMEOUT = 60

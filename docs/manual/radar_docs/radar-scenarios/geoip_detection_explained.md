@@ -17,7 +17,7 @@ Detection relies on **custom rules, decoders, and whitelists**:
 - **Rules (`/radar/scenarios/rules/geoip_detection/a2-geoip-detection.xml`)**
     - Match log events with unusual geographic origin.
     - **SSH login monitoring** (rules 100900, 100901): Detects successful SSH authentication from non-whitelisted countries.
-    - **Web access log monitoring** (rule 100902, correlated by rule 100903): Detects HTTP/HTTPS requests from non-whitelisted countries (Apache, Nginx), with 100903 raising a higher-severity alert when 100902 recurs 300 times within 300 seconds. Active response is bound to 100900, 100901 and 100903 — a single rule 100902 match is recorded but does not by itself trigger a response.
+    - **Web access log monitoring** (rule 100902, correlated by rule 100903): Detects HTTP/HTTPS requests from non-whitelisted countries (Apache, Nginx), with 100903 raising a higher-severity alert when 100902 recurs 300 times within 300 seconds.
 - **Decoders**
     - Standard SSH decoder for authentication logs.
     - Apache/Nginx web accesslog decoder: Parses web server access logs and enriches them with GeoIP country information.

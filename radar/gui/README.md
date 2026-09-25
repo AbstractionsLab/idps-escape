@@ -26,7 +26,7 @@ From RADAR root `radar/`:
 ./radar.sh gui
 ```
 
-The server listens on `http://localhost:5000` by default. 
+The server listens on `http://127.0.0.1:5000` only by default (it has no login of its own). Reach it from another machine with an SSH tunnel, `ssh -L 5000:127.0.0.1:5000 <gui-host>`, or an authenticating reverse proxy. `RADAR_GUI_HOST`, `RADAR_GUI_PORT` and `RADAR_GUI_DEBUG=1` override the defaults; never enable debug on a reachable interface. 
 
 ---
 
@@ -40,7 +40,7 @@ Configures the active response logic per bound scenario. Settings cover:
 - **Signature scoring** - `signature_impact` and `signature_likelihood` parameters fed into the risk engine.
 - **Anomaly detection scoring** - AD score thresholds and scaling.
 - **Time windows** - `delta_ad_minutes` controls how far back the AD correlation looks; `delta_signature_minutes` controls the look-back window used for both signature correlation and CTI lookups (RADAR queries the CTI tool for threat intelligence hits on the alerting entity within that many minutes).
-- **Risk tiers** - score boundaries [0–1] for T1 (alert only), T2 (escalate + Flowintel case), T3 (mitigate), T4 (hard mitigate).
+- **Risk tiers** - score boundaries [0–1] for T0 (logged only), T1 (email + Flowintel case), T2 (email + case + tier-2 mitigations), T3 (full response + tier-3 mitigations).
 - **Mitigations** - per-tier lists of active response actions (`firewall-drop`, `lock_user_linux`, `terminate_service`). Requires `allow_mitigation: true` to execute.
 
 All changes are saved immediately to `ar.yaml` on submit.
@@ -55,7 +55,8 @@ Manages credentials and URLs for all external integrations. Values are written t
 | Wazuh API | URL, user, password, manager address |
 | Wazuh Dashboard | URL, user, password, SSL |
 | SMTP | Host, port, user, password, recipient |
-| DECIPHER | URL, API token, SSL, timeout |
+| DECIPHER | URL, SSL, timeout |
+| MaxMind GeoLite2 | License key |
 | Webhook | Name, URL |
 
 Each connector has a **Test** button that performs a live connectivity check.
@@ -78,9 +79,15 @@ Six tabs, two of which have their own second-level sub-tabs:
 
 Deploying/undeploying, minting a token, opening/closing the enrollment window, and tearing down all need the sudo password — the GUI prompts for it once per session and holds it in memory only.
 
-### Not currently reachable: Infrastructure (`/infrastructure`)
+### Infrastructure (`/infrastructure`)
 
-`templates/infrastructure.html` and `static/js/infrastructure.js` still exist on disk, but the `/infrastructure` route and every `/api/infrastructure/*` endpoint are commented out in `app.py`.
+Registers the core components RADAR talks to, independently of the Connectors page's credentials: the dashboard (a single component), and the manager and indexer (each a list of nodes, so a cluster can register more than one — the
+first one added is primary). Each entry has a container name, host, port, and scheme.
+
+This registration is what `wazuh_api.infra` resolves against when one component needs to reach another (e.g. the manager reaching the indexer during active-response handling, or the indexer posting to the webhook when a monitor
+fires): the declared host is tried first, falling back to the registered container name if the declared host does not respond. **Test link** on this page checks reachability between two registered components directly.
+
+**Detect IP** fills the host field with an address auto-detected from the machine running the GUI.
 
 ---
 
@@ -126,5 +133,6 @@ The GUI exposes a JSON REST API under `/api/`. All endpoints are served by the s
 | Prefix | Responsibility |
 |--------|---------------|
 | `/api/scenarios` | List scenarios, read and write AR config, bind / unbind |
+| `/api/infra` | Register/update/delete the dashboard and manager/indexer nodes, detect the local IP, test reachability between two registered components |
 | `/api/connectors` | Read, write, and test connector settings |
 | `/api/deploy` | Build, undeploy, onboard/deregister agent, assign/unassign group, enrollment window, run AD, health-check, teardown, preview, and stream status for each |

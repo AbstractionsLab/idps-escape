@@ -1,32 +1,60 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-SCENARIO="${1:?Usage: manager-apply-scenario.sh <scenario>}"
+SCENARIO="${1:?Usage: manager-apply-scenario.sh <scenario> [container_name]}"
 RADAR_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VOLUMES_YML="$RADAR_ROOT/volumes.yml"
-CONTAINER="wazuh.manager"
 
 # shellcheck source=./_lib.sh
 source "$RADAR_ROOT/radar_deploy/_lib.sh"
 radar_load_env "$RADAR_ROOT"
+CONTAINER="${2:-$(radar_manager_container "$RADAR_ROOT")}"
 
-hostpath() { grep -E ":${1//\//\\/}\$" "$VOLUMES_YML" | head -1 | sed -E 's/^ *- *//; s/:[^:]*$//'; }
+hostpath() { radar_hostpath "$RADAR_ROOT" "$1" "$CONTAINER" || true; }
 INTEGRATIONS_DIR=$(hostpath '/var/ossec/integrations')
 OSSEC_ETC=$(hostpath '/var/ossec/etc')
+
+RESOLVED_OS_URL="$(PYTHONPATH="$RADAR_ROOT" python3 -m wazuh_api.infra resolve manager indexer 2>/dev/null)" || true
+OS_URL="${RESOLVED_OS_URL:-${OS_URL:-}}"
 OSSEC_LOGS=$(hostpath '/var/ossec/logs')
 AR_BIN=$(hostpath '/var/ossec/active-response/bin')
 FILEBEAT_ETC=$(hostpath '/etc/filebeat')
 PIPELINE_JSON=$(hostpath '/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json')
 
+declare -A REQUIRED_PATHS=(
+  [/var/ossec/integrations]="$INTEGRATIONS_DIR"
+  [/var/ossec/etc]="$OSSEC_ETC"
+  [/var/ossec/logs]="$OSSEC_LOGS"
+  [/var/ossec/active-response/bin]="$AR_BIN"
+  [/etc/filebeat]="$FILEBEAT_ETC"
+)
+MISSING=()
+for container_path in "${!REQUIRED_PATHS[@]}"; do
+  [[ -z "${REQUIRED_PATHS[$container_path]}" ]] && MISSING+=("$container_path")
+done
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+  echo "[ERROR] volumes.yml has no bind mount for $CONTAINER covering:" >&2
+  for p in "${MISSING[@]}"; do echo "        $p" >&2; done
+  exit 1
+fi
+
+echo ">>> Bind-mount permissions (repairs 777 modes left by older builds)..."
+bash "$RADAR_ROOT/radar_deploy/manager-repair-permissions.sh" "$CONTAINER"
+
 echo ">>> Active response files..."
 mkdir -p "$AR_BIN"
-[[ -f "$RADAR_ROOT/.env" ]] && cp "$RADAR_ROOT/.env" "$AR_BIN/active_responses.env" && echo "OK - copied active_responses.env"
+if [[ -f "$RADAR_ROOT/.env" ]]; then
+  PYTHONPATH="$RADAR_ROOT" python3 -m wazuh_api.ar_env write "$AR_BIN/active_responses.env" \
+    --env-file "$RADAR_ROOT/.env" --os-url "${OS_URL:-}" \
+    --manager-address "${WAZUH_MANAGER_ADDRESS:-$(detect_manager_address)}"
+  echo "OK - wrote filtered active_responses.env"
+fi
 [[ -f "$RADAR_ROOT/scenarios/active_responses/radar_ar.py" ]] && cp "$RADAR_ROOT/scenarios/active_responses/radar_ar.py" "$AR_BIN/radar_ar.py" && echo "OK - copied radar_ar.py"
 [[ -f "$RADAR_ROOT/scenarios/active_responses/ar.yaml" ]] && cp "$RADAR_ROOT/scenarios/active_responses/ar.yaml" "$AR_BIN/ar.yaml" && echo "OK - copied ar.yaml"
 
 dexec "dnf -y install python3-pyyaml python3-requests >/dev/null 2>&1 || true"
 dexec "chown root:wazuh /var/ossec/active-response/bin/active_responses.env /var/ossec/active-response/bin/radar_ar.py /var/ossec/active-response/bin/ar.yaml 2>/dev/null || true
-chmod 0660 /var/ossec/active-response/bin/active_responses.env 2>/dev/null || true
+chmod 0440 /var/ossec/active-response/bin/active_responses.env 2>/dev/null || true
 chmod 0750 /var/ossec/active-response/bin/radar_ar.py 2>/dev/null || true
 chmod 0640 /var/ossec/active-response/bin/ar.yaml 2>/dev/null || true"
 
@@ -99,7 +127,7 @@ chmod 0770 /var/ossec/etc/radar /var/ossec/logs/radar 2>/dev/null || true"
 fi
 
 echo ">>> Agent enrollment (authd) config..."
-bash "$RADAR_ROOT/radar_deploy/manager-harden-enrollment.sh"
+bash "$RADAR_ROOT/radar_deploy/manager-harden-enrollment.sh" "$CONTAINER"
 
 CHANGED=false
 
@@ -116,8 +144,18 @@ if [[ "$SCENARIO" == "log_volume" ]]; then
     exit 1
   fi
 
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u "${OS_USER}:${OS_PASS}" -k -X PUT \
-    "${OS_URL%/}/_index_template/radar-log-volume" -H 'Content-Type: application/json' --data-binary "@$TEMPLATE") || true
+  cp "$TEMPLATE" "$OSSEC_ETC/radar-log-volume-template.json"
+  curl_user_config() {
+    local v="$1"
+    v="${v//\\/\\\\}"
+    v="${v//\"/\\\"}"
+    printf 'user = "%s"\n' "$v"
+  }
+  STATUS=$(curl_user_config "${OS_USER}:${OS_PASS}" | docker exec -i "$CONTAINER" \
+    curl -K - -s -o /dev/null -w '%{http_code}' -k -X PUT \
+    "${OS_URL%/}/_index_template/radar-log-volume" -H 'Content-Type: application/json' \
+    --data-binary '@/var/ossec/etc/radar-log-volume-template.json') || true
+  rm -f "$OSSEC_ETC/radar-log-volume-template.json"
   if [[ "$STATUS" == "200" || "$STATUS" == "201" ]]; then
     echo "OK - index template PUT ($STATUS)"
   else
@@ -127,21 +165,31 @@ if [[ "$SCENARIO" == "log_volume" ]]; then
   fi
 
   SNIPPET="$RADAR_ROOT/scenarios/pipelines/$SCENARIO/radar-pipeline.txt"
-  if [[ -f "$SNIPPET" && -f "$PIPELINE_JSON" ]]; then
-    if grep -qF "log_volume_metric" "$PIPELINE_JSON"; then
-      echo "OK - log_volume date_index_name already patched into pipeline.json"
-    else
-      PRE_HASH=$(md5sum "$PIPELINE_JSON" | awk '{print $1}')
-      SNIPPET_CONTENT="$(cat "$SNIPPET")" perl -0777 -i -pe '
-        s/\{\s*"date_index_name"\s*:\s*\{.*?"index_name_prefix"\s*:\s*"\{\{fields\.index_prefix\}\}".*?"ignore_failure"\s*:\s*(true|false)\s*\}\s*\},/$ENV{SNIPPET_CONTENT}/s
-      ' "$PIPELINE_JSON"
-      POST_HASH=$(md5sum "$PIPELINE_JSON" | awk '{print $1}')
-      [[ "$PRE_HASH" != "$POST_HASH" ]] && { echo "OK - patched log_volume date_index_name into pipeline.json"; CHANGED=true; }
-    fi
+  if [[ ! -f "$SNIPPET" ]]; then
+    echo "[ERROR] log_volume requires $SNIPPET, but it's missing from the repository." >&2
+    exit 1
+  fi
+  if [[ -z "$PIPELINE_JSON" || ! -f "$PIPELINE_JSON" ]]; then
+    echo "[ERROR] log_volume requires a working volumes.yml mapping for" >&2
+    echo "        /usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json on $CONTAINER," >&2
+    echo "        but that path doesn't exist on the host -- log_volume_metric events will keep" >&2
+    echo "        routing to wazuh-archives-* instead of wazuh-ad-log-volume-* until this is fixed." >&2
+    exit 1
+  fi
+  if grep -qF "log_volume_metric" "$PIPELINE_JSON"; then
+    echo "OK - log_volume date_index_name already patched into pipeline.json"
+  else
+    PRE_HASH=$(md5sum "$PIPELINE_JSON" | awk '{print $1}')
+    SNIPPET_CONTENT="$(cat "$SNIPPET")" perl -0777 -i -pe '
+      s/\{\s*"date_index_name"\s*:\s*\{.*?"index_name_prefix"\s*:\s*"\{\{fields\.index_prefix\}\}".*?"ignore_failure"\s*:\s*(true|false)\s*\}\s*\},/$ENV{SNIPPET_CONTENT}/s
+    ' "$PIPELINE_JSON"
+    POST_HASH=$(md5sum "$PIPELINE_JSON" | awk '{print $1}')
+    [[ "$PRE_HASH" != "$POST_HASH" ]] && { echo "OK - patched log_volume date_index_name into pipeline.json"; CHANGED=true; }
   fi
 fi
 
 FILEBEAT_YML="$FILEBEAT_ETC/filebeat.yml"
+
 if [[ -f "$FILEBEAT_YML" ]]; then
   PRE_HASH=$(md5sum "$FILEBEAT_YML" | awk '{print $1}')
   sed -i -E 's/^([ \t]*enabled:[ \t]*).*$/\1true/' "$FILEBEAT_YML"

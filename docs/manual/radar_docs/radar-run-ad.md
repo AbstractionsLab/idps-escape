@@ -41,6 +41,10 @@ run-radar.sh <scenario> [--ingest true|false]
 - `OS_VERIFY_SSL`: TLS certificate verification for OpenSearch (`DASHBOARD_VERIFY_SSL` is accepted as a fallback if `OS_VERIFY_SSL` is unset, for historical reasons — set `OS_VERIFY_SSL` directly)
 - `WEBHOOK_URL`: webhook endpoint the monitor posts to (the `ad-webhook` container `build-radar.sh` brings up)
 - `WEBHOOK_NAME`: webhook destination name registered with OpenSearch (default: `RADAR Webhook`)
+- `WEBHOOK_SHARED_SECRET`: secret the notification channel sends to the webhook, generated on the first deployment
+
+`run-radar.sh` reads these from `.env` and passes them to the containers; `.env`
+itself stays private to its owner and is not mounted into them.
 
 > `DASHBOARD_URL`, `DASHBOARD_USER`, and `DASHBOARD_PASS` are not read by this pipeline — they configure the separate Dashboards connector tested on the GUI's Connectors page, unrelated to `run-radar.sh`.
 
@@ -182,7 +186,7 @@ Creates or retrieves ID of an OpenSearch Anomaly Detection detector configured f
 
 1. Configuration loading
     - Reads `config.yaml` for scenario definitions
-    - Loads environment variables from `.env`
+    - Reads its settings from the environment passed in by `run-radar.sh`
     - Validates scenario exists
 2. Detector existence check
     - Searches for existing detector by name pattern: `{SCENARIO}_DETECTOR`

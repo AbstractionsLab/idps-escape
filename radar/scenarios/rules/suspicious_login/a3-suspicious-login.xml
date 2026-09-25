@@ -1,13 +1,6 @@
 <group name="suspicious_login,">
 
   <!-- 1) Rule for failed burst logins -->
-  <rule id="210012" level="8" timeframe="60" frequency="5">
-    <if_matched_sid>5760</if_matched_sid>
-    <same_srcuser />
-    <description>RADAR SuspiciousLogin: failed-burst (≥5 in 60s)</description>
-    <group>authentication_failures,brute_force</group>
-  </rule>
-
   <rule id="210013" level="8" timeframe="60" frequency="5">
     <if_matched_sid>5760</if_matched_sid>
     <same_user />
@@ -20,7 +13,7 @@
     <if_group>authentication_failed</if_group>
     <field name="radar_geo_velocity_kmh" type="pcre2">^(?:9(?:0[1-9]|[1-9]\d)|[1-9]\d{3,})(?:\.\d+)?$</field>
     <description>RADAR SuspiciousLogin: impossible travel with failure (≥900 km/h + country change)</description>
-    <group>authentication_success,impossible_travel,geo</group>
+    <group>authentication_failed,impossible_travel,geo</group>
   </rule>
   <rule id="210021" level="10">
     <if_group>authentication_success</if_group>
@@ -30,9 +23,9 @@
   </rule>
 
   <!-- 3) Composite correlation rule: failed burst followed by impossible travel -->
-  <rule id="210022" level="12" timeframe="300">
-    <if_matched_sid>210021</if_matched_sid>
-    <if_matched_sid>210012</if_matched_sid>
+  <rule id="210022" level="12" frequency="4" timeframe="300">
+    <if_sid>210021</if_sid>
+    <if_matched_sid>5760</if_matched_sid>
     <same_user />
     <description>RADAR SuspiciousLogin: credential compromise (failed-burst + impossible-travel within 5min)</description>
     <group>authentication_success,impossible_travel,brute_force,credential_compromise</group>

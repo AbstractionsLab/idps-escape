@@ -41,6 +41,8 @@ _setup_isolated_root() {
   TEST_ROOT="$(mktemp -d)"
   cp "$SCRIPT" "$TEST_ROOT/"
   cp -r "$REPO_ROOT/wazuh_api" "$TEST_ROOT/"
+  mkdir -p "$TEST_ROOT/radar_deploy"
+  cp "$REPO_ROOT/radar_deploy/_lib.sh" "$TEST_ROOT/radar_deploy/"
   mkdir -p "$TEST_ROOT/radar_deploy" "$TEST_ROOT/config/wazuh_cluster" \
            "$TEST_ROOT/srv/etc" "$TEST_ROOT/srv/filebeat"
   echo '{}' > "$TEST_ROOT/config/wazuh_cluster/pipeline-archives.json"
@@ -96,6 +98,10 @@ if [[ "\$*" == *"wait-for-api"* ]]; then
   echo '{"api_reachable": true}'
   exit 0
 fi
+if [[ "\$*" == *"wazuh_api.credentials"* ]]; then
+  echo "credentials \$*" >> "${LOG_DIR}/calls.log"
+  exit 0
+fi
 exec "${REAL_PYTHON3}" "\$@"
 EOF
   chmod +x "${BIN_DIR}/python3"
@@ -126,7 +132,7 @@ teardown() {
   certs_line=-1; compose_line=-1
   for i in "${!lines[@]}"; do
     [[ "${lines[$i]}" == "manager-ensure-certs.sh called" ]] && certs_line=$i
-    [[ "${lines[$i]}" == "docker compose -f docker-compose.core.yml -f volumes.yml up -d" ]] && compose_line=$i
+    [[ "${lines[$i]}" == "docker compose -f docker-compose.core.yml -f - up -d" ]] && compose_line=$i
   done
   [ "$certs_line" -ge 0 ]
   [ "$compose_line" -ge 0 ]

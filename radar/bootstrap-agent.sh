@@ -11,6 +11,9 @@
 # --agent-name   Name to register as (defaults to this host's hostname)
 # --version      Agent package version to install. Defaults to
 #                WAZUH_AGENT_VERSION if set in the environment, else 4.14.1-1
+# --allow-service  (log_volume only) systemd service terminate_service.sh
+#                may stop. Repeatable or comma-separated. Anything not listed
+#                is refused; with none listed, no service can be stopped.
 #
 # After install, this script pins wazuh-agent to the installed version and
 # disables automatic updates for it (apt-mark hold / yum|dnf versionlock),
@@ -29,9 +32,10 @@ MANAGER=""
 TOKEN=""
 AGENT_VERSION="${WAZUH_AGENT_VERSION:-4.14.1-1}"
 TARGET_GROUPS=()
+ALLOWED_SERVICES=()
 
 usage() {
-  grep '^#' "$0" | grep -v '#!/' | sed 's/^# \{0,2\}//' | head -20
+  grep '^#' "$0" | grep -v '#!/' | sed 's/^# \{0,2\}//' | head -23
   exit "${1:-0}"
 }
 
@@ -46,6 +50,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --agent-name)  AGENT_NAME="$2";     shift 2 ;;
     --version)     AGENT_VERSION="$2";  shift 2 ;;
+    --allow-service)
+      IFS=',' read -ra _services_split <<< "$2"
+      ALLOWED_SERVICES+=("${_services_split[@]}")
+      shift 2
+      ;;
     --help|-h)     usage ;;
     *) echo "Unknown option: $1"; usage 2 ;;
   esac
@@ -53,6 +62,10 @@ done
 
 [[ -n "$MANAGER" ]] || { echo "ERROR: --manager is required"; usage 2; }
 [[ -n "$TOKEN" ]] || { echo "ERROR: --token is required"; usage 2; }
+for _svc in "${ALLOWED_SERVICES[@]}"; do
+  [[ "$_svc" =~ ^[A-Za-z0-9][A-Za-z0-9@._:-]*$ ]] \
+    || { echo "ERROR: invalid --allow-service name: $_svc"; usage 2; }
+done
 
 if [[ "$EUID" -ne 0 ]]; then
   echo "ERROR: run this as root"; exit 1
@@ -139,15 +152,26 @@ echo ">>> Setting manager address in ossec.conf..."
 OSSEC_CONF=/var/ossec/etc/ossec.conf
 if grep -q "<address>" "$OSSEC_CONF"; then
   sed -i "s|<address>[^<]*</address>|<address>${MANAGER}</address>|" "$OSSEC_CONF"
+elif grep -q "<server>" "$OSSEC_CONF"; then
+  perl -0777 -i -pe "s|<server>\s*</server>|<server>\n      <address>${MANAGER}</address>\n      <port>1514</port>\n      <protocol>tcp</protocol>\n    </server>|" "$OSSEC_CONF"
+  grep -q "<address>${MANAGER}</address>" "$OSSEC_CONF" \
+    || fail "found an empty <server></server> block but could not insert an <address> into it" "check the <server> block manually"
 else
-  fail "no <address> tag found in $OSSEC_CONF" "check the <server> block manually"
+  fail "no <server> block found in $OSSEC_CONF" "check the <client> block manually"
 fi
 
 echo ">>> Registering with manager $MANAGER..."
 GROUPS_CSV=$(IFS=','; echo "${TARGET_GROUPS[*]}")
+CLIENT_KEYS=/var/ossec/etc/client.keys
 if ! /var/ossec/bin/agent-auth -m "$MANAGER" -P "$TOKEN" -A "$AGENT_NAME" -G "$GROUPS_CSV" 2>/tmp/agent-auth.err; then
   if grep -q "Duplicate agent name" /tmp/agent-auth.err; then
-    echo "OK - agent name already registered"
+    if [[ -s "$CLIENT_KEYS" ]]; then
+      echo "OK - agent name already registered, and $CLIENT_KEYS already has a key"
+    else
+      cat /tmp/agent-auth.err
+      fail "manager has an entry for '$AGENT_NAME' but $CLIENT_KEYS is empty: this agent never actually received a key (likely interrupted by a manager restart mid-enrollment)" \
+           "on the manager, deregister the agent and mint a fresh token and re-run this script"
+    fi
   elif grep -qi "Invalid password\|Unable to connect" /tmp/agent-auth.err; then
     cat /tmp/agent-auth.err
     fail "enrollment rejected by manager" \
@@ -241,27 +265,82 @@ has_group() {
   return 1
 }
 
-if has_group "suspicious_login"; then
-  write_ar_script lock_user_linux.sh <<'AR_SCRIPT_EOF'
-#!/usr/bin/bash
-
-LOG_FILE="/var/ossec/logs/active-responses.log"
-
-IFS= read -r wrapper_json
-
-if [[ -z "$wrapper_json" ]]; then
-  exit 0
+if has_group "suspicious_login" || has_group "log_volume"; then
+  if ! command -v jq >/dev/null 2>&1; then
+    echo ">>> Installing jq (needed by the active response scripts)..."
+    if command -v apt-get >/dev/null 2>&1; then
+      apt-get install -y -qq jq >/dev/null || true
+    elif JQ_PKG_MGR=$(command -v dnf || command -v yum); then
+      "$JQ_PKG_MGR" install -y jq >/dev/null || true
+    fi
+    command -v jq >/dev/null 2>&1 \
+      || warn "jq is not installed; the active response scripts will refuse to act until it is"
+  fi
 fi
 
-action=$(jq -r '.command' <<<"$wrapper_json")
-user=$(jq -r '.parameters.extra_args[0]' <<<"$wrapper_json")
+if has_group "suspicious_login"; then
+  write_ar_script lock_user_linux.sh <<'AR_SCRIPT_EOF'
+#!/usr/bin/env bash
+# RADAR active response: lock (add) / unlock (delete) a local user account.
+# The username comes from alert data, which is attacker-influenced (anyone
+# who can produce failed logins picks the name), so it is validated here
+# regardless of what the manager already filtered.
 
-if [[ "$action" == "add" ]]; then
-  usermod -L "$user"
-  echo "$(date) [lock_user_linux] Locked $user" >> "$LOG_FILE"
+set -uo pipefail
+
+LOG_FILE="/var/ossec/logs/active-responses.log"
+# Accounts below this UID (root, system and service accounts) are never touched.
+MIN_UID=1000
+# Optional extra accounts that must never be locked, one name per line.
+PROTECTED_USERS_FILE="/var/ossec/etc/radar-protected-users"
+
+log() { echo "$(date) [lock_user_linux] $*" >> "$LOG_FILE"; }
+
+IFS= read -r wrapper_json || true
+[[ -n "${wrapper_json:-}" ]] || exit 0
+
+if ! command -v jq >/dev/null 2>&1; then
+  log "jq not installed; refusing to act"
+  exit 1
+fi
+
+action=$(jq -r '.command // empty' <<<"$wrapper_json" 2>/dev/null) || action=""
+user=$(jq -r '.parameters.extra_args[0] | strings' <<<"$wrapper_json" 2>/dev/null) || user=""
+
+case "$action" in
+  add)    op="-L"; verb="Locked" ;;
+  delete) op="-U"; verb="Unlocked" ;;
+  *)
+    log "refusing: unexpected command $(printf '%q' "$action")"
+    exit 1
+    ;;
+esac
+
+if [[ ! "$user" =~ ^[A-Za-z_][A-Za-z0-9._-]{0,31}$ ]]; then
+  log "refusing: invalid username $(printf '%q' "$user")"
+  exit 1
+fi
+
+if ! entry=$(getent passwd "$user"); then
+  log "refusing: no account named '$user'"
+  exit 1
+fi
+uid=$(cut -d: -f3 <<<"$entry")
+if [[ ! "$uid" =~ ^[0-9]+$ ]] || (( uid < MIN_UID || uid == 65534 )); then
+  log "refusing: '$user' is a system account (uid $uid)"
+  exit 1
+fi
+
+if [[ -f "$PROTECTED_USERS_FILE" ]] && grep -qxF -- "$user" "$PROTECTED_USERS_FILE"; then
+  log "refusing: '$user' is listed in $PROTECTED_USERS_FILE"
+  exit 1
+fi
+
+if usermod "$op" -- "$user" >> "$LOG_FILE" 2>&1; then
+  log "$verb $user"
 else
-  usermod -U "$user"
-  echo "$(date) [lock_user_linux] Unlocked $user" >> "$LOG_FILE"
+  log "usermod $op failed for $user"
+  exit 1
 fi
 
 exit 0
@@ -269,75 +348,133 @@ AR_SCRIPT_EOF
 fi
 
 if has_group "log_volume"; then
+  SERVICES_FILE=/var/ossec/etc/radar-terminable-services
+  if [[ ${#ALLOWED_SERVICES[@]} -gt 0 ]]; then
+    {
+      echo "# Services terminate_service.sh may stop, one per line (written by bootstrap-agent.sh)."
+      printf '%s\n' "${ALLOWED_SERVICES[@]}"
+    } > "$SERVICES_FILE"
+  elif [[ ! -f "$SERVICES_FILE" ]]; then
+    echo "# Services terminate_service.sh may stop, one per line. Empty = none." > "$SERVICES_FILE"
+  fi
+  chown root:wazuh "$SERVICES_FILE"
+  chmod 0640 "$SERVICES_FILE"
+  if ! grep -qv '^[[:space:]]*\(#\|$\)' "$SERVICES_FILE"; then
+    warn "no services listed in $SERVICES_FILE; terminate_service.sh can only kill connections to an IP (use --allow-service to allow stopping a service)"
+  fi
+
   write_ar_script terminate_service.sh <<'AR_SCRIPT_EOF'
-#!/bin/bash
+#!/usr/bin/env bash
+# RADAR active response: stop an allowlisted service, or kill the processes
+# holding TCP connections to a given IPv4 address. The target comes from
+# alert data (e.g. a syslog program name any local user can forge), so it is
+# validated here regardless of what the manager already filtered.
+
+set -uo pipefail
 
 LOG_FILE="/var/ossec/logs/active-responses.log"
+# Services this script may stop, one unit name per line ('#' comments ok).
+# A missing or empty file means no service can be stopped.
+ALLOWED_SERVICES_FILE="/var/ossec/etc/radar-terminable-services"
+# Never stopped, even if listed in the allowlist.
+NEVER_STOP_RE='^(wazuh-.*|ssh|sshd|systemd-.*|dbus|dbus-broker|auditd|rsyslog|syslog-ng|firewalld|ufw|nftables|iptables|netfilter-persistent|NetworkManager|networking|polkit)$'
 
-IFS= read -r wrapper_json
-echo "$(date) [terminate_c2] $wrapper_json" >> "$LOG_FILE"
+log() { echo "$(date) [terminate_service] $*" >> "$LOG_FILE"; }
 
-if [[ -z "$wrapper_json" ]]; then
-    exit 0
+IFS= read -r wrapper_json || true
+[[ -n "${wrapper_json:-}" ]] || exit 0
+
+if ! command -v jq >/dev/null 2>&1; then
+  log "jq not installed; refusing to act"
+  exit 1
 fi
 
-if command -v jq >/dev/null 2>&1; then
-    C2_IP=$(echo "$wrapper_json" | jq -r '.parameters.extra_args[0]')
-else
-    C2_IP=$(echo "$wrapper_json" | grep -oP '"extra_args":\["\K[^"]+')
-fi
+action=$(jq -r '.command // empty' <<<"$wrapper_json" 2>/dev/null) || action=""
+target=$(jq -r '.parameters.extra_args[0] | strings' <<<"$wrapper_json" 2>/dev/null) || target=""
 
-if [[ -z "$C2_IP" ]]; then
-    echo "$(date) [terminate_c2] No destination IP/service provided in extra_args." >> "$LOG_FILE"
-    exit 1
+# Stopping a service or killing processes is one-shot: the timeout 'delete'
+# must not repeat it.
+[[ "$action" == "delete" ]] && exit 0
+if [[ "$action" != "add" ]]; then
+  log "refusing: unexpected command $(printf '%q' "$action")"
+  exit 1
+fi
+if [[ -z "$target" ]]; then
+  log "refusing: no target in extra_args"
+  exit 1
 fi
 
 is_ipv4() {
-    local ip="$1"
-    [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
-    IFS='.' read -r a b c d <<<"$ip"
-    [[ "$a" -le 255 && "$b" -le 255 && "$c" -le 255 && "$d" -le 255 ]]
+  local ip="$1" o octets
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+  IFS='.' read -ra octets <<<"$ip"
+  for o in "${octets[@]}"; do
+    (( 10#$o <= 255 )) || return 1
+  done
 }
 
-if ! is_ipv4 "$C2_IP"; then
-    echo "$(date) [terminate_c2] Treating target as service '$C2_IP'" >> "$LOG_FILE"
+stop_service() {
+  local name="${1%.service}"
+  if [[ ! "$name" =~ ^[A-Za-z0-9][A-Za-z0-9@._:-]*$ ]]; then
+    log "refusing: invalid service name $(printf '%q' "$1")"
+    return 1
+  fi
+  if [[ "$name" =~ $NEVER_STOP_RE ]]; then
+    log "refusing: '$name' is a protected service"
+    return 1
+  fi
+  if [[ ! -f "$ALLOWED_SERVICES_FILE" ]] \
+     || ! sed 's/#.*//; s/[[:space:]]//g; s/\.service$//' "$ALLOWED_SERVICES_FILE" | grep -qxF -- "$name"; then
+    log "refusing: '$name' is not listed in $ALLOWED_SERVICES_FILE"
+    return 1
+  fi
 
-    SVC_NAME="${C2_IP%.service}"
-    if command -v systemctl >/dev/null 2>&1; then
-        UNIT="$C2_IP"
-        [[ "$UNIT" != *.service ]] && UNIT="${SVC_NAME}.service"
-        echo "$(date) [terminate_c2] systemctl stop $UNIT" >> "$LOG_FILE"
-        systemctl stop "$UNIT" >> "$LOG_FILE" 2>&1
-        exit $?
+  log "stopping service $name"
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl stop -- "${name}.service" >> "$LOG_FILE" 2>&1
+  elif command -v service >/dev/null 2>&1; then
+    service "$name" stop >> "$LOG_FILE" 2>&1
+  else
+    log "no supported service manager found"
+    return 1
+  fi
+}
+
+kill_connections() {
+  local ip="$1" pid comm pids killed=0
+  case "$ip" in
+    0.*|127.*|255.255.255.255)
+      log "refusing: $ip is not a remote address"
+      return 1
+      ;;
+  esac
+  if ! command -v ss >/dev/null 2>&1; then
+    log "ss not installed; cannot find connections to $ip"
+    return 1
+  fi
+
+  # 'dst' matches the exact remote address, unlike grepping the ss output.
+  pids=$(ss -Htnp dst "$ip" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -un)
+  for pid in $pids; do
+    (( pid > 1 && pid != $$ && pid != PPID )) || continue
+    comm=$(cat "/proc/$pid/comm" 2>/dev/null) || continue
+    if [[ "$comm" == wazuh-* ]]; then
+      log "skipping $comm (pid $pid): never kill the agent"
+      continue
     fi
-    if command -v service >/dev/null 2>&1; then
-        echo "$(date) [terminate_c2] service $SVC_NAME stop" >> "$LOG_FILE"
-        service "$SVC_NAME" stop >> "$LOG_FILE" 2>&1
-        exit $?
+    if kill -9 "$pid" 2>/dev/null; then
+      log "killed pid $pid ($comm) connected to $ip"
+      killed=$((killed + 1))
     fi
-    if [[ -x "/etc/init.d/$SVC_NAME" ]]; then
-        echo "$(date) [terminate_c2] /etc/init.d/$SVC_NAME stop" >> "$LOG_FILE"
-        "/etc/init.d/$SVC_NAME" stop >> "$LOG_FILE" 2>&1
-        exit $?
-    fi
-    echo "$(date) [terminate_c2] No supported service manager found for '$C2_IP'" >> "$LOG_FILE"
-    exit 1
+  done
+  (( killed > 0 )) || log "no processes to kill for $ip"
+  return 0
+}
+
+if is_ipv4 "$target"; then
+  kill_connections "$target"
 else
-    echo "$(date) [terminate_c2] Terminating connections to $C2_IP" >> "$LOG_FILE"
-    PIDS=$(ss -ntp | grep "$C2_IP" | awk -F',' '{print $2}' | awk '{print $1}' | sort -u)
-
-    if [[ -z "$PIDS" ]]; then
-        echo "$(date) [terminate_c2] No processes found for $C2_IP" >> "$LOG_FILE"
-        exit 0
-    fi
-
-    for PID in $PIDS; do
-        if [[ "$PID" =~ ^[0-9]+$ ]]; then
-            kill -9 "$PID"
-            echo "$(date) [terminate_c2] Terminated PID $PID for connection to $C2_IP" >> "$LOG_FILE"
-        fi
-    done
-    exit 0
+  stop_service "$target"
 fi
 AR_SCRIPT_EOF
 fi

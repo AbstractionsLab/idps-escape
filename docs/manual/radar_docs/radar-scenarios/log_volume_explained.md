@@ -27,6 +27,10 @@ Active responses handle detected suspicious events:
 
 - **Email Notification (`/radar/scenarios/active_responses/radar_ar.py`)**
     - Sends alert emails when a scenario rule is triggered.
+- **Service / connection termination (`/radar/scenarios/active_responses/terminate_service.sh`)**, at tier 3
+    - Stops the alert's service only if it is listed both in `terminable_services` in `ar.yaml` and in the agent's `/var/ossec/etc/radar-terminable-services` (written by `bootstrap-agent.sh --allow-service <name>`). Both are empty by default, so no service is stopped until you configure them.
+    - Otherwise kills the processes holding TCP connections to the alert's remote IP.
+    - Core services (`wazuh-*`, `sshd`, `auditd`, `systemd-*`, firewall and syslog) are never stopped. See [Mitigations](../radar-tuning.md#mitigations).
 
 ### Manual setup
 
@@ -95,7 +99,19 @@ nano /var/ossec/etc/ossec.conf
 ```
 And paste the content of `/radar/scenarios/agent_configs/log_volume/radar-log-volume-agent-snippet.xml` inside of `<ossec_config>` tag.
 
-4. Restart the agent:
+4. Install the `terminate_service.sh` mitigation and the list of services it may stop (it needs `jq`):
+```bash
+cp /radar/scenarios/active_responses/terminate_service.sh /var/ossec/active-response/bin/terminate_service.sh
+chown root:wazuh /var/ossec/active-response/bin/terminate_service.sh
+chmod 0750 /var/ossec/active-response/bin/terminate_service.sh
+
+# One service per line; leave empty to never stop a service.
+echo "nginx" > /var/ossec/etc/radar-terminable-services
+chown root:wazuh /var/ossec/etc/radar-terminable-services
+chmod 0640 /var/ossec/etc/radar-terminable-services
+```
+
+5. Restart the agent:
 ```
 systemctl restart wazuh-agent
 ```

@@ -12,15 +12,25 @@ Start it with:
 ./radar.sh gui
 ```
 
-Then open `http://localhost:5000`.
+Then open the login URL it prints (`http://127.0.0.1:5000/?token=…`). A new
+token is printed each time the GUI starts.
+
+The GUI accepts connections from the local machine only. Open it in a browser on
+your own workstation through an SSH tunnel, then use the login URL there:
+`ssh -L 5000:127.0.0.1:5000 <user>@<radar-host>`. Don't open it in a browser on
+the RADAR host itself: browsers share cookies across ports on the same host, so
+any local user there could read your login and sudo session cookies. To make it
+listen on a network address instead, set `RADAR_GUI_HOST` and
+`RADAR_GUI_ALLOWED_HOSTS`, and restrict the port to admin hosts.
 
 ![RADAR GUI walkthrough](/docs/manual/_figures/RADAR_GUI.gif)
 
-The left sidebar has three pages:
+The left sidebar has four pages:
 
 | Page | Use it to |
 |------|-----------|
 | **RADAR Scenarios** | Tune risk weights, tier thresholds, and mitigations per scenario |
+| **Infrastructure** | Register the manager, indexer, dashboard, and webhook so RADAR can reach them and resolve between them |
 | **Connectors** | Set and test URLs and credentials for every external service |
 | **Deployment** | Deploy scenarios, onboard agents, run the detector, check health, tear down |
 
@@ -32,16 +42,18 @@ Work through these in order:
 
 1. **[RADAR Scenarios](#radar-scenarios)** — tune thresholds and decide whether
    to let RADAR execute mitigations automatically.
-2. **[Connectors](#connectors)** — fill in OpenSearch, Wazuh API, Dashboards,
+2. **[Infrastructure](#infrastructure)** — register the manager, indexer,
+   dashboard, and webhook, including their container names.
+3. **[Connectors](#connectors)** — fill in OpenSearch, Wazuh API, Dashboards,
    SMTP, and (if you are using `suspicious_login` or `geoip_detection`) MaxMind.
    Hit **Test all** and get everything green.
-3. **[Deployment → Scenario Management](#scenario-management)** — deploy your
+4. **[Deployment → Scenario Management](#scenario-management)** — deploy your
    first scenario.
-4. **[Deployment → Agent Management](#agent-management)** — mint a token and
+5. **[Deployment → Agent Management](#agent-management)** — mint a token and
    onboard an endpoint.
-5. **[Deployment → Anomaly Detector](#anomaly-detector)** — for ML scenarios,
+6. **[Deployment → Anomaly Detector](#anomaly-detector)** — for ML scenarios,
    start the detector.
-6. **[Deployment → Status](#status)** — confirm everything is healthy.
+7. **[Deployment → Status](#status)** — confirm everything is healthy.
 
 ---
 
@@ -137,6 +149,30 @@ the Wazuh dashboard.
 
 ---
 
+## Infrastructure
+
+![RADAR GUI — Infrastructure page](/docs/website/assets/RADAR_GUI_Infrastructure.png "Infrastructure page: registering the manager, indexer, and dashboard")
+
+Registers each core component RADAR talks to — manager, indexer, and dashboard — with its address and its Docker container name.
+
+| Field | Notes |
+|-------|-------|
+| Host | The address other components should use to reach this one |
+| Port / scheme | Defaults match each component's standard port |
+| Container name | The Docker container name this component actually runs as |
+
+For a cluster indexer or dashboard, add every node; the first one entered is
+treated as primary.
+
+Adding, editing, removing or promoting an indexer asks for your sudo password,
+because the primary indexer's address is where RADAR sends the indexer password.
+
+**IP resolution fallback.** When one component needs to reach another, RADAR tries the declared host
+first and falls back to the registered container name if the declared host does not respond. 
+Fill in the container name for every component.
+
+---
+
 ## Connectors
 
 ![RADAR GUI — Connectors page](/docs/website/assets/RADAR_GUI_Connectors.png "Connectors page: credential fields and per-connector test buttons")
@@ -147,7 +183,13 @@ the RADAR root; uploaded CA certificates go to `.certs/`.
 **Test all** (top right) runs every connectivity check in sequence. Each card
 also has its own **Test** and **Save**. The dot in each card header is grey
 (not tested this session), green (last test passed), or red (last test failed).
-Password fields that already hold a value get a **Show** button.
+Password fields that already hold a value get a **Show** button, which asks for
+your sudo password.
+
+Saving a new address for a connector that has a stored password also asks for
+your sudo password: the indexer URL, the Wazuh API URL, the SMTP host, port or
+STARTTLS setting, and the webhook URL. It doesn't ask if you enter a new
+password in the same save.
 
 | Connector | Fields | Test button |
 |-----------|--------|-------------|
@@ -169,8 +211,9 @@ Notes worth knowing:
   GeoLite2-City and GeoLite2-ASN for manager-side enrichment. A free key from
   [MaxMind](https://www.maxmind.com/en/geolite2/signup) is enough. Without it,
   those two scenarios will deploy but not enrich.
-- **Send ping** POSTs `{"ping": true}` to the webhook URL to confirm it is
-  reachable.
+- **Send ping** confirms the webhook is reachable. The webhook only accepts
+  requests carrying its shared secret (`WEBHOOK_SHARED_SECRET` in `.env`),
+  which is generated on the first deployment.
 
 ---
 

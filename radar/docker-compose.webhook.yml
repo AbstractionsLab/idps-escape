@@ -1,9 +1,5 @@
 version: '3.7'
 
-# networks:
-#   soar-radar:
-#     driver: bridge
-
 services:
   webhook:
     build:
@@ -12,12 +8,15 @@ services:
       args:
         WAZUH_AGENT_VERSION: ${WAZUH_AGENT_VERSION}
         WAZUH_MANAGER_ADDRESS: ${WAZUH_MANAGER_ADDRESS}
-    container_name: ad-webhook
+    container_name: ${WEBHOOK_CONTAINER_NAME:-ad-webhook}
     restart: always
     environment:
       - WAZUH_REGISTRATION_TOKEN=${WAZUH_REGISTRATION_TOKEN:-}
+      - WEBHOOK_INTERNAL_PORT=${WEBHOOK_INTERNAL_PORT:-8080}
+      - WEBHOOK_AGENT_NAME=${WEBHOOK_AGENT_NAME:-ad-webhook}
+      - WEBHOOK_SHARED_SECRET=${WEBHOOK_SHARED_SECRET:?WEBHOOK_SHARED_SECRET is not set in .env; run build-radar.sh or the GUI build}
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8080' >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/${WEBHOOK_INTERNAL_PORT:-8080}' >/dev/null 2>&1"]
       interval: 5s
       timeout: 3s
       retries: 30
@@ -25,10 +24,8 @@ services:
     volumes:
       - wazuh-webhook-logs:/var/log
       - wazuh-webhook-etc:/var/ossec/etc
-    # networks:
-    #   - soar-radar
     ports:
-      - "8080:8080"
+      - "${WEBHOOK_BIND_ADDRESS:-0.0.0.0}:${WEBHOOK_INTERNAL_PORT:-8080}:${WEBHOOK_INTERNAL_PORT:-8080}"
 
 volumes:
   wazuh-webhook-logs:

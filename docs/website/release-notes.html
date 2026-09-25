@@ -341,6 +341,103 @@
       </div>
 
       <!-- ═══════════════════════════════════════════
+           v2.1.0
+           ═══════════════════════════════════════════ -->
+      <div class="release" id="v2.1.0">
+        <div class="release-heading">
+          <h2 class="release-title">v2.1.0</h2>
+          <span class="release-date">September 2026</span>
+        </div>
+
+        <!-- ── main feature ── -->
+        <div class="feature-card highlight">
+          <div class="new-badge">Security hardening</div>
+          <h3>Active response &amp; platform hardening</h3>
+          <p>
+            Active response scripts now validate every mitigation target (usernames, service
+            names, IPs) instead of trusting alert fields an attacker could forge.
+            <code>terminate_service.sh</code> only stops explicitly allow-listed services, kills
+            connections by exact address, and can no longer be tricked into running arbitrary
+            executables via path traversal. <code>lock_user_linux.sh</code> no longer unlocks
+            accounts on malformed input, and protects system/service accounts.
+          </p>
+          <p>
+            The GUI now binds to <code>127.0.0.1</code> only (reach it via SSH tunnel), requires a
+            login token and re-confirms the sudo password before revealing or redirecting stored
+            secrets. New deployments get unique, randomly generated credentials, and
+            <code>sudo ./radar.sh rotate-credentials</code> rotates them for existing ones. The
+            anomaly-detection webhook now requires a shared secret and only accepts alerts from its
+            own log.
+          </p>
+          <p>
+            <strong>Upgrading:</strong> re-run <code>bootstrap-agent.sh</code> on
+            <code>suspicious_login</code>/<code>log_volume</code> endpoints and redeploy
+            <code>ar.yaml</code>; run <code>./radar.sh run log_volume</code> once so the webhook
+            notification channel picks up the new shared secret.
+          </p>
+          <div class="chips">
+            <span class="chip">terminate_service.sh</span>
+            <span class="chip">lock_user_linux.sh</span>
+            <span class="chip">GUI access control</span>
+            <span class="chip">credential rotation</span>
+            <span class="chip">webhook shared secret</span>
+            <span class="chip">breaking change</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Infrastructure-aware IP resolution</h3>
+          <p>
+            Connection address resolution (webhook, manager–indexer, and other core stack links)
+            now falls back to the registered container name when the declared host is unreachable,
+            instead of failing outright. Adds support for existing single-node and multi-node Wazuh
+            instances, with a new Infrastructure page in the manuals.
+          </p>
+          <div class="chips">
+            <span class="chip">IP resolution fallback</span>
+            <span class="chip">existing Wazuh support</span>
+            <span class="chip">Infrastructure page</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Active response targeting scope &amp; manager hardening</h3>
+          <p>
+            IP-based mitigations now act only on the alert's own source IP, never on addresses
+            found elsewhere in the logs, with a new <code>global.never_block</code> allowlist and
+            proxy-aware <code>X-Forwarded-For</code> handling for <code>scanning_detection</code>.
+            Manager builds no longer leave mounted directories world-writable, and expired
+            enrollment tokens are revoked even across manager restarts.
+          </p>
+          <div class="chips">
+            <span class="chip">never_block</span>
+            <span class="chip">trusted_proxies</span>
+            <span class="chip">repair-permissions</span>
+            <span class="chip">enrollment token revocation</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Simulation coverage &amp; documentation</h3>
+          <p>
+            Simulation scripts were matched to the acceptance criteria in SRS-051 and SRS-055, with
+            updated unit tests. Documentation was refreshed for the IP resolution fallback and
+            infrastructure-aware architecture, and the README gained a "Security assumptions and
+            recommendations" section covering firewall ports and SSH-tunnel access to the GUI.
+          </p>
+          <div class="chips">
+            <span class="chip">SRS-051</span>
+            <span class="chip">SRS-055</span>
+            <span class="chip">security assumptions</span>
+          </div>
+        </div>
+
+      </div>
+      <!-- /v2.1.0 -->
+
+      <hr class="release-divider">
+
+      <!-- ═══════════════════════════════════════════
            v2.0.0
            ═══════════════════════════════════════════ -->
       <div class="release" id="v2.0.0">

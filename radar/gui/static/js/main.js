@@ -119,7 +119,7 @@ window.RADAR = {
     const sl2 = badge.querySelector("#sudo-set-link");
     if (cl) cl.onclick = async (e) => {
       e.preventDefault();
-      await fetch("/api/sudo/lock", { method: "POST", credentials: "same-origin" });
+      await fetch("/api/sudo/lock", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" } });
       RADAR._updateSudoBadge(false);
     };
     if (sl2) sl2.onclick = (e) => { e.preventDefault(); RADAR.promptSudoPassword(); };

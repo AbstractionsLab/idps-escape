@@ -4,6 +4,7 @@ Higher-level scenario orchestration on top of wazuh_api.groups.
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -11,8 +12,9 @@ from . import config as config_module
 from .client import WazuhAPIClient, WazuhAPIError
 from .groups import assign_agent_to_groups, ensure_group, get_agent_by_ip, get_agent_by_name, list_agents, remove_agent_from_groups, upload_group_config
 from .manager_config import (
-    apply_marked_block, apply_tag_value, check_lists_loaded, get_raw_config,
-    remove_marked_block, restart_manager, update_raw_config, wait_for_api,
+    apply_marked_block, apply_tag_value, check_lists_loaded, cluster_nodes, cluster_status,
+    get_raw_config, get_raw_config_for_node, remove_marked_block, restart_manager_or_cluster,
+    update_raw_config, update_raw_config_for_node, wait_for_api,
 )
 from .ruleset import delete_decoder_file, delete_list_file, delete_rule_file, upload_decoder_file, upload_list_file, upload_rule_file
 
@@ -369,13 +371,8 @@ def undo_ruleset_files(client: WazuhAPIClient, scenario_name: str, scenarios_dir
     }
 
 
-def deploy_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_dir: str, *,
-                          wait_for_restart: bool = True,
-                          restart_timeout: float = 90.0,
-                          indexer_host: str = "https://wazuh.indexer:9200") -> Dict:
-    ruleset_changes = deploy_ruleset_files(client, scenario_name, scenarios_dir)
-
-    content = get_raw_config(client)
+def _compute_ossec_changes(content: str, scenario_name: str, scenarios_dir: str,
+                            indexer_host: str) -> Tuple[str, Dict[str, bool]]:
     ossec_changes: Dict[str, bool] = {}
 
     default_snippet = ossec_default_snippet_path(scenarios_dir)
@@ -437,7 +434,171 @@ def deploy_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_
     content, changed = apply_tag_value(content, "host", indexer_host)
     ossec_changes["indexer_host"] = changed
 
-    ossec_content_changed = any(ossec_changes.values())
+    return content, ossec_changes
+
+
+def _ruleset_files_for(scenario_name: str, scenarios_dir: str) -> Dict[str, Path]:
+    files: Dict[str, Path] = {}
+
+    decoders_dir = Path(scenarios_dir) / "decoders" / scenario_name
+    if decoders_dir.is_dir():
+        for f in sorted(decoders_dir.glob("*.xml")):
+            files[f"decoders/{f.name}"] = f
+
+    default_rules_dir = Path(scenarios_dir) / "rules" / "default"
+    if default_rules_dir.is_dir():
+        for f in sorted(default_rules_dir.glob("*.xml")):
+            files[f"rules/{f.name}"] = f
+
+    scenario_rules_dir = Path(scenarios_dir) / "rules" / scenario_name
+    if scenario_rules_dir.is_dir():
+        for f in sorted(scenario_rules_dir.glob("*.xml")):
+            files[f"rules/{f.name}"] = f
+
+    if scenario_name in config_module.whitelist_scenarios(str(Path(scenarios_dir).parent)):
+        whitelist_file = Path(scenarios_dir) / "lists" / "whitelist_countries"
+        if whitelist_file.is_file():
+            files["lists/whitelist_countries"] = whitelist_file
+
+    for f in scenario_list_files(scenario_name, scenarios_dir):
+        files[f"lists/{f.name}"] = f
+
+    return files
+
+
+def deploy_manager_config_local(ossec_etc_dir: str, scenario_name: str, scenarios_dir: str,
+                                 indexer_host: str) -> Dict:
+    check_referenced_lists_exist(scenario_name, scenarios_dir)
+
+    ossec_etc = Path(ossec_etc_dir)
+    ruleset_changes: Dict[str, bool] = {}
+    for rel_path, src in _ruleset_files_for(scenario_name, scenarios_dir).items():
+        dest = ossec_etc / rel_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        new_bytes = src.read_bytes()
+        changed = not dest.exists() or dest.read_bytes() != new_bytes
+        if changed:
+            dest.write_bytes(new_bytes)
+        ruleset_changes[rel_path] = changed
+
+    ossec_conf = ossec_etc / "ossec.conf"
+    content = ossec_conf.read_text()
+    new_content, ossec_changes = _compute_ossec_changes(content, scenario_name, scenarios_dir, indexer_host)
+    ossec_content_changed = new_content != content
+    if ossec_content_changed:
+        ossec_conf.write_text(new_content)
+
+    restart_needed = ossec_content_changed or any(ruleset_changes.values())
+    return {
+        "ossec_changes": ossec_changes,
+        "ruleset_changes": ruleset_changes,
+        "restart_needed": restart_needed,
+    }
+
+
+def _cluster_status_with_retry(client: WazuhAPIClient, attempts: int = 5, delay: float = 3.0) -> dict:
+    try:
+        status = cluster_status(client)
+    except WazuhAPIError:
+        return {"enabled": False}
+    for attempt in range(attempts):
+        if status.get("enabled"):
+            return status
+        if attempt == attempts - 1:
+            return status
+        time.sleep(delay)
+        try:
+            status = cluster_status(client)
+        except WazuhAPIError:
+            return {"enabled": False}
+    return status
+
+
+def _cluster_targets(client: WazuhAPIClient, status: dict, *,
+                      attempts: int = 6, delay: float = 5.0) -> Tuple[List, Dict]:
+    if not status.get("enabled"):
+        return [None], {}
+    seen: Dict[str, None] = {}
+    last_error: Optional[WazuhAPIError] = None
+    for attempt in range(attempts):
+        try:
+            for n in cluster_nodes(client):
+                seen[n["name"]] = None
+            last_error = None
+        except WazuhAPIError as e:
+            last_error = e
+        if attempt < attempts - 1:
+            time.sleep(delay)
+    if not seen:
+        return [], {"_error": f"could not list cluster nodes: {last_error}"}
+    return list(seen.keys()), {}
+
+
+def _node_io(client: WazuhAPIClient, is_clustered: bool):
+    if is_clustered:
+        return (lambda name: get_raw_config_for_node(client, name),
+                lambda name, content: update_raw_config_for_node(client, name, content))
+    return (lambda name: get_raw_config(client),
+            lambda name, content: update_raw_config(client, content))
+
+
+def _apply_per_node(targets: List, get_fn, put_fn, transform, *,
+                     retries: int = 5, retry_delay: float = 3.0) -> Tuple[Dict, bool]:
+    per_node_changes: Dict[str, Dict] = {}
+    any_changed = False
+    for name in targets:
+        key = name or "manager"
+        last_error = None
+        for attempt in range(retries):
+            try:
+                content = get_fn(name)
+                new_content, changes = transform(content)
+                changes_dict = changes if isinstance(changes, dict) else {"removed": changes}
+                if any(changes_dict.values()):
+                    put_fn(name, new_content)
+                    any_changed = True
+                per_node_changes[key] = changes_dict
+                last_error = None
+                break
+            except WazuhAPIError as e:
+                last_error = e
+                if attempt < retries - 1:
+                    time.sleep(retry_delay)
+        if last_error is not None:
+            per_node_changes[key] = {"error": str(last_error)}
+    return per_node_changes, any_changed
+
+
+def deploy_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_dir: str, *,
+                          wait_for_restart: bool = True,
+                          restart_timeout: float = 90.0,
+                          indexer_host: str = "https://wazuh.indexer:9200",
+                          cluster_ruleset_sync_wait: float = 15.0,
+                          node_retry_attempts: int = 5,
+                          node_retry_delay: float = 3.0) -> Dict:
+    ruleset_changes = deploy_ruleset_files(client, scenario_name, scenarios_dir)
+
+    status = _cluster_status_with_retry(client)
+    is_clustered = bool(status.get("enabled"))
+
+    targets, per_node_changes = _cluster_targets(client, status)
+    get_fn, put_fn = _node_io(client, is_clustered)
+
+    def transform(content):
+        return _compute_ossec_changes(content, scenario_name, scenarios_dir, indexer_host)
+
+    node_results, ossec_content_changed = _apply_per_node(
+        targets, get_fn, put_fn, transform,
+        retries=node_retry_attempts, retry_delay=node_retry_delay,
+    )
+    per_node_changes.update(node_results)
+
+    ossec_changes: Dict[str, bool] = {}
+    for node_changes in per_node_changes.values():
+        for k, v in node_changes.items():
+            if k != "error":
+                ossec_changes[k] = ossec_changes.get(k, False) or v
+
     ruleset_files_changed = any(ruleset_changes.values())
     restart_needed = ossec_content_changed or ruleset_files_changed
 
@@ -445,12 +606,13 @@ def deploy_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_
         "ossec_changes": ossec_changes,
         "ruleset_changes": ruleset_changes,
         "restart_triggered": False,
+        "per_node_ossec_changes": per_node_changes,
     }
 
     if restart_needed:
-        if ossec_content_changed:
-            update_raw_config(client, content)
-        restart_manager(client)
+        if ruleset_files_changed and is_clustered and cluster_ruleset_sync_wait > 0:
+            time.sleep(cluster_ruleset_sync_wait)
+        result["restart_info"] = restart_manager_or_cluster(client)
         result["restart_triggered"] = True
         if wait_for_restart:
             result["api_back_up"] = wait_for_api(
@@ -465,14 +627,29 @@ def deploy_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_
 
 
 def undo_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_dir: str, *,
-                         wait_for_restart: bool = True, restart_timeout: float = 90.0) -> Dict:
+                         wait_for_restart: bool = True, restart_timeout: float = 90.0,
+                         node_retry_attempts: int = 5, node_retry_delay: float = 3.0) -> Dict:
     content = get_raw_config(client)
     ruleset_result = undo_ruleset_files(client, scenario_name, scenarios_dir, content)
 
-    new_content, changed = remove_marked_block(content, scenario_name)
+    status = _cluster_status_with_retry(client)
+    is_clustered = bool(status.get("enabled"))
+
+    targets, per_node_changes = _cluster_targets(client, status)
+    get_fn, put_fn = _node_io(client, is_clustered)
+
+    def transform(node_content):
+        return remove_marked_block(node_content, scenario_name)
+
+    node_results, changed = _apply_per_node(
+        targets, get_fn, put_fn, transform,
+        retries=node_retry_attempts, retry_delay=node_retry_delay,
+    )
+    per_node_changes.update(node_results)
 
     result: Dict = {
         "scenario_block_removed": changed,
+        "per_node_ossec_changes": per_node_changes,
         "ruleset_files_removed": ruleset_result["removed"],
         "ruleset_files_kept_shared": ruleset_result["kept_shared"],
         "ruleset_files_errors": ruleset_result["errors"],
@@ -490,9 +667,7 @@ def undo_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_di
     restart_needed = changed or any(ruleset_result["removed"].values())
 
     if restart_needed:
-        if changed:
-            update_raw_config(client, new_content)
-        restart_manager(client)
+        result["restart_info"] = restart_manager_or_cluster(client)
         result["restart_triggered"] = True
         if wait_for_restart:
             result["api_back_up"] = wait_for_api(
@@ -500,13 +675,20 @@ def undo_manager_config(client: WazuhAPIClient, scenario_name: str, scenarios_di
                 timeout=restart_timeout, verify_ssl=client.verify_ssl,
             )
             if changed and result["api_back_up"]:
-                verify_content = get_raw_config(client)
-                if f"<!-- RADAR: {scenario_name} BEGIN -->" in verify_content:
+                still_present = []
+                for name in targets:
+                    try:
+                        verify_content = get_fn(name)
+                        if f"<!-- RADAR: {scenario_name} BEGIN -->" in verify_content:
+                            still_present.append(name or "manager")
+                    except WazuhAPIError:
+                        pass
+                if still_present:
                     result["scenario_block_removed"] = False
                     result["error"] = (
-                        f"Restarted the manager after writing the updated ossec.conf, but the "
-                        f"'{scenario_name}' marker is still present after the restart -- the "
-                        f"write genuinely did not take effect (it may have been rejected). The "
+                        f"Restarted after writing the updated ossec.conf, but the "
+                        f"'{scenario_name}' marker is still present on {still_present} after the "
+                        f"restart -- the write genuinely did not take effect there. The "
                         f"ruleset file changes above (if any) still went through independently."
                     )
 

@@ -8,7 +8,7 @@ import requests
 from . import config as config_module
 from .client import WazuhAPIClient, WazuhAPIError
 from .groups import resolve_agent
-from .manager_config import get_raw_config
+from .manager_config import cluster_nodes, cluster_status, get_raw_config, get_raw_config_for_node
 from .scenario_ops import SHARED_GROUP
 
 CORE_DAEMONS = ["wazuh-analysisd", "wazuh-remoted", "wazuh-logcollector", "wazuh-db"]
@@ -130,12 +130,14 @@ def check_scenario_agents(client: WazuhAPIClient, scenario: str, radar_root: str
     return report
 
 
-def check_manager_daemons(client: WazuhAPIClient, daemons: List[str] = None) -> List[str]:
+def check_manager_daemons(client: WazuhAPIClient, daemons: List[str] = None,
+                           node: Optional[str] = None) -> List[str]:
     daemons = daemons or CORE_DAEMONS
+    path = f"/cluster/{node}/status" if node else "/manager/status"
     try:
-        resp = client.get("/manager/status")
+        resp = client.get(path)
     except WazuhAPIError as e:
-        return [f"FAIL - could not reach /manager/status: {e}"]
+        return [f"FAIL - could not reach {path}: {e}"]
     statuses = resp.json()["data"]["affected_items"][0]
     return [
         f"OK - {d} running" if statuses.get(d) == "running" else f"FAIL - {d} is {statuses.get(d, 'unknown')}"
@@ -143,10 +145,10 @@ def check_manager_daemons(client: WazuhAPIClient, daemons: List[str] = None) -> 
     ]
 
 
-def check_config_contains(client: WazuhAPIClient, markers: Dict[str, str]) -> List[str]:
-    """markers: label -> substring expected somewhere in ossec.conf."""
+def check_config_contains(client: WazuhAPIClient, markers: Dict[str, str],
+                           node: Optional[str] = None) -> List[str]:
     try:
-        content = get_raw_config(client)
+        content = get_raw_config_for_node(client, node) if node else get_raw_config(client)
     except WazuhAPIError as e:
         return [f"FAIL - could not fetch manager configuration: {e}"]
     return [
@@ -195,12 +197,34 @@ def check_ruleset_files(client: WazuhAPIClient, kind: str, filenames: List[str])
 def check_manager_api(client: WazuhAPIClient, scenarios: List[str], os_url: str = "", os_user: str = "",
                        os_pass: str = "", webhook_url: str = "", radar_root: str = ".") -> List[str]:
     report: List[str] = []
-    report += check_manager_daemons(client)
 
     scenarios_with_ar_wiring = set(SCENARIO_RULESET_FILES.keys())
+    ar_markers = {f"{s} active-response wiring": f"<!-- RADAR: {s} BEGIN -->"
+                  for s in scenarios if s in scenarios_with_ar_wiring}
+
+    try:
+        cluster = cluster_status(client)
+    except WazuhAPIError:
+        cluster = {"enabled": False}
+
+    if cluster.get("enabled"):
+        try:
+            nodes = [n["name"] for n in cluster_nodes(client)]
+        except WazuhAPIError as e:
+            nodes = []
+            report.append(f"FAIL - could not list cluster nodes: {e}")
+        for node in nodes:
+            report.append(f"--- {node} ---")
+            report += check_manager_daemons(client, node=node)
+            if ar_markers:
+                report += check_config_contains(client, ar_markers, node=node)
+        report.append("--- cluster-wide ---")
+    else:
+        report += check_manager_daemons(client)
+        if ar_markers:
+            report += check_config_contains(client, ar_markers)
+
     for s in scenarios:
-        if s in scenarios_with_ar_wiring:
-            report += check_config_contains(client, {f"{s} active-response wiring": f"<!-- RADAR: {s} BEGIN -->"})
         report.append(check_scenario_group_config(client, s, radar_root=radar_root))
 
     decoders, rules = set(), set()

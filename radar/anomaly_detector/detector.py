@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import os, sys, json, time, yaml, requests
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -8,15 +9,48 @@ def die(msg: str, code: int = 1) -> None:
     print(f"[!] {msg}", file=sys.stderr)
     sys.exit(code)
 
+def _parse_env_value(raw: str):
+    raw = raw.strip()
+    if raw.startswith("'"):
+        end = raw.find("'", 1)
+        if end < 0:
+            return None
+        rest = raw[end + 1:].strip()
+        return raw[1:end] if (not rest or rest.startswith("#")) else None
+    if raw.startswith('"'):
+        out, i = [], 1
+        while i < len(raw):
+            ch = raw[i]
+            if ch == "\\" and i + 1 < len(raw) and raw[i + 1] in '\\"$`':
+                out.append(raw[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                rest = raw[i + 1:].strip()
+                return "".join(out) if (not rest or rest.startswith("#")) else None
+            out.append(ch)
+            i += 1
+        return None
+    return re.split(r"\s+#", raw, maxsplit=1)[0].strip()
+# end _parse_env_value
+
+
+_ENV_LINE_RE = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
+
 def load_env(env_path: Path) -> None:
     if not env_path.exists():
         return
     for line in env_path.read_text().splitlines():
         line = line.strip()
-        if not line or line.startswith("#") or "=" not in line: 
+        if not line or line.startswith("#"):
             continue
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip())
+        m = _ENV_LINE_RE.match(line)
+        if not m:
+            continue
+        value = _parse_env_value(m.group(2))
+        if value is not None:
+            os.environ.setdefault(m.group(1), value)
 
 def load_yaml(path: Path) -> Dict[str, Any]:
     if not path.exists():

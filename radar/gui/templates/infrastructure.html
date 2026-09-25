@@ -6,84 +6,135 @@
 
 {% block content %}
 
-<div id="vault-banner" style="display:none" class="strip strip--amber" style="margin-bottom:20px;flex-wrap:wrap;gap:10px">
-  <div id="vault-banner-msg"></div>
-  <div style="margin-left:auto;display:flex;gap:8px">
-    <button class="btn btn--sm" id="vault-banner-btn-unlock" onclick="RADAR.promptVaultUnlock()" style="display:none">Unlock vault</button>
-    <button class="btn btn--sm" id="vault-banner-btn-create" onclick="openVaultCreate()" style="display:none">Create vault</button>
-  </div>
-</div>
-
-
 <div class="section-header">
   <div>
-    <div class="section-header__title">Agent endpoints</div>
+    <div class="section-header__title">Wazuh containers</div>
     <div class="section-header__subtitle" style="font-size:12px;color:var(--text-muted)">
-      Tracked automatically from <code>fleet.yaml</code> every time Group Enrollment runs. Read-only.
+      Manager and indexer each support multiple containers (clusters). RADAR itself uses the primary one.
     </div>
   </div>
+  <button class="btn btn--primary" onclick="openComponentModal()">+ Add container</button>
 </div>
 
-{% if fleet_agents %}
-<table class="infra-table" style="width:100%;margin-bottom:32px">
-  <tr>
-    <td class="infra-table__label">Agent</td>
-    <td class="infra-table__label">Agent ID</td>
-    <td class="infra-table__label">Resolved via</td>
-    <td class="infra-table__label">Status</td>
-    <td class="infra-table__label">Groups</td>
-    <td class="infra-table__label">Last scenario</td>
-    <td class="infra-table__label">Last action</td>
-    <td class="infra-table__label">Last updated</td>
-  </tr>
-  {% for key, entry in fleet_agents.items() %}
-  <tr>
-    <td class="infra-table__value mono">{{ key }}</td>
-    <td class="infra-table__value mono">{{ entry.agent_id or '—' }}</td>
-    <td class="infra-table__value">{{ entry.resolved_via or '—' }}</td>
-    <td class="infra-table__value">
-      {% if entry.status %}<span class="badge badge--green">{{ entry.status }}</span>{% else %}—{% endif %}
-    </td>
-    <td class="infra-table__value">
-      {% for g in entry.groups or [] %}<span class="badge badge--blue" style="margin-right:4px">{{ g }}</span>{% endfor %}
-      {% if not entry.groups %}—{% endif %}
-    </td>
-    <td class="infra-table__value mono">{{ entry.last_scenario or '—' }}</td>
-    <td class="infra-table__value">
-      {% if entry.last_action == 'group_assignment_failed' %}
-      <span class="badge badge--red" title="{{ entry.last_warning or '' }}">failed</span>
-      {% elif entry.last_action %}
-      <span class="badge badge--gray">{{ entry.last_action }}</span>
-      {% else %}—{% endif %}
-    </td>
-    <td class="infra-table__value mono">{{ entry.last_updated or '—' }}</td>
-  </tr>
+<div class="infra-grid">
+  {% for node in manager_nodes %}
+  <div class="infra-card infra-card--manager">
+    <div class="infra-card__header">
+      <span class="infra-card__name">manager{% if node.primary %} <span class="badge badge--green">primary</span>{% endif %}</span>
+    </div>
+    <table class="infra-table">
+      <tr><td class="infra-table__label">Container</td><td class="infra-table__value mono">{{ node.container_name }}</td></tr>
+      <tr><td class="infra-table__label">Host</td><td class="infra-table__value mono">{{ node.host or 'not set' }}</td></tr>
+      <tr><td class="infra-table__label">Address</td><td class="infra-table__value mono">{{ node.scheme }}://{{ node.host or '?' }}:{{ node.port }}</td></tr>
+    </table>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick='openComponentModal("manager", "{{ node.id }}")'>Edit</button>
+      {% if not node.primary %}
+      <button class="btn btn--sm" onclick='setPrimaryNode("manager", "{{ node.id }}")'>Make primary</button>
+      <button class="btn btn--sm" onclick='deleteNode("manager", "{{ node.id }}")'>Delete</button>
+      {% endif %}
+    </div>
+  </div>
   {% endfor %}
-</table>
-{% else %}
-<div class="strip strip--amber" style="margin-bottom:32px">
-  No entries yet. This fills in automatically the first time an agent is assigned to groups via the Deploy page's Group Enrollment tab.
+
+  {% for node in indexer_nodes %}
+  <div class="infra-card infra-card--manager">
+    <div class="infra-card__header">
+      <span class="infra-card__name">indexer{% if node.primary %} <span class="badge badge--green">primary</span>{% endif %}</span>
+    </div>
+    <table class="infra-table">
+      <tr><td class="infra-table__label">Container</td><td class="infra-table__value mono">{{ node.container_name }}</td></tr>
+      <tr><td class="infra-table__label">Host</td><td class="infra-table__value mono">{{ node.host or 'not set' }}</td></tr>
+      <tr><td class="infra-table__label">Address</td><td class="infra-table__value mono">{{ node.scheme }}://{{ node.host or '?' }}:{{ node.port }}</td></tr>
+    </table>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick='openComponentModal("indexer", "{{ node.id }}")'>Edit</button>
+      {% if not node.primary %}
+      <button class="btn btn--sm" onclick='setPrimaryNode("indexer", "{{ node.id }}")'>Make primary</button>
+      <button class="btn btn--sm" onclick='deleteNode("indexer", "{{ node.id }}")'>Delete</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if dashboard.host %}
+  <div class="infra-card infra-card--manager">
+    <div class="infra-card__header">
+      <span class="infra-card__name">dashboard</span>
+    </div>
+    <table class="infra-table">
+      <tr><td class="infra-table__label">Container</td><td class="infra-table__value mono">{{ dashboard.container_name }}</td></tr>
+      <tr><td class="infra-table__label">Host</td><td class="infra-table__value mono">{{ dashboard.host }}</td></tr>
+      <tr><td class="infra-table__label">Address</td><td class="infra-table__value mono">{{ dashboard.scheme }}://{{ dashboard.host }}:{{ dashboard.port }}</td></tr>
+    </table>
+    <div class="connector-card__actions">
+      <button class="btn btn--sm" onclick='openComponentModal("dashboard")'>Edit</button>
+      <button class="btn btn--sm" onclick='deleteComponent("dashboard")'>Delete</button>
+    </div>
+  </div>
+  {% endif %}
 </div>
+{% if not manager_nodes and not indexer_nodes and not dashboard.host %}
+<div class="strip strip--amber" style="margin-top:12px">No containers registered yet.</div>
 {% endif %}
 
+<div class="section-header" style="margin-top:24px">
+  <div>
+    <div class="section-header__title">Connectivity</div>
+  </div>
+  <button class="btn btn--sm" onclick="testAllLinks()">Test links</button>
+</div>
+<div class="infra-card__footer" id="all-links-status"></div>
 
-<div class="modal-backdrop" id="cred-modal" style="display:none" onclick="closeModal(event,'cred-modal')">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-title">Set sudo password</div>
-    <div class="modal-sub" id="cred-modal-sub"></div>
-    <input type="hidden" id="cred-node-name">
-    <input type="hidden" id="cred-node-type">
+
+<div class="modal-backdrop" id="component-modal" style="display:none" onclick="closeModal(event,'component-modal')">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:520px">
+    <div class="modal-title" id="component-modal-title">Add container</div>
+    <input type="hidden" id="component-orig-type">
+    <input type="hidden" id="component-node-id">
     <div class="form-group" style="margin-top:14px">
-      <label class="form-label">Sudo / become password</label>
-      <input class="form-input" id="cred-pw" type="password" placeholder="Enter password">
-      <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">Saved to <code>host_vars/&lt;name&gt;.yml</code> chmod 0600, encrypted with the vault password.</div>
+      <label class="form-label">Type</label>
+      <select class="form-input" id="component-type">
+        <option value="manager">manager</option>
+        <option value="indexer">indexer</option>
+        <option value="dashboard">dashboard</option>
+      </select>
     </div>
+    <div class="form-group" style="margin-top:10px">
+      <label class="form-label">Container name</label>
+      <input class="form-input" id="component-container" placeholder="e.g. wazuh.indexer">
+    </div>
+    <div class="form-group" style="margin-top:10px">
+      <label class="form-label">Host</label>
+      <div style="display:flex;gap:6px">
+        <input class="form-input" id="component-host" placeholder="IP or hostname, optional for now" style="flex:1">
+        <button class="btn btn--sm" type="button" onclick="detectComponentIp()">Detect</button>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:10px;display:flex;gap:10px">
+      <div style="flex:1">
+        <label class="form-label">Port</label>
+        <input class="form-input" id="component-port" type="number">
+      </div>
+      <div style="flex:1">
+        <label class="form-label">Scheme</label>
+        <select class="form-input" id="component-scheme">
+          <option value="https">https</option>
+          <option value="http">http</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:10px" id="component-primary-row">
+      <label class="form-label" style="display:flex;align-items:center;gap:6px;font-weight:normal">
+        <input type="checkbox" id="component-primary"> Primary
+      </label>
+    </div>
+
     <div class="modal-actions">
-      <button class="btn" id="cred-delete-btn" onclick="deleteCredential()" style="display:none;margin-right:auto">Remove stored</button>
-      <button class="btn" onclick="closeModal(null,'cred-modal')">Cancel</button>
-      <button class="btn btn--primary" onclick="saveCredential()">Save</button>
+      <button class="btn" onclick="closeModal(null,'component-modal')">Cancel</button>
+      <button class="btn btn--primary" onclick="saveComponent()">Save</button>
     </div>
-    <div class="modal-error" id="cred-error"></div>
+    <div class="modal-error" id="component-error"></div>
   </div>
 </div>
 

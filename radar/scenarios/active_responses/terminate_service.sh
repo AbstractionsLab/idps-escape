@@ -1,74 +1,112 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# RADAR active response: stop an allowlisted service, or kill the processes
+# holding TCP connections to a given IPv4 address. The target comes from
+# alert data (e.g. a syslog program name any local user can forge), so it is
+# validated here regardless of what the manager already filtered.
 
-# terminate_c2.sh - Wazuh AR
+set -uo pipefail
+
 LOG_FILE="/var/ossec/logs/active-responses.log"
+# Services this script may stop, one unit name per line ('#' comments ok).
+# A missing or empty file means no service can be stopped.
+ALLOWED_SERVICES_FILE="/var/ossec/etc/radar-terminable-services"
+# Never stopped, even if listed in the allowlist.
+NEVER_STOP_RE='^(wazuh-.*|ssh|sshd|systemd-.*|dbus|dbus-broker|auditd|rsyslog|syslog-ng|firewalld|ufw|nftables|iptables|netfilter-persistent|NetworkManager|networking|polkit)$'
 
-# 1) Read full wrapper JSON from stdin
-IFS= read -r wrapper_json
-echo "$(date) [terminate_c2] $wrapper_json" >> "$LOG_FILE"
+log() { echo "$(date) [terminate_service] $*" >> "$LOG_FILE"; }
 
-# 2) Make sure we got something
-if [[ -z "$wrapper_json" ]]; then
-    exit 0
+IFS= read -r wrapper_json || true
+[[ -n "${wrapper_json:-}" ]] || exit 0
+
+if ! command -v jq >/dev/null 2>&1; then
+  log "jq not installed; refusing to act"
+  exit 1
 fi
 
-# 3) Extract C2 destination IP from extra_args[0]
-if command -v jq >/dev/null 2>&1; then
-    C2_IP=$(echo "$wrapper_json" | jq -r '.parameters.extra_args[0]')
-else
-    C2_IP=$(echo "$wrapper_json" | grep -oP '"extra_args":\["\K[^"]+')
-fi
+action=$(jq -r '.command // empty' <<<"$wrapper_json" 2>/dev/null) || action=""
+target=$(jq -r '.parameters.extra_args[0] | strings' <<<"$wrapper_json" 2>/dev/null) || target=""
 
-if [[ -z "$C2_IP" ]]; then
-    echo "$(date) [terminate_c2] No destination IP/service provided in extra_args." >> "$LOG_FILE"
-    exit 1
+# Stopping a service or killing processes is one-shot: the timeout 'delete'
+# must not repeat it.
+[[ "$action" == "delete" ]] && exit 0
+if [[ "$action" != "add" ]]; then
+  log "refusing: unexpected command $(printf '%q' "$action")"
+  exit 1
+fi
+if [[ -z "$target" ]]; then
+  log "refusing: no target in extra_args"
+  exit 1
 fi
 
 is_ipv4() {
-    local ip="$1"
-    [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
-    IFS='.' read -r a b c d <<<"$ip"
-    [[ "$a" -le 255 && "$b" -le 255 && "$c" -le 255 && "$d" -le 255 ]]
+  local ip="$1" o octets
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+  IFS='.' read -ra octets <<<"$ip"
+  for o in "${octets[@]}"; do
+    (( 10#$o <= 255 )) || return 1
+  done
 }
 
-if ! is_ipv4 "$C2_IP"; then
-    echo "$(date) [terminate_c2] Treating target as service '$C2_IP'" >> "$LOG_FILE"
+stop_service() {
+  local name="${1%.service}"
+  if [[ ! "$name" =~ ^[A-Za-z0-9][A-Za-z0-9@._:-]*$ ]]; then
+    log "refusing: invalid service name $(printf '%q' "$1")"
+    return 1
+  fi
+  if [[ "$name" =~ $NEVER_STOP_RE ]]; then
+    log "refusing: '$name' is a protected service"
+    return 1
+  fi
+  if [[ ! -f "$ALLOWED_SERVICES_FILE" ]] \
+     || ! sed 's/#.*//; s/[[:space:]]//g; s/\.service$//' "$ALLOWED_SERVICES_FILE" | grep -qxF -- "$name"; then
+    log "refusing: '$name' is not listed in $ALLOWED_SERVICES_FILE"
+    return 1
+  fi
 
-    SVC_NAME="${C2_IP%.service}"
-    if command -v systemctl >/dev/null 2>&1; then
-        UNIT="$C2_IP"
-        [[ "$UNIT" != *.service ]] && UNIT="${SVC_NAME}.service"
-        echo "$(date) [terminate_c2] systemctl stop $UNIT" >> "$LOG_FILE"
-        systemctl stop "$UNIT" >> "$LOG_FILE" 2>&1
-        exit $?
+  log "stopping service $name"
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl stop -- "${name}.service" >> "$LOG_FILE" 2>&1
+  elif command -v service >/dev/null 2>&1; then
+    service "$name" stop >> "$LOG_FILE" 2>&1
+  else
+    log "no supported service manager found"
+    return 1
+  fi
+}
+
+kill_connections() {
+  local ip="$1" pid comm pids killed=0
+  case "$ip" in
+    0.*|127.*|255.255.255.255)
+      log "refusing: $ip is not a remote address"
+      return 1
+      ;;
+  esac
+  if ! command -v ss >/dev/null 2>&1; then
+    log "ss not installed; cannot find connections to $ip"
+    return 1
+  fi
+
+  # 'dst' matches the exact remote address, unlike grepping the ss output.
+  pids=$(ss -Htnp dst "$ip" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -un)
+  for pid in $pids; do
+    (( pid > 1 && pid != $$ && pid != PPID )) || continue
+    comm=$(cat "/proc/$pid/comm" 2>/dev/null) || continue
+    if [[ "$comm" == wazuh-* ]]; then
+      log "skipping $comm (pid $pid): never kill the agent"
+      continue
     fi
-    if command -v service >/dev/null 2>&1; then
-        echo "$(date) [terminate_c2] service $SVC_NAME stop" >> "$LOG_FILE"
-        service "$SVC_NAME" stop >> "$LOG_FILE" 2>&1
-        exit $?
+    if kill -9 "$pid" 2>/dev/null; then
+      log "killed pid $pid ($comm) connected to $ip"
+      killed=$((killed + 1))
     fi
-    if [[ -x "/etc/init.d/$SVC_NAME" ]]; then
-        echo "$(date) [terminate_c2] /etc/init.d/$SVC_NAME stop" >> "$LOG_FILE"
-        "/etc/init.d/$SVC_NAME" stop >> "$LOG_FILE" 2>&1
-        exit $?
-    fi
-    echo "$(date) [terminate_c2] No supported service manager found for '$C2_IP'" >> "$LOG_FILE"
-    exit 1
+  done
+  (( killed > 0 )) || log "no processes to kill for $ip"
+  return 0
+}
+
+if is_ipv4 "$target"; then
+  kill_connections "$target"
 else
-    echo "$(date) [terminate_c2] Terminating connections to $C2_IP" >> "$LOG_FILE"
-    # Find PIDs communicating with that destination IP
-    PIDS=$(ss -ntp | grep "$C2_IP" | awk -F',' '{print $2}' | awk '{print $1}' | sort -u)
-
-    if [[ -z "$PIDS" ]]; then
-        echo "$(date) [terminate_c2] No processes found for $C2_IP" >> "$LOG_FILE"
-        exit 0
-    fi
-
-    for PID in $PIDS; do
-        if [[ "$PID" =~ ^[0-9]+$ ]]; then
-            kill -9 "$PID"
-            echo "$(date) [terminate_c2] Terminated PID $PID for connection to $C2_IP" >> "$LOG_FILE"
-        fi
-    done
-    exit 0
+  stop_service "$target"
 fi

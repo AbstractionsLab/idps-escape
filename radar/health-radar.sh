@@ -22,12 +22,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 cd "$SCRIPT_DIR"
-if [[ -f .env ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source .env
-  set +a
-fi
+# shellcheck source=radar_deploy/_lib.sh
+source "$SCRIPT_DIR/radar_deploy/_lib.sh"
+radar_load_env "$SCRIPT_DIR"
 export PYTHONPATH="$(pwd)${PYTHONPATH:+:$PYTHONPATH}"
 
 echo "=== MANAGER (filesystem/container) ==="

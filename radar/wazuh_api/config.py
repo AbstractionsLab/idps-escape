@@ -48,12 +48,28 @@ def scenario_display_info(radar_root: str, scenario_name: str) -> dict:
     }
 
 
-def manager_volume_host_paths(radar_root: str = ".", service: str = "wazuh.manager") -> list[str]:
+def _manager_service_name(radar_root: str) -> str:
+    try:
+        from . import infra as infra_module
+        name = infra_module.container_for(radar_root, "manager")
+        if name:
+            return name
+    except Exception:
+        pass
+    return "wazuh.manager"
+
+
+def _load_service_cfg(radar_root: str, service: str) -> dict:
     path = Path(radar_root) / "volumes.yml"
     if not path.exists():
-        return []
+        return {}
     data = yaml.safe_load(path.read_text()) or {}
-    service_cfg = (data.get("services") or {}).get(service) or {}
+    return (data.get("services") or {}).get(service) or {}
+
+
+def manager_volume_host_paths(radar_root: str = ".", service: str | None = None) -> list[str]:
+    service = service or _manager_service_name(radar_root)
+    service_cfg = _load_service_cfg(radar_root, service)
     host_paths: list[str] = []
     for entry in service_cfg.get("volumes") or []:
         if not isinstance(entry, str) or ":" not in entry:
@@ -65,12 +81,9 @@ def manager_volume_host_paths(radar_root: str = ".", service: str = "wazuh.manag
 
 
 def manager_volume_host_path_for(radar_root: str, container_path: str,
-                                  service: str = "wazuh.manager") -> str | None:
-    path = Path(radar_root) / "volumes.yml"
-    if not path.exists():
-        return None
-    data = yaml.safe_load(path.read_text()) or {}
-    service_cfg = (data.get("services") or {}).get(service) or {}
+                                  service: str | None = None) -> str | None:
+    service = service or _manager_service_name(radar_root)
+    service_cfg = _load_service_cfg(radar_root, service)
     for entry in service_cfg.get("volumes") or []:
         if not isinstance(entry, str) or ":" not in entry:
             continue
@@ -80,3 +93,20 @@ def manager_volume_host_path_for(radar_root: str, container_path: str,
         if container_side == container_path and host_side.startswith(("/", "./", "../", "~")):
             return host_side
     return None
+
+
+def _core_compose_services(radar_root: str) -> set:
+    path = Path(radar_root) / "docker-compose.core.yml"
+    if not path.exists():
+        return set()
+    data = yaml.safe_load(path.read_text()) or {}
+    return set((data.get("services") or {}).keys())
+
+
+def core_volumes_overlay_yaml(radar_root: str) -> str:
+    core_services = _core_compose_services(radar_root)
+    path = Path(radar_root) / "volumes.yml"
+    data = yaml.safe_load(path.read_text()) if path.exists() else {}
+    all_services = (data or {}).get("services") or {}
+    filtered = {k: v for k, v in all_services.items() if k in core_services}
+    return yaml.safe_dump({"services": filtered}, sort_keys=False)

@@ -6,17 +6,13 @@ import subprocess
 import threading
 from pathlib import Path
 
+from wazuh_api import envfile
+from wazuh_api import infra as infra_module
+
 _lock = threading.Lock()
 
 _DEFAULT_MANAGER_CONTAINER = "wazuh.manager"
 _DEFAULT_AR_RISK_CONFIG = "/var/ossec/active-response/bin/ar.yaml"
-
-def _manager_container(env: dict) -> str:
-    return env.get("MANAGER_CONTAINER", "").strip() or _DEFAULT_MANAGER_CONTAINER
-
-def _ar_bin_env_path(env: dict) -> str:
-    ar_risk_config = env.get("AR_RISK_CONFIG", "").strip() or _DEFAULT_AR_RISK_CONFIG
-    return str(Path(ar_risk_config).parent / "active_responses.env")
 
 FIELD_MAP = {
     "os-url": "OS_URL",
@@ -55,6 +51,27 @@ PASSWORD_KEYS = {
     "maxmind-key": "MAXMIND_LICENSE_KEY",
 }
 
+PUBLIC_KEYS = frozenset(
+    {v for k, v in FIELD_MAP.items() if k not in PASSWORD_KEYS and not v.startswith("_")}
+    | {"OS_VERIFY_SSL", "DASHBOARD_VERIFY_SSL"}
+)
+
+# Endpoint settings that receive a stored secret, and the secrets they receive.
+# Changing one needs the unlocked vault, unless the same save also sets new secrets.
+SECRET_ENDPOINTS = {
+    "OS_URL": ("OS_PASS",),
+    "WAZUH_API_URL": ("WAZUH_AUTH_PASS",),
+    "SMTP_HOST": ("SMTP_PASS",),
+    "SMTP_PORT": ("SMTP_PASS",),
+    "SMTP_STARTTLS": ("SMTP_PASS",),
+    "WEBHOOK_URL": ("WEBHOOK_SHARED_SECRET",),
+}
+_ENDPOINT_DEFAULTS = {"SMTP_PORT": "587", "SMTP_STARTTLS": "yes"}
+
+
+class VaultRequired(Exception):
+    pass
+
 
 def _env_path(radar_root: str) -> Path:
     return Path(radar_root) / ".env"
@@ -65,22 +82,11 @@ def _certs_dir(radar_root: str) -> Path:
 
 
 def load_env(radar_root: str) -> dict:
-    p = _env_path(radar_root)
-    result = {}
-    if not p.exists():
-        return result
-    with p.open() as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            if "=" in line:
-                k, _, v = line.partition("=")
-                v = v.strip()
-                if not (v.startswith('"') or v.startswith("'")):
-                    v = re.split(r"\s+#", v, maxsplit=1)[0].strip()
-                result[k.strip()] = v.strip('"').strip("'")
-    return result
+    return envfile.load(_env_path(radar_root))
+
+
+def public_env(env: dict) -> dict:
+    return {k: v for k, v in env.items() if k in PUBLIC_KEYS}
 
 
 def has_passwords(env: dict) -> dict:
@@ -92,9 +98,16 @@ def reveal_password(radar_root: str, env_key: str) -> str | None:
     return load_env(radar_root).get(env_key)
 
 
-def save_connector(radar_root: str, connector: str, fields: dict) -> dict:
+def _endpoint_changes_needing_vault(current: dict, updates: dict) -> list[str]:
+    return [key for key, secrets in SECRET_ENDPOINTS.items()
+            if key in updates
+            and updates[key] != current.get(key, _ENDPOINT_DEFAULTS.get(key, ""))
+            and not all(updates.get(s) for s in secrets)]
+
+
+def save_connector(radar_root: str, connector: str, fields: dict, vault_unlocked: bool = False) -> dict:
     with _lock:
-        env = load_env(radar_root)
+        updates: dict = {}
 
         ssl_prefix_map = {
             "os-ssl-enabled": ("OS_VERIFY_SSL", "opensearch"),
@@ -106,14 +119,14 @@ def save_connector(radar_root: str, connector: str, fields: dict) -> dict:
             if field_id in ssl_prefix_map:
                 env_key, cert_name = ssl_prefix_map[field_id]
                 if value == "false":
-                    env[env_key] = "false"
+                    updates[env_key] = "false"
                 else:
                     cert_content = fields.get(field_id.replace("-ssl-enabled", "-cert-content"))
                     if cert_content:
                         cert_path = _save_cert(radar_root, cert_name, cert_content)
-                        env[env_key] = str(cert_path)
+                        updates[env_key] = str(cert_path)
                     else:
-                        env[env_key] = "true"
+                        updates[env_key] = "true"
                 continue
 
             if field_id.endswith("-cert-content"):
@@ -121,9 +134,16 @@ def save_connector(radar_root: str, connector: str, fields: dict) -> dict:
 
             env_key = FIELD_MAP.get(field_id)
             if env_key and value:
-                env[env_key] = value
+                if not isinstance(value, (str, int, float)):
+                    raise ValueError(f"{field_id}: expected a string")
+                updates[env_key] = envfile.validate(env_key, str(value))
 
-        _write_env(radar_root, env)
+        if not vault_unlocked:
+            blocked = _endpoint_changes_needing_vault(load_env(radar_root), updates)
+            if blocked:
+                raise VaultRequired(", ".join(blocked))
+
+        _write_env(radar_root, updates)
 
     try:
         _sync_active_responses_env(radar_root)
@@ -133,30 +153,41 @@ def save_connector(radar_root: str, connector: str, fields: dict) -> dict:
 
 
 def _sync_active_responses_env(radar_root: str) -> None:
+    from wazuh_api import ar_env
+
     env = load_env(radar_root)
-    container = _manager_container(env)
-    ar_env_path = _ar_bin_env_path(env)
-    src = str(_env_path(radar_root))
+    container = infra_module.container_for(radar_root, "manager", _DEFAULT_MANAGER_CONTAINER)
+    ar_risk_config = env.get("AR_RISK_CONFIG", "").strip() or _DEFAULT_AR_RISK_CONFIG
+    ar_env_path = str(Path(ar_risk_config).parent / "active_responses.env")
+
+    overrides = {"RADAR_MANAGER_ADDRESS": env.get("WAZUH_MANAGER_ADDRESS", "") or infra_module.detect_local_ip() or ""}
+    try:
+        overrides["OS_URL"] = infra_module.resolve_url(radar_root, "manager", "indexer")
+    except infra_module.NotConfigured:
+        pass
+
+    tmp_path = Path(radar_root) / ".active_responses.env.tmp"
+    ar_env.write(tmp_path, env, overrides)
     try:
         subprocess.run(
-            ["docker", "cp", src, f"{container}:{ar_env_path}"],
+            ["docker", "cp", str(tmp_path), f"{container}:{ar_env_path}"],
             capture_output=True, text=True, timeout=15, check=True,
         )
     except subprocess.CalledProcessError as e:
         detail = (e.stderr or e.stdout or str(e)).strip()
-        raise RuntimeError(f"could not copy .env into {container}: {detail}")
+        raise RuntimeError(f"could not copy active_responses.env into {container}: {detail}")
     except FileNotFoundError:
         raise RuntimeError(f"docker CLI not found on GUI host -- could not sync into {container}")
     except subprocess.TimeoutExpired:
-        raise RuntimeError(f"timed out copying .env into {container}")
-    subprocess.run(
-        ["docker", "exec", "-u", "root", container, "chown", "root:wazuh", ar_env_path],
-        capture_output=True, text=True, timeout=10,
-    )
-    subprocess.run(
-        ["docker", "exec", "-u", "root", container, "chmod", "0660", ar_env_path],
-        capture_output=True, text=True, timeout=10,
-    )
+        raise RuntimeError(f"timed out copying active_responses.env into {container}")
+    finally:
+        tmp_path.unlink(missing_ok=True)
+    for cmd in (["chown", ar_env.FINAL_OWNER, ar_env_path], ["chmod", oct(ar_env.FINAL_MODE)[2:], ar_env_path]):
+        proc = subprocess.run(["docker", "exec", "-u", "root", container, *cmd],
+                              capture_output=True, text=True, timeout=10)
+        if proc.returncode != 0:
+            raise RuntimeError(f"could not {' '.join(cmd[:2])} active_responses.env in {container}: "
+                               f"{(proc.stderr or proc.stdout).strip()}")
 
 
 def _save_cert(radar_root: str, name: str, content: str) -> Path:
@@ -168,34 +199,12 @@ def _save_cert(radar_root: str, name: str, content: str) -> Path:
     return p
 
 
-def _write_env(radar_root: str, env: dict) -> None:
-    p = _env_path(radar_root)
-    lines = []
-    written_keys: set = set()
+def _write_env(radar_root: str, updates: dict) -> None:
+    """Apply `updates` to .env in place (comments and order kept).
 
-    if p.exists():
-        with p.open() as f:
-            for line in f:
-                stripped = line.strip()
-                if not stripped or stripped.startswith("#"):
-                    lines.append(line.rstrip())
-                    continue
-                if "=" in stripped:
-                    k = stripped.split("=", 1)[0].strip()
-                    if k in env:
-                        lines.append(f"{k}={env[k]}")
-                        written_keys.add(k)
-                    else:
-                        lines.append(line.rstrip())
-
-    for k, v in env.items():
-        if k not in written_keys:
-            lines.append(f"{k}={v}")
-
-    tmp = p.with_suffix(".env.tmp")
-    with tmp.open("w") as f:
-        f.write("\n".join(lines) + "\n")
-    tmp.replace(p)
+    Audit #2/#16: values are validated and quoted by wazuh_api.envfile, and
+    the file is rewritten atomically with mode 0600."""
+    envfile.update(_env_path(radar_root), updates)
 
 
 def test_connector(radar_root: str, connector: str) -> dict:
@@ -209,7 +218,7 @@ def test_connector(radar_root: str, connector: str) -> dict:
     if connector == "smtp":
         return _test_smtp(env)
     if connector == "decipher":
-        return _test_decipher(env)
+        return _test_decipher(radar_root, env)
     if connector == "webhook":
         return _test_webhook(env)
     if connector == "maxmind":
@@ -296,7 +305,8 @@ def _test_smtp(env: dict) -> dict:
         return {"ok": False, "error": str(e)}
 
 
-def _test_via_manager_container(label: str, url: str, verify_val: str, timeout_val: str, container: str) -> dict:
+def _test_via_container(label: str, container: str, url: str, verify_val: str, timeout_val: str,
+                         method: str = "GET", data: bytes = None, auth: tuple = None) -> dict:
     try:
         timeout_f = float(timeout_val)
     except (TypeError, ValueError):
@@ -310,6 +320,12 @@ def _test_via_manager_container(label: str, url: str, verify_val: str, timeout_v
     ]
     if insecure:
         cmd.append("-k")
+    if method != "GET":
+        cmd += ["-X", method]
+    if data is not None:
+        cmd += ["-H", "Content-Type: application/json", "-d", data.decode() if isinstance(data, bytes) else data]
+    if auth:
+        cmd += ["-u", f"{auth[0]}:{auth[1]}"]
     cmd.append(url)
 
     try:
@@ -328,15 +344,15 @@ def _test_via_manager_container(label: str, url: str, verify_val: str, timeout_v
         return {"ok": False, "error": str(e)}
 
 
-def _test_decipher(env: dict) -> dict:
+def _test_decipher(radar_root: str, env: dict) -> dict:
     base = env.get("DECIPHER_BASE_URL", "")
     if not base:
         return {"ok": False, "error": "DECIPHER_BASE_URL not configured"}
     url = base.rstrip("/") + "/health"
     timeout = env.get("DECIPHER_TIMEOUT_SEC", "30")
     verify = env.get("DECIPHER_VERIFY_SSL", "false")
-    container = _manager_container(env)
-    return _test_via_manager_container("DECIPHER", url, verify, timeout, container)
+    container = infra_module.container_for(radar_root, "manager", _DEFAULT_MANAGER_CONTAINER)
+    return _test_via_container("DECIPHER", container, url, verify, timeout)
 
 
 def _test_maxmind(env: dict) -> dict:
@@ -369,9 +385,11 @@ def _test_webhook(env: dict) -> dict:
         if not url:
             return {"ok": False, "error": "WEBHOOK_URL not configured"}
         payload = _json.dumps({"ping": True}).encode()
-        req = urllib.request.Request(url, data=payload,
-                                     headers={"Content-Type": "application/json"},
-                                     method="POST")
+        headers = {"Content-Type": "application/json"}
+        secret = env.get("WEBHOOK_SHARED_SECRET", "")
+        if secret:
+            headers["X-RADAR-Webhook-Token"] = secret
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=10) as resp:
             return {"ok": True, "detail": f"Webhook responded {resp.status}"}
     except Exception as e:

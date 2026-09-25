@@ -3,6 +3,7 @@ Core enrichment logic.
 """
 from __future__ import annotations
 
+import ipaddress
 import re
 from datetime import datetime, timezone
 from math import asin, cos, radians, sin, sqrt
@@ -26,8 +27,8 @@ RX_HEAD = re.compile(
     r"(?P<prog>sshd(?:-session)?|sudo)(?:\[\d+\])?:\s*"
     r"(?P<msg>.*)$"
 )
-RX_ACCEPT = re.compile(r"Accepted \S+ for (?P<user>\S+) from (?P<srcip>\S+) port (?P<port>\d+)")
-RX_FAILED = re.compile(r"Failed \S+ for (?:(?:invalid|illegal) user )?(?P<user>\S+) from (?P<srcip>\S+) port (?P<port>\d+)")
+RX_ACCEPT = re.compile(r"Accepted \S+ for (?P<user>.+) from (?P<srcip>[0-9A-Fa-f:.]+) port (?P<port>\d+)(?: ssh2(?:: .*)?)?$")
+RX_FAILED = re.compile(r"Failed \S+ for (?:(?:invalid|illegal) user )?(?P<user>.+) from (?P<srcip>[0-9A-Fa-f:.]+) port (?P<port>\d+)(?: ssh2(?:: .*)?)?$")
 
 
 def parse_event_ts(ts_str: str) -> float:
@@ -50,7 +51,7 @@ def parse_auth_line(full_log: str):
     mhead = RX_HEAD.match(full_log)
     if not mhead:
         return None
-    msg = mhead.group("msg")
+    msg = mhead.group("msg").rstrip()
     m = RX_ACCEPT.search(msg)
     outcome = "success"
     if not m:
@@ -58,7 +59,11 @@ def parse_auth_line(full_log: str):
         outcome = "failure"
     if not m:
         return None
-    return parse_event_ts(mhead.group("ts")), m.group("user"), m.group("srcip"), outcome
+    try:
+        srcip = str(ipaddress.ip_address(m.group("srcip")))
+    except ValueError:
+        return None
+    return parse_event_ts(mhead.group("ts")), m.group("user"), srcip, outcome
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

@@ -107,6 +107,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 |---------|-------|-------------|-------------------|
 | `100900` | 10 | Connection from non-whitelist country | Authentication success + `radar_country` field not in whitelist |
 | `100901` | 10 | Connection from non-whitelist country | Authentication success + source GeoIP not in EU Greater Region |
+| `100902` | 10 | Connection from non-whitelist country (access log) | Web access log (group `accesslog`) + `radar_country` field not in whitelist |
 | `100903` | 12 | High number of connections from non-whitelist countries | 300+ auth events from non-whitelisted countries within 300 seconds |
 
 **Alert Flow**:
@@ -120,7 +121,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 ```
 
 **Whitelist mechanism**:
-- **List-based** (Rule 100900): Dynamic whitelist in `etc/lists/whitelist_countries`
+- **List-based** (Rules 100900, 100902): Dynamic whitelist in `etc/lists/whitelist_countries`, keyed on ISO 3166-1 alpha-2 codes matching what the enrichment integration emits into `radar_country` (e.g. "DE", "BR"), not full country names
 - **Hardcoded** (Rule 100901): Fallback to countries using `srcgeoip` field
 
 **Frequency escalation** (Rule 100903):
@@ -145,11 +146,10 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 
 | Rule ID | Level | Description | Trigger Condition | Timeframe |
 |---------|-------|-------------|-------------------|-----------|
-| `210012` | 8 | Failed-burst brute force | ≥5 failed SSH logins from same source user | 60 seconds |
 | `210013` | 8 | Failed-burst brute force | ≥5 failed SSH logins from same destination user | 60 seconds |
-| `210020` | 10 | Impossible travel (with failure) | Auth failure + country change + velocity ≥900 km/h | N/A |
-| `210021` | 10 | Impossible travel (with success) | Auth success + country change + velocity ≥900 km/h | N/A |
-| `210022` | 12 | Credential compromise (composite) | Failed-burst + impossible travel for same user | 300 seconds |
+| `210020` | 10 | Impossible travel (with failure) | Auth failure + velocity ≥900 km/h (country-change field not currently checked) | N/A |
+| `210021` | 10 | Impossible travel (with success) | Auth success + velocity ≥900 km/h (country-change field not currently checked) | N/A |
+| `210022` | 12 | Credential compromise (composite) | ≥4 raw failed-auth events (rule 5760) within 300s, same user, followed by an impossible travel success (210021) | 300 seconds |
 | `210030` | 5  | O365 login failure | Single Microsoft 365 authentication failure | N/A |
 | `210031` | 10 | O365 brute force | ≥3 O365 login failures for same user | 300 seconds |
 
@@ -165,7 +165,6 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 1. Authentication event (success or failure)
 2. RADAR helper identifies: `radar_country_change_i` (1 if country changed, 0 otherwise) and `radar_geo_velocity_kmh` (km/h between previous and current login)
 3. Rule 210020/210021 checks:
-    - Country changed? (radar_country_change_i == 1)
     - Velocity >= 900 km/h? (physically impossible travel)
 ```
 

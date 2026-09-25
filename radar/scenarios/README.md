@@ -53,7 +53,7 @@ Contains custom log decoders organized by scenario. Decoders parse incoming log 
 - **`geoip_detection/`**: Decoders for GeoIP-based detection scenarios
 - **`log_volume/`**: Decoders for log volume anomaly detection
 - **`suspicious_login/`**: Contains `0310-ssh.xml` - a customized SSH decoder that extracts velocity/location change and geographic information from SSH logs
-- **`scanning_detection/`**: Uses Wazuh's built-in `web-log` decoder for Apache/Nginx HTTP access log parsing
+- **`scanning_detection/`**: Uses Wazuh's built-in decoder for HTTP field extraction
 
 Decoders transform unstructured log messages into structured events that rules can analyze.
 

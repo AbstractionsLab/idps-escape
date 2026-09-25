@@ -80,6 +80,14 @@ case "$CMD" in
     exec bash "$SCRIPT_DIR/radar_deploy/manager-enrollment-window.sh" "$@"
     ;;
 
+  rotate-credentials)
+    exec bash "$SCRIPT_DIR/radar_deploy/manager-rotate-credentials.sh" "$@"
+    ;;
+
+  repair-permissions)
+    exec bash "$SCRIPT_DIR/radar_deploy/manager-repair-permissions.sh" "$@"
+    ;;
+
   -h|--help|"")
     usage
     ;;

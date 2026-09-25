@@ -9,8 +9,10 @@ the single front door.
 ./radar.sh run <scenario> [--ingest true]               # = ./run-radar.sh
 ./radar.sh health [--scenario …] [--agent-name …]       # = ./health-radar.sh
 ./radar.sh stop [--purge]                               # = ./stop-radar.sh
-./radar.sh mint-token <group>[,<group>…] [minutes]
+./radar.sh mint-token <group>[,<group>…] [minutes]      # mint new token
 ./radar.sh enrollment open [--minutes N] | close | status
+./radar.sh rotate-credentials                      # new indexer and API passwords
+./radar.sh repair-permissions                      # fix file permissions left by older builds
 ```
 
 On first use it creates a virtualenv and installs the GUI's dependencies; after
@@ -77,12 +79,20 @@ window, or to close it early.
 `open` and `close` need `sudo` (they touch the host firewall); `status` does not
 and reports `OPEN`/`CLOSED` plus the auto-close timer's PID.
 
+A token is revoked when it expires. If that is missed, for example because the
+host was rebooted, the next health check or build revokes it.
+
 Then, on the endpoint:
 
 ```bash
 sudo ./bootstrap-agent.sh --manager <address> --token <token> \
-     --group default --group <scenario> [--agent-name <name>]
+     --group default --group <scenario> [--agent-name <name>] \
+     [--allow-service <name>]
 ```
+
+For `log_volume`, `--allow-service` (repeatable or comma-separated) lists the
+services `terminate_service.sh` may stop on this endpoint. Without it, no service
+can be stopped there. See [Mitigations](radar-tuning.md#mitigations).
 
 Manager-side agent operations:
 
@@ -100,8 +110,9 @@ Manager-side agent operations:
 ./health-radar.sh [--scenario <name|all>] [--agent-name name1,name2]
 ```
 
-Read-only — it never restarts services or fixes anything. Three groups of
-checks run in order:
+Read-only, with one exception: an enrollment token that has outlived its expiry
+is revoked, which restarts the Wazuh manager processes. Three groups of checks
+run in order:
 
 | Group | Covers |
 |-------|--------|
@@ -114,6 +125,22 @@ typically a scenario whose detector has not run yet. `FAIL` means the component
 is missing or unreachable.
 
 Same thing in the GUI: Deployment → **Status**.
+
+---
+
+## Credentials
+
+The first deployment generates unique passwords for the indexer, the dashboard,
+and the Wazuh API, and stores them in `.env`. To replace them on a running
+deployment:
+
+```bash
+sudo ./radar.sh rotate-credentials
+```
+
+The containers restart with the new passwords; restart the GUI afterwards. Log
+in to the Wazuh dashboard as `admin` with the new `OS_PASS`. This command only
+manages a stack RADAR deployed itself, not an existing Wazuh installation.
 
 ---
 

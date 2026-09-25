@@ -99,6 +99,8 @@ Then open the displayed local URL and use the **Deployment** page to deploy the
 full stack, onboard agents, configure scenarios, start anomaly detection, run
 health checks, and manage teardown. See the [RADAR GUI user manual](/docs/manual/radar_docs/radar-gui-user-manual.md) and [getting started](/docs/manual/radar_docs/radar-getting-started.md) page for full details.
 
+> **Before deploying beyond a test machine**, read RADAR's [security assumptions and recommendations](/radar/README.md#security-assumptions-and-recommendations). It covers how to reach the GUI safely (through an SSH tunnel from your workstation), which ports to restrict by firewall, and the settings to review for your site.
+
 Screenshots depicting the various stages in a Suspicious Login detection and response event flow are provided below.
 
 **Suspicious login detection shown on the Wazuh dashboard:**

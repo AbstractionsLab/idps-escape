@@ -1,23 +1,57 @@
 #!/usr/bin/env python3
 
+import re
 import os, sys, json, yaml, requests
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
-from webhook import ensure_webhook
+from webhook import ensure_webhook, webhook_headers
 
 def die(msg: str, code: int = 1) -> None:
     print(msg, file=sys.stderr)
     sys.exit(code)
+
+def _parse_env_value(raw: str):
+    raw = raw.strip()
+    if raw.startswith("'"):
+        end = raw.find("'", 1)
+        if end < 0:
+            return None
+        rest = raw[end + 1:].strip()
+        return raw[1:end] if (not rest or rest.startswith("#")) else None
+    if raw.startswith('"'):
+        out, i = [], 1
+        while i < len(raw):
+            ch = raw[i]
+            if ch == "\\" and i + 1 < len(raw) and raw[i + 1] in '\\"$`':
+                out.append(raw[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                rest = raw[i + 1:].strip()
+                return "".join(out) if (not rest or rest.startswith("#")) else None
+            out.append(ch)
+            i += 1
+        return None
+    return re.split(r"\s+#", raw, maxsplit=1)[0].strip()
+# end _parse_env_value
+
+
+_ENV_LINE_RE = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
 
 def load_env(path: Path) -> None:
     if not path.exists():
         return
     for line in path.read_text().splitlines():
         line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+        if not line or line.startswith("#"):
             continue
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip())
+        m = _ENV_LINE_RE.match(line)
+        if not m:
+            continue
+        value = _parse_env_value(m.group(2))
+        if value is not None:
+            os.environ.setdefault(m.group(1), value)
 
 def load_yaml(path: Path) -> Dict[str, Any]:
     if not path.exists():
@@ -88,7 +122,6 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
 
     trigger_name = scn.get("trigger_name", f"{scenario_name}-trigger")
     monitor_name = scn.get("monitor_name", f"{scenario_name}-monitor")
-    lookback = interval * int(scn.get("monitor_lookback_multiplier", 2))
 
     query = {
         "size": 1,
@@ -99,7 +132,7 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
                     {
                         "range": {
                             "execution_end_time": {
-                                "from": f"{{{{period_end}}}}||-{lookback}m",
+                                "from": f"{{{{period_end}}}}||-{interval}m",
                                 "to": "{{period_end}}",
                                 "include_lower": True,
                                 "include_upper": True
@@ -230,7 +263,8 @@ def main() -> None:
 
     session = make_session(os_user, os_pass)
 
-    destination_id = ensure_webhook(opensearch_base, os_user, os_pass, os_verify, webhook_name, webhook_url)
+    destination_id = ensure_webhook(opensearch_base, os_user, os_pass, os_verify, webhook_name, webhook_url,
+                                    headers=webhook_headers())
 
     mon_name = scn.get("monitor_name", f"{scenario_name}-monitor")
     existing = find_monitor(session, opensearch_base, mon_name, os_verify)
