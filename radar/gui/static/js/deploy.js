@@ -129,6 +129,21 @@ async function previewUndoScenario() {
   }
 }
 
+
+async function refreshDeployStatus() {
+  try {
+    const res = await fetch("/api/scenarios/deploy-status", { credentials: "same-origin" });
+    const data = await res.json();
+    if (!res.ok || !data.ok) return;
+    document.querySelectorAll("option[data-name]").forEach((opt) => {
+      if (!(opt.value in data.active)) return;
+      opt.textContent = data.active[opt.value] ? opt.dataset.name : `${opt.dataset.name} (not deployed)`;
+    });
+  } catch (e) {
+    // The labels only go stale until the next page load; nothing else depends on them.
+  }
+}
+
 async function undoScenario() {
   const scenario = document.getElementById("ub-scenario").value;
   if (!scenario) {
@@ -150,6 +165,7 @@ async function undoScenario() {
       failToast: "Undo failed",
     }
   );
+  refreshDeployStatus();
 }
 
 function _setRunning(action, running) {
@@ -306,6 +322,7 @@ async function runAction(action) {
     _currentReader = null;
     _currentAbortController = null;
     _setRunning(action, false);
+    if (action === "build") refreshDeployStatus();
   }
 }
 
@@ -547,7 +564,6 @@ async function unassignAgentGroup() {
 async function deregisterAgent() {
   const agentName = document.getElementById("dr-agent-name").value.trim();
   const agentIp = document.getElementById("dr-agent-ip").value.trim();
-  const noPurge = document.getElementById("dr-no-purge").checked;
 
   if (!agentName) {
     _toast("Enter an agent name first", "warn");
@@ -559,7 +575,7 @@ async function deregisterAgent() {
 
   await _streamPost(
     "/api/deploy/deregister-agent",
-    { agent_name: agentName, agent_ip: agentIp, no_purge: noPurge },
+    { agent_name: agentName, agent_ip: agentIp },
     "deregister",
     {
       startMsg: "Deregistering agent…",
@@ -726,6 +742,7 @@ async function teardownStack() {
     _currentReader = null;
     _currentAbortController = null;
     _setRunning("teardown", false);
+    refreshDeployStatus();
     // _setRunning unconditionally re-enables the button; re-apply the
     // checkbox's own state so it doesn't become clickable again without
     // re-confirming.

@@ -4,16 +4,25 @@ Comprehensive unit tests for SONAR (SIEM-Oriented Neural Anomaly Recognition sys
 
 ## Test organization
 
-| Test File | Coverage | Lines |
-|-----------|----------|-------|
-| `test_config.py` | Configuration dataclasses | ~200 |
-| `test_engine_and_features.py` | MVAD engine & feature extraction | ~380 |
-| `test_wazuh_and_pipeline.py` | Wazuh client & post-processing | ~280 |
-| `test_local_data_provider.py` | Debug mode data loading | ~240 |
-| `test_scenario.py` | Scenario system (YAML configs) | ~635 |
-| `test_cli_synthetic_fast.py` | CLI synthetic fill behavior | ~272 |
-
-**Total:** ~2,000 lines of tests
+| Test file | Coverage |
+|-----------|----------|
+| `test_config.py` | Configuration dataclasses |
+| `test_paths.py` | Path resolution, SONAR home, no working-directory paths |
+| `test_engine_and_features.py` | Model engine (MVAD backend mocked) and feature extraction |
+| `test_features_v2.py` | Feature schema 2: time grid, volume features, vocabulary, feature contract |
+| `test_backends.py` | Backend contract for `ewma`, `pca` and `mvad`, model directory, MVAD regression (`mvad` part marked `slow`) |
+| `test_engine_real_mvad.py` | Training and prediction with the real MVAD library (marked `slow`) |
+| `test_wazuh_and_pipeline.py` | Post-processing (thresholds, runs, contributors) |
+| `test_indexer_client.py` | Shared OpenSearch client, paged alert search, anomalies index |
+| `test_local_data_provider.py` | Debug mode data loading |
+| `test_scenario.py` | Scenario system (YAML configs) |
+| `test_detection_cli.py` | Detection window and context, exit codes, one detection path |
+| `test_realtime_delivery.py` | At-most-once delivery, watermarks, realtime polling |
+| `test_sinks.py` | Sinks, Wazuh events and rules, `install-rules` |
+| `test_shipper.py` | Index templates, retention policy, data stream sink |
+| `test_evaluation.py` | Evaluation metrics, calibration, `sonar evaluate` |
+| `test_e2e_detection.py` | End to end with real detectors: spike, burst, silence and new category with the MVAD library and with `pca`, realtime delivery without duplicates (marked `slow`; data from `e2e_data.py`) |
+| `test_packaging.py` | Wheel contents and a packaged example run outside the repository (marked `slow`) |
 
 ## Coverage by module
 
@@ -29,7 +38,7 @@ Comprehensive unit tests for SONAR (SIEM-Oriented Neural Anomaly Recognition sys
 
 ### Partial coverage
 
-- ⚠️ `cli.py` - CLI commands (covered by `test_cli_synthetic_fast.py`, needs expansion)
+- ⚠️ `cli.py` - CLI commands (covered by `test_detection_cli.py` and `test_scenario.py`, needs expansion)
 
 ### No tests yet
 
@@ -39,16 +48,9 @@ Comprehensive unit tests for SONAR (SIEM-Oriented Neural Anomaly Recognition sys
 
 ### All tests
 
-⚠️ **Important**: `test_cli_synthetic_fast.py` uses module-level mocking that conflicts with other tests when collected together.
-
 ```bash
 cd /home/alab/soar
-
-# Run all tests EXCEPT test_cli_synthetic_fast.py
-poetry run python -m pytest tests/sonartests/ --ignore=tests/sonartests/test_cli_synthetic_fast.py
-
-# Run test_cli_synthetic_fast.py separately
-poetry run python -m pytest tests/sonartests/test_cli_synthetic_fast.py
+poetry run python -m pytest tests/sonartests/
 ```
 
 ### Specific test file
@@ -62,17 +64,15 @@ poetry run python -m pytest tests/sonartests/test_wazuh_and_pipeline.py
 ### With coverage report
 
 ```bash
-# Coverage for main tests (excluding CLI synthetic)
-poetry run python -m pytest tests/sonartests/ --ignore=tests/sonartests/test_cli_synthetic_fast.py --cov=sonar --cov-report=html
+poetry run python -m pytest tests/sonartests/ --cov=sonar --cov-report=html
 ```
 
 ### Fast tests only
 
-⚠️ **Known Issue**: `test_cli_synthetic_fast.py` currently has import conflicts due to module-level mocking and cannot be run successfully in isolation or with other tests. This file needs refactoring to move stub setup into fixtures.
+`test_engine_real_mvad.py`, `test_e2e_detection.py`, `test_packaging.py` and part of `test_backends.py` use the real MVAD library and import torch. They are marked `slow` (the marker is registered in `conftest.py`); deselect them while iterating:
 
 ```bash
-# This test file has import issues and is currently disabled
-# poetry run pytest tests/sonartests/test_cli_synthetic_fast.py -v
+poetry run python -m pytest tests/sonartests/ -m "not slow"
 ```
 
 ## Test categories
@@ -84,15 +84,18 @@ Most tests use mocking to avoid external dependencies:
 - `test_engine_and_features.py` - Mocked MVAD model
 - `test_wazuh_and_pipeline.py` - Mocked HTTP requests
 - `test_local_data_provider.py` - Temporary file fixtures
+- `test_features_v2.py` - Feature builder and model metadata
 
-### Integration tests (fast with stubs)
+### Integration tests (fast, mocked)
 
-- `test_cli_synthetic_fast.py` - CLI with stubbed imports
+- `test_detection_cli.py` - CLI detection with a mocked model and alert source
 - `test_scenario.py` - YAML parsing and validation
 
 ### Integration tests (slow, require dependencies)
 
-None currently - all tests use mocking for speed.
+- `test_engine_real_mvad.py` - Real MVAD library, small windows and fixed seeds (marked `slow`)
+- `test_backends.py` (`TestMVADBackend`) - Real MVAD library against verdicts recorded in `tests/assets/sonar_mvad_regression.json` (marked `slow`)
+- `test_packaging.py` - Builds the wheel and runs its `sonar` package from a temporary directory (marked `slow`)
 
 ## Test fixtures
 
@@ -112,11 +115,11 @@ alerts = [
     {"timestamp": "2025-12-30T10:05:00Z", "rule": {"level": 5}},
 ]
 
-# Mock MVAD results
-results = {
-    "is_anomaly": [False, True],
-    "scores": [0.1, 0.9]
-}
+# Mock MVAD results: one dict per scored bucket (severity = score / (e - 1), 0 if not anomalous)
+results = [
+    {"index": pd.Timestamp("2025-12-30T10:00:00Z"), "is_anomaly": False, "score": 0.1, "severity": 0.0},
+    {"index": pd.Timestamp("2025-12-30T10:05:00Z"), "is_anomaly": True, "score": 0.9, "severity": 0.52},
+]
 
 # Mock HTTP response
 mock_resp = MagicMock()

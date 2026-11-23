@@ -99,6 +99,7 @@ Pick one:
 | [`geoip_detection`](./radar-scenarios/geoip_detection_explained.md) | Logins from non-approved countries |
 | [`log_volume`](./radar-scenarios/log_volume_explained.md) | Unusual spikes in log generation |
 | [`scanning_detection`](./radar-scenarios/scanning_detection_explained.md) | Web-layer scanning and vulnerability probes |
+| [`linux_resource_utilization`](./radar-scenarios/linux_resource_utilization_explained.md) | Anomalous CPU/memory utilization on Linux endpoints |
 
 **GUI:** Deployment → Scenario Management → **Deploy scenario**.
 
@@ -133,33 +134,41 @@ set an expiry, click **Mint token**. Copy the printed command.
 **CLI:**
 
 ```bash
-./radar.sh mint-token default,suspicious_login,radar_shared 60
+sudo ./radar.sh mint-token default,suspicious_login,radar_shared 60
 ```
 
-Include `radar_shared` for `suspicious_login` and `geoip_detection`; the other
-two scenarios need only `default,<scenario>`. The GUI adds it automatically.
+Include `radar_shared` for `suspicious_login` and `geoip_detection`: their
+`auth.log` shipping is configured in that group. The other scenarios need only
+`default,<scenario>`. The GUI adds it automatically.
 
 Both print a ready-to-run `bootstrap-agent.sh` command and open the port-1515
-enrollment window for the token's lifetime.
+enrollment window for the token's lifetime. Opening the window needs root:
+without `sudo`, the CLI only prints a note and port 1515 stays closed.
 
 The token is a one-time shared password. It is revoked automatically when it
 expires, even if the manager or the host restarts in the meantime.
 
 ### Run the bootstrap script on the endpoint
 
-Since this runs as root on a monitored machine, do not pipe a download into a
-shell. Download, verify, then run:
+Copy the whole `radar/radar-agent/` folder to the endpoint and run the script
+from inside it. The folder holds the scripts and files the bootstrap installs,
+so the script alone is not enough:
 
 ```bash
-curl -fsSL <release-url>/bootstrap-agent.sh -o bootstrap-agent.sh
-echo "<sha256sum>  bootstrap-agent.sh" | sha256sum -c
+scp -r radar/radar-agent <user>@<endpoint>:~/
+# on the endpoint
+cd ~/radar-agent
 sudo ./bootstrap-agent.sh --manager <address> --token <token> \
-     --group default --group suspicious_login
+     --group default --group suspicious_login --group radar_shared
 ```
 
-Use the checksum published alongside the release in question on our [GitHub Releases page](https://github.com/AbstractionsLab/idps-escape/releases). The script installs the agent
-package, enrolls with the token, assigns the groups, and starts the service.
-Re-running it on an already-enrolled endpoint is safe.
+Pass the same groups the token was minted for (`--group` also accepts a
+comma-separated list).
+
+The script installs the agent package, enrolls with the token, assigns the
+groups, and starts the service. Re-running it on an already-enrolled endpoint
+is safe. To remove the agent later, run `sudo ./uninstall-agent.sh` from the
+same folder.
 
 > **Already using Ansible, Puppet, Intune, or SCCM?** Wrap
 > `bootstrap-agent.sh` — it is the supported integration point. As an Ansible
@@ -170,9 +179,13 @@ Re-running it on an already-enrolled endpoint is safe.
 >   ansible.builtin.command:
 >     cmd: >
 >       ./bootstrap-agent.sh --manager {{ radar_manager }}
->       --token {{ radar_token }} --group default --group {{ radar_scenario }}
+>       --token {{ radar_token }} --group {{ radar_groups }}
+>     chdir: <path to the radar-agent folder on the endpoint>
 >     creates: /var/ossec/etc/client.keys
 > ```
+>
+> `radar_groups` is the comma-separated group list the token was minted for,
+> for example `default,suspicious_login,radar_shared`.
 
 ### Confirm the group
 
@@ -192,8 +205,12 @@ new agents only.
 
 ## 4. Start the anomaly detector
 
-Only for scenarios that use ML (`log_volume`, and `suspicious_login` in hybrid
-mode). Skip it for pure signature scenarios.
+Only for scenarios that use ML: `log_volume`, `linux_resource_utilization` and
+`suspicious_login`. For `suspicious_login` this step is optional: it sets up
+off-hours activity detection against the working hours declared in
+`config.yaml` (see [Off-hours activity](./radar-scenarios/off-hours-activity.md)),
+and RADAR combines those alerts with the scenario's signature alerts for the
+same user. Without it, `suspicious_login` scores signature alerts alone. Skip this step for pure signature scenarios.
 
 **GUI:** Deployment → Anomaly Detector.
 
@@ -225,7 +242,12 @@ Every check is marked `OK`, `WARN`, or `FAIL`. See
 
 ## 6. Tune the response
 
-RADAR ships with automatic mitigation **disabled** for the baseline scenario. See [Tuning](./radar-tuning.md).
+RADAR ships with automatic mitigation **disabled** for the baseline scenario and
+`scanning_detection`, but **enabled** (`allow_mitigation: true` in `ar.yaml`)
+for `geoip_detection`, `suspicious_login`, `log_volume` and
+`linux_resource_utilization`. With the shipped settings, `geoip_detection` runs
+`firewall-drop` at T2. Turn **Allow automatic mitigation execution** off for
+these scenarios until you have checked their tiering. See [Tuning](./radar-tuning.md#tuning-workflow).
 
 ---
 
@@ -261,7 +283,7 @@ things need to match the existing setup:
   | `/var/ossec/integrations` | Enrichment integration scripts |
   | `/var/ossec/active-response/bin` | `radar_ar.py` and the mitigation scripts |
   | `/etc/filebeat` | Filebeat configuration |
-  | `/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json` | Archive ingest pipeline — `build-radar.sh` aborts if this one is missing |
+  | `/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json` | Archive ingest pipeline. `build-radar.sh` aborts if it is missing when it brings up its own stack. With an existing manager it only warns, and `suspicious_login` off-hours flagging then does not work |
 - **Existing agents** — enroll them into the scenario group with
   [Group Management](./radar-gui-user-manual.md#group-management) rather than
   re-bootstrapping.

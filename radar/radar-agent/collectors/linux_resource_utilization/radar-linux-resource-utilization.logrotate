@@ -1,0 +1,8 @@
+/var/log/radar/resource_usage_metric.log {
+  daily
+  rotate 7
+  compress
+  missingok
+  notifempty
+  copytruncate
+}

@@ -125,6 +125,105 @@ window.RADAR = {
     if (sl2) sl2.onclick = (e) => { e.preventDefault(); RADAR.promptSudoPassword(); };
   },
 
+  _jobRunning() {
+    return typeof _currentAbortController !== "undefined" && !!_currentAbortController;
+  },
+
+  confirmLogout() {
+    return new Promise((resolve) => {
+      let modal = document.getElementById("radar-logout-modal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "radar-logout-modal";
+        modal.className = "modal-backdrop";
+        modal.innerHTML = `
+          <div class="modal-box" style="width:440px">
+            <div class="modal-title">Log out and stop the GUI?</div>
+            <div class="modal-sub">This stops the RADAR GUI server, frees its port, and forgets the stored sudo password.
+              Every open GUI tab stops working. To log in again, run <code>./radar.sh gui</code> and open the new login URL it prints.</div>
+            <div class="modal-sub" id="radar-logout-job" style="margin-top:8px;color:var(--red-text)"></div>
+            <div class="modal-actions">
+              <button class="btn" id="radar-logout-cancel">Cancel</button>
+              <button class="btn btn--danger" id="radar-logout-submit">Log out</button>
+            </div>
+            <div class="modal-error" id="radar-logout-err"></div>
+          </div>`;
+        document.body.appendChild(modal);
+      }
+      const jobEl = modal.querySelector("#radar-logout-job");
+      const errEl = modal.querySelector("#radar-logout-err");
+      const cancelBtn = modal.querySelector("#radar-logout-cancel");
+      const submitBtn = modal.querySelector("#radar-logout-submit");
+      jobEl.textContent = RADAR._jobRunning()
+        ? "A job is still running on the Deployment page. Logging out stops it."
+        : "Any job still running on the Deployment page is stopped.";
+      errEl.textContent = "";
+      submitBtn.disabled = false;
+      modal.style.display = "flex";
+      setTimeout(() => cancelBtn.focus(), 50);
+
+      const cleanup = () => {
+        modal.style.display = "none";
+        submitBtn.removeEventListener("click", onSubmit);
+        cancelBtn.removeEventListener("click", onCancel);
+        document.removeEventListener("keydown", onKey);
+      };
+      const onCancel = () => { cleanup(); resolve(false); };
+      const onSubmit = async () => {
+        submitBtn.disabled = true;
+        errEl.textContent = "Logging out…";
+        try {
+          const res = await fetch("/api/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: "{}",
+          });
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok || !body.ok) {
+            errEl.textContent = body.error || `HTTP ${res.status}`;
+            submitBtn.disabled = false;
+            return;
+          }
+          cleanup();
+          RADAR._showLoggedOut(body);
+          resolve(true);
+        } catch (e) {
+          errEl.textContent = e.message;
+          submitBtn.disabled = false;
+        }
+      };
+      const onKey = (e) => { if (e.key === "Escape") onCancel(); };
+      submitBtn.addEventListener("click", onSubmit);
+      cancelBtn.addEventListener("click", onCancel);
+      document.addEventListener("keydown", onKey);
+    });
+  },
+
+  _showLoggedOut(result) {
+    const port = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
+    const n = result.stopped_jobs || 0;
+    const jobs = n
+      ? `<p class="modal-sub">${n === 1 ? "1 running job was" : `${n} running jobs were`} stopped.</p>` : "";
+    const server = result.server_stopping
+      ? `<p class="modal-sub">The RADAR GUI server has stopped and port ${port} is free.</p>`
+      : `<p class="modal-sub">Your session has ended.</p>`;
+    document.title = "Logged out - RADAR";
+    document.body.innerHTML = `
+      <div class="logged-out">
+        <div class="modal-box logged-out__box">
+          <div class="modal-title">You've been logged out</div>
+          ${server}${jobs}
+          <p class="modal-sub">To log in again, run <code>./radar.sh gui</code> on the RADAR host and open the new login URL it prints. You can close this tab.</p>
+        </div>
+      </div>`;
+  },
+
+  initLogout() {
+    const btn = document.getElementById("logout-btn");
+    if (btn) btn.addEventListener("click", () => RADAR.confirmLogout());
+  },
+
   async initSudoBadge() {
     const badge = document.getElementById("sudo-badge");
     if (!badge) return;
@@ -138,4 +237,5 @@ window.RADAR = {
 
 document.addEventListener("DOMContentLoaded", () => {
   RADAR.initSudoBadge();
+  RADAR.initLogout();
 });

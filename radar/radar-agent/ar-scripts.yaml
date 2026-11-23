@@ -1,0 +1,25 @@
+# Catalog of the active response scripts RADAR installs on endpoints.
+#
+# scripts:
+#   <name the manager triggers>: <script under active_responses/ in this folder>
+#
+# What this file does NOT do: decide which scenario uses which action, or at
+# which tier. That is scenarios/active_responses/ar.yaml, edited from the GUI.
+# bootstrap-agent.sh installs every script listed here on every endpoint, so
+# any action the GUI binds to any scenario can run on any enrolled endpoint.
+#
+# Adding a new name here also needs:
+#   - the script itself under active_responses/,
+#   - an argument builder for it in radar_ar.py (ActionExecutor._build_args,
+#     and SUPPORTED_MITIGATIONS), otherwise the manager never triggers it.
+# Once listed here it appears in the GUI's mitigation picker.
+#
+# Changing only the script version behind a name (e.g. _v1 -> _v2) needs no
+# GUI or manager change. On an enrolled endpoint the live copy of this file is
+# /var/ossec/radar-agent/ar-scripts.yaml: edit it there (the new version must
+# be in /var/ossec/radar-agent/active_responses/), or re-run
+# bootstrap-agent.sh from an updated radar-agent folder.
+
+scripts:
+  lock_user_linux.sh: active_responses/lock_user_linux_v1.sh
+  terminate_service.sh: active_responses/terminate_service_v1.sh

@@ -46,14 +46,26 @@ training:
   # Sliding window size for MVAD model
   # 200 buckets = ~16.7 hours of context at 5-min buckets
   sliding_window: 200
-  
-  # Minimum samples required to train
-  # NOTE: This field is currently ignored by the training engine
-  min_samples: 500
+
+  # MVAD training parameters. interval: 1 trains on every window position (the library
+  # default of 10 skips 9 in 10). 7 days = 2016 buckets -> 11 batches/epoch, 1100 gradient
+  # steps. Training needs at least 1010 buckets from the first alert (empty buckets count) with these settings.
+  extra_params:
+    interval: 1
+
+  # Derived features: per-bucket counts of alerts matching a condition. Only the
+  # authentication-related ones; every irrelevant column dilutes the anomaly score.
+  derived_features:
+    - is_auth_failure
+    - is_auth_success
+    - is_brute_force
+    - is_ssh_event
+    - is_windows_logon
+    - is_high_severity
 
 # Shipping configuration (optional - enables data streaming to Wazuh)
 shipping:
-  enabled: false  # Set to true to enable data shipping for RADAR integration
+  enabled: false  # Set to true to ship anomalies to a sonar_anomalies_mvad_<id> data stream
   install_templates: true  # Install base templates on first run
   scenario_id: "brute_force"  # Custom ID for this scenario
 
@@ -62,17 +74,15 @@ detection:
   # NOTE: For fresh Wazuh installations, use "historical" mode initially
   mode: "historical"
   
-  # How far back to look for detection
-  # IMPORTANT: Must have enough data for model (minimum 200 time points)
-  # Formula: lookback_minutes / bucket_minutes ≥ 200
-  # With bucket_minutes=5: need lookback_minutes ≥ 1000 (16.7 hours)
-  # For fresh installations with limited data, this may skip detection until
-  # enough alerts accumulate. Monitor logs for "Insufficient data" warnings.
-  lookback_minutes: 60
+  # Minutes of complete buckets to score, ending at the last complete bucket. SONAR
+  # fetches the earlier context MVAD needs on its own (input_size + threshold_window - 1
+  # buckets), so any lookback of at least one bucket works.
+  lookback_minutes: 1440  # 24 hours = 288 buckets
   
-  # Anomaly score threshold (0.0 - 1.0)
-  # Lower = more sensitive, higher = fewer false positives
-  threshold: 0.7
-  
-  # Minimum consecutive anomalous buckets to trigger alert
-  min_consecutive: 2
+  # Decision rule and confidence calibrated with `sonar evaluate` on the labelled synthetic
+  # splits of sonar/test_data (validation split for threshold and min_consecutive, test
+  # split precision for anomaly_confidence); see docs/specs/trp/assets/sonar-evaluation/brute_force-mvad.md.
+  # Recalibrate on labelled data from your own environment.
+  threshold: 0.2  # minimum MVAD severity (0-1) on top of MVAD's own anomaly decision
+  min_consecutive: 3  # minimum run of consecutive anomalous buckets
+  anomaly_confidence: 0.73  # measured precision, sent to Wazuh and used by RADAR

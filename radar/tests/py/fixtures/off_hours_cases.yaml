@@ -1,0 +1,59 @@
+# Shared case table for off-hours flagging.
+# Used by tests/py/test_off_hours.py (Python twin) and by
+# radar-test-framework/checks/off_hours_simulate.py (Painless, via _simulate).
+#
+# expect:
+#   {off_hours: 0|1, group: <name>, user: <name>}  -> radar.* fields written
+#   absent                                         -> event left unchanged
+#   error                                          -> radar.off_hours_error set, no flag
+
+config:
+  user_fields: [data.user, data.srcuser, data.dstuser]
+  default_group: synthetic_day        # the spec's table applies a default group to unknown users
+  ignore_users: [root]
+  groups:
+    synthetic_early: {timezone: UTC, workdays: [1, 2, 3, 4, 5], start: "04:00", end: "15:00", mode: rule}
+    synthetic_day: {timezone: UTC, workdays: [1, 2, 3, 4, 5], start: "08:00", end: "19:00", mode: rule}
+    synthetic_late: {timezone: UTC, workdays: [1, 2, 3, 4, 5], start: "16:00", end: "03:00", mode: rule}
+    synthetic_admin: {timezone: Europe/Luxembourg, workdays: [1, 2, 3, 4, 5], start: "08:00", end: "19:00", mode: model}
+    test_always_off: {timezone: UTC, workdays: [], start: "00:00", end: "24:00", mode: rule}
+    test_always_on: {timezone: UTC, workdays: [1, 2, 3, 4, 5, 6, 7], start: "00:00", end: "24:00", mode: rule}
+  users:
+    alice: synthetic_early
+    bob: synthetic_day
+    oscar: synthetic_late
+    trent: synthetic_admin
+    test_off_user: test_always_off
+    test_on_user: test_always_on
+
+cases:
+  # --- the 18 cases from the specification (section 10.1) ---
+  - {note: "the original missed event", event: {"@timestamp": "2026-09-18T02:05:00Z", data: {user: bob}}, expect: {off_hours: 1, group: synthetic_day, user: bob}}
+  - {note: "offset form of the timestamp", event: {"@timestamp": "2026-09-18T02:05:00+00:00", data: {user: bob}}, expect: {off_hours: 1, group: synthetic_day, user: bob}}
+  - {note: "on shift, upper-case user name", event: {"@timestamp": "2026-09-16T12:00:00Z", data: {user: BOB}}, expect: {off_hours: 0, group: synthetic_day, user: bob}}
+  - {note: "start is inclusive", event: {"@timestamp": "2026-09-18T08:00:00Z", data: {user: bob}}, expect: {off_hours: 0, group: synthetic_day, user: bob}}
+  - {note: "end is exclusive", event: {"@timestamp": "2026-09-18T19:00:00Z", data: {user: bob}}, expect: {off_hours: 1, group: synthetic_day, user: bob}}
+  - {note: "weekend", event: {"@timestamp": "2026-09-19T12:00:00Z", data: {user: bob}}, expect: {off_hours: 1, group: synthetic_day, user: bob}}
+  - {note: "after midnight, Monday's shift", event: {"@timestamp": "2026-09-15T01:30:00Z", data: {user: oscar}}, expect: {off_hours: 0, group: synthetic_late, user: oscar}}
+  - {note: "after midnight, Friday's shift", event: {"@timestamp": "2026-09-19T01:30:00Z", data: {user: oscar}}, expect: {off_hours: 0, group: synthetic_late, user: oscar}}
+  - {note: "after midnight, but Sunday has no shift", event: {"@timestamp": "2026-09-14T01:30:00Z", data: {user: oscar}}, expect: {off_hours: 1, group: synthetic_late, user: oscar}}
+  - {note: "midday is off hours for a late shift", event: {"@timestamp": "2026-09-16T12:00:00Z", data: {user: oscar}}, expect: {off_hours: 1, group: synthetic_late, user: oscar}}
+  - {note: "Saturday evening, no shift starts", event: {"@timestamp": "2026-09-19T23:00:00Z", data: {user: oscar}}, expect: {off_hours: 1, group: synthetic_late, user: oscar}}
+  - {note: "07:30 local, winter time", event: {"@timestamp": "2026-03-27T06:30:00Z", data: {user: trent}}, expect: {off_hours: 1, group: synthetic_admin, user: trent}}
+  - {note: "08:30 local, winter time", event: {"@timestamp": "2026-03-27T07:30:00Z", data: {user: trent}}, expect: {off_hours: 0, group: synthetic_admin, user: trent}}
+  - {note: "08:30 local, summer time", event: {"@timestamp": "2026-03-30T06:30:00Z", data: {user: trent}}, expect: {off_hours: 0, group: synthetic_admin, user: trent}}
+  - {note: "19:30 local, summer time", event: {"@timestamp": "2026-03-30T17:30:00Z", data: {user: trent}}, expect: {off_hours: 1, group: synthetic_admin, user: trent}}
+  - {note: "unknown user, default_group applied", event: {"@timestamp": "2026-09-16T12:00:00Z", data: {user: mallory}}, expect: {off_hours: 0, group: synthetic_day, user: mallory}}
+  - {note: "no user, event unchanged", event: {"@timestamp": "2026-09-16T12:00:00Z", data: {srcip: 1.2.3.4}}, expect: absent}
+  - {note: "bad timestamp, error recorded, event kept", event: {"@timestamp": "not-a-date", data: {user: bob}}, expect: error}
+
+  # --- cases found against the live cluster (Phase 0) ---
+  - {note: "Wazuh +0000 offset", event: {"@timestamp": "2026-09-18T02:05:00.123+0000", data: {user: bob}}, expect: {off_hours: 1, group: synthetic_day, user: bob}}
+  - {note: "real sshd login: user only in data.dstuser", event: {"@timestamp": "2026-09-16T12:00:00.355Z", data: {dstuser: oscar, srcip: 192.168.0.15}}, expect: {off_hours: 1, group: synthetic_late, user: oscar}}
+  - {note: "sudo: actor in data.srcuser wins over target data.dstuser", event: {"@timestamp": "2026-09-19T12:00:00Z", data: {srcuser: bob, dstuser: test_on_user}}, expect: {off_hours: 1, group: synthetic_day, user: bob}}
+  - {note: "ignored account (root)", event: {"@timestamp": "2026-09-19T03:00:00Z", data: {dstuser: Root}}, expect: absent}
+  - {note: "empty user field falls through to the next one", event: {"@timestamp": "2026-09-16T12:00:00Z", data: {user: "  ", dstuser: test_off_user}}, expect: {off_hours: 1, group: test_always_off, user: test_off_user}}
+  - {note: "epoch milliseconds", event: {"@timestamp": 1789697100000, data: {user: bob}}, expect: {off_hours: 1, group: synthetic_day, user: bob}}
+  - {note: "timestamp without offset is an error", event: {"@timestamp": "2026-09-16T12:00:00", data: {user: bob}}, expect: error}
+  - {note: "test_always_off, mid-week noon", event: {"@timestamp": "2026-09-16T12:00:00Z", data: {user: test_off_user}}, expect: {off_hours: 1, group: test_always_off, user: test_off_user}}
+  - {note: "test_always_on, Sunday 03:00", event: {"@timestamp": "2026-09-20T03:00:00Z", data: {user: test_on_user}}, expect: {off_hours: 0, group: test_always_on, user: test_on_user}}

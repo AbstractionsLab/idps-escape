@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: cQo1ZZmE2iW4zMoTf5EHVw2Y_aN3jTxsiPqFL5ooLSY=
 ---
 
 # RADAR Software Design

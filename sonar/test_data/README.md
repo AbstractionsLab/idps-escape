@@ -10,8 +10,8 @@ test_data/
 │   ├── normal_training.json    # 14 days normal baseline (~12,000 alerts)
 │   └── attack_scenarios.json   # 2 days with attack patterns (~2,000 alerts)
 ├── synthetic_alerts/            # Legacy synthetic data
-│   ├── normal_baseline.json    # 30 days simple training data (~12,000 alerts)
-│   └── with_anomalies.json     # 30 days with anomalies (~6,000 alerts)
+│   ├── normal_baseline.json    # 1 year simple training data (~12,000 alerts)
+│   └── with_anomalies.json     # 6 months with anomalies (~6,000 alerts)
 ├── generate_attack_data.py      # Data generation script
 ├── inject_wazuh_data.py         # Inject synthetic data into Wazuh Indexer
 └── README.md                    # This file
@@ -23,8 +23,17 @@ test_data/
 |--------------|------|---------|--------|-----------|
 | `generated_scenarios/` | `normal_training.json` | Normal baseline for training | ~12,000 | 14 days |
 | `generated_scenarios/` | `attack_scenarios.json` | Detection testing with attacks | ~2,000 | 2 days |
-| `synthetic_alerts/` | `normal_baseline.json` | Legacy simple training data | ~12,000 | 30 days |
-| `synthetic_alerts/` | `with_anomalies.json` | Legacy detection test data | ~6,000 | 30 days |
+| `synthetic_alerts/` | `normal_baseline.json` | Legacy simple training data | ~12,000 | 1 year |
+| `synthetic_alerts/` | `with_anomalies.json` | Legacy detection test data | ~6,000 | 6 months |
+
+## RADAR resource-utilization events
+
+`radar_format.py` rewrites the resource alerts of `generate_resource_data.py` as the events of RADAR's `linux_resource_utilization` collector (`data.cpu_usage_pct`, `data.mem_usage_pct` as strings, no rule), with the same timestamps and hosts, so the label files of the evaluation splits stay valid. `radar_resource_utilization/` holds the debug data of the `radar_linux_resource_utilization` scenario, converted from `resource_monitoring/`:
+
+```bash
+python sonar/test_data/radar_format.py sonar/test_data/resource_monitoring/resource_monitoring_training.json sonar/test_data/radar_resource_utilization/training.json
+python sonar/test_data/radar_format.py sonar/test_data/resource_monitoring/resource_monitoring_detection.json sonar/test_data/radar_resource_utilization/detection.json
+```
 
 ## Attack scenarios
 

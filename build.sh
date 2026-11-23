@@ -5,7 +5,7 @@ SERVICE=${1:-all}
 case $SERVICE in
   sonar)
     echo "Building SONAR image..."
-    docker build -t sonar:v0.7 -f sonar/Dockerfile.sonar .
+    docker build -t sonar:v0.8 -f sonar/Dockerfile.sonar .
     ;;
   adbox)
     echo "Building ADBox image..."
@@ -21,7 +21,7 @@ case $SERVICE in
     ;;
   all)
     echo "Building all images..."
-    docker build -t sonar:v0.7 -f sonar/Dockerfile.sonar .
+    docker build -t sonar:v0.8 -f sonar/Dockerfile.sonar .
     docker build -t adbox:v0.3.0 -f adbox/Dockerfile.adbox .
     docker build -t soar-dev:latest -f dev.Dockerfile .
     docker build -t adbox-test:v0.3.0 -f adbox/Dockerfile.test .

@@ -5,12 +5,13 @@ the single front door.
 
 ```bash
 ./radar.sh gui                                          # start the Web GUI
+./radar.sh gui-url                                      # print the running GUI's login URL
 ./radar.sh build <scenario>                             # = sudo ./build-radar.sh
 ./radar.sh run <scenario> [--ingest true]               # = ./run-radar.sh
 ./radar.sh health [--scenario …] [--agent-name …]       # = ./health-radar.sh
 ./radar.sh stop [--purge]                               # = ./stop-radar.sh
-./radar.sh mint-token <group>[,<group>…] [minutes]      # mint new token
-./radar.sh enrollment open [--minutes N] | close | status
+sudo ./radar.sh mint-token <group>[,<group>…] [minutes] # mint new token
+sudo ./radar.sh enrollment open [--minutes N] | close | status
 ./radar.sh rotate-credentials                      # new indexer and API passwords
 ./radar.sh repair-permissions                      # fix file permissions left by older builds
 ```
@@ -19,7 +20,7 @@ On first use it creates a virtualenv and installs the GUI's dependencies; after
 that it reuses them unless `gui/requirements.txt` changes.
 
 Valid scenarios: `suspicious_login`, `geoip_detection`, `log_volume`,
-`scanning_detection`.
+`scanning_detection`, `linux_resource_utilization`.
 
 ---
 
@@ -53,36 +54,44 @@ sudo ./radar_deploy/manager-undo-scenario.sh <scenario>
 ```
 
 Three stages, in order: optionally ingest a training dataset, create or reuse
-the OpenSearch detector (prints `DET_ID`), then create or reuse the monitor and
-its webhook destination (prints `MON_ID`). Each stage runs in the `radar-cli`
+the OpenSearch detector (prints `DET_ID`), then create the monitor and its
+webhook destination, or update an existing monitor whose configuration changed
+(prints `MON_ID`). Each stage runs in the `radar-cli`
 container, which is built on the fly.
 
 Only scenarios with an ML component apply. `--ingest true` is needed the first
 time, before real traffic exists.
+
+`suspicious_login` runs `off_hours.py` instead: it deploys the off-hours ingest
+pipeline, marks the archived history after the optional ingest, then creates or
+updates the rule-mode monitor and the model-mode detector and monitor. See
+[Off-hours activity](./radar-scenarios/off-hours-activity.md#commands).
 
 ---
 
 ## Agent enrollment
 
 ```bash
-./radar.sh mint-token <group>[,<group>…] [expiry_minutes]     # default 60
+sudo ./radar.sh mint-token <group>[,<group>…] [expiry_minutes]  # default 60
 sudo ./radar.sh enrollment open [--minutes N]                  # default 30
 sudo ./radar.sh enrollment close
-./radar.sh enrollment status
+sudo ./radar.sh enrollment status
 ```
 
-Minting a token already opens the enrollment window for the token's own
-lifetime, so the `enrollment` subcommands are only for opening, closing, or
+Minting a token with `sudo` already opens the enrollment window for the
+token's own lifetime (without root it only prints a note and the window stays
+closed), so the `enrollment` subcommands are only for opening, closing, or
 checking it independently — for instance to onboard several endpoints in one
 window, or to close it early.
 
-`open` and `close` need `sudo` (they touch the host firewall); `status` does not
-and reports `OPEN`/`CLOSED` plus the auto-close timer's PID.
+All three need `sudo`: they read or change the host firewall, and without root
+`status` cannot read the rule and always reports `OPEN`. `status` reports
+`OPEN`/`CLOSED` plus the auto-close timer's PID.
 
 A token is revoked when it expires. If that is missed, for example because the
 host was rebooted, the next health check or build revokes it.
 
-Then, on the endpoint:
+Then, on the endpoint, from inside the `radar-agent` folder copied there:
 
 ```bash
 sudo ./bootstrap-agent.sh --manager <address> --token <token> \
@@ -90,9 +99,18 @@ sudo ./bootstrap-agent.sh --manager <address> --token <token> \
      [--allow-service <name>]
 ```
 
-For `log_volume`, `--allow-service` (repeatable or comma-separated) lists the
-services `terminate_service.sh` may stop on this endpoint. Without it, no service
-can be stopped there. See [Mitigations](radar-tuning.md#mitigations).
+Pass the groups the token was minted for: `suspicious_login` and
+`geoip_detection` also need `--group radar_shared`, which carries their
+`auth.log` shipping.
+
+For `log_volume` and `linux_resource_utilization`, `--allow-service` (repeatable
+or comma-separated) lists the services `terminate_service.sh` may stop on this
+endpoint. Without it, no service can be stopped there. The scenario's
+`terminable_services` in `ar.yaml` must list the service too; the shipped
+`linux_resource_utilization` block has no such key, so add it there. See [Mitigations](radar-tuning.md#mitigations).
+
+To remove the agent from an endpoint, run `sudo ./uninstall-agent.sh
+[--purge-data]` from the same folder.
 
 Manager-side agent operations:
 
@@ -148,14 +166,18 @@ manages a stack RADAR deployed itself, not an existing Wazuh installation.
 
 ```bash
 ./stop-radar.sh            # stop containers, keep data on disk
-./stop-radar.sh --purge    # also delete volumes: indices, dashboards, enrollment state, certs
+./stop-radar.sh --purge    # also delete the indexer data and dashboard volumes
 ```
 
-`--purge` is not reversible. Without it, everything comes back when you next
-run `build-radar.sh`.
+`--purge` is not reversible. It removes only the core stack's named Docker
+volumes (indices and dashboard settings); the manager's data under `/srv/wazuh/`
+(rules, agent keys, logs) and the certificates under `config/` stay. Without
+`--purge`, everything comes back when you next run `build-radar.sh`.
 
-Same thing in the GUI: Deployment → **Teardown**, where `--purge` is the
-**Delete all data** checkbox.
+The GUI's Deployment → **Teardown** does the same. Its **Delete all data**
+checkbox goes further than `--purge`: it also deletes the manager's host
+directories listed in `volumes.yml` and marks every scenario as not deployed.
+Certificates are kept in both cases.
 
 ---
 
@@ -167,8 +189,7 @@ so you can tail them without entering the container.
 
 | What | Where |
 |------|-------|
-| Active response decisions and mitigations | `/var/ossec/logs/active-responses.log` |
-| RADAR AR audit entries | `/var/ossec/logs/radar/radar_ar_audit.log` |
+| Active response decisions, mitigations and audit entries | `/var/ossec/logs/active-responses.log` |
 | Wazuh manager log | `/var/ossec/logs/ossec.log` |
 | Enriched auth / web logs | `/var/ossec/logs/radar/enriched_auth.log`, `enriched_web_access.log` |
 | Detector results, alerts | Wazuh dashboard, or the `opensearch-ad-plugin-result-*` indices |

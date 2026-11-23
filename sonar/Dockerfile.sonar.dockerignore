@@ -1,0 +1,22 @@
+# Build context for sonar/Dockerfile.sonar only. BuildKit (the default builder since
+# Docker 23) reads <Dockerfile>.dockerignore next to the Dockerfile instead of the root
+# .dockerignore, which ADBox images share: they need adbox/assets/secrets, SONAR must not.
+#
+# Allowlist: exclude everything, then re-include what the image needs.
+*
+!pyproject.toml
+!poetry.lock
+!README.md
+!sonar
+# pyproject.toml declares the adbox package, so the root install needs it to exist;
+# the SONAR image needs none of ADBox's code, models or secrets.
+!adbox/__init__.py
+
+# Never ship secrets, local models or debug output, even from re-included directories.
+**/.env
+**/*.pkl
+sonar/payloads
+# A delivery watermark baked into the image would suppress anomalies in production.
+sonar/models/state
+**/__pycache__
+**/.DS_Store

@@ -3,320 +3,123 @@ active: true
 derived: false
 level: 2.11
 links:
-- HARC-004: B-4i2SClF5iGbeV-cWw9l0nDiMns0PHC2fNuaqSQAmo=
-- HARC-014: ShXINRasg8k_EUmwdYZIwUUznXOyfv6zDpDA8O-ZRVo=
-- LARC-015: b6iWi1kYZwtxRQIRTDe5K8kFa4EUsP9n93xZMdplUb8=
-- SRS-050: f1fx4EzuMUZpkPuPmI8RJXj5-ASOsNLfOUx5pm81PWc=
-- SRS-051: L_FEEgh5sx0eJ_B6mZtm3kp_90KxFJLwar48ZeSHzbk=
-- SRS-052: rnH2AeVu4U2ZbCOXkatJeqKiv_ziq90iRQZJjU1fHKc=
-- SRS-056: xKvRTfbWPnFhLmrKkVnKcrA1gfDRFhhKwc6tXbXmnJw=
+- SRS-056: cPHoeLEAeLaaZ8tCLEz_E724FHEVIvO-aLO0IBU7EMQ=
+- SRS-062: umq1jJ6JmmUdM9cRbOX6I9iDoL3ADz0MdwhUZP0blw4=
+- SRS-071: ZHNgKjI-5h3aLRPBushyk3-rGXZlaZGed2XtpPWs0Gg=
 normative: true
 ref: ''
 release: Alpha
-reviewed: cd8uvqWCbPUjFM-dbhgZ3XeC81TdLqyUvizvfbLpkIM=
+reviewed: RvNYZBdFJx5Min1vSv9KVVoFLfbo06kOdRAqbAr1aoc=
 version: '0.1'
 ---
 
 # RADAR data ingestion pipeline
 
-The diagram below depicts the data ingestion workflow orchestrated by `run-radar.sh` and implemented by scenario-specific `wazuh_ingest.py` scripts.
+This item describes how `run-radar.sh` seeds the indexer with history for the anomaly-based scenarios, through the scenario-specific `wazuh_ingest.py` scripts (SWD-033).
 
 ## Pipeline purpose
 
-Data ingestion generates synthetic time-series data for training OpenSearch RCF anomaly detectors. Each behavior-based scenario requires historical baseline data to establish normal patterns before real-time detection begins.
+An OpenSearch RCF detector needs enough past intervals per entity before it reports anomalies, and the `suspicious_login` off-hours model mode needs weeks of per-user activity. Ingestion writes that history so a scenario can be demonstrated and tested right after deployment, without waiting for real data to accumulate. It is optional (`run-radar.sh <scenario> --ingest true`) and exists for three scenarios:
+
+| Scenario | Target index | What is written | Shaped from |
+|---|---|---|---|
+| `log_volume` | `wazuh-ad-log-volume-<date>` (today) | Synthetic `log_volume_metric` samples (`data.log_bytes`) for one agent, growing linearly up to the latest real value | The agent's two most recent real samples |
+| `linux_resource_utilization` | `wazuh-archives-radar-seed` | Synthetic `resource_usage_metric` samples (`data.cpu_usage_pct`, `data.mem_usage_pct`) per agent, marked `radar_seed: true`, ending where the agent's real samples begin | Agents with real samples in the configured recent window |
+| `suspicious_login` | `wazuh-archives-4.x-<date>` (one index per day) | Synthetic archived activity events (`data.user`, `data.action`) per configured user, inside each user's shift, with optional evening work and one burst | The `ingest.users` list in `config.yaml` |
+
+All parameters come from `scenarios.<scenario>.ingest` in `radar/config.yaml`; the indexer connection from `OS_URL`, `OS_USER`, `OS_PASS` and `OS_VERIFY_SSL`.
 
 ## Workflow stages
 
-### 1. Script invocation
-Execute from run-radar.sh:
-```
-Command: Execute scenario ingestion script in containerized environment
-  Container: radar-cli:latest
-  Environment: Load OS_URL, OS_USER, OS_PASS, OS_VERIFY_SSL from .env
-  Volumes: Mount scenarios directory
-  Script: /app/scenarios/ingest_scripts/{scenario}/wazuh_ingest.py
-```
+### 1. Invocation
 
-### 2. Baseline query (scenario-dependent)
+`run-radar.sh` builds the `radar-cli` image, which contains the three ingest scripts, and runs `python <scenario>/wazuh_ingest.py` in it, passing the indexer settings as environment variables and mounting the indexer CA certificate. Ingestion runs before the detector is created; `detector.py` additionally waits briefly (about ten seconds at most) for the index pattern to have documents, because the AD plugin cannot start a detector on an empty index.
 
-**Log volume scenario**:
+For `suspicious_login`, `off_hours.py deploy` first creates the `radar-off-hours` ingest pipeline, the synthetic events are indexed through it so they carry the off-hours flags, and `off_hours.py backfill` then flags real archived events indexed earlier.
 
-- Query last 10 minutes of existing data from `wazuh-ad-log-volume-*`
-- Retrieve 2 most recent documents
-- Calculate delta between log byte values
-- Fallback: 20,000 bytes if insufficient data
+### 2. Baseline
 
-**Suspicious login scenario**:
+- **`log_volume`**: the two most recent `data.log_bytes` values of the configured agent give the latest value and the growth per step. With no real sample the script waits 60 seconds and asks again, then falls back to `baseline_bytes` and `fallback_delta` and warns that the scenario is probably not wired up. With one sample, it uses `fallback_delta`; a non-positive delta is replaced by `fallback_delta`.
+- **`linux_resource_utilization`**: targets are the configured `agent_names`, or every agent with real (non-seed) samples in `baseline_window`. Each target's earliest real sample marks where the seed must end; an agent that already has `history_minutes` of history is skipped. With no target at all, the script exits with an error.
+- **`suspicious_login`**: no query; the history comes entirely from configuration.
 
-- Query user authentication patterns
-- Analyze login frequency distribution
-- Determine normal session intervals
+### 3. Generation
 
-### 3. Time series generation
-
-**Log volume algorithm**:
-```
-Algorithm: Generate realistic time series baseline
-  Input: baseline_value, delta, lookback_minutes, sampling_interval_seconds
-
-  total_points ← (lookback_minutes × 60) / sampling_interval_seconds
-  start_time ← current_time - lookback_minutes
-
-  for i from 0 to total_points:
-    timestamp ← start_time + (i × sampling_interval_seconds)
-    value ← baseline_value + (delta × i / total_points)  // Linear progression
-
-    document ← {
-      "@timestamp": timestamp (ISO8601 format),
-      "agent": {"name": agent_name, "id": agent_id},
-      "data": {"log_path": path, "log_bytes": value},
-      "predecoder": {"program_name": metric_name}
-    }
-
-    append document to bulk_data
-
-  Output: bulk_data collection
-```
-
-Example generated data characteristics:
-
-- **Default parameters**: 240 minutes lookback, 20-second sampling = 720 points
-- **Monotonic trend**: Realistic growth from baseline to baseline+delta
-- **Proper timestamps**: ISO8601 with consistent spacing
-- **Scenario-specific fields**: Match detector configuration exactly
+- **`log_volume`**: `history_minutes × 60 / step_seconds` points, one every `step_seconds`, rising linearly by the delta per step and ending at the latest real value, plus one point one step after now.
+- **`linux_resource_utilization`**: one point every `step_seconds` from `now − history_minutes` to the agent's first real sample, CPU and memory drawn around `baseline_cpu_pct` and `baseline_mem_pct` with the configured jitter (reproducible per agent).
+- **`suspicious_login`**: for each workday from `history_days` back to `future_days` ahead, between `events_per_login_min` and `events_per_login_max` events at random times within the user's shift (± `drift_minutes`), in the user's time zone; optionally evening events and a burst `days_ago` days back.
 
 ### 4. Bulk indexing
 
-**OpenSearch Bulk API specification**:
+Documents are sent to the OpenSearch Bulk API (`POST /_bulk`, NDJSON): in one request for `log_volume`, in chunks for the other two (`suspicious_login` names the `radar-off-hours` pipeline when off-hours detection is enabled). `linux_resource_utilization` first creates its seed index with an explicit mapping if it does not exist.
 
-- Endpoint: `POST /{index}/_bulk`
-- Content-Type: `application/x-ndjson`
-- Format: Newline-delimited JSON (NDJSON)
+### 5. Result
 
-**Example NDJSON structure**:
-```json
-{"index": {"_index": "wazuh-ad-log-volume-2026-02-16"}}
-{"@timestamp": "2026-02-16T10:00:00Z", "agent": {...}, "data": {...}}
-{"index": {"_index": "wazuh-ad-log-volume-2026-02-16"}}
-{"@timestamp": "2026-02-16T10:00:20Z", "agent": {...}, "data": {...}}
-```
+An HTTP error or a failed bulk item makes `log_volume` and `linux_resource_utilization` exit with an error; `suspicious_login` raises on HTTP errors and prints failed items. Each script prints what it indexed. `linux_resource_utilization` then stops its detector, if one exists, so that the detector re-initialises on the seeded history at its next start. There is no separate verification query and no retry.
 
-**Batch processing**:
-
-- Default batch size: 500-1000 documents per bulk request
-- Error handling: Retry on transient failures (network, temporary unavailability)
-- Progress logging: Document count, timestamp range after each batch
-
-### 5. Verification
-```
-Algorithm: Verify successful ingestion
-  1. Query document count in target index for time range
-  2. Compare actual_count with expected_count
-  3. Verify earliest and latest timestamps match expected range
-  4. Validate field mappings (numeric fields are numbers, not strings)
-
-  if all checks pass:
-    return SUCCESS
-  else:
-    return FAILURE with diagnostic information
-```
-
-### 6. Output
-- Log ingestion summary: document count, time range, index name
-- Return success/failure exit code
-- Output used by run-radar.sh to proceed to detector creation
-
-## Scenario-specific ingestion patterns
-
-### Log volume
-- **Index**: `wazuh-ad-log-volume-*`
-- **Key field**: `data.log_bytes` (numeric)
-- **Pattern**: Monotonic increase with realistic deltas
-- **Volume**: 720 points over 240 minutes
-
-### Suspicious login
-- **Index**: `wazuh-archives-*` or custom index
-- **Key fields**: `srcuser`, `srcip`, `@timestamp`, enriched RADAR fields
-- **Pattern**: Normal login distribution with occasional geographic diversity
-- **Volume**: Variable based on user count and session patterns
-
-### Insider threat (archived)
-- **Index**: `wazuh-archives-*`
-- **Key fields**: File access patterns, data transfer volumes
-- **Pattern**: Baseline file activity with gradual increase
-- **Volume**: Per-user baselines
-
-## Data quality considerations
-
-- **Timestamp accuracy**: Proper ISO8601 format with timezone
-- **Field types**: Numeric fields as numbers, not strings (critical for aggregations)
-- **Index patterns**: Match detector configuration exactly
-- **Agent consistency**: Use consistent agent.name for high-cardinality detection
-- **Realistic patterns**: Avoid synthetic steps or unrealistic spikes that confuse training
-
-## Error handling
-
-- **Connection failures**: Retry with exponential backoff
-- **Index creation**: Auto-create if not exists (OpenSearch default)
-- **Mapping conflicts**: Log error, fail fast
-- **Bulk API errors**: Parse response, retry failed documents
-
-## Data Ingestion Sequence
+## Data ingestion sequence
 
 ```plantuml
 @startuml
 participant "run-radar.sh" as RunScript
-participant "radar-cli\nContainer" as Docker
+participant "radar-cli\ncontainer" as Docker
 participant "wazuh_ingest.py" as IngestScript
-participant "scenario\nconfig.yaml" as Config
-participant "OpenSearch\nQuery API" as OS_Query
-participant "Time Series\nGenerator" as Generator
-participant "Bulk\nIndexer" as Bulk
-participant "OpenSearch\nIndex" as OS_Index
-participant "Verification" as Verify
+participant "config.yaml\nscenarios.{scenario}.ingest" as Config
+participant "Wazuh indexer\n(OpenSearch)" as OS
 
-note over RunScript,Verify: Historical Data Ingestion for Detector Training
+note over RunScript,OS: Optional history seeding (--ingest true)
 
-group 1. Script invocation
-  RunScript -> Docker: docker run --env-file .env radar-cli
-  Docker -> IngestScript: python wazuh_ingest.py
-  IngestScript -> Config: Load scenario configuration
-  Config --> IngestScript: index_pattern, lookback_minutes, features
+group 1. Invocation
+  RunScript -> Docker: docker build -f Dockerfile.radar-cli
+  opt suspicious_login
+    RunScript -> Docker: python off_hours.py deploy
+    Docker -> OS: PUT _ingest/pipeline/radar-off-hours
+  end
+  RunScript -> Docker: docker run -e OS_URL ... radar-cli
+  Docker -> IngestScript: python {scenario}/wazuh_ingest.py
+  IngestScript -> Config: load ingest settings
 end
 
-group 2. Query existing data for baseline
-  IngestScript -> OS_Query: GET /{index}/_search
-  note over IngestScript,OS_Query
-    {
-      "size": 2,
-      "sort": [{"@timestamp": "desc"}],
-      "query": {"range": {"@timestamp": {"gte": "now-10m"}}}
-    }
-  end note
-
-  OS_Query --> IngestScript: Recent documents
-
-  alt Sufficient data found
-    IngestScript -> IngestScript: Calculate delta from existing data
-    note over IngestScript
-      delta = value[0] - value[1]
-      baseline_value = value[0]
-    end note
-  else Insufficient data
-    IngestScript -> IngestScript: Use fallback baseline
-    note over IngestScript
-      baseline_value = 20000 (default)
-      delta = 1000 (default growth)
-    end note
+group 2. Baseline
+  alt log_volume
+    IngestScript -> OS: POST wazuh-ad-log-volume-*/_search\n(agent, 2 most recent, data.log_bytes)
+    OS --> IngestScript: latest values
+    note over IngestScript: delta from the two values;\nwait 60 s and retry, then\nfall back to baseline_bytes / fallback_delta
+  else linux_resource_utilization
+    IngestScript -> OS: POST wazuh-archives-*/_search\n(agents with real samples in baseline_window)
+    IngestScript -> OS: POST wazuh-archives-*/_search\n(earliest real sample per agent)
+  else suspicious_login
+    note over IngestScript: users, shifts, evenings,\nburst from config.yaml
   end
 end
 
-group 3. Generate synthetic time series
-  IngestScript -> Generator: generate_time_series(baseline, delta, lookback_minutes)
-
-  Generator -> Generator: Calculate parameters
-  note over Generator
-    total_points = lookback_minutes * 60 / sampling_interval
-    sampling_interval = 20 seconds
-    lookback_minutes = 240 (default)
-    total_points = 720
-  end note
-
-  Generator -> Generator: Generate data points
-  note over Generator
-    for i in range(total_points):
-      timestamp = start_time + (i * sampling_interval)
-      value = baseline + (delta * i / total_points)
-      document = construct_document(timestamp, value)
-  end note
-
-  Generator --> IngestScript: List of 720 documents
-  note over Generator
-    Linear progression:
-    Time 0: baseline_value
-    Time 240min: baseline_value + delta
-    Realistic monotonic trend
-  end note
+group 3. Generation
+  IngestScript -> IngestScript: build synthetic documents
 end
 
-group 4. Format for bulk indexing
-  IngestScript -> Bulk: format_bulk_ndjson(documents)
-
-  Bulk -> Bulk: Build NDJSON payload
-  note over Bulk
-    {"index": {"_index": "wazuh-ad-log-volume-2026-02-16"}}
-    {"@timestamp": "2026-02-16T06:30:00Z", "agent": {...}, "data": {"log_bytes": 20145}}
-    {"index": {"_index": "wazuh-ad-log-volume-2026-02-16"}}
-    {"@timestamp": "2026-02-16T06:30:20Z", "agent": {...}, "data": {"log_bytes": 20290}}
-    ...
-  end note
-
-  Bulk --> IngestScript: NDJSON string (batches of 500 docs)
-end
-
-group 5. Bulk index to OpenSearch
-  loop For each batch (500-1000 docs)
-    IngestScript -> OS_Index: POST /{index}/_bulk
-    note over IngestScript,OS_Index: Content-Type: application/x-ndjson
-
-    OS_Index -> OS_Index: Parse NDJSON
-    OS_Index -> OS_Index: Index documents
-
-    alt All successful
-      OS_Index --> IngestScript: {"errors": false, "took": 523}
-      IngestScript -> IngestScript: Log progress
-      note over IngestScript: Indexed batch 1/2: 500 docs
-    else Partial failure
-      OS_Index --> IngestScript: {"errors": true, "items": [...]}
-      IngestScript -> IngestScript: Parse error responses
-      IngestScript -> IngestScript: Retry failed documents
-      note over IngestScript: Retry: 3 docs failed (transient)
-    end
+group 4. Bulk indexing
+  opt linux_resource_utilization, seed index missing
+    IngestScript -> OS: PUT wazuh-archives-radar-seed (mapping)
+  end
+  IngestScript -> OS: POST /_bulk (NDJSON)\n[?pipeline=radar-off-hours for suspicious_login]
+  OS --> IngestScript: bulk response
+  alt errors
+    IngestScript --> Docker: report failed items / exit 1
+  else success
+    IngestScript --> Docker: print summary
+  end
+  opt linux_resource_utilization
+    IngestScript -> OS: stop LINUX_RESOURCE_UTILIZATION_DETECTOR
   end
 end
 
-group 6. Verify ingestion success
-  IngestScript -> Verify: verify_ingestion(index, expected_count, time_range)
-
-  Verify -> OS_Index: GET /{index}/_count
-  note over Verify,OS_Index
-    {
-      "query": {
-        "range": {"@timestamp": {"gte": start, "lte": end}}
-      }
-    }
-  end note
-  OS_Index --> Verify: {"count": 720}
-
-  Verify -> Verify: Compare counts
-  note over Verify
-    expected_count = 720
-    actual_count = 720
-    ✓ Match
-  end note
-
-  Verify -> OS_Index: GET /{index}/_search?size=1&sort=@timestamp:asc
-  OS_Index --> Verify: Earliest document timestamp
-
-  Verify -> OS_Index: GET /{index}/_search?size=1&sort=@timestamp:desc
-  OS_Index --> Verify: Latest document timestamp
-
-  Verify -> Verify: Validate time range
-  note over Verify
-    earliest = 2026-02-16T06:30:00Z
-    latest = 2026-02-16T10:29:40Z
-    delta = 239.98 minutes
-    ✓ Covers 240-minute lookback
-  end note
-
-  alt Verification passed
-    Verify --> IngestScript: Success
-    IngestScript --> Docker: Exit code 0
-    Docker --> RunScript: Ingestion complete
-  else Verification failed
-    Verify --> IngestScript: Error
-    IngestScript --> Docker: Exit code 1
-    Docker --> RunScript: Ingestion failed
+group 5. Next steps in run-radar.sh
+  alt suspicious_login
+    RunScript -> Docker: python off_hours.py backfill
+    RunScript -> Docker: python off_hours.py monitors
+  else log_volume, linux_resource_utilization
+    RunScript -> Docker: python detector.py {scenario}
+    RunScript -> Docker: python monitor.py {scenario} {detector_id}
   end
 end
 
@@ -325,10 +128,13 @@ end
 
 ## Implementation reference
 
-Scenario-specific implementations:
-
-- [radar/scenarios/ingest_scripts/log_volume/wazuh_ingest.py](../../../radar/scenarios/ingest_scripts/log_volume/wazuh_ingest.py) - Log volume implementation
-- [radar/scenarios/ingest_scripts/suspicious_login/wazuh_ingest.py](../../../radar/scenarios/ingest_scripts/suspicious_login/wazuh_ingest.py) - Login behavioral implementation
+- `radar/scenarios/ingest_scripts/log_volume/wazuh_ingest.py`
+- `radar/scenarios/ingest_scripts/linux_resource_utilization/wazuh_ingest.py`
+- `radar/scenarios/ingest_scripts/suspicious_login/wazuh_ingest.py`
+- `radar/run-radar.sh`, `radar/Dockerfile.radar-cli`
 
 ## See also
-- `/docs/manual/radar_docs/radar-run-ad.md` for workflow documentation
+
+- `docs/manual/radar_docs/radar-run-ad.md` (sections "About data ingestion" and "Stage 1: Data ingestion")
+
+Related: HARC-004, HARC-014, LARC-015.

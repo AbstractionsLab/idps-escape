@@ -5,7 +5,7 @@ Multivariate time-series anomaly detection for Wazuh, leveraging Microsoft's
 time-series-anomaly-detector library for improved performance and maintainability.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.2.0"
 __author__ = "IDPS-ESCAPE Team"
 
 from sonar.config import MVADConfig, PipelineConfig, WazuhIndexerConfig

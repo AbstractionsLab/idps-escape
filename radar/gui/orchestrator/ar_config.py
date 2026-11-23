@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import re
 import threading
 from pathlib import Path
 from typing import Any
@@ -9,9 +10,67 @@ import yaml
 
 _lock = threading.Lock()
 
+BUILTIN_MITIGATIONS = ("firewall-drop",)
+
+LEGACY_MITIGATION_ALIASES = {
+    "lock_user_linux": "lock_user_linux.sh",
+    "terminate_service": "terminate_service.sh",
+}
+
+MITIGATION_KEYS = ("mitigations_tier2", "mitigations_tier3", "mitigations_tier4")
+
+_AR_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_SCRIPT_PATH_RE = re.compile(r"^active_responses/[A-Za-z0-9._/-]+$")
+
+
+class CatalogError(Exception):
+    """radar-agent/ar-scripts.yaml is missing or invalid."""
+
 
 def _ar_path(radar_root: str | Path) -> Path:
     return Path(radar_root) / "scenarios" / "active_responses" / "ar.yaml"
+
+
+def _catalog_path(radar_root: str | Path) -> Path:
+    return Path(radar_root) / "radar-agent" / "ar-scripts.yaml"
+
+
+def load_catalog(radar_root: str | Path) -> dict[str, str]:
+    """Endpoint script catalog: {active response name: script path}.
+
+    Read-only for the GUI. It is the list of shell actions every enrolled
+    endpoint can run; which scenario uses them is ar.yaml's job.
+    """
+    p = _catalog_path(radar_root)
+    try:
+        data = yaml.safe_load(p.read_text()) or {}
+    except FileNotFoundError:
+        raise CatalogError(f"{p} not found")
+    except yaml.YAMLError as e:
+        raise CatalogError(f"{p} is not valid YAML: {e}")
+    scripts = data.get("scripts") if isinstance(data, dict) else None
+    if scripts is None:
+        scripts = {}
+    if not isinstance(scripts, dict):
+        raise CatalogError(f"{p}: 'scripts' must map active response names to script paths")
+    catalog: dict[str, str] = {}
+    for name, path in scripts.items():
+        if not isinstance(name, str) or not _AR_NAME_RE.match(name):
+            raise CatalogError(f"{p}: invalid active response name {name!r}")
+        if not isinstance(path, str) or not _SCRIPT_PATH_RE.match(path) or \
+                any(seg in ("", ".", "..") for seg in path.split("/")):
+            raise CatalogError(f"{p}: invalid script path {path!r} for {name!r}")
+        catalog[name] = path
+    return catalog
+
+
+def catalog_problem(radar_root: str | Path) -> str | None:
+    """Why the catalog cannot be used, or None if it is fine."""
+    try:
+        load_catalog(radar_root)
+        return None
+    except CatalogError as e:
+        return str(e)
 
 
 def load(radar_root: str | Path) -> dict:
@@ -38,11 +97,50 @@ def list_bound_scenarios(radar_root: str | Path) -> list[str]:
 
 
 def list_known_mitigations(radar_root: str | Path) -> list[str]:
-    return ["firewall-drop", "lock_user_linux", "terminate_service"]
+    try:
+        catalog = load_catalog(radar_root)
+    except CatalogError:
+        catalog = {}
+    return list(BUILTIN_MITIGATIONS) + [n for n in catalog if n not in BUILTIN_MITIGATIONS]
+
+
+def normalize_mitigations(radar_root: str | Path, values: Any) -> list[str]:
+    if values is None:
+        return []
+    if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+        raise ValueError("mitigations must be a list of action names")
+    known = list_known_mitigations(radar_root)
+    out: list[str] = []
+    unknown: list[str] = []
+    for v in values:
+        name = LEGACY_MITIGATION_ALIASES.get(v.strip(), v.strip())
+        if name not in known:
+            unknown.append(v)
+        elif name not in out:
+            out.append(name)
+    if unknown:
+        problem = catalog_problem(radar_root)
+        hint = (f" (the endpoint script catalog is unusable: {problem})" if problem
+                else " -- add it to radar-agent/ar-scripts.yaml first")
+        raise ValueError(
+            f"unknown mitigation(s): {', '.join(unknown)}. "
+            f"Available: {', '.join(known)}{hint}"
+        )
+    return out
+
+
+def _normalize_patch_mitigations(radar_root: str | Path, patch: dict) -> dict:
+    patch = dict(patch)
+    for key in MITIGATION_KEYS:
+        if key in patch:
+            patch[key] = normalize_mitigations(radar_root, patch[key])
+    return patch
 
 
 def bind_scenario(radar_root: str | Path, scenario_id: str,
                   mitigations: list[str] | None = None) -> None:
+    if mitigations is not None:
+        mitigations = normalize_mitigations(radar_root, mitigations)
     p = _ar_path(radar_root)
     with _lock:
         with p.open() as f:
@@ -101,6 +199,9 @@ def mark_deployed(radar_root: str | Path, scenario_id: str, deployed: bool) -> N
 
 
 def update_scenario(radar_root: str | Path, scenario_id: str, patch: dict) -> None:
+    if not isinstance(patch, dict):
+        raise ValueError("expected a JSON object")
+    patch = _normalize_patch_mitigations(radar_root, patch)
     p = _ar_path(radar_root)
     with _lock:
         with p.open() as f:

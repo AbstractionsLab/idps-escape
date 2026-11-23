@@ -62,12 +62,18 @@ Work through these in order:
 ![RADAR GUI — RADAR Scenarios page](/docs/website/assets/RADAR_GUI_RADAR_Scenarios.png "RADAR Scenarios page: risk weights, time windows, tier thresholds, mitigations")
 
 A sidebar lists every scenario. Click one to load its configuration into the
-right-hand panel. **Save** writes to `ar.yaml` and takes effect immediately.
+right-hand panel. **Save** writes to `radar/scenarios/active_responses/ar.yaml`;
+the change reaches the manager the next time the scenario is deployed
+(Deployment → Scenario Management → **Deploy scenario**).
 
-**Default (baseline)** is pinned at the top of the list. It carries the
-fleet-wide PowerShell / command-shell detection rules, and every other scenario
-inherits its values as defaults — so changing something there changes it
-everywhere it has not been overridden.
+**Default (baseline)** is pinned at the top of the list. It is a scenario of
+its own: it scores the alerts matched by its own rule IDs and rule groups (the
+fleet-wide PowerShell / command-shell rules and alerts no dedicated scenario
+covers). Its values are not inherited by other scenarios: at runtime,
+`radar_ar.py` uses its own built-in defaults for a field a scenario's block in
+`ar.yaml` leaves unset. The page only *displays* `default`'s value in such a
+field; it applies to the scenario once you **Save**, which writes it into the
+scenario's own block.
 
 Each tab carries badges:
 
@@ -106,10 +112,12 @@ detector — the fields here are informational.
 
 ### Time windows
 
-How far back RADAR looks when it correlates evidence at alert time.
+How far back RADAR looks for events on the alert's agent, to put in the email,
+the DECIPHER request and the case. They do not change the risk score; see
+[Time windows](./radar-tuning.md#time-windows).
 
-- **`delta_ad_minutes`** — look-back for anomaly-detector events.
-- **`delta_signature_minutes`** — look-back for signature events and the CTI
+- **`delta_ad_minutes`** — look-back for anomaly-detector alerts.
+- **`delta_signature_minutes`** — look-back for signature alerts and the CTI
   lookup.
 
 ### Risk tiers and thresholds
@@ -135,8 +143,12 @@ T0 and T1 have no executable actions. For T2 and T3, add actions from the
 | Action | Effect |
 |--------|--------|
 | `firewall-drop` | Blocks the source IP on the affected agent |
-| `lock_user_linux` | Locks the Linux account involved in the alert |
-| `terminate_service` | Terminates the suspicious process or service |
+| `lock_user_linux.sh` | Locks the Linux user named in the alert (never `root`, system accounts, or protected users) |
+| `terminate_service.sh` | Stops the alert's service if it is allowlisted on both the manager and the agent; otherwise kills connections to the alert's source IP |
+
+The dropdown offers `firewall-drop` plus every action listed in
+`radar/radar-agent/ar-scripts.yaml`; saving a scenario with any other action is
+refused. See [Mitigations](./radar-tuning.md#mitigations).
 
 **Allow automatic mitigation execution** — with this off, RADAR plans and logs
 every action but executes none. Check each scenario for `Allow automatic mitigation execution` before you deploy.
@@ -227,7 +239,8 @@ Long-running actions show a **Stop streaming** button.
 
 Several actions need `sudo` on the machine running the GUI. RADAR prompts for it
 the first time it is needed, keeps it in memory for the browser session only,
-and never writes it to disk. Restarting the Flask server clears it.
+and never writes it to disk. It is forgotten after 15 minutes without use, or
+when the Flask server restarts.
 
 ### Scenario Management
 
@@ -286,7 +299,7 @@ same duration.
 When minting finishes, the bootstrap command appears in a highlighted box with a
 **Copy command** button — it is pulled out of the log stream deliberately,
 because it starts with `sudo` and is easy to scroll past. Run it under `sudo` on
-the target endpoint.
+the target endpoint, from inside the `radar-agent` folder copied there.
 
 **Deregister agent.** Removes an agent from the manager entirely, freeing its
 name and IP for a fresh enrollment.
@@ -295,7 +308,6 @@ name and IP for a fresh enrollment.
 |-------|-------|
 | Agent name | Required; must match exactly |
 | Agent IP | Optional, used if the name does not resolve |
-| Keep the entry reserved | Unchecked (default) frees the name/IP immediately. Checked keeps it reserved, so re-onboarding the same endpoint needs a different name or IP |
 
 If the Wazuh agent service is still running on the endpoint, it will try to
 re-enroll on its own — stop it there first if that is not what you want.
@@ -328,11 +340,13 @@ at enrollment time only applies to genuinely new agents.
 **Unenroll from groups** removes only the scenario's own group. `default` and
 `radar_shared` are left in place, since another scenario may still need them.
 
-> **`log_volume` is a special case.** Assigning an agent here delivers the
-> group's config but does *not* install the systemd timer that produces the
-> metric — only `bootstrap-agent.sh` does that, at bootstrap time. The agent will
-> be told to watch `/var/log/radar/log_volume_metric.log` but nothing will write
-> to it. Re-run `bootstrap-agent.sh --group log_volume` on that endpoint.
+> **`log_volume` and `linux_resource_utilization` are special cases.** Assigning
+> an agent here delivers the group's config but does *not* install the systemd
+> timer that produces the metric — only `bootstrap-agent.sh` does that, at
+> bootstrap time. The agent will be told to watch
+> `/var/log/radar/log_volume_metric.log` (or `resource_usage_metric.log`) but
+> nothing will write to it. Mint a token for the scenario and re-run
+> `bootstrap-agent.sh` on that endpoint with that scenario's group.
 
 ### Status
 
@@ -342,11 +356,16 @@ Runs `health-radar.sh`.
 
 | Field | Notes |
 |-------|-------|
-| Scenario filter | **all** or a specific scenario |
-| Agent names | Optional, comma-separated — adds agent connectivity and group-membership checks |
+| Scenario filter | A specific scenario (required) |
 
-Every line is marked `OK`, `WARN`, or `FAIL`. The check is read-only; it never
-changes anything.
+The tab has no agent filter. To check all scenarios at once, or named agents'
+connectivity and group membership, use the CLI:
+`./radar.sh health [--scenario all] [--agent-name name1,name2]` (see
+[Health check](./radar-operations.md#health-check)).
+
+Every line is marked `OK`, `WARN`, or `FAIL`. The check is read-only with one
+exception: an enrollment token that has outlived its expiry is revoked, which
+restarts the Wazuh manager processes.
 
 ### Teardown
 
@@ -356,7 +375,7 @@ Stops and removes the manager, indexer, dashboard, and webhook containers.
 
 | Field | Notes |
 |-------|-------|
-| Delete all data | Unchecked: containers stop, data stays on disk for next time. Checked: indices, dashboards, enrollment state, and certificates are permanently deleted |
+| Delete all data | Unchecked: containers stop, data stays on disk for next time. Checked: indices, dashboard settings, and the manager's host directories from `volumes.yml` (rules, agent keys, logs) are permanently deleted, and every scenario is marked not deployed. Certificates are kept |
 
 A confirmation checkbox must be ticked before the **Tear down** button enables.
 Needs `sudo`.

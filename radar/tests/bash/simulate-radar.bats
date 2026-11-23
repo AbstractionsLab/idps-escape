@@ -1,107 +1,167 @@
 #!/usr/bin/env bats
 
+GIB=$((1024 ** 3))
+MIB=$((1024 ** 2))
+
 setup() {
   REPO_ROOT="$(cd "$(dirname "${BATS_TEST_FILENAME}")/../.." && pwd)"
-
+  SCRIPT_SRC="${REPO_ROOT}/radar-test-framework/simulate/scenarios/linux_resource_utilization.sh"
   TMPDIR="$(mktemp -d)"
   BIN_DIR="${TMPDIR}/bin"
   mkdir -p "${BIN_DIR}"
+  STRESS_LOG="${TMPDIR}/stress-ng.log"
+  MEMINFO="${TMPDIR}/meminfo"
+  SCRIPT="${TMPDIR}/lru.sh"
 
+  cat > "${BIN_DIR}/stress-ng" <<EOF
+#!/usr/bin/env bash
+echo "\$*" >> "${STRESS_LOG}"
+[[ -n "\${FAKE_STRESS_RC:-}" ]] && exit "\${FAKE_STRESS_RC}"
+trap 'exit 0' TERM
+sleep 30 &
+wait
+EOF
+  chmod +x "${BIN_DIR}/stress-ng"
   export PATH="${BIN_DIR}:${PATH}"
 
-  DOCKER_LOG="${TMPDIR}/docker.log"
-  ANSIBLE_LOG="${TMPDIR}/ansible.log"
-
-  cat > "${BIN_DIR}/docker" <<EOF
-#!/usr/bin/env bash
-echo "docker \$*" >> "${DOCKER_LOG}"
-exit 0
-EOF
-  chmod +x "${BIN_DIR}/docker"
-
-  cat > "${BIN_DIR}/ansible-playbook" <<EOF
-#!/usr/bin/env bash
-echo "ansible-playbook \$*" >> "${ANSIBLE_LOG}"
-exit 0
-EOF
-  chmod +x "${BIN_DIR}/ansible-playbook"
-
-  cat > "${BIN_DIR}/ssh-agent" <<'EOF'
-#!/usr/bin/env bash
-echo "SSH_AUTH_SOCK=/tmp/fake; export SSH_AUTH_SOCK;"
-EOF
-  chmod +x "${BIN_DIR}/ssh-agent"
-
-  cat > "${BIN_DIR}/ssh-add" <<'EOF'
-#!/usr/bin/env bash
-exit 0
-EOF
-  chmod +x "${BIN_DIR}/ssh-add"
-
-  cat > "${BIN_DIR}/ssh-keygen" <<'EOF'
-#!/usr/bin/env bash
-echo "256 SHA256:dummy key"
-EOF
-  chmod +x "${BIN_DIR}/ssh-keygen"
-
-  mkdir -p "${REPO_ROOT}/roles/wazuh_agent/playbooks"
-  [[ -f "${REPO_ROOT}/roles/wazuh_agent/playbooks/simulate.yml" ]] || echo "- hosts: all
-  tasks: []" > "${REPO_ROOT}/roles/wazuh_agent/playbooks/simulate.yml"
-
-  [[ -f "${REPO_ROOT}/inventory.yaml" ]] || echo "all:
-  hosts: {}" > "${REPO_ROOT}/inventory.yaml"
-
-  mkdir -p "${REPO_ROOT}/radar-test-framework/simulate/scenarios"
-  [[ -d "${REPO_ROOT}/radar-test-framework/simulate/scenarios" ]] || true
-
-  # root config.yaml used by simulate-radar.sh create only if missing
-  CONFIG_YAML_CREATED=false
-  if [[ ! -f "${REPO_ROOT}/config.yaml" ]]; then
-    printf 'geoip_detection:\n  container_name: agent.geoip\n' > "${REPO_ROOT}/config.yaml"
-    CONFIG_YAML_CREATED=true
-  fi
-
-  SSH_KEY="${TMPDIR}/id_ed25519"
-  echo "dummy" > "${SSH_KEY}"
+  meminfo $((8 * 1024 * 1024)) $((6 * 1024 * 1024))
+  configure MEMINFO_PATH "\"${MEMINFO}\"" DURATION_SECONDS 2 REPORT_INTERVAL_SECONDS 30
 }
 
 teardown() {
-  [[ "${CONFIG_YAML_CREATED}" == "true" ]] && rm -f "${REPO_ROOT}/config.yaml"
+  pkill -f "${BIN_DIR}/stress-ng" 2>/dev/null || true
   rm -rf "${TMPDIR}"
 }
 
-@test "missing scenario fails" {
-  run bash "${REPO_ROOT}/simulate-radar.sh"
-  [ "$status" -ne 0 ]
+meminfo() {
+  printf 'MemTotal:       %s kB\nMemFree:        1 kB\nMemAvailable:   %s kB\n' "$1" "$2" > "${MEMINFO}"
 }
 
-@test "invalid scenario fails" {
-  run bash "${REPO_ROOT}/simulate-radar.sh" nope --agent local
-  [ "$status" -ne 0 ]
+configure() {
+  [[ -f "${SCRIPT}" ]] || cp "${SCRIPT_SRC}" "${SCRIPT}"
+  while (( $# >= 2 )); do
+    grep -q "^$1=" "${SCRIPT}"
+    sed -i "s|^$1=.*|$1=$2|" "${SCRIPT}"
+    shift 2
+  done
 }
 
-@test "missing --agent fails" {
-  run bash "${REPO_ROOT}/simulate-radar.sh" geoip_detection
-  [ "$status" -ne 0 ]
+stress_args() {
+  cat "${STRESS_LOG}"
 }
 
-@test "local agent uses docker with container from config.yaml" {
-  run bash "${REPO_ROOT}/simulate-radar.sh" geoip_detection --agent local
+@test "both mode runs stress-ng with CPU load and the computed memory" {
+  configure MODE '"both"' CPU_WORKERS 2
+  run bash "${SCRIPT}"
   [ "$status" -eq 0 ]
-
-  # ensure docker was invoked and container name used
-  run bash -c "cat '${DOCKER_LOG}'"
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"docker exec -i agent.geoip"* ]]
-  [[ "$output" == *"docker cp"* ]]
+  [[ "$output" == *"CPU: 2 worker(s) at 95% load"* ]]
+  [[ "$output" == *"linux_resource_utilization simulation completed. Load released."* ]]
+  local expected=$(( 7301444403 - 2 * GIB ))
+  [ "$(stress_args)" = "--cache-size 64K --cpu 2 --cpu-load 95 --vm 1 --vm-bytes ${expected} --vm-keep --vm-populate --vm-hang 0 --timeout 2s" ]
 }
 
-@test "remote agent uses ansible-playbook with limit and extra vars" {
-  run bash "${REPO_ROOT}/simulate-radar.sh" suspicious_login --agent remote --ssh-key "${SSH_KEY}"
+@test "cpu mode with CPU_WORKERS=0 uses one worker per CPU and no memory" {
+  configure MODE '"cpu"' CPU_LOAD_PCT 70
+  run bash "${SCRIPT}"
   [ "$status" -eq 0 ]
+  [ "$(stress_args)" = "--cache-size 64K --cpu $(nproc) --cpu-load 70 --timeout 2s" ]
+}
 
-  run bash -c "cat '${ANSIBLE_LOG}'"
+@test "mem mode keeps the safety floor of free memory" {
+  meminfo $((8 * 1024 * 1024)) $((600 * 1024))
+  configure MODE '"mem"' MEM_TARGET_PCT 100
+  run bash "${SCRIPT}"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"--limit wazuh_agents_ssh"* ]]
-  [[ "$output" == *"radar_simulate_scenario=suspicious_login"* ]]
+  [[ "$(stress_args)" == *"--vm-bytes $(( 88 * MIB )) "* ]]
+}
+
+@test "mem mode never holds more than MEM_MAX_BYTES" {
+  configure MODE '"mem"' MEM_MAX_BYTES "${GIB}"
+  run bash "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$(stress_args)" == *"--vm-bytes ${GIB} "* ]]
+}
+
+@test "mem mode already above target allocates nothing and does not start stress-ng" {
+  meminfo $((8 * 1024 * 1024)) $((1024 * 1024))
+  configure MODE '"mem"'
+  run bash "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"nothing allocated"* ]]
+  [ ! -f "${STRESS_LOG}" ]
+}
+
+@test "stress-ng is stopped when the script is terminated" {
+  configure MODE '"cpu"' DURATION_SECONDS 60
+  bash "${SCRIPT}" > "${TMPDIR}/out" 2>&1 &
+  local pid=$!
+  for _ in $(seq 50); do [[ -f "${STRESS_LOG}" ]] && break; sleep 0.1; done
+  pgrep -f "${BIN_DIR}/stress-ng" > /dev/null
+  kill -TERM "${pid}"
+  local rc=0
+  wait "${pid}" || rc=$?
+  [ "$rc" -eq 130 ]
+  grep -q "Interrupted; load released." "${TMPDIR}/out"
+  sleep 0.5
+  ! pgrep -f "${BIN_DIR}/stress-ng" > /dev/null
+}
+
+@test "a failing stress-ng is reported" {
+  configure MODE '"cpu"'
+  FAKE_STRESS_RC=3 run bash "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"stress-ng stopped with exit code 3"* ]]
+}
+
+@test "missing stress-ng gives install instructions" {
+  local minbin="${TMPDIR}/minbin"
+  mkdir -p "${minbin}"
+  for c in bash env date awk dirname uname nproc sleep kill; do
+    ln -s "$(command -v "$c")" "${minbin}/$c"
+  done
+  configure MODE '"cpu"'
+  PATH="${minbin}" run bash "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"stress-ng is not installed"*"apt-get install -y stress-ng"* ]]
+}
+
+@test "inject mode writes decoder-compatible lines until the deadline" {
+  mkdir -p "${TMPDIR}/radar"
+  configure MODE '"inject"' DURATION_SECONDS 3 INJECT_INTERVAL_SECONDS 1 \
+    INJECT_CPU_PCT 99 INJECT_MEM_PCT 88 INJECT_LOG_PATH "\"${TMPDIR}/radar/m.log\""
+  run bash "${SCRIPT}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Injected 4 metric line(s)"* ]]
+  [ "$(wc -l < "${TMPDIR}/radar/m.log")" -eq 4 ]
+  ! grep -vE '^[A-Z][a-z]{2} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [^ ]+ resource_usage_metric: cpu=99\.00 mem=88\.00$' "${TMPDIR}/radar/m.log"
+  [ ! -f "${STRESS_LOG}" ]
+}
+
+@test "inject mode without the collector directory explains enrollment" {
+  configure MODE '"inject"' INJECT_LOG_PATH "\"${TMPDIR}/missing/m.log\""
+  run bash "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"linux_resource_utilization group"* ]]
+}
+
+@test "an invalid mode is rejected" {
+  configure MODE '"gpu"'
+  run bash "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"MODE must be one of cpu, mem, both, inject"* ]]
+}
+
+@test "an out-of-range CPU load is rejected" {
+  configure CPU_LOAD_PCT 150
+  run bash "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"CPU_LOAD_PCT must be a whole number from 1 to 100"* ]]
+}
+
+@test "meminfo without MemAvailable is a clear error" {
+  printf 'MemTotal: 1000 kB\n' > "${MEMINFO}"
+  configure MODE '"mem"'
+  run bash "${SCRIPT}"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"has no MemTotal/MemAvailable"* ]]
 }

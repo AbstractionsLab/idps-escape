@@ -4,32 +4,26 @@ settings:
   parent: SRS
   prefix: TST
   sep: '-'
-
 attributes:
   defaults:
     release: alpha
-    header: |
-      Add a short description here
+    header: 'Add a short description here
+
+      '
     platform: GNU/Linux (Dockerized C5-DEC deployment environment)
-    authors: 'ACR'
-    execution_type: 'Automated/Manual'
+    authors: ACR
+    execution_type: Automated/Manual
     complexity: 1-5
     test_data: see referenced files
-    verification_method: 'Test (T)/Review of design (R)/Inspection (I)/Analysis (A)'
+    verification_method: Test (T)/Review of design (R)/Inspection (I)/Analysis (A)
     references:
-      - path: docs/specs/tst/assets
-        type: file
-    text: |
-      ## Preconditions and setup actions
-      - 
-      
-      ## Test steps
-      1. follow steps in SRS.
-      
-      ## Expected outcome
-      1.  
+    - path: docs/specs/tst/assets
+      type: file
+    text: "## Preconditions and setup actions\n- \n\n## Test steps\n1. follow steps\
+      \ in SRS.\n\n## Expected outcome\n1.  \n"
     expected_outcome: ''
     version: 0.1
+    references_content_fingerprint: {}
   publish:
   - platform
   - execution_type

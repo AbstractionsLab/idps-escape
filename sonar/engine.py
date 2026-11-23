@@ -1,250 +1,240 @@
 """
-Multivariate Anomaly Detection model engine.
+The model engine: a trained detector backend plus the feature contract it was trained under.
+
+A model is a directory ``<models_dir>/<model_name>/``:
+
+- ``metadata.json``: format and SONAR versions, the backend's name and training record,
+  the feature schema version, the FeatureConfig, the categorical vocabulary and the column
+  order (the feature contract), and the number of training buckets;
+- the backend's state files (``mvad_config.json`` and ``mvad_weights.pt``, ``pca_state.json`` or ``ewma_state.json``).
+
+No file is unpickled when a model is loaded. Model files are still inputs to trust: protect
+``models_dir`` as you would the configuration.
 """
 
+import dataclasses
+import json
 import logging
-import pickle
-from typing import Any, Optional, List
+import os
+import shutil
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
-# Defer importing the heavy anomaly_detector until train() runs to avoid import-time
-# side-effects during test collection. Tests can still patch
-# `sonar.engine.MultivariateAnomalyDetector` when needed.
-MultivariateAnomalyDetector = None
 
-from sonar.config import PipelineConfig
+from sonar import __version__ as SONAR_VERSION
+from sonar.backends import DetectorBackend, PointResult, backend_class, new_backend
+from sonar.config import FeatureConfig, PipelineConfig
+from sonar.features import FEATURE_SCHEMA_VERSION, FeatureVocabulary
 
 logger = logging.getLogger(__name__)
 
+MODEL_FORMAT_VERSION = 1
+METADATA_FILE = "metadata.json"
 
-class MVADModelEngine:
-    """Wrapper for MultivariateAnomalyDetector model lifecycle."""
+
+class IncompatibleModelError(ValueError):
+    """Raised when a model file was trained on a feature layout or in a format this SONAR cannot use."""
+
+
+class ModelEngine:
+    """Train, save, load and run a detector backend under a fixed feature contract."""
 
     def __init__(self, cfg: PipelineConfig):
-        """
-        Initialize MVAD engine.
-
-        Args:
-            cfg: PipelineConfig instance.
-        """
         self.cfg = cfg
-        self.model: Optional[MultivariateAnomalyDetector] = None
-        self.training_columns: Optional[List[str]] = None  # Store column names from training
+        self.backend: Optional[DetectorBackend] = None
+        self.training_columns: Optional[List[str]] = None
+        self.metadata: Dict[str, Any] = {}
+        self._training_samples = 0
 
-    # ---------- Training ----------
+    # ---------- training ----------
 
-    def train(self, ts_data: pd.DataFrame) -> None:
+    def train(self, ts_data: pd.DataFrame, vocabulary: Optional[FeatureVocabulary] = None) -> None:
         """
-        Train MultivariateAnomalyDetector on a multivariate time series.
+        Train ``cfg.backend`` on a feature matrix.
 
         Args:
             ts_data: DataFrame with time index and numeric feature columns.
+            vocabulary: Categorical vocabulary the features were built with; stored in the
+                model so detection builds the same columns.
 
         Raises:
-            ValueError: If training data is empty or has insufficient rows.
+            ValueError: If the training data is empty or a backend parameter is invalid.
+            InsufficientTrainingDataError: If the backend could not learn from this many buckets.
         """
         if ts_data.empty:
             raise ValueError("Training data is empty.")
-        
-        # Drop rows with NaN values to ensure valid samples for DataLoader
         ts_data = ts_data.dropna()
-        
         if len(ts_data) == 0:
             raise ValueError("Training data has no valid samples after removing NaN values.")
-        
-        if len(ts_data) < 2:
-            raise ValueError("Training data must have at least 2 samples; got {}.".format(len(ts_data)))
 
-        params = self.cfg.mvad.to_params()
-        sliding_window = params.get("sliding_window", 0)
-        logger.debug("Training data samples=%d, sliding_window=%d", len(ts_data), sliding_window)
+        backend = new_backend(self.cfg)
+        backend.fit(ts_data)
 
-        n_windows = len(ts_data) - sliding_window + 1
-        logger.debug("Computed training windows: %d", n_windows)
-
-        if n_windows <= 0:
-            # If user explicitly set an unreasonable sliding_window, raise.
-            # But if they're using the library default, allow a safe fallback
-            # for small test cases (do not mutate the user's config).
-            from sonar.config import MVADConfig
-
-            default_sw = MVADConfig.__dataclass_fields__["sliding_window"].default
-            if sliding_window == default_sw:
-                effective_sw = max(1, len(ts_data) - 1)
-                logger.warning(
-                    "Configured sliding_window (%d) is too large for samples=%d; "
-                    "using effective_sliding_window=%d for this fit (no config change).",
-                    sliding_window,
-                    len(ts_data),
-                    effective_sw,
-                )
-                params["sliding_window"] = effective_sw
-            else:
-                logger.error(
-                    "Sliding window (%d) is too large for training data (samples=%d).",
-                    sliding_window,
-                    len(ts_data),
-                )
-                raise ValueError(
-                    f"Sliding window ({sliding_window}) is too large for training data "
-                    f"(samples={len(ts_data)}); need at least sliding_window+1 time points."
-                )
-
-        # Ensure the model class is imported (lazy import to keep tests fast)
-        if MultivariateAnomalyDetector is None:
-            from anomaly_detector import MultivariateAnomalyDetector as _MAD  # type: ignore
-            MAD = _MAD
-        else:
-            MAD = MultivariateAnomalyDetector
-
-        model = MAD()
-        # The library expects a DataFrame with rows = time points, cols = variables.
-        logger.info("Fitting MVAD model on %d windows", n_windows)
-        model.fit(ts_data, params=params)
-
-        self.model = model
-        
-        # Store training column names for alignment during prediction
+        self.backend = backend
         self.training_columns = ts_data.columns.tolist()
-        logger.info("Stored %d training columns for prediction alignment", len(self.training_columns))
-        
-        # Store training sample count for metadata
         self._training_samples = len(ts_data)
-        logger.debug("Stored training sample count: %d", self._training_samples)
+        self.metadata = {
+            "format_version": MODEL_FORMAT_VERSION,
+            "sonar_version": SONAR_VERSION,
+            "backend": backend.name,
+            "feature_schema_version": FEATURE_SCHEMA_VERSION,
+            "feature_config": dataclasses.asdict(self.cfg.features),
+            "vocabulary": (vocabulary or FeatureVocabulary()).to_dict(),
+            "columns": list(self.training_columns),
+            "training_samples": self._training_samples,
+            **backend.metadata,
+        }
+        logger.info("Trained the %s backend on %d buckets x %d columns", backend.name, len(ts_data), len(self.training_columns))
+
+    # ---------- model directory ----------
 
     def save(self) -> None:
         """
-        Save trained model to disk.
+        Write the model directory, replacing an existing one only once the new one is complete.
 
         Raises:
             RuntimeError: If no model has been trained.
         """
-        if self.model is None:
+        if self.backend is None:
             raise RuntimeError("No model to save; train first.")
-        
-        # Save both model and training columns
-        with open(self.cfg.model_path, "wb") as f:
-            pickle.dump({
-                "model": self.model,
-                "training_columns": self.training_columns,
-                "training_samples": getattr(self, '_training_samples', 0),
-            }, f)
-        
-        logger.info("Model, training columns, and metadata saved to %s", self.cfg.model_path)
+        target = Path(self.cfg.model_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(dir=target.parent, prefix=f".{target.name}."))
+        try:
+            (staging / METADATA_FILE).write_text(json.dumps(self.metadata, indent=2, default=_json_default), encoding="utf-8")
+            self.backend.save_state(staging)
+            if target.exists():
+                previous = target.with_name(f".{target.name}.previous")
+                shutil.rmtree(previous, ignore_errors=True)
+                os.replace(target, previous)
+                os.replace(staging, target)
+                shutil.rmtree(previous, ignore_errors=True)
+            else:
+                os.replace(staging, target)
+        except BaseException:
+            shutil.rmtree(staging, ignore_errors=True)
+            raise
+        logger.info("Model saved to %s", target)
 
     def load(self) -> None:
         """
-        Load model from disk.
+        Load the model directory.
 
         Raises:
-            FileNotFoundError: If model file does not exist.
+            FileNotFoundError: If there is no model at ``cfg.model_path``.
+            IncompatibleModelError: For a model in an older format or feature schema.
         """
-        with open(self.cfg.model_path, "rb") as f:
-            data = pickle.load(f)
-        
-        # Handle both old (model only) and new (model + columns + metadata) format
-        if isinstance(data, dict):
-            self.model = data["model"]
-            self.training_columns = data.get("training_columns")
-            self._training_samples = data.get("training_samples", 0)
-            logger.info("Model loaded with %d training columns and %d training samples", 
-                       len(self.training_columns) if self.training_columns else 0,
-                       self._training_samples)
-        else:
-            # Old format: just the model
-            self.model = data
-            self.training_columns = None
-            self._training_samples = 0
-            logger.warning("Loaded model without training columns; column alignment disabled")
-        
-        logger.info("Model loaded from %s", self.cfg.model_path)
+        directory = Path(self.cfg.model_path)
+        legacy = directory if directory.suffix == ".pkl" else directory.with_name(f"{directory.name}.pkl")
+        if not (directory / METADATA_FILE).is_file():
+            if legacy.is_file():
+                target = directory.with_name(directory.name[: -len(".pkl")]) if directory.suffix == ".pkl" else directory
+                raise IncompatibleModelError(f"{legacy} is a model in the old pickle format, which SONAR {SONAR_VERSION} no longer loads (unpickling can run code). Retrain the model; it will be saved as {target}/.")
+            raise FileNotFoundError(f"No model at {directory}")
 
-    # ---------- Inference ----------
+        metadata = json.loads((directory / METADATA_FILE).read_text(encoding="utf-8"))
+        schema = metadata.get("feature_schema_version")
+        if schema != FEATURE_SCHEMA_VERSION:
+            raise IncompatibleModelError(f"Model {directory} was built with feature schema {schema or 'unknown'}, but this SONAR builds schema {FEATURE_SCHEMA_VERSION} features. Retrain the model with SONAR {SONAR_VERSION} or later.")
+        if metadata.get("format_version") != MODEL_FORMAT_VERSION:
+            raise IncompatibleModelError(f"Model {directory} has format version {metadata.get('format_version')}; this SONAR reads version {MODEL_FORMAT_VERSION}. Retrain the model.")
 
-    def predict(self, ts_data: pd.DataFrame) -> Any:
+        self.backend = backend_class(metadata.get("backend", "mvad")).from_state(directory, metadata)
+        self.metadata = metadata
+        self.training_columns = metadata.get("columns")
+        self._training_samples = int(metadata.get("training_samples", 0))
+        if self.backend.name == "mvad" and metadata.get("gradient_steps", 0) < 1:
+            logger.warning("Model %s records 0 gradient steps: it is untrained. Retrain it.", directory)
+        logger.info("Loaded %s model %s (%d columns, %d training buckets)", self.backend.name, directory, len(self.training_columns or []), self._training_samples)
+
+    # ---------- feature contract ----------
+
+    @property
+    def feature_config(self) -> Optional[FeatureConfig]:
+        """FeatureConfig the model was trained with, or None if not recorded."""
+        stored = self.metadata.get("feature_config")
+        if not isinstance(stored, dict):
+            return None
+        known = set(FeatureConfig.__dataclass_fields__)
+        return FeatureConfig(**{k: v for k, v in stored.items() if k in known})
+
+    @property
+    def vocabulary(self) -> FeatureVocabulary:
+        """Categorical vocabulary the model was trained with."""
+        return FeatureVocabulary.from_dict(self.metadata.get("vocabulary"))
+
+    # ---------- window ----------
+
+    def _backend(self) -> DetectorBackend:
+        return self.backend if self.backend is not None else new_backend(self.cfg)
+
+    @property
+    def backend_name(self) -> str:
+        return self._backend().name
+
+    @property
+    def sliding_window(self) -> int:
+        """MVAD's sliding window (0 for backends without one)."""
+        return int(getattr(self._backend(), "sliding_window", 0) or 0)
+
+    @property
+    def window(self) -> tuple:
+        """MVAD's ``(input_size, threshold_window)``."""
+        return self._backend().window
+
+    @property
+    def min_detection_points(self) -> int:
+        """Fewest buckets the backend accepts at prediction time."""
+        return int(self._backend().min_points)
+
+    @property
+    def context_buckets(self) -> int:
+        """Buckets needed before the first bucket that gets a verdict."""
+        return self.min_detection_points - 1
+
+    # ---------- inference ----------
+
+    def predict(self, ts_data: pd.DataFrame) -> List[PointResult]:
         """
-        Run anomaly detection on new multivariate time series.
-
-        Args:
-            ts_data: DataFrame with time index and numeric feature columns.
-
-        Returns:
-            Raw prediction result from MultivariateAnomalyDetector.
+        Verdicts for ``ts_data``, from bucket ``context_buckets`` on.
 
         Raises:
-            RuntimeError: If model has not been trained or loaded.
-            ValueError: If prediction data is invalid or incompatible.
+            RuntimeError: If no model has been trained or loaded.
+            ValueError: If the data is empty, not numeric, or not the model's columns.
         """
-        if self.model is None:
+        if self.backend is None:
             raise RuntimeError("Model not loaded; call load() or train().")
-
         if ts_data.empty:
             raise ValueError("Cannot predict on empty data.")
-
-        # Ensure all columns are numeric
-        ts_clean = ts_data.copy()
-        
-        # Convert all columns to float, dropping non-numeric columns
-        numeric_cols = ts_clean.select_dtypes(include=['number']).columns.tolist()
+        numeric_cols = ts_data.select_dtypes(include=["number"]).columns.tolist()
         if not numeric_cols:
             raise ValueError("No numeric columns found in prediction data.")
-        
-        ts_clean = ts_clean[numeric_cols].astype(float)
-        
-        # Align columns to match training data
-        if self.training_columns is not None:
-            logger.debug("Aligning %d prediction columns to %d training columns", 
-                        len(ts_clean.columns), len(self.training_columns))
-            
-            # Add missing columns (fill with 0)
-            for col in self.training_columns:
-                if col not in ts_clean.columns:
-                    logger.debug("Adding missing column: %s", col)
-                    ts_clean[col] = 0.0
-            
-            # Remove extra columns  
-            extra_cols = [c for c in ts_clean.columns if c not in self.training_columns]
-            if extra_cols:
-                logger.debug("Removing %d extra columns: %s", len(extra_cols), extra_cols[:5])
-                ts_clean = ts_clean.drop(columns=extra_cols)
-            
-            # Reorder columns to match training
-            ts_clean = ts_clean[self.training_columns]
-        
-        # Fill any remaining NaN/inf values
-        ts_clean = ts_clean.fillna(0.0)
-        ts_clean = ts_clean.replace([float('inf'), float('-inf')], 0.0)
-        
-        logger.debug(
-            "Prediction data: shape=%s, columns=%s, non-null=%d",
-            ts_clean.shape,
-            ts_clean.columns.tolist(),
-            ts_clean.count().sum()
-        )
+        ts_clean = ts_data[numeric_cols].astype(float)
 
-        # Try passing a context dict (newer versions require it) but fall back
-        # to the older signature if the model doesn't accept the kwarg.
-        try:
-            results = self.model.predict(data=ts_clean, context={"pipeline_config": self.cfg})
-        except TypeError as e:
-            logger.debug("Model.predict did not accept 'context' kwarg: %s. Falling back.", e)
-            try:
-                results = self.model.predict(data=ts_clean)
-            except Exception as predict_err:
-                logger.error(
-                    "Model prediction failed. Data shape: %s, columns: %s. Error: %s",
-                    ts_clean.shape,
-                    ts_clean.columns.tolist(),
-                    predict_err
-                )
-                raise
-        except Exception as e:
-            logger.error(
-                "Model prediction failed. Data shape: %s, columns: %s. Error: %s",
-                ts_clean.shape,
-                ts_clean.columns.tolist(),
-                e
-            )
-            raise
-        
-        return results
+        # The feature contract (stored config and vocabulary) makes the detection columns
+        # identical to the training columns. A difference is a bug: refuse rather than
+        # zero-fill or drop columns, which used to hide exactly the columns that changed.
+        if self.training_columns is not None:
+            missing = [c for c in self.training_columns if c not in ts_clean.columns]
+            extra = [c for c in ts_clean.columns if c not in self.training_columns]
+            if missing or extra:
+                raise ValueError(f"Detection features do not match the model's training columns (missing: {missing[:10]}, extra: {extra[:10]}). Build detection features with the model's feature config and vocabulary.")
+            ts_clean = ts_clean[self.training_columns]
+
+        ts_clean = ts_clean.fillna(0.0).replace([float("inf"), float("-inf")], 0.0)
+        logger.debug("Prediction data: shape=%s, columns=%s", ts_clean.shape, ts_clean.columns.tolist())
+        return self.backend.predict(ts_clean)
+
+
+# The engine predates the backends, when MVAD was the only detector.
+MVADModelEngine = ModelEngine
+
+
+def _json_default(value: Any) -> Any:
+    if hasattr(value, "item"):
+        return value.item()
+    if hasattr(value, "tolist"):
+        return value.tolist()
+    return str(value)

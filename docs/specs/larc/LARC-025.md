@@ -3,175 +3,82 @@ active: true
 derived: false
 level: 2.9
 links:
-- HARC-014: RXkcsJfH9zSPUQ5b1GZ_tcRQ7PRGe6A6TxCOFXi3UJk=
-- SRS-051: L_FEEgh5sx0eJ_B6mZtm3kp_90KxFJLwar48ZeSHzbk=
-- SRS-055: ysWB5SJEBNrXmKQYG-xHmAiWmgdyjAcTkOqrg1qRW4g=
+- SRS-068: -z4KtFVs6E8dQfxlWTv0m-w72QVcvMmgc6jTvbLt-zQ=
 normative: true
 ref: ''
 release: Alpha
-reviewed: I_Tm3sJlvpRqkfy9UVhQG7vQLKppf0wWc7c9xO-uhyk=
+reviewed: fgrNDgr3tSiG80BrYrhOM5ZSAN_gdGrKHobBd3ZXYEA=
 version: '0.1'
 ---
 
-# RADAR helper enrichment pipeline
+# RADAR manager-side enrichment pipeline
 
-The diagram below depicts the real-time log enrichment pipeline implemented by the RADAR Helper service running on Wazuh agents.
+This item describes the log enrichment pipeline that runs on the Wazuh manager for the `suspicious_login` and `geoip_detection` scenarios (HARC-014). It replaced the per-endpoint RADAR helper daemon, removed in v2.0.0.
 
 ## Pipeline overview
 
-The RADAR Helper is a multi-threaded Python daemon that monitors authentication logs, enriches them with geographic and behavioral context, and writes enhanced logs for Wazuh to ingest. This enrichment enables signature-based detection of geographic anomalies and impossible travel scenarios.
+Endpoints forward their raw authentication and web-access logs. The manager classifies each line with Wazuh's stock decoders and rules; an alert in a relevant group triggers an enrichment integration, which appends geographic and behavioural context to the original line and writes it to a file the manager monitors. The enriched line is decoded a second time, and the scenario rules match on the added `radar_*` fields.
 
-## Pipeline stages
+| Path | Trigger (rule groups) | Integration | Output file |
+|---|---|---|---|
+| Authentication | `authentication_success`, `authentication_failed` | `custom-radar-enrich` | `/var/ossec/logs/radar/enriched_auth.log` |
+| Web access (`geoip_detection` only) | `accesslog` | `custom-radar-web-enrich` | `/var/ossec/logs/radar/enriched_web_access.log` |
 
-### 1. Log monitoring
-**AuthLogWatcher** continuously monitors `/var/log/auth.log`:
+Both integrations and their `<localfile>` entries are declared in the manager snippets `radar/scenarios/ossec/radar-shared-auth-log-ossec-snippet.xml` and `radar/scenarios/ossec/radar-geoip-detection-ossec-snippet.xml`, and installed by `radar/radar_deploy/manager-apply-scenario.sh`.
 
-- Implements tail-like following with rotation handling
-- Detects SSH authentication events (success and failure)
-- Extracts: username, source IP, timestamp (parsed from the log line via `parse_event_ts()`), outcome
+## Pipeline stages (authentication path)
 
-> **Note**: The timestamp used for all subsequent behavioral calculations is parsed directly from the log line header, not taken from time at processing. This ensures accurate velocity estimates for replayed or delayed log streams.
+### 1. Trigger and loop guard
 
-### 2. Geographic enrichment
-**GeoLookup Service** queries MaxMind GeoLite2 databases:
+`integratord` passes the alert to `custom-radar-enrich`. If the alert's `full_log` already carries a RADAR tail, the line is an enriched line on its second pass, and the integration exits without output.
 
-- City database: `/usr/share/GeoIP/GeoLite2-City.mmdb`
-- ASN database: `/usr/share/GeoIP/GeoLite2-ASN.mmdb`
+### 2. Parsing
 
-Extracted fields:
+The integration parses the event timestamp, user, source IP and outcome (`success` or `failure`) from the original `sshd` log line itself, not from Wazuh's decoded fields, which the scenario decoders fill only once a tail exists. Accepted and failed logins, including invalid users, are recognised; any other line produces no output. The timestamp is the log line's own (syslog or ISO 8601), so velocity is computed on event time, not processing time.
 
-- `country`: ISO 3166-1 alpha-2 country code
-- `region`: State/province name
-- `city`: City name
-- `asn`: Autonomous System Number
-- `asn_placeholder_flag`: True if ASN lookup failed
-- Geographic coordinates: latitude, longitude (for velocity calculation)
+### 3. Geographic lookup
 
-### 3. User state management
-**UserState** maintains per-user historical data:
+`geoip.py` looks up the source address in the MaxMind GeoLite2 City and ASN databases (`/var/ossec/etc/radar/`): ISO country code, first subdivision, city, latitude, longitude and ASN. A missing ASN sets `asn_placeholder_flag` to `true`.
 
-- Last login location (latitude, longitude)
-- Last login timestamp (epoch seconds, sourced from the parsed event timestamp)
-- ASN history (90-day sliding window)
+### 4. User state
 
-State enables temporal and behavioral analysis:
+`state_store.py` loads the user's state from the SQLite database `/var/ossec/etc/radar/user_state.sqlite3`, keyed by user name and shared by all endpoints: last event time, last position, last country, and the ASN history of the last 90 days.
 
-- Velocity between consecutive logins
-- ASN novelty detection
-- Country change tracking
+### 5. Behavioural indicators
 
-### 4. Behavioral calculations
+- **Geo-velocity**: great-circle (haversine) distance between the previous and current positions divided by the time between the two events: $v = d_{km} / \max(|\Delta t_h|, 10^{-9})$. It is 0 for the user's first located event. Velocity is not capped.
+- **Country change**: 1 when the user's previous known country differs from the current one, else 0.
+- **ASN novelty**: 1 when the ASN is not in the user's ASN history, else 0. History entries older than 90 days (relative to the event time) are dropped before the check.
 
-**Geographic velocity**:
+The updated state is written back before the tail is emitted.
+
+### 6. Enriched line
+
+The original line is appended with a tail and written to `enriched_auth.log`, for example:
+
 ```
-Algorithm: Calculate velocity between consecutive logins
-  Input: previous_location (lat, lon, event_timestamp),
-         current_location  (lat, lon, event_timestamp)
-
-  distance_km ← haversine_distance(prev_lat, prev_lon, curr_lat, curr_lon)
-  dt_h        ← abs(curr_event_ts - prev_event_ts) / 3600
-  if abs(dt_h) < DT_EPS_H (1e-9):
-      dt_h ← DT_EPS_H          // guard against near-simultaneous events
-  velocity_kmh ← distance_km / dt_h
-
-  Output: velocity_kmh
+Nov 23 10:15:02 web01 sshd[4242]: Accepted password for alice from 203.0.113.42 port 52111 ssh2 RADAR outcome='success' asn='64500' asn_placeholder_flag='false' country='US' region='California' city='San Francisco' geo_velocity_kmh='450.230' country_change_i='1' asn_novelty_i='0'
 ```
 
-> **Note**: Velocity is no longer capped at a fixed maximum. The previous 2000 km/h ceiling has been removed. The `DT_EPS_H` guard (1×10⁻⁹ hours) prevents division by zero for events with identical or near-identical timestamps without distorting physically plausible velocities.
+### 7. Second pass
 
-**Country change indicator**:
-```
-Algorithm: Detect country transition
-  country_change_i ← (curr_country ≠ prev_country) ? 1 : 0
-```
+The manager reads the file as syslog. The `-with-radar` decoders in `radar/scenarios/decoders/suspicious_login/0310-ssh.xml` (shipped identically for `geoip_detection`) extract the `radar_*` fields, and the rules evaluate them: for example impossible travel (velocity of at least 900 km/h with a country change) in `suspicious_login`, and a country outside the `whitelist_countries` CDB list in `geoip_detection`.
 
-**ASN novelty indicator**:
-```
-Algorithm: Check if ASN is novel within retention window
-  asn_novelty_i ← (curr_asn ∉ user_asn_history[−90d]) ? 1 : 0
-```
+## Web-access path
 
-### 5. Enriched log writing
-Formatted log line written to `/var/log/suspicious_login.log`:
-```
-timestamp hostname sshd[PID]: radar_outcome="success" radar_user="alice"
-  radar_src_ip="203.0.113.42" radar_country="US" radar_region="California"
-  radar_city="San Francisco" radar_asn="15169" radar_asn_placeholder_flag="false"
-  radar_geo_velocity_kmh="450.23" radar_country_change_i="1"
-  radar_asn_novelty_i="0"
-```
+`custom-radar-web-enrich` handles access-log lines (Apache or Nginx, plain or relayed through rsyslog). It extracts the client address, skips loopback and RFC 1918 addresses, and appends `RADAR country="…" region="…" city="…" lat="…" lon="…"`. It keeps no state and computes no velocity or novelty. The `geoip_detection` web decoders in `0375-web-accesslog.xml` read the tail.
 
-### 6. Wazuh ingestion
-Wazuh agent monitors `/var/log/suspicious_login.log`:
+## Failure handling
 
-- Custom decoders extract radar_* fields
-- Rules evaluate conditions (velocity > 900 km/h, country not in whitelist)
-- Active responses trigger on rule matches
-
-## Algorithms
-
-**Haversine distance** (great-circle distance):
-```
-Algorithm: Calculate great-circle distance between two geographic points
-  Input: lat1, lon1, lat2, lon2 (in degrees)
-
-  R    ← 6371.0088  // Earth mean radius in km
-  Δlat ← radians(lat2 - lat1)
-  Δlon ← radians(lon2 - lon1)
-
-  a ← sin²(Δlat/2) + cos(radians(lat1)) × cos(radians(lat2)) × sin²(Δlon/2)
-  c ← 2 × atan2(√a, √(1-a))
-  distance ← R × c
-
-  Output: distance (in kilometers)
-```
-
-**ASN history maintenance**:
-```
-Algorithm: Maintain time-windowed ASN history for user
-  Input: user_state, retention_window_sec (default: 90 × 24 × 3600 = 7,776,000 s)
-
-  cutoff_timestamp ← current_event_ts - retention_window_sec
-
-  for each (asn, timestamp) in user_state.asn_history:
-    if timestamp < cutoff_timestamp:
-      remove (asn, timestamp) from user_state.asn_history
-      if asn not referenced by any remaining entry:
-        remove asn from user_state.asn_set
-
-  Output: updated user_state with pruned history and set
-```
-
-**Timestamp parsing** (`parse_event_ts`):
-```
-Algorithm: Parse log line timestamp to Unix epoch float
-  Input: ts_str (string)
-
-  if ts_str matches ISO 8601 pattern (contains "T" and timezone offset):
-    return datetime.fromisoformat(ts_str).timestamp()
-
-  if ts_str matches syslog pattern (e.g., "Jan 15 10:30:00"):
-    reconstruct datetime using current year and local timezone
-    return datetime(...).timestamp()
-
-  fallback:
-    return time.time()
-
-  Output: float (Unix epoch seconds)
-```
-
-## Multi-threading design
-
-- **Main thread**: Creates a `RadarLogger` singleton (`RADAR_LOG`) at startup, instantiates `AuthLogWatcher` with it, and manages the watcher lifecycle
-- **RadarLogger**: Encapsulates all logger setup; provides a shared debug logger and a factory method (`build_out_logger`) for per-watcher output loggers
-- **Watcher threads**: One per log file; `AuthLogWatcher` is active in production; `AuditLogWatcher` is defined as a stub for future use
-- **Graceful shutdown**: Stop event signaling and thread join with 5-second timeout on exit
+Any failure to read the alert, open a GeoIP database, update the state or write the output is appended to `/var/ossec/logs/radar/enrichment_errors.log`; the integration then exits without output. The first-pass alert is unaffected, so a broken enrichment never hides the original event. `radar/radar_deploy/manager-health.sh` reports missing integration files, databases, an unwritable state database and recent error-log entries (SRS-068).
 
 ## Implementation reference
 
-See [radar/radar-helper/radar-helper.py](../../../radar/radar-helper/radar-helper.py) for complete implementation.
+`radar/manager-enrichment/` (`custom-radar-enrich`, `custom-radar-web-enrich`, `enrichment.py`, `web_enrichment.py`, `geoip.py`, `state_store.py`); design in SWD-030.
 
 ## See also
 
-- `/docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md` for usage in GeoIP scenario
-- `/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md` for usage in suspicious login scenario
+- `docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md`
+- `docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md`
+
+Related: HARC-014.

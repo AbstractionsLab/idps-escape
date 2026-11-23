@@ -40,14 +40,18 @@ active responses, agent configuration, and risk settings.
 
 | Scenario | Type | Detects | Needs |
 |----------|------|---------|-------|
-| [Suspicious login](./radar-scenarios/suspicious_login_explained.md) | Hybrid | Failed-login bursts, impossible travel, ASN novelty, per-user behavioural outliers | MaxMind key |
+| [Suspicious login](./radar-scenarios/suspicious_login_explained.md) | Hybrid | Failed-login bursts, impossible travel, ASN novelty, off-hours activity against declared working hours (rule monitor or per-user anomaly detector), combined per user over time | MaxMind key |
 | [GeoIP detection](./radar-scenarios/geoip_detection_explained.md) | Signature | SSH logins and web requests from non-approved countries | MaxMind key, country whitelist |
 | [Log volume growth](./radar-scenarios/log_volume_explained.md) | Anomaly (ML) | Unusual spikes in log generation, per endpoint | Agent bootstrapped with the `log_volume` group |
 | [Web scanning](./radar-scenarios/scanning_detection_explained.md) | Signature | Scanner tool signatures, failed-request bursts, HTTP method abuse | Suricata shipping `eve.json` |
+| [Linux resource utilization](./radar-scenarios/linux_resource_utilization_explained.md) | Anomaly (ML) | Anomalous CPU/memory utilization, per endpoint | Agent bootstrapped with the `linux_resource_utilization` group |
 
-Alongside these, a **default (baseline)** scenario is always active. It carries
-fleet-wide PowerShell and command-shell detection, and every other scenario
-inherits its risk settings as defaults.
+Alongside these, a **default (baseline)** scenario is always active. It is a
+scenario of its own: it scores the alerts matched by its own rule IDs and rule
+groups, which cover fleet-wide PowerShell and command-shell detection and
+alerts no dedicated scenario covers. Other scenarios do not inherit its risk
+settings: a value missing from a scenario's block in `ar.yaml` falls back to
+`radar_ar.py`'s built-in defaults.
 
 `suspicious_login` and `geoip_detection` are **shared scenarios**: they use a
 common `radar_shared` agent group for `auth.log` shipping and manager-side
@@ -64,7 +68,7 @@ enrichment, so running both costs nothing extra on the endpoint.
 | **Deployed** | Its artifacts are currently applied to the manager |
 | **Shared scenario** | Uses the common `radar_shared` agent group |
 | **Tier (T0–T3)** | The response band a risk score falls into |
-| **Mitigation** | An executable action: `firewall-drop`, `lock_user_linux`, `terminate_service` |
+| **Mitigation** | An executable action: `firewall-drop`, or a script listed in `radar/radar-agent/ar-scripts.yaml` (`lock_user_linux.sh`, `terminate_service.sh`) |
 | **Connector** | An external service RADAR talks to: OpenSearch, Wazuh API, Dashboards, SMTP, DECIPHER, MaxMind, the webhook |
 | **Enrollment window** | The time-limited period during which port 1515 accepts new agent enrollments |
 

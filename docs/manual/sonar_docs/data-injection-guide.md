@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `inject_wazuh_data.py` tool solves a critical problem for SONAR testing and development: **fresh Wazuh installations don't have enough historical data** for the MVAD model (requires 200+ time points).
+The `inject_wazuh_data.py` tool solves a critical problem for SONAR testing and development: **fresh Wazuh installations don't have enough historical data** to train the MVAD model (with the default settings, about 1000 five-minute buckets between the first alert and the end of the training window, empty buckets included; the training error states the number for your settings).
 
 Instead of waiting 24+ hours for real alerts to accumulate, inject synthetic data and start testing immediately.
 
@@ -17,10 +17,10 @@ cd /home/alab/soar/sonar/test_data
 # 1. Preview what would be injected (safe, no changes)
 poetry run python inject_wazuh_data.py --hours 24 --dry-run
 
-# 2. Inject 24 hours of normal baseline
-poetry run python inject_wazuh_data.py --hours 24
+# 2. Inject 7 days of normal baseline (training needs about 3.5 days of 5-minute buckets)
+poetry run python inject_wazuh_data.py --days 7 --source generated_scenarios/normal_training.json
 
-# 3. Train SONAR (from project root)
+# 3. Train SONAR (from project root); the model is sonar/models/brute_force_detection/
 cd /home/alab/soar
 poetry run sonar train --scenario sonar/scenarios/brute_force_detection.yaml
 
@@ -28,10 +28,18 @@ poetry run sonar train --scenario sonar/scenarios/brute_force_detection.yaml
 cd sonar/test_data
 poetry run python inject_wazuh_data.py --hours 48 --source generated_scenarios/attack_scenarios.json
 
-# 5. Run detection (from project root)
+# 5. Run detection (from project root). The scenario's lookback_minutes (1440) applies;
+#    --lookback-minutes 2880 widens it to the full 48 injected hours
 cd /home/alab/soar
-poetry run sonar detect --scenario sonar/scenarios/brute_force_detection.yaml
+poetry run sonar detect --scenario sonar/scenarios/brute_force_detection.yaml --lookback-minutes 2880
 ```
+
+Notes on this walkthrough:
+
+- **`train` and `detect` use the same model.** `brute_force_detection.yaml` has no `model_name`, so both commands use its `name` in lower case, `brute_force_detection`: the directory `sonar/models/brute_force_detection/`. Training again replaces it; see the [model guide](./model-naming-guide.md) to keep versions.
+- **Lookback comes from the scenario** (`lookback_hours: 168`, `lookback_minutes: 1440`) unless you pass `--lookback-hours` or `--lookback-minutes`.
+- **`lookback_minutes` is the window to score.** Detection also fetches the 199 buckets (about 16.6 hours at 5-minute buckets, for `sliding_window: 200`) of context the model needs before that window. Buckets without alerts count as silence, so inject history that covers the context too, or the window is scored against an empty context. With no alerts at all in the fetched range, `detect` exits with status 2 without scoring.
+- Alternatively, run training and detection in one `sonar scenario --use-case` run, which applies the same scenario settings.
 
 ## Use cases
 
@@ -44,28 +52,6 @@ Solution:
 # Inject 14 days of baseline for comprehensive training
 poetry run python inject_wazuh_data.py --days 14 --source generated_scenarios/normal_training.json
 ```
-
-### Use case 1b: Export from existing Wazuh and inject
-
-Problem: Have production Wazuh data, want to replicate in test environment
-
-Solution:
-```bash
-# Step 1: Export from production Wazuh using Dev Tools or curl
-curl -k -u admin:admin "https://prod-wazuh:9200/wazuh-alerts-*/_search" \
-  -H "Content-Type: application/json" \
-  -d '{"query": {"range": {"@timestamp": {"gte": "now-7d"}}}, "size": 10000}' \
-  > exported_alerts.json
-
-# Step 2: Inject to test environment (OpenSearch format auto-detected)
-poetry run python inject_wazuh_data.py --days 7 --source exported_alerts.json
-
-# Step 3: Use for training (also supports OpenSearch format)
-cd /home/alab/soar/sonar
-poetry run sonar train --debug  # If using local file in debug mode
-```
-
-**Note**: The inject tool automatically detects OpenSearch API response format `{hits: {hits: [{_source: {...}}]}}` and extracts alert documents.
 
 **Path context**: When running from `sonar/test_data/`, paths like `generated_scenarios/attack_scenarios.json` are relative to that directory.
 
@@ -110,6 +96,21 @@ poetry run python inject_wazuh_data.py \
   --source generated_scenarios/normal_training.json
 ```
 
+### Use case 5: Replay labelled evaluation splits
+
+Problem: Need labelled data in a lab indexer, for example to score another detector with `sonar evaluate`
+
+Solution:
+```bash
+# Write labelled splits (training, validation and test files plus *_labels.json)
+poetry run python generate_attack_data.py --evaluation --output-dir /tmp/eval/auth
+
+# Index a split at its own timestamps, so its label file stays valid
+poetry run python inject_wazuh_data.py --source /tmp/eval/auth/test.json --keep-timestamps
+```
+
+`--keep-timestamps` leaves every alert's `timestamp` unchanged; the splits are dated in the past, so the alerts land in the daily indices of those dates. See [Evaluating detection quality](./evaluation-guide.md#comparing-with-another-detector).
+
 ## Command reference
 
 ### Basic options
@@ -117,7 +118,7 @@ poetry run python inject_wazuh_data.py \
 | Option | Description | Example |
 |--------|-------------|---------|
 | `--config` | Path to config YAML | `--config ../default_config.yaml` |
-| `--source` | JSON file with alerts | `--source generated_scenarios/attack_scenarios.json` |
+| `--source` | JSON file holding a plain array of alert documents (an OpenSearch `_search` response is not accepted) | `--source generated_scenarios/attack_scenarios.json` |
 | `--dry-run` | Preview without indexing | `--dry-run` |
 | `--verbose` | Detailed logging | `--verbose` |
 
@@ -128,6 +129,9 @@ poetry run python inject_wazuh_data.py \
 | `--hours N` | Last N hours | `--hours 24` |
 | `--days N` | Last N days | `--days 14` |
 | `--range START END` | Custom range | `--range "2025-12-29 00:00:00" "2025-12-30 23:59:59"` |
+| `--keep-timestamps` | Keep the alerts' own timestamps (labelled evaluation splits) | `--keep-timestamps` |
+
+Without any of them, the alerts are spread over the last 24 hours.
 
 ### Connection options
 
@@ -137,7 +141,7 @@ poetry run python inject_wazuh_data.py \
 | `--port` | Wazuh Indexer port | From config or `9200` |
 | `--username` | Auth username | From config or `admin` |
 | `--password` | Auth password | From config or `admin` |
-| `--no-verify-ssl` | Disable SSL verification | SSL enabled by default |
+| `--no-verify-ssl` | Disable SSL verification | From config (`wazuh.verify_ssl`, `false` in `default_config.yaml`), or enabled without a config |
 | `--bulk-size` | Docs per bulk request | `1000` |
 
 ## Available data sources
@@ -148,8 +152,8 @@ All paths relative to `sonar/test_data/`:
 |------|--------|-----------|----------|
 | `generated_scenarios/normal_training.json` | ~12,000 | 14 days | Training baseline with realistic patterns |
 | `generated_scenarios/attack_scenarios.json` | ~2,000 | 2 days | Detection testing with known attacks |
-| `synthetic_alerts/normal_baseline.json` | ~12,000 | 30 days | Legacy simple training data |
-| `synthetic_alerts/with_anomalies.json` | ~6,000 | 30 days | Legacy detection test data |
+| `synthetic_alerts/normal_baseline.json` | ~12,000 | 1 year | Legacy simple training data |
+| `synthetic_alerts/with_anomalies.json` | ~6,000 | 6 months | Legacy detection test data |
 
 ### Attack patterns in attack_scenarios.json
 
@@ -161,7 +165,7 @@ All paths relative to `sonar/test_data/`:
 ## How it works
 
 1. **Loads** synthetic alerts from JSON file
-2. **Adjusts** timestamps to fit target time range while maintaining temporal distribution
+2. **Adjusts** timestamps to fit target time range while maintaining temporal distribution (skipped with `--keep-timestamps`)
 3. **Validates** connection to Wazuh Indexer (OpenSearch API)
 4. **Groups** alerts by daily indices (e.g., `wazuh-alerts-4.x-2025.12.30`)
 5. **Indexes** using bulk API for performance (1000 docs/request by default)
@@ -192,31 +196,32 @@ poetry run python inject_wazuh_data.py --hours 24 --no-verify-ssl
 curl -k -u admin:admin "https://localhost:9200/wazuh-alerts-*/_count"
 
 # Verify time range matches scenario requirements
-# For 200+ time points with 5-minute buckets:
-poetry run python inject_wazuh_data.py --days 1  # 288 time points
+# Training with the shipped 5-minute scenarios needs days of buckets:
+poetry run python inject_wazuh_data.py --days 7  # 2016 time points
 ```
 
 ### Wrong index pattern
 
-```bash
-# Override index pattern in config
-# Edit default_config.yaml:
+The injector always writes to `wazuh-alerts-4.x-YYYY.MM.DD`; `wazuh.alerts_index_pattern` does not change that. The setting is where SONAR searches, so it must match the injected indices:
+
+```yaml
+# default_config.yaml (or your own config)
 wazuh:
   base_url: "https://localhost:9200"
-  alerts_index_pattern: "wazuh-alerts-*"  # Must match your Wazuh version
+  alerts_index_pattern: "wazuh-alerts-*"  # matches wazuh-alerts-4.x-*
 ```
 
 ## Best practices
 
 ### 1. Match scenario requirements
 
-For SONAR scenarios with 5-minute buckets:
-- **Minimum**: 1000 minutes (16.7 hours) = 200 time points
-- **Recommended**: 24+ hours for robust training
+For SONAR scenarios with 5-minute buckets and `sliding_window: 200`:
+- **Training**: enough buckets between the first alert and the end of the training window (empty ones count) for MVAD to perform training updates; the error message states how many (about 3.5 days with `interval: 1`, see [Training data size](./scenario-guide.md#training-data-size))
+- **Detection**: the scored window (`lookback_minutes`) plus 199 buckets (about 16.6 hours) of context before it, which SONAR fetches on its own
 
 ```bash
-# Good: 24 hours = 288 time points
-poetry run python inject_wazuh_data.py --hours 24
+# Enough for detection with lookback_minutes: 1440 (context plus window): 2 days = 576 time points
+poetry run python inject_wazuh_data.py --days 2
 
 # Better: 7 days = 2016 time points
 poetry run python inject_wazuh_data.py --days 7

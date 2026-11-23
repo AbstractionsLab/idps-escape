@@ -27,17 +27,18 @@ The resource monitoring scenario detects anomalous system resource usage pattern
 
 ### Detection Data
 - **File**: `resource_monitoring_detection.json`
-- **Content**: 6 hours of data with injected anomalies
-- **Alerts**: 3,038 alerts (includes attack patterns)
+- **Content**: 2 hours of normal context (2024-12-14T22:00 to 23:59), then 6 hours with injected anomalies (2024-12-15T00:00 to 05:59)
+- **Alerts**: 3,998 alerts (includes attack patterns)
+- **Why the context**: in debug mode the file is all the data there is. MVAD scores a bucket only after `input_size + threshold_window − 1` earlier buckets (119 one-minute buckets for `sliding_window: 120`), so the 2 normal hours let every bucket of the 6 attack hours be scored.
 - **Anomalies Included**:
-  1. **CPU Spike (Hour 1)**: Sustained high CPU (88-98%) for 45 minutes
+  1. **CPU Spike (01:00)**: Sustained high CPU (88-98%) for 45 minutes
      - Simulates crypto mining or CPU-intensive malware
      - Affects 2-3 random servers
-  2. **Memory Leak (Hour 3)**: Gradual memory increase over 60 minutes
+  2. **Memory Leak (03:00)**: Gradual memory increase over 60 minutes
      - Linear growth from 50% to 95%
      - Single server affected
      - Simulates memory leak or memory-exhaustion attack
-  3. **Fork Bomb (Hour 5)**: Rapid resource exhaustion for 8 minutes
+  3. **Fork Bomb (05:00)**: Rapid resource exhaustion for 8 minutes
      - Both CPU (92-99%) and memory (88-98%) spike
      - Single server affected
      - Simulates fork bomb or rapid resource abuse
@@ -47,43 +48,31 @@ The resource monitoring scenario detects anomalous system resource usage pattern
 ### Generate Test Data
 
 ```bash
-cd sonar/test_data
-python generate_resource_data.py --output-dir ./resource_monitoring
+# From the project root
+poetry run python sonar/test_data/generate_resource_data.py --output-dir sonar/test_data/resource_monitoring --training-hours 24
 ```
 
 Options:
-- `--training-hours N`: Hours of training data (default: 168 = 7 days)
-- `--detection-hours N`: Hours of detection data (default: 6)
+- `--training-hours N`: Hours of training data (default: 168 = 7 days; the shipped file holds 24)
+- `--detection-hours N`: Hours of detection data after the context, containing the attacks at hours 1, 3 and 5 (default: 6)
+- `--context-hours N`: Hours of normal data before the detection hours (default: 2)
+- `--detection-only`: Regenerate only the detection file and keep the existing training file
 
-### Train Model (Debug Mode)
-
-```bash
-# Using scenario file
-poetry run sonar scenario \
-  --use-case scenarios/linux_resource_monitoring.yaml \
-  --config resource_monitoring_config.yaml \
-  --debug
-
-# Or using direct train command
-poetry run sonar train \
-  --config resource_monitoring_config.yaml \
-  --debug
-```
-
-### Run Detection (Debug Mode)
+### Train and detect (debug mode)
 
 ```bash
-# Using scenario file
+# From the project root: train on the training file, then detect on the detection file
 poetry run sonar scenario \
-  --use-case scenarios/linux_resource_monitoring.yaml \
-  --config resource_monitoring_config.yaml \
+  --use-case sonar/scenarios/linux_resource_monitoring.yaml \
   --debug
 
-# Or using direct detect command
+# Detection only, with the model trained above (the scenario sets model_name)
 poetry run sonar detect \
-  --config resource_monitoring_config.yaml \
+  --scenario sonar/scenarios/linux_resource_monitoring.yaml \
   --debug
 ```
+
+Debug mode ignores the time range: every bucket of the detection file after its first 119 is scored.
 
 ## Configuration
 
@@ -93,7 +82,7 @@ The resource monitoring scenario uses specific configuration:
 - **1 minute buckets**: Fine-grained monitoring for detecting short-duration spikes
 
 ### Sliding Window
-- **300 time points**: Captures 5 hours of context (at 1-min buckets)
+- **120 time points**: Captures 2 hours of context (at 1-min buckets)
 - Balances detection of both gradual trends and sudden spikes
 
 ### Features
@@ -103,7 +92,7 @@ The resource monitoring scenario uses specific configuration:
 - **Rule level**: Alert severity
 
 ### Thresholds
-- **Anomaly threshold**: 0.75 (balanced for resource anomalies)
+- **Anomaly threshold**: `null` (MVAD's own decision; a minimum severity between 0 and 1 can be set once calibrated)
 - **Consecutive buckets**: 3 (sustained anomaly detection)
 
 ## Attack Pattern Details
@@ -190,11 +179,11 @@ For production use with real Wazuh data:
 The scenario configuration is in [`scenarios/linux_resource_monitoring.yaml`](../scenarios/linux_resource_monitoring.yaml).
 
 Key parameters:
-- Training window: 168 hours (7 days)
-- Detection window: 30 minutes
+- Training window: 24 hours
+- Detection window: 360 minutes scored (earlier context is fetched automatically)
 - Bucket size: 1 minute
-- Sliding window: 300 time points
-- Anomaly threshold: 0.75
+- Sliding window: 120 time points
+- Anomaly threshold: `null` (MVAD's decision alone)
 - Alert level: 10
 
 ## Troubleshooting
@@ -202,10 +191,10 @@ Key parameters:
 ### Model doesn't detect anomalies
 - Check that training data covers sufficient normal patterns
 - Verify sliding_window size matches training time points
-- Lower the threshold (try 0.65)
+- Lower the threshold, or set it to `null`
 
 ### Too many false positives
-- Increase threshold (try 0.85)
+- Set a minimum severity as threshold (between 0 and 1), or raise it
 - Increase min_consecutive buckets
 - Train on more diverse baseline data
 

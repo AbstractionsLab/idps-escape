@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: sWZaHci0JypSclC-ezf3eMKap5LGJG_lPPPk1DT3hvI=
 ---
 
 # RADAR Low-Level Architecture

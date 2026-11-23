@@ -1,0 +1,369 @@
+{
+  "format": "sonar-evaluation/1",
+  "sonar_version": "2.1.0",
+  "test_labels": "auth/test_labels.json",
+  "validation_labels": "auth/validation_labels.json",
+  "tolerance_minutes": 5.0,
+  "event_types": [
+    "brute_force",
+    "password_spray"
+  ],
+  "max_false_alarms_per_day": 5.0,
+  "scenario": "brute_force",
+  "backend": "mvad",
+  "train_file": "auth/training.json",
+  "training_buckets": 2017,
+  "training_seconds": 357.7,
+  "context_buckets": 199,
+  "validation_file": "auth/validation.json",
+  "test_file": "auth/test.json",
+  "detector": "sonar/mvad",
+  "calibration": {
+    "threshold": 0.2,
+    "min_consecutive": 3,
+    "within_false_alarm_budget": true,
+    "max_false_alarms_per_day": 5.0,
+    "validation": {
+      "events": 8,
+      "detected": 5,
+      "alarms": 5,
+      "true_alarms": 5,
+      "false_alarms": 0,
+      "days": 9.309,
+      "precision": 1.0,
+      "recall": 0.625,
+      "f1": 0.7692,
+      "mean_delay_minutes": 21.6,
+      "false_alarms_per_day": 0.0,
+      "outcomes": [
+        {
+          "id": "brute_force_1",
+          "type": "brute_force",
+          "start": "2024-12-22T04:27:00Z",
+          "end": "2024-12-22T04:57:00Z",
+          "detected": true,
+          "delay_minutes": 3.0
+        },
+        {
+          "id": "password_spray_1",
+          "type": "password_spray",
+          "start": "2024-12-22T12:57:00Z",
+          "end": "2024-12-22T14:57:00Z",
+          "detected": false,
+          "delay_minutes": null
+        },
+        {
+          "id": "password_spray_2",
+          "type": "password_spray",
+          "start": "2024-12-24T06:08:00Z",
+          "end": "2024-12-24T08:08:00Z",
+          "detected": false,
+          "delay_minutes": null
+        },
+        {
+          "id": "brute_force_2",
+          "type": "brute_force",
+          "start": "2024-12-25T15:22:00Z",
+          "end": "2024-12-25T15:52:00Z",
+          "detected": true,
+          "delay_minutes": 3.0
+        },
+        {
+          "id": "brute_force_3",
+          "type": "brute_force",
+          "start": "2024-12-26T03:54:00Z",
+          "end": "2024-12-26T04:24:00Z",
+          "detected": true,
+          "delay_minutes": 6.0
+        },
+        {
+          "id": "password_spray_3",
+          "type": "password_spray",
+          "start": "2024-12-26T14:09:00Z",
+          "end": "2024-12-26T16:09:00Z",
+          "detected": true,
+          "delay_minutes": 91.0
+        },
+        {
+          "id": "password_spray_4",
+          "type": "password_spray",
+          "start": "2024-12-27T02:21:00Z",
+          "end": "2024-12-27T04:21:00Z",
+          "detected": false,
+          "delay_minutes": null
+        },
+        {
+          "id": "brute_force_4",
+          "type": "brute_force",
+          "start": "2024-12-28T17:25:00Z",
+          "end": "2024-12-28T17:55:00Z",
+          "detected": true,
+          "delay_minutes": 5.0
+        }
+      ],
+      "ignored_events": 8,
+      "unscored_events": 0
+    }
+  },
+  "runs": [
+    {
+      "name": "test (configured)",
+      "threshold": null,
+      "min_consecutive": 2,
+      "metrics": {
+        "events": 8,
+        "detected": 7,
+        "alarms": 38,
+        "true_alarms": 11,
+        "false_alarms": 27,
+        "days": 9.309,
+        "precision": 0.2895,
+        "recall": 0.875,
+        "f1": 0.435,
+        "mean_delay_minutes": 16.4,
+        "false_alarms_per_day": 2.9,
+        "outcomes": [
+          {
+            "id": "brute_force_1",
+            "type": "brute_force",
+            "start": "2025-01-03T15:47:00Z",
+            "end": "2025-01-03T16:17:00Z",
+            "detected": true,
+            "delay_minutes": 3.0
+          },
+          {
+            "id": "brute_force_2",
+            "type": "brute_force",
+            "start": "2025-01-04T02:11:00Z",
+            "end": "2025-01-04T02:41:00Z",
+            "detected": true,
+            "delay_minutes": 4.0
+          },
+          {
+            "id": "password_spray_1",
+            "type": "password_spray",
+            "start": "2025-01-05T16:40:00Z",
+            "end": "2025-01-05T18:40:00Z",
+            "detected": true,
+            "delay_minutes": 5.0
+          },
+          {
+            "id": "brute_force_3",
+            "type": "brute_force",
+            "start": "2025-01-06T00:30:00Z",
+            "end": "2025-01-06T01:00:00Z",
+            "detected": true,
+            "delay_minutes": 5.0
+          },
+          {
+            "id": "password_spray_2",
+            "type": "password_spray",
+            "start": "2025-01-06T12:34:00Z",
+            "end": "2025-01-06T14:34:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "password_spray_3",
+            "type": "password_spray",
+            "start": "2025-01-07T15:53:00Z",
+            "end": "2025-01-07T17:53:00Z",
+            "detected": true,
+            "delay_minutes": 0.0
+          },
+          {
+            "id": "password_spray_4",
+            "type": "password_spray",
+            "start": "2025-01-09T06:09:00Z",
+            "end": "2025-01-09T08:09:00Z",
+            "detected": true,
+            "delay_minutes": 96.0
+          },
+          {
+            "id": "brute_force_4",
+            "type": "brute_force",
+            "start": "2025-01-09T20:18:00Z",
+            "end": "2025-01-09T20:48:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          }
+        ],
+        "ignored_events": 8,
+        "unscored_events": 0
+      }
+    },
+    {
+      "name": "validation (calibrated)",
+      "threshold": 0.2,
+      "min_consecutive": 3,
+      "metrics": {
+        "events": 8,
+        "detected": 5,
+        "alarms": 5,
+        "true_alarms": 5,
+        "false_alarms": 0,
+        "days": 9.309,
+        "precision": 1.0,
+        "recall": 0.625,
+        "f1": 0.7692,
+        "mean_delay_minutes": 21.6,
+        "false_alarms_per_day": 0.0,
+        "outcomes": [
+          {
+            "id": "brute_force_1",
+            "type": "brute_force",
+            "start": "2024-12-22T04:27:00Z",
+            "end": "2024-12-22T04:57:00Z",
+            "detected": true,
+            "delay_minutes": 3.0
+          },
+          {
+            "id": "password_spray_1",
+            "type": "password_spray",
+            "start": "2024-12-22T12:57:00Z",
+            "end": "2024-12-22T14:57:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "password_spray_2",
+            "type": "password_spray",
+            "start": "2024-12-24T06:08:00Z",
+            "end": "2024-12-24T08:08:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "brute_force_2",
+            "type": "brute_force",
+            "start": "2024-12-25T15:22:00Z",
+            "end": "2024-12-25T15:52:00Z",
+            "detected": true,
+            "delay_minutes": 3.0
+          },
+          {
+            "id": "brute_force_3",
+            "type": "brute_force",
+            "start": "2024-12-26T03:54:00Z",
+            "end": "2024-12-26T04:24:00Z",
+            "detected": true,
+            "delay_minutes": 6.0
+          },
+          {
+            "id": "password_spray_3",
+            "type": "password_spray",
+            "start": "2024-12-26T14:09:00Z",
+            "end": "2024-12-26T16:09:00Z",
+            "detected": true,
+            "delay_minutes": 91.0
+          },
+          {
+            "id": "password_spray_4",
+            "type": "password_spray",
+            "start": "2024-12-27T02:21:00Z",
+            "end": "2024-12-27T04:21:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "brute_force_4",
+            "type": "brute_force",
+            "start": "2024-12-28T17:25:00Z",
+            "end": "2024-12-28T17:55:00Z",
+            "detected": true,
+            "delay_minutes": 5.0
+          }
+        ],
+        "ignored_events": 8,
+        "unscored_events": 0
+      }
+    },
+    {
+      "name": "test (calibrated)",
+      "threshold": 0.2,
+      "min_consecutive": 3,
+      "metrics": {
+        "events": 8,
+        "detected": 6,
+        "alarms": 11,
+        "true_alarms": 8,
+        "false_alarms": 3,
+        "days": 9.309,
+        "precision": 0.7273,
+        "recall": 0.75,
+        "f1": 0.7385,
+        "mean_delay_minutes": 11.0,
+        "false_alarms_per_day": 0.322,
+        "outcomes": [
+          {
+            "id": "brute_force_1",
+            "type": "brute_force",
+            "start": "2025-01-03T15:47:00Z",
+            "end": "2025-01-03T16:17:00Z",
+            "detected": true,
+            "delay_minutes": 3.0
+          },
+          {
+            "id": "brute_force_2",
+            "type": "brute_force",
+            "start": "2025-01-04T02:11:00Z",
+            "end": "2025-01-04T02:41:00Z",
+            "detected": true,
+            "delay_minutes": 4.0
+          },
+          {
+            "id": "password_spray_1",
+            "type": "password_spray",
+            "start": "2025-01-05T16:40:00Z",
+            "end": "2025-01-05T18:40:00Z",
+            "detected": true,
+            "delay_minutes": 50.0
+          },
+          {
+            "id": "brute_force_3",
+            "type": "brute_force",
+            "start": "2025-01-06T00:30:00Z",
+            "end": "2025-01-06T01:00:00Z",
+            "detected": true,
+            "delay_minutes": 5.0
+          },
+          {
+            "id": "password_spray_2",
+            "type": "password_spray",
+            "start": "2025-01-06T12:34:00Z",
+            "end": "2025-01-06T14:34:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "password_spray_3",
+            "type": "password_spray",
+            "start": "2025-01-07T15:53:00Z",
+            "end": "2025-01-07T17:53:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "password_spray_4",
+            "type": "password_spray",
+            "start": "2025-01-09T06:09:00Z",
+            "end": "2025-01-09T08:09:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "brute_force_4",
+            "type": "brute_force",
+            "start": "2025-01-09T20:18:00Z",
+            "end": "2025-01-09T20:48:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          }
+        ],
+        "ignored_events": 8,
+        "unscored_events": 0
+      }
+    }
+  ],
+  "anomaly_confidence": 0.7273
+}

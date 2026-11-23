@@ -239,6 +239,12 @@
       {% set mit2 = cfg.get('mitigations_tier2') or [] %}
       {% set mit3 = cfg.get('mitigations_tier3') or [] %}
 
+      {% if catalog_problem %}
+      <div class="mit-catalog-warn">
+        Endpoint script catalog unusable, only built-in actions can be added: {{ catalog_problem }}
+      </div>
+      {% endif %}
+
       <div class="mit-picker-grid">
 
         <div class="mit-picker-col">
@@ -255,7 +261,12 @@
           <div class="mit-picker-header"><span class="tier-dot tier-dot--2"></span> Tier 2</div>
           <div class="mit-tag-list" id="mit-tags-2">
             {% for m in mit2 %}
-            <span class="mit-tag" data-value="{{ m }}">{{ m }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% set mv = legacy_mitigations.get(m, m) %}
+            {% if mv in known_mitigations %}
+            <span class="mit-tag" data-value="{{ mv }}">{{ mv }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% else %}
+            <span class="mit-tag mit-tag--unknown" data-value="{{ mv }}" title="Not a built-in action and not in radar-agent/ar-scripts.yaml: endpoints cannot run it. Remove it to save.">{{ mv }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% endif %}
             {% endfor %}
           </div>
           <select class="mit-picker-select" onchange="addMitTag(this, 'mit-tags-2')">
@@ -270,7 +281,12 @@
           <div class="mit-picker-header"><span class="tier-dot tier-dot--3"></span> Tier 3</div>
           <div class="mit-tag-list" id="mit-tags-3">
             {% for m in mit3 %}
-            <span class="mit-tag" data-value="{{ m }}">{{ m }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% set mv = legacy_mitigations.get(m, m) %}
+            {% if mv in known_mitigations %}
+            <span class="mit-tag" data-value="{{ mv }}">{{ mv }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% else %}
+            <span class="mit-tag mit-tag--unknown" data-value="{{ mv }}" title="Not a built-in action and not in radar-agent/ar-scripts.yaml: endpoints cannot run it. Remove it to save.">{{ mv }}<button type="button" class="mit-tag-remove" onclick="removeMitTag(this)">&#10005;</button></span>
+            {% endif %}
             {% endfor %}
           </div>
           <select class="mit-picker-select" onchange="addMitTag(this, 'mit-tags-3')">
@@ -291,6 +307,10 @@
         </label>
         <div class="ar-hint-field" style="margin-top:6px">
           When disabled, mitigations are planned and logged but not executed. Enable only after testing.
+        </div>
+        <div class="ar-hint-field">
+          Shell actions come from <code>radar-agent/ar-scripts.yaml</code> and run on endpoints bootstrapped
+          with the radar-agent folder. Saved changes reach the manager the next time the scenario is deployed.
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import hashlib
 import re
 import os, sys, json, yaml, requests
 from pathlib import Path
@@ -81,7 +82,9 @@ def _extract_detector_id(mon: Dict[str, Any]) -> Optional[str]:
     try:
         for inp in (mon.get("inputs") or []):
             search = inp.get("search") or inp
-            bool_clause = (search.get("query") or {}).get("bool") or {}
+            query = search.get("query") or {}
+            # A stored monitor nests the search body: search.query = {size, sort, query: {bool}}.
+            bool_clause = query.get("bool") or (query.get("query") or {}).get("bool") or {}
             clauses = []
             for key in ("filter", "must", "should"):
                 val = bool_clause.get(key)
@@ -98,7 +101,18 @@ def _extract_detector_id(mon: Dict[str, Any]) -> Optional[str]:
         pass
     return None
 
-def find_monitor(session: requests.Session, opensearch_base: str, name: str, verify: bool) -> Optional[Tuple[str, Optional[str]]]:
+PAYLOAD_HASH_KEY = "radar_payload_sha256"
+
+
+def payload_hash(payload: Dict[str, Any]) -> str:
+    """Fingerprint of the monitor RADAR wants, stored in ui_metadata so a rerun
+    can tell whether the deployed monitor is stale (config or code changed)."""
+    body = json.loads(json.dumps(payload))
+    (body.get("ui_metadata") or {}).pop(PAYLOAD_HASH_KEY, None)
+    return hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+
+
+def find_monitor(session: requests.Session, opensearch_base: str, name: str, verify: bool) -> Optional[Tuple[str, Optional[str], Optional[str]]]:
     url = f"{opensearch_base.rstrip('/')}/_plugins/_alerting/monitors/_search"
     body = {"query": {"match": {"monitor.name": name}}}
     r = session.post(url, json=body, verify=verify)
@@ -110,8 +124,36 @@ def find_monitor(session: requests.Session, opensearch_base: str, name: str, ver
         src = hit.get("_source") or {}
         mon = src.get("monitor") or src
         if mon.get("name") == name:
-            return hit.get("_id"), _extract_detector_id(mon)
+            return hit.get("_id"), _extract_detector_id(mon), (mon.get("ui_metadata") or {}).get(PAYLOAD_HASH_KEY)
     return None
+
+def message_template() -> str:
+    """Webhook body. The top-level keys describe the top hit, the format older
+    webhooks read. `anomalies` lists every hit; the trailing null keeps the array
+    valid JSON after the mustache loop's last comma. dataStart/dataEnd are the
+    anomaly's own data window (epoch ms); periodStart/periodEnd are the monitor's
+    run window, which is later than the data."""
+    top = "ctx.results.0.hits.hits.0._source"
+    legacy = json.dumps({
+        "monitor": {"name": "{{ctx.monitor.name}}"},
+        "trigger": {"name": "{{ctx.trigger.name}}"},
+        "entity": f"{{{{{top}.entity.0.value}}}}",
+        "periodStart": "{{ctx.periodStart}}",
+        "periodEnd": "{{ctx.periodEnd}}",
+        "anomaly_grade": f"{{{{{top}.anomaly_grade}}}}",
+        "anomaly_confidence": f"{{{{{top}.confidence}}}}",
+        "dataStart": f"{{{{{top}.data_start_time}}}}",
+        "dataEnd": f"{{{{{top}.data_end_time}}}}",
+    })
+    item = json.dumps({
+        "entity": "{{_source.entity.0.value}}",
+        "anomaly_grade": "{{_source.anomaly_grade}}",
+        "anomaly_confidence": "{{_source.confidence}}",
+        "dataStart": "{{_source.data_start_time}}",
+        "dataEnd": "{{_source.data_end_time}}",
+    })
+    return legacy[:-1] + ', "anomalies": [{{#ctx.results.0.hits.hits}}' + item + ',{{/ctx.results.0.hits.hits}}null]}'
+
 
 def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, destination_id: str) -> Dict[str, Any]:
     interval = int(scn.get("monitor_interval", scn.get("detector_interval", 5)))
@@ -122,9 +164,13 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
 
     trigger_name = scn.get("trigger_name", f"{scenario_name}-trigger")
     monitor_name = scn.get("monitor_name", f"{scenario_name}-monitor")
+    # Detectors are per entity (agent or user). One run may find several anomalous
+    # entities; each is reported, highest grade first (the webhook keeps one line
+    # per entity).
+    max_entities = max(1, min(50, int(scn.get("monitor_max_entities", 5))))
 
     query = {
-        "size": 1,
+        "size": max_entities,
         "sort": [{"anomaly_grade": "desc"}, {"confidence": "desc"}],
         "query": {
             "bool": {
@@ -139,7 +185,9 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
                             }
                         }
                     },
-                    {"term": {"detector_id": {"value": detector_id}}}
+                    {"term": {"detector_id": {"value": detector_id}}},
+                    {"range": {"anomaly_grade": {"gte": grade_th}}},
+                    {"range": {"confidence": {"gte": conf_th}}}
                 ]
             }
         },
@@ -179,15 +227,7 @@ def monitor_payload(scenario_name: str, scn: Dict[str, Any], detector_id: str, d
                 "name": monitor_name,
                 "destination_id": destination_id,
                 "subject_template": {"lang": "mustache", "source": "Alerting Notification action"},
-                "message_template": {"lang": "mustache", "source": json.dumps({
-                    "monitor": {"name": "{{ctx.monitor.name}}"},
-                    "trigger": {"name": "{{ctx.trigger.name}}"},
-                    "entity": "{{ctx.results.0.hits.hits.0._source.entity.0.value}}",
-                    "periodStart": "{{ctx.periodStart}}",
-                    "periodEnd": "{{ctx.periodEnd}}",
-                    "anomaly_grade": "{{ctx.results.0.hits.hits.0._source.anomaly_grade}}", 
-                    "anomaly_confidence": "{{ctx.results.0.hits.hits.0._source.confidence}}"
-                })},
+                "message_template": {"lang": "mustache", "source": message_template()},
                 "throttle_enabled": False
             }]
         }],
@@ -267,16 +307,17 @@ def main() -> None:
                                     headers=webhook_headers())
 
     mon_name = scn.get("monitor_name", f"{scenario_name}-monitor")
+    payload = monitor_payload(scenario_name, scn, detector_id, destination_id)
+    payload["ui_metadata"][PAYLOAD_HASH_KEY] = payload_hash(payload)
+
     existing = find_monitor(session, opensearch_base, mon_name, os_verify)
     if existing:
-        monitor_id, linked_detector_id = existing
-        if linked_detector_id != detector_id:
-            payload = monitor_payload(scenario_name, scn, detector_id, destination_id)
+        monitor_id, linked_detector_id, stored_hash = existing
+        if linked_detector_id != detector_id or stored_hash != payload["ui_metadata"][PAYLOAD_HASH_KEY]:
             update_monitor(session, opensearch_base, monitor_id, payload, os_verify)
         print(monitor_id)
         return
 
-    payload = monitor_payload(scenario_name, scn, detector_id, destination_id)
     monitor_id = create_monitor(session, opensearch_base, payload, os_verify)
     if not monitor_id:
         die("Monitor create succeeded but no id returned")

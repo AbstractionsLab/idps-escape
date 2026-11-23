@@ -1,0 +1,17 @@
+<command>
+    <name>radar_ar_linux_resource_utilization</name>
+    <executable>radar_ar.py</executable>
+</command>
+ 
+<command>
+    <name>terminate_service.sh</name>
+    <executable>terminate_service.sh</executable>
+    <timeout_allowed>yes</timeout_allowed>
+</command>
+ 
+<active-response>
+    <disabled>no</disabled>
+    <command>radar_ar_linux_resource_utilization</command>
+    <location>server</location>
+    <rules_id>100321</rules_id>
+</active-response>

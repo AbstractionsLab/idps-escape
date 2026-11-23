@@ -3,225 +3,123 @@ active: true
 derived: false
 level: 2.7
 links:
-- HARC-004: B-4i2SClF5iGbeV-cWw9l0nDiMns0PHC2fNuaqSQAmo=
-- HARC-012: ilKIUnLMG0LmoIUP781vdTvx8oRCMLZHrRM5puzgbGU=
-- LARC-022: tH9LfjIxzDfssQPvlDYNSMqEW06cLQf9ts3l08QvrXI=
-- SRS-050: f1fx4EzuMUZpkPuPmI8RJXj5-ASOsNLfOUx5pm81PWc=
-- SRS-051: L_FEEgh5sx0eJ_B6mZtm3kp_90KxFJLwar48ZeSHzbk=
-- SRS-052: rnH2AeVu4U2ZbCOXkatJeqKiv_ziq90iRQZJjU1fHKc=
-- SRS-056: xKvRTfbWPnFhLmrKkVnKcrA1gfDRFhhKwc6tXbXmnJw=
+- SRS-056: cPHoeLEAeLaaZ8tCLEz_E724FHEVIvO-aLO0IBU7EMQ=
+- SRS-062: umq1jJ6JmmUdM9cRbOX6I9iDoL3ADz0MdwhUZP0blw4=
+- SRS-071: ZHNgKjI-5h3aLRPBushyk3-rGXZlaZGed2XtpPWs0Gg=
+- SRS-089: -2y47C-Pd178im0LQo0uCWdw1eMlrk1nUtAzUD0JsIQ=
 normative: true
 ref: ''
 release: Alpha
-reviewed: zipSVvmSX3ZDxzf71r69dtVLRWVy5Hbh4tB40WaOaSs=
+reviewed: 9PVU2BGLJ4_uupeigJpYUkBRpOpIJEX5tyMSga2Wrqg=
 version: '0.1'
 ---
 
 # RADAR monitor and webhook workflow
 
-The diagram below depicts the sequence for creating OpenSearch monitors and webhook notification channels via `monitor.py` and `webhook.py` modules.
-
-## Workflow overview
-
-The monitor workflow ensures anomaly detection results trigger automated responses when thresholds are exceeded. Monitors continuously evaluate detector outputs and send structured notifications to a webhook endpoint, which integrates with Wazuh's rule engine.
+The diagram below depicts how `radar/anomaly_detector/monitor.py` and `radar/anomaly_detector/webhook.py` create the OpenSearch notification channel and alerting monitor for an anomaly detector, and how the monitor's notifications then reach Wazuh through the RADAR webhook service (`radar/webhook/ad_alerts_webhook.py`). `run-radar.sh` runs `monitor.py` after `detector.py` (LARC-022) for `log_volume` and `linux_resource_utilization`; the `suspicious_login` off-hours monitors are created by `off_hours.py` through the same channel and webhook.
 
 ## Workflow stages
 
-### 1. Webhook destination setup
-Execute `ensure_webhook()` from webhook.py:
+### 1. Notification channel (idempotent)
+`ensure_webhook()` in `webhook.py`:
 
-- Query existing notification destinations: `GET /_plugins/_notifications/configs`
-- Search for webhook by name pattern
-- If not found, create new webhook destination:
+- `GET /_plugins/_notifications/configs` and look for a `webhook` channel with the configured name (`webhook.name` in `config.yaml`, else `WEBHOOK_NAME`, default "RADAR Webhook") and URL (`webhook.url`, else `WEBHOOK_URL`).
+- If found, update it when its shared-secret header differs; otherwise `POST /_plugins/_notifications/configs` to create it.
+- The channel sends the header `X-RADAR-Webhook-Token` with `WEBHOOK_SHARED_SECRET`.
 
-    - Endpoint: `POST /_plugins/_notifications/configs`
-    - Configuration: Custom webhook type, POST method, webhook URL from environment
-    - Return webhook destination ID
+### 2. Monitor specification
+`monitor_payload()` builds a query-level monitor named `monitor_name`:
 
-### 2. Monitor existence check
-- Query existing monitors: `GET /_plugins/_alerting/monitors/_search`
-- Search by name pattern: `{scenario}_Monitor`
-- If found, return existing monitor ID (idempotent operation)
+- **Schedule**: every `monitor_interval`, else `detector_interval`, minutes.
+- **Input**: search of the detector's `result_index` for results of this detector in the last interval with anomaly grade and confidence at or above `anomaly_grade_threshold` and `confidence_threshold`, highest grade first, at most `monitor_max_entities` (default 5) hits.
+- **Trigger** `trigger_name`: a Painless condition on the maximum grade and the top hit's confidence.
+- **Action**: POST to the channel with the message template of SWD-029: the top hit's keys plus an `anomalies` list with one entry per hit, each with entity, grade, confidence and the anomaly's own data window.
+- A SHA-256 fingerprint of the payload is stored in the monitor's `ui_metadata`.
 
-### 3. Monitor specification building
-Construct monitor JSON including:
+### 3. Monitor creation or update
+- `POST /_plugins/_alerting/monitors/_search` by monitor name.
+- If it exists and its detector ID or payload fingerprint differs, `PUT` the new payload; if it matches, leave it. Otherwise `POST /_plugins/_alerting/monitors`.
+- Print the monitor ID.
 
-- **Schedule**: Evaluation frequency (defaults to detector_interval if monitor_interval not specified)
-- **Inputs**: Query detector's result index for recent anomalies
-- **Triggers**: Condition evaluating anomaly scores
-- **Actions**: Webhook notification when triggered
+### 4. Runtime delivery
+- Each run with a hit posts to the webhook (`POST /notify`, port `WEBHOOK_INTERNAL_PORT`, default 8080).
+- The webhook checks the token, validates each entry, and writes one line per entity to `/var/log/ad_alerts.log` (format in SWD-035).
+- The Wazuh agent in the webhook container ships the file to the manager, where the `opensearch_ad` decoder, an AD catch-all rule (`radar_ad_received` group) and the scenario's trigger rule invoke `radar_ar.py`.
 
-### 4. Trigger condition configuration
-Default trigger logic:
-```
-anomaly_grade > threshold AND confidence > threshold
-```
-
-Where thresholds are defined in scenario configuration (typical values: 0.3-0.5 for balanced sensitivity/precision).
-
-### 5. Webhook action specification
-Notification payload includes:
-```json
-{
-  "monitor": {"name": "{{ctx.monitor.name}}"},
-  "trigger": {"name": "{{ctx.trigger.name}}"},
-  "entity": "{{ctx.results.0.hits.hits.0._source.entity.0.value}}",
-  "periodStart": "{{ctx.periodStart}}",
-  "periodEnd": "{{ctx.periodEnd}}"
-}
-```
-
-### 6. Monitor creation
-- Create monitor via OpenSearch Alerting API
-- Endpoint: `POST /_plugins/_alerting/monitors`
-- Monitor begins evaluating detector results at configured intervals
-
-### 7. Output
-- Return monitor ID to stdout
-- Monitor continuously watches detector and triggers webhook on anomalies
-
-## Key functions
-
-```python
-# webhook.py
-notif_find_id(webhook_name: str) -> str | None
-notif_create(webhook_url: str) -> str
-ensure_webhook() -> str
-
-# monitor.py
-find_monitor_id(monitor_name: str) -> str | None
-monitor_payload(detector_id: str, webhook_id: str, config: dict) -> dict
-create_monitor(payload: dict) -> str
-```
-
-## Integration flow
-
-Monitor → Detector Results → Evaluate Threshold → Webhook POST → `/var/log/ad_alerts.log` → Wazuh Rules → Active Response
-
-## Monitor and Webhook Sequence
+## Monitor and webhook sequence
 
 ```plantuml
 @startuml
 participant "run-radar.sh" as CLI
-participant "radar-cli\nContainer" as Docker
-participant "webhook.py" as Webhook
 participant "monitor.py" as Monitor
-participant "OpenSearch\nAPI" as OS
+participant "webhook.py" as Webhook
 participant "Notifications\nPlugin" as NotifPlugin
 participant "Alerting\nPlugin" as AlertPlugin
 participant "Detector\nResult Index" as DetectorIndex
-participant "Webhook\nService" as WebhookSvc
+participant "RADAR webhook\n(ad_alerts_webhook.py)" as WebhookSvc
+participant "Wazuh agent\n(webhook container)" as Agent
+participant "Wazuh manager" as Manager
 
-note over CLI,WebhookSvc: Monitor and Webhook Workflow
+CLI -> Monitor: docker run radar-cli python monitor.py <scenario> <detector_id>
 
-group Phase 1: Ensure webhook destination (idempotent)
-  CLI -> Docker: docker run radar-cli monitor.py
-  Docker -> Webhook: ensure_webhook()
-
+group 1. Ensure notification channel
+  Monitor -> Webhook: ensure_webhook(name, url, token header)
   Webhook -> NotifPlugin: GET /_plugins/_notifications/configs
-  note over Webhook,NotifPlugin: Search for existing webhook
-  NotifPlugin --> Webhook: Webhook list
-
-  alt Webhook exists
-    Webhook --> Monitor: Return existing webhook_id
-  else Webhook not found
-    Webhook -> NotifPlugin: POST /_plugins/_notifications/configs
-    note over Webhook,NotifPlugin
-      Create webhook destination
-      config_type: webhook
-      name: {scenario}_webhook
-      url: http://manager:8080/notify
-      method: POST
-    end note
-    NotifPlugin --> Webhook: webhook_id
-    Webhook --> Monitor: Return new webhook_id
-  end
-end
-
-group Phase 2: Check for existing monitor (idempotent)
-  Monitor -> AlertPlugin: GET /_plugins/_alerting/monitors/_search
-  note over Monitor,AlertPlugin: Search by name: "{scenario}_Monitor"
-  AlertPlugin --> Monitor: Monitor list
-
-  alt Monitor exists
-    Monitor --> CLI: Return existing monitor_id
-    note over Monitor: Exit early (idempotent)
-  else Monitor not found
-    note over Monitor: Proceed to creation
-  end
-end
-
-group Phase 3: Build monitor specification
-  Monitor -> Monitor: Load scenario config
-  note right of Monitor
-    Schedule: Every 5 minutes
-    Input: Query detector result index
-    Trigger: anomaly_grade > threshold
-    Action: Webhook notification
-  end note
-
-  Monitor -> Monitor: monitor_payload(detector_id, webhook_id)
-  note right of Monitor
-    name: {scenario}_Monitor
-    schedule: {period: {interval: 5, unit: MINUTES}}
-    inputs: [search detector result index]
-    triggers: [AnomalyTrigger condition]
-    actions: [webhook notification]
-  end note
-end
-
-group Phase 4: Create monitor via API
-  Monitor -> AlertPlugin: POST /_plugins/_alerting/monitors
-  AlertPlugin -> DetectorIndex: Validate query against result index
-  DetectorIndex --> AlertPlugin: Query valid
-  AlertPlugin --> Monitor: monitor_id, status: "ACTIVE"
-end
-
-group Phase 5: Continuous anomaly monitoring
-  loop Every 5 minutes
-    AlertPlugin -> DetectorIndex: Query for recent anomalies
-    DetectorIndex --> AlertPlugin: Anomaly results
-
-    alt Anomaly detected (grade > threshold)
-      AlertPlugin -> AlertPlugin: Evaluate trigger condition
-      note over AlertPlugin
-        anomaly_grade > 0.3 AND
-        confidence > 0.3
-      end note
-
-      AlertPlugin -> WebhookSvc: POST /notify
-      note over AlertPlugin,WebhookSvc
-        Webhook payload:
-        monitor: {name: "log_volume_Monitor"}
-        trigger: {name: "AnomalyTrigger"}
-        entity: "edge.vm"
-        anomaly_grade: 0.85
-        confidence: 0.92
-        periodStart: "2026-02-16T10:00:00Z"
-        periodEnd: "2026-02-16T10:05:00Z"
-      end note
-
-      WebhookSvc --> AlertPlugin: 200 OK
-      note over WebhookSvc: Write to /var/log/ad_alerts.log
-    else No anomaly
-      note over AlertPlugin: No action
+  NotifPlugin --> Webhook: channels
+  alt Channel exists
+    opt Token header differs
+      Webhook -> NotifPlugin: PUT /_plugins/_notifications/configs/{id}
     end
+  else Channel missing
+    Webhook -> NotifPlugin: POST /_plugins/_notifications/configs
   end
+  Webhook --> Monitor: destination_id
 end
 
-Monitor --> Docker: monitor_id (stdout)
-Docker --> CLI: monitor_id
-note over CLI: Monitoring active
+group 2. Build payload
+  Monitor -> Monitor: monitor_payload(scenario, detector_id, destination_id)
+  note right of Monitor
+    query: last interval, this detector,
+    grade and confidence >= thresholds,
+    top monitor_max_entities by grade
+    action: top-hit keys + anomalies list
+    ui_metadata: payload sha256
+  end note
+end
 
-note over AlertPlugin,WebhookSvc: Monitor runs continuously until deleted/disabled
+group 3. Create or update
+  Monitor -> AlertPlugin: POST /_plugins/_alerting/monitors/_search (name)
+  AlertPlugin --> Monitor: existing monitor, if any
+  alt Missing
+    Monitor -> AlertPlugin: POST /_plugins/_alerting/monitors
+  else Detector or fingerprint differs
+    Monitor -> AlertPlugin: PUT /_plugins/_alerting/monitors/{id}
+  else Up to date
+    note over Monitor: no change
+  end
+  Monitor --> CLI: monitor_id (stdout)
+end
+
+group 4. Runtime, every interval
+  AlertPlugin -> DetectorIndex: query recent results
+  DetectorIndex --> AlertPlugin: anomalous entities
+  opt Trigger condition true
+    AlertPlugin -> WebhookSvc: POST /notify\nX-RADAR-Webhook-Token
+    WebhookSvc -> WebhookSvc: check token, validate entries
+    WebhookSvc -> WebhookSvc: append one line per entity\nto /var/log/ad_alerts.log
+    WebhookSvc --> AlertPlugin: 200 {"status": "written", "lines": n}
+    Agent -> Manager: ship /var/log/ad_alerts.log lines
+    Manager -> Manager: opensearch_ad decoder,\ncatch-all + trigger rule,\nradar_ar.py
+  end
+end
 
 @enduml
 ```
 
 ## Implementation reference
 
-See implementation details:
+- [radar/anomaly_detector/monitor.py](../../../radar/anomaly_detector/monitor.py) - monitor creation and update
+- [radar/anomaly_detector/webhook.py](../../../radar/anomaly_detector/webhook.py) - notification channel management
+- [radar/webhook/ad_alerts_webhook.py](../../../radar/webhook/ad_alerts_webhook.py) - webhook service
 
-- [radar/anomaly_detector/monitor.py](../../../radar/anomaly_detector/monitor.py) - Monitor creation
-- [radar/anomaly_detector/webhook.py](../../../radar/anomaly_detector/webhook.py) - Webhook management
-- [radar/webhook/ad_alerts_webhook.py](../../../radar/webhook/ad_alerts_webhook.py) - Webhook service implementation
+Related: HARC-004, HARC-012, LARC-022.

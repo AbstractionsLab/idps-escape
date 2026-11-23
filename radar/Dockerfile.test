@@ -6,8 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-RUN apt-get update && apt-get install -y --no-install-recommends bash ca-certificates bats  \
- && pip install --no-cache-dir pytest responses pyyaml requests "flask>=3.0,<4" \
+RUN apt-get update && apt-get install -y --no-install-recommends bash ca-certificates bats jq shellcheck \
+ && groupadd -r wazuh \
+ && pip install --no-cache-dir pytest responses pyyaml requests tzdata "flask>=3.0,<4" \
  && useradd -r -m -s /bin/bash testuser \
  && mkdir -p /workspace \
  && chown testuser:testuser /workspace \

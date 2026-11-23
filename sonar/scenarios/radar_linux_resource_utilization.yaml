@@ -1,0 +1,98 @@
+# RADAR Linux Resource Utilization, scored by SONAR
+# =================================================
+# The same data and features as RADAR's linux_resource_utilization scenario (radar/config.yaml),
+# so that SONAR can be compared with RADAR's detector (the OpenSearch anomaly detection plugin's
+# random cut forest) on one Wazuh deployment:
+#
+# - Data: the events of RADAR's collector (radar-agent/collectors/linux_resource_utilization),
+#   "resource_usage_metric: cpu=<pct> mem=<pct>", decoded into data.cpu_usage_pct and
+#   data.mem_usage_pct (strings). No rule matches them, so they are only in wazuh-archives-*,
+#   not in the alerts index; RADAR's deployment turns the archives on.
+# - Features: per-minute mean and maximum of CPU and memory use, RADAR's four features. No
+#   derived features and no categorical columns, which RADAR does not have either.
+# - Filter: RADAR's filter_query (events with data.mem_usage_pct), without the synthetic history
+#   RADAR's ingest script seeds into wazuh-archives-radar-seed (radar_seed: true), so that SONAR
+#   learns from what the hosts really did.
+# - Hosts: RADAR's detector models each agent.name separately. This scenario pools every host into
+#   one series, so a spike on one host of many is diluted. For a per-host comparison run one SONAR
+#   per host with --agent <name> (model radar_linux_resource_utilization-<name>).
+#
+# Compare the two detectors on a labelled window with `sonar export` and `sonar evaluate`
+# (docs/manual/sonar_docs/radar-comparison-guide.md).
+
+name: "RADAR Linux Resource Utilization"
+description: "SONAR on the data and features of RADAR's linux_resource_utilization scenario, for comparison with RADAR's random cut forest"
+enabled: true
+
+model_name: "radar_linux_resource_utilization"
+
+wazuh:
+  # RADAR's index_prefix; the events never become alerts.
+  alerts_index_pattern: "wazuh-archives-*"
+
+training:
+  # MVAD needs at least 610 one-minute buckets with these settings (sonar/training_plan.py): the
+  # collector must have run for more than 10 hours. RADAR's 240 minutes of seeded history are not
+  # enough and are excluded below.
+  lookback_hours: 24
+
+  numeric_fields:
+    - "data.cpu_usage_pct"
+    - "data.mem_usage_pct"
+  max_numeric_fields:
+    - "data.cpu_usage_pct"
+    - "data.mem_usage_pct"
+  categorical_fields: []
+  derived_features: false
+
+  # RADAR's detector_interval (minutes).
+  bucket_minutes: 1
+
+  # RADAR imputes ZERO for intervals without data (imputation_option) and its feature scripts
+  # read a missing field as 0: a silent collector looks like an idle host to both detectors.
+  numeric_fill: zero
+
+  alert_filter:
+    bool:
+      filter:
+        - exists:
+            field: "data.mem_usage_pct"
+      must_not:
+        - term:
+            radar_seed: true
+
+  # 120 buckets = 2 hours of context per verdict. RADAR's shingle_size is 8; MVAD's window also sets
+  # how many buckets it needs before its first verdict (input_size + threshold_window - 1).
+  sliding_window: 120
+  device: "cpu"
+  extra_params:
+    interval: 1
+
+shipping:
+  enabled: false
+  install_templates: true
+  scenario_id: "radar_resource_utilization"
+
+# Debug data: the synthetic resource_monitoring data rewritten as RADAR events
+# (sonar/test_data/radar_format.py); same hosts, attacks and timestamps.
+debug:
+  enabled: false
+  data_dir: "../test_data/radar_resource_utilization"  # relative to this file
+  training_data_file: "training.json"  # 24 h, 8 hosts, one sample per host and minute
+  detection_data_file: "detection.json"  # 2 h of context, then 6 h with three attacks
+
+detection:
+  mode: "historical"
+  # The debug data holds 2 hours of normal context before these 6 hours.
+  lookback_minutes: 360
+
+  # Calibrated with `sonar evaluate` on the labelled synthetic resource splits rewritten as RADAR
+  # events (validation split for threshold and min_consecutive, test split precision for
+  # anomaly_confidence); see docs/specs/trp/assets/sonar-evaluation/radar_resource_utilization-mvad.json.
+  # MVAD's own decision alone raised 41 false alarms a day there. Synthetic attacks are easy to
+  # separate: recalibrate on a labelled window of your own hosts (sonar export) before trusting 1.0.
+  threshold: 0.25  # minimum MVAD severity (0-1) on top of MVAD's own anomaly decision
+  min_consecutive: 5  # minimum run of consecutive anomalous buckets
+  anomaly_confidence: 1.0  # measured precision, sent to Wazuh and used by RADAR
+
+  polling_interval_seconds: 60

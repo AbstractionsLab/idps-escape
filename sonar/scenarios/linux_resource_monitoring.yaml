@@ -24,7 +24,7 @@ name: "Linux Resource Monitoring"
 description: "Detect anomalous system resource utilization patterns indicative of attacks or misconfigurations"
 enabled: true
 
-model_name: "linux_resource_monitoring_20260112_230114"
+model_name: "linux_resource_monitoring"
 
 training:
   # Training window - use 24 hours for test data
@@ -63,12 +63,23 @@ training:
   bucket_minutes: 1
   
   # Sliding window size for MVAD model
-  # 300 buckets = 5 hours of context at 1-min buckets
-  # Captures both short-term spikes and gradual trends
-  sliding_window: 300
+  # 120 buckets = 2 hours of context at 1-min buckets
+  # (300 cannot train on 24 h: the 10% validation split, 144 buckets, would be
+  # shorter than the 150-bucket input window.)
+  sliding_window: 120
   
-  # Enable derived features for enhanced detection
-  derived_features: true
+  # Derived features: per-bucket counts of metric alerts above a threshold
+  derived_features:
+    - is_cpu_high
+    - is_cpu_critical
+    - is_memory_high
+    - is_memory_critical
+    - is_high_load
+
+  # Metrics are gauges: in a bucket without a metric alert, carry the last value forward
+  # instead of reading 0 % CPU. Means are taken only over alerts that carry the field,
+  # so SSH or FIM alerts no longer dilute them.
+  numeric_fill: ffill
   
   # Filter ingested alerts to performance_metric events only.
   # Prevents SSH, FIM, and other alert types from diluting the resource signal.
@@ -80,41 +91,43 @@ training:
   
   # Training parameters
   device: "cpu"  # Use "cuda" if GPU available
-  fill_with_synthetic: false
   
-  # Extra MVAD parameters
+  # Extra MVAD parameters (any MultiADConfig field of the MVAD library).
+  # interval: 1 trains on every window position: 1440 buckets -> 8 batches/epoch,
+  # 800 gradient steps. Training needs at least 610 buckets with these settings.
   extra_params:
-    learning_rate: 0.001
-    batch_size: 32
+    interval: 1
 
 # Shipping configuration (optional - enables data streaming to Wazuh)
 shipping:
-  enabled: false  # Set to true to enable data shipping for RADAR integration
+  enabled: false  # Set to true to ship anomalies to a sonar_anomalies_mvad_<id> data stream
   install_templates: true  # Install base templates on first run
   scenario_id: "resource_monitoring"  # Custom ID for this scenario
 
 # Debug configuration (for testing without Wazuh)
 debug:
   enabled: false  # Set to true or use --debug CLI flag
-  data_dir: "sonar/test_data/resource_monitoring"
-  training_data_file: "resource_monitoring_training-2.json"
+  data_dir: "../test_data/resource_monitoring"  # relative to this file
+  training_data_file: "resource_monitoring_training.json"  # 24 h, 1440 one-minute buckets
   detection_data_file: "resource_monitoring_detection.json"
 
 detection:
   # Detection mode: "historical" for batch analysis
   mode: "historical"
   
-  # How far back to look for detection
-  # 30 minutes provides recent context
-  lookback_minutes: 30
+  # Minutes of complete buckets to score, ending at the last complete bucket. SONAR
+  # fetches the earlier context MVAD needs on its own (input_size + threshold_window - 1
+  # buckets), so any lookback of at least one bucket works.
+  # The debug data holds 2 hours of normal context before these 6 hours.
+  lookback_minutes: 360
   
-  # Anomaly score threshold (0.0 - 1.0)
-  # 0.75 balances sensitivity for resource anomalies
-  threshold: 0.75
-  
-  # Minimum consecutive anomalous buckets to trigger alert
-  # 3 consecutive 1-min buckets = sustained anomaly
-  min_consecutive: 3
+  # Decision rule and confidence calibrated with `sonar evaluate` on the labelled synthetic
+  # splits of sonar/test_data (validation split for threshold and min_consecutive, test
+  # split precision for anomaly_confidence); see docs/specs/trp/assets/sonar-evaluation/resource_monitoring-mvad.md.
+  # Recalibrate on labelled data from your own environment.
+  threshold: 0.05  # minimum MVAD severity (0-1) on top of MVAD's own anomaly decision
+  min_consecutive: 4  # minimum run of consecutive anomalous buckets
+  anomaly_confidence: 0.92  # measured precision, sent to Wazuh and used by RADAR
   
   # Polling interval for streaming mode (seconds)
   polling_interval_seconds: 60

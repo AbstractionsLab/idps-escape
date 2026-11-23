@@ -44,7 +44,7 @@
           <select class="form-input" id="b-scenario">
             <option value="" disabled selected>Select a scenario</option>
             {% for s in scenarios %}
-            <option value="{{ s.id }}" data-shared="{{ 'true' if s.shared else 'false' }}">{{ s.name }}{% if not s.ar_config.get('active') %} (not deployed){% endif %}</option>
+            <option value="{{ s.id }}" data-name="{{ s.name }}" data-shared="{{ 'true' if s.shared else 'false' }}">{{ s.name }}{% if not s.ar_config.get('active') %} (not deployed){% endif %}</option>
             {% endfor %}
           </select>
         </div>
@@ -72,7 +72,7 @@
           <select class="form-input" id="ub-scenario">
             <option value="" disabled selected>Select a scenario</option>
             {% for s in scenarios %}
-            <option value="{{ s.id }}">{{ s.name }}{% if not s.ar_config.get('active') %} (not deployed){% endif %}</option>
+            <option value="{{ s.id }}" data-name="{{ s.name }}">{{ s.name }}{% if not s.ar_config.get('active') %} (not deployed){% endif %}</option>
             {% endfor %}
           </select>
         </div>
@@ -200,19 +200,6 @@
           <div class="form-group">
             <label class="form-label">Agent IP (optional, used if name doesn't resolve)</label>
             <input class="form-input mono" id="dr-agent-ip" placeholder="8.8.8.8">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-            <input type="checkbox" id="dr-no-purge">
-            <span>Keep the entry reserved instead of freeing the name/IP for reuse</span>
-          </label>
-          <div class="form-hint" style="margin-top:4px;font-size:11px;color:var(--text-muted)">
-            Checked: the agent record stays in Wazuh (disabled/unreachable) under this same name/IP --
-            re-onboarding the same endpoint later will need a different name or IP, or you'll need to
-            come back and deregister it properly first. Unchecked (default): the name/IP is freed
-            immediately, so the same endpoint can be re-onboarded right away without any conflict.
           </div>
         </div>
 

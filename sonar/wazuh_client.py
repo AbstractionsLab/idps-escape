@@ -1,42 +1,62 @@
 """
-Wazuh Indexer client for ingesting alerts and indexing anomalies.
+Wazuh Indexer client: reads alerts and indexes anomalies.
+
+Alert search pages through the whole result with a point-in-time and ``search_after``, so
+long training lookbacks are read completely instead of being cut at one page.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
 import json
+import logging
+import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Sequence
+from uuid import uuid4
 
-import requests
+from opensearchpy.exceptions import ConflictError
 
 from sonar.config import WazuhIndexerConfig
-import logging
+from sonar.indexer import build_opensearch_client, json_safe
+from sonar.paths import sonar_home
 
 logger = logging.getLogger(__name__)
+
+# Hits per page; OpenSearch's default index.max_result_window is 10000.
+PAGE_SIZE = 10_000
+# How long the indexer keeps the point-in-time between two pages.
+PIT_KEEP_ALIVE = "2m"
+# Newest first, so that a search cut off at max_alerts keeps the most recent alerts. The
+# alert's keyword `id` ("<epoch>.<offset>", unique per manager) breaks ties between alerts
+# with the same timestamp, so search_after never skips or repeats one.
+ALERT_SORT = [
+    {"timestamp": {"order": "desc"}},
+    {"id": {"order": "desc", "unmapped_type": "keyword"}},
+]
 
 
 class WazuhIndexerClient:
     """Client for Wazuh Indexer (OpenSearch) API operations."""
+
     def __init__(self, cfg: WazuhIndexerConfig, *, print_payloads: bool = False, dry_run: bool = False, payload_dir: Optional[str] = None):
         """
         Initialize Wazuh Indexer client.
 
         Args:
             cfg: WazuhIndexerConfig instance with connection details.
+            print_payloads: Print and save every anomaly payload before sending it.
+            dry_run: Save anomaly payloads instead of sending them.
+            payload_dir: Directory for saved payloads (default ``./payloads``).
         """
         self.cfg = cfg
-        self.session = requests.Session()
-        self.session.auth = (cfg.username, cfg.password)
-        self.session.verify = cfg.verify_ssl
+        self.client = build_opensearch_client(cfg)
+        self.max_alerts = int(getattr(cfg, "max_alerts", 2_000_000))
         # Debug / integration options
         self.print_payloads = bool(print_payloads)
         self.dry_run = bool(dry_run)
-        self.payload_dir = payload_dir or "./payloads"
+        self.payload_dir = payload_dir or str(sonar_home() / "payloads")
         if self.dry_run or self.print_payloads:
             try:
-                import os
-
                 os.makedirs(self.payload_dir, exist_ok=True)
-            except Exception as e:
+            except OSError as e:
                 logger.warning("Could not create payload_dir '%s': %s", self.payload_dir, e)
 
     def search_alerts(
@@ -44,56 +64,159 @@ class WazuhIndexerClient:
         start: datetime,
         end: datetime,
         query: Optional[Dict[str, Any]] = None,
-        size: int = 10_000,
+        source_fields: Optional[Sequence[str]] = None,
+        page_size: int = PAGE_SIZE,
     ) -> List[Dict[str, Any]]:
         """
-        Retrieve alerts from wazuh-alerts-* indices via Wazuh indexer (OpenSearch) API.
+        Retrieve every alert in ``[start, end)`` from ``alerts_index_pattern``, oldest first.
+
+        Pages through a point-in-time with ``search_after``, which is closed afterwards even
+        on error. Stops at ``max_alerts``, keeping the most recent alerts, with a warning.
 
         Args:
-            start: Start datetime (UTC).
-            end: End datetime (UTC).
-            query: Optional additional query filter.
-            size: Maximum number of documents to retrieve.
+            start: Start datetime (UTC), inclusive.
+            end: End datetime (UTC), exclusive.
+            query: Optional additional query, added to ``bool.must`` (e.g. ``alert_filter``).
+                Alerts in ``exclude_rule_groups`` are always left out (``bool.must_not``).
+            source_fields: Alert fields to return; None returns whole alerts.
+            page_size: Hits per page.
 
         Returns:
-            List of alert documents (source only).
+            Alert documents (``_source``), in ascending ``timestamp`` order.
 
         Raises:
-            requests.HTTPError: If the API request fails.
+            opensearchpy.exceptions.OpenSearchException: If a request fails.
         """
-        base_query: Dict[str, Any] = {
-            "query": {
-                "bool": {
-                    "filter": [
-                        {
-                            "range": {
-                                "timestamp": {
-                                    "gte": start.isoformat(),
-                                    "lte": end.isoformat(),
-                                }
-                            }
+        bool_block: Dict[str, Any] = {
+            "filter": [
+                {
+                    "range": {
+                        "timestamp": {
+                            "gte": start.isoformat(),
+                            # end is exclusive: it is the start of the first bucket not analysed
+                            "lt": end.isoformat(),
                         }
-                    ]
+                    }
                 }
-            },
-            "size": size,
+            ]
         }
-
         if query:
-            # Merge user query into bool.must
-            bool_block = base_query["query"]["bool"]
-            bool_block.setdefault("must", [])
-            bool_block["must"].append(query)
+            bool_block["must"] = [query]
+        excluded = list(getattr(self.cfg, "exclude_rule_groups", None) or [])
+        if excluded:
+            # SONAR's own alerts (rule group "sonar") must never become training or detection input.
+            bool_block["must_not"] = [{"terms": {"rule.groups": excluded}}]
 
-        url = f"{self.cfg.base_url}/{self.cfg.alerts_index_pattern}/_search"
-        resp = self.session.post(url, json=base_query)
-        resp.raise_for_status()
-        hits = resp.json().get("hits", {}).get("hits", [])
-        return [h["_source"] for h in hits]
+        pit_id = self.client.create_pit(index=self.cfg.alerts_index_pattern, params={"keep_alive": PIT_KEEP_ALIVE})["pit_id"]
+        alerts: List[Dict[str, Any]] = []
+        total = None
+        try:
+            search_after = None
+            while len(alerts) < self.max_alerts:
+                body: Dict[str, Any] = {
+                    "size": min(page_size, self.max_alerts - len(alerts)),
+                    "query": {"bool": bool_block},
+                    "sort": ALERT_SORT,
+                    "pit": {"id": pit_id, "keep_alive": PIT_KEEP_ALIVE},
+                    # Count the matches once, on the first page.
+                    "track_total_hits": total is None,
+                }
+                if source_fields is not None:
+                    body["_source"] = list(source_fields)
+                if search_after is not None:
+                    body["search_after"] = search_after
+                resp = self.client.search(body=body)
+                pit_id = resp.get("pit_id", pit_id)
+                hits = resp.get("hits", {})
+                if total is None:
+                    total = _total_hits(hits)
+                page = hits.get("hits", [])
+                alerts.extend(h.get("_source", {}) for h in page)
+                if len(page) < body["size"]:
+                    break
+                search_after = page[-1]["sort"]
+        finally:
+            try:
+                self.client.delete_pit(body={"pit_id": [pit_id]})
+            except Exception as e:  # the point-in-time expires on its own after PIT_KEEP_ALIVE
+                logger.warning("Could not close the alert search point-in-time: %s", e)
+
+        if total is not None and total > len(alerts) and len(alerts) >= self.max_alerts:
+            logger.warning(
+                "The alert search matched %d alerts; only the %d most recent were fetched (wazuh.max_alerts). Shorten the lookback or raise max_alerts.",
+                total,
+                len(alerts),
+            )
+        else:
+            logger.info("Fetched %d of %s matching alerts.", len(alerts), total if total is not None else "?")
+        alerts.reverse()
+        return alerts
+
+    def search_detector_results(
+        self,
+        index: str,
+        start: datetime,
+        end: datetime,
+        entity: Optional[str] = None,
+        entity_field: str = "agent.name",
+        page_size: int = PAGE_SIZE,
+    ) -> List[Dict[str, Any]]:
+        """
+        Results of the OpenSearch anomaly detection plugin (RADAR's detectors) whose interval starts in ``[start, end)``.
+
+        Reads through a scroll, which needs no sort tiebreaker: results of several entities share
+        a ``data_start_time``. The caller orders them (``sonar.evaluation.load_external_detections`` does).
+
+        Args:
+            index: Result index or pattern, e.g. ``opensearch-ad-plugin-result-linux-resource-utilization*``.
+            start: Start datetime (UTC), inclusive.
+            end: End datetime (UTC), exclusive.
+            entity: Keep only the results of this entity (a high-cardinality detector's category value).
+            entity_field: The detector's category field.
+            page_size: Hits per scroll page.
+
+        Returns:
+            Result documents (``_source``), at most ``max_alerts``.
+
+        Raises:
+            opensearchpy.exceptions.OpenSearchException: If a request fails.
+        """
+        filters: List[Dict[str, Any]] = [{"range": {"data_start_time": {"gte": start.isoformat(), "lt": end.isoformat()}}}]
+        if entity is not None:
+            # The plugin stores the category values as a nested list of {name, value}.
+            entity_match = {"bool": {"filter": [{"term": {"entity.name": entity_field}}, {"term": {"entity.value": entity}}]}}
+            filters.append({"nested": {"path": "entity", "query": entity_match}})
+        body = {"size": page_size, "query": {"bool": {"filter": filters}}}
+        resp = self.client.search(index=index, body=body, params={"scroll": PIT_KEEP_ALIVE, "ignore_unavailable": "true"})
+        results: List[Dict[str, Any]] = []
+        scroll_id = resp.get("_scroll_id")
+        try:
+            while True:
+                page = resp.get("hits", {}).get("hits", [])
+                results.extend(h.get("_source", {}) for h in page)
+                if not page or not scroll_id or len(results) >= self.max_alerts:
+                    break
+                resp = self.client.scroll(body={"scroll_id": scroll_id, "scroll": PIT_KEEP_ALIVE})
+                scroll_id = resp.get("_scroll_id", scroll_id)
+        finally:
+            if scroll_id:
+                try:
+                    self.client.clear_scroll(body={"scroll_id": scroll_id})
+                except Exception as e:  # the scroll expires on its own; a failed clear must not hide the results
+                    logger.debug("Could not clear the scroll: %s", e)
+        if len(results) >= self.max_alerts:
+            logger.warning("Kept the first %d detector results (wazuh.max_alerts); shorten the window.", self.max_alerts)
+            results = results[: self.max_alerts]
+        logger.info("Fetched %d detector results from %s.", len(results), index)
+        return results
 
     def index_anomaly(self, doc: Dict[str, Any]) -> str:
         """
         Index an anomaly document in a dedicated index.
+
+        A document with an ``anomaly_id`` is created under that id and never overwritten:
+        if the index already holds it (HTTP 409), it was delivered before, which counts as
+        success.
 
         Args:
             doc: Anomaly document to index.
@@ -102,136 +225,37 @@ class WazuhIndexerClient:
             Document ID of the indexed anomaly.
 
         Raises:
-            requests.HTTPError: If the API request fails.
+            opensearchpy.exceptions.OpenSearchException: If the request fails.
         """
-        url = f"{self.cfg.base_url}/{self.cfg.anomalies_index}/_doc"
-        # Ensure all datetime-like objects are serialized (pandas.Timestamp, numpy types, etc.)
-        try:
-            payload = json.dumps(doc, default=str)
-        except Exception:
-            # Fallback: convert to strings aggressively
-            payload = json.dumps(doc, default=lambda o: str(o))
-        # If configured to print/save payloads, do so before sending
+        doc_id = doc.get("anomaly_id")
+        body = json_safe(doc)
         if self.print_payloads or self.dry_run:
-            try:
-                import os
-                from uuid import uuid4
-                fname = f"anomaly_{int(datetime.now().timestamp())}_{uuid4().hex}.json"
-                path = os.path.join(self.payload_dir, fname)
-                with open(path, "w", encoding="utf-8") as fh:
-                    fh.write(payload)
-                logger.info("Wrote anomaly payload to %s", path)
-                if self.print_payloads:
-                    print(payload)
-            except Exception as e:
-                logger.warning("Failed to write anomaly payload: %s", e)
-
+            self._save_payload(doc_id, body)
         if self.dry_run:
-            return f"dryrun-{int(datetime.now().timestamp())}"
+            return f"dryrun-{doc_id or int(datetime.now().timestamp())}"
 
-        resp = self.session.post(url, data=payload, headers={"Content-Type": "application/json"})
+        index = self.cfg.anomalies_index
+        if not doc_id:
+            return self.client.index(index=index, body=body).get("_id", "")
         try:
-            resp.raise_for_status()
-        except requests.HTTPError:
-            # Log response body for easier debugging (caller will catch/log)
-            logger.warning("Failed to index anomaly: %s", getattr(resp, "text", ""))
-            raise
-        return resp.json().get("_id", "")
+            return self.client.create(index=index, id=doc_id, body=body).get("_id", doc_id)
+        except ConflictError:
+            logger.debug("Anomaly %s is already indexed; not writing it again.", doc_id)
+            return doc_id
 
-    def index_alert(self, doc: Dict[str, Any]) -> str:
-        """
-        Index a synthetic alert into the alerts indices pattern.
-
-        Useful for populating test or synthetic data when not enough historical
-        data is available for training.
-
-        Args:
-            doc: Alert document to index.
-
-        Returns:
-            Document ID of the indexed alert.
-
-        Raises:
-            requests.HTTPError: If the API request fails.
-        """
-        # If the configured alerts index pattern contains a wildcard, try to
-        # resolve it to a concrete index via the cluster's aliases API or _cat/indices.
-        index_name = self.cfg.alerts_index_pattern
-        if "*" in index_name:
-            try:
-                # Prefer resolving via aliases API which can indicate a write index
-                alias_url = f"{self.cfg.base_url}/_alias/{self.cfg.alerts_index_pattern}"
-                r = self.session.get(alias_url)
-                r.raise_for_status()
-                aliases_info = r.json()
-                if isinstance(aliases_info, dict) and len(aliases_info) > 0:
-                    # Choose an index that has an alias matching the pattern; prefer write index metadata
-                    chosen = None
-                    for idx_name, meta in aliases_info.items():
-                        # meta.get('aliases') is a dict of alias names -> props
-                        aliases = meta.get("aliases", {})
-                        if aliases:
-                            # If any alias has 'is_write_index' True, prefer this index
-                            for a_name, a_props in aliases.items():
-                                if isinstance(a_props, dict) and a_props.get("is_write_index"):
-                                    chosen = idx_name
-                                    break
-                            if chosen:
-                                break
-                    if not chosen:
-                        # fallback to first index name
-                        chosen = next(iter(aliases_info.keys()))
-                    index_name = chosen
-                    logger.info("Resolved alerts index pattern (aliases) '%s' -> '%s'", self.cfg.alerts_index_pattern, index_name)
-                else:
-                    # Fallback to _cat/indices
-                    cat_url = f"{self.cfg.base_url}/_cat/indices/{self.cfg.alerts_index_pattern}?format=json"
-                    r2 = self.session.get(cat_url)
-                    r2.raise_for_status()
-                    indices = r2.json()
-                    if isinstance(indices, list) and len(indices) > 0 and "index" in indices[0]:
-                        index_name = indices[0]["index"]
-                        logger.info("Resolved alerts index pattern '%s' -> '%s' via _cat/indices", self.cfg.alerts_index_pattern, index_name)
-                    else:
-                        index_name = index_name.replace("*", "") or self.cfg.alerts_index_pattern
-                        logger.warning("Could not resolve concrete index for pattern '%s'; falling back to '%s'", self.cfg.alerts_index_pattern, index_name)
-            except Exception as e:
-                logger.warning("Failed to resolve index pattern '%s': %s", self.cfg.alerts_index_pattern, e)
-                index_name = index_name.replace("*", "") or self.cfg.alerts_index_pattern
-
-        url = f"{self.cfg.base_url}/{index_name}/_doc"
+    def _save_payload(self, doc_id: Optional[str], body: Dict[str, Any]) -> None:
+        """Write (and with print_payloads, print) an anomaly payload for inspection."""
+        payload = json.dumps(body)
+        fname = f"anomaly_{doc_id}.json" if doc_id else f"anomaly_{int(datetime.now().timestamp())}_{uuid4().hex}.json"
+        path = os.path.join(self.payload_dir, fname)
         try:
-            payload = json.dumps(doc, default=str)
-        except Exception:
-            payload = json.dumps(doc, default=lambda o: str(o))
-
-        # If configured to print/save payloads, do so before sending
-        if self.print_payloads or self.dry_run:
-            try:
-                import os
-                from uuid import uuid4
-                fname = f"alert_{int(datetime.now().timestamp())}_{uuid4().hex}.json"
-                path = os.path.join(self.payload_dir, fname)
-                with open(path, "w", encoding="utf-8") as fh:
-                    fh.write(payload)
-                logger.info("Wrote alert payload to %s", path)
-                if self.print_payloads:
-                    print(payload)
-            except Exception as e:
-                logger.warning("Failed to write alert payload: %s", e)
-
-        if self.dry_run:
-            return f"dryrun-{int(datetime.now().timestamp())}"
-
-        resp = self.session.post(url, data=payload, headers={"Content-Type": "application/json"})
-        try:
-            resp.raise_for_status()
-        except requests.HTTPError as e:
-            body = getattr(resp, "text", "")
-            logger.warning("Indexing alert failed (status=%s): %s", getattr(resp, "status_code", "?"), body)
-            e.response_text = body
-            raise
-        return resp.json().get("_id", "")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(payload)
+            logger.info("Wrote anomaly payload to %s", path)
+        except OSError as e:
+            logger.warning("Failed to write anomaly payload: %s", e)
+        if self.print_payloads:
+            print(payload)
 
     def check_connection(self) -> bool:
         """
@@ -241,8 +265,15 @@ class WazuhIndexerClient:
             True if connection successful, False otherwise.
         """
         try:
-            url = f"{self.cfg.base_url}/"
-            resp = self.session.get(url, timeout=5)
-            return resp.status_code == 200
-        except Exception:
+            return bool(self.client.ping())
+        except Exception as e:
+            logger.debug("Indexer ping failed: %s", e)
             return False
+
+
+def _total_hits(hits: Dict[str, Any]) -> Optional[int]:
+    """``hits.total`` as a number (OpenSearch returns ``{"value": n, "relation": ...}``)."""
+    total = hits.get("total")
+    if isinstance(total, dict):
+        return int(total.get("value", 0))
+    return int(total) if total is not None else None

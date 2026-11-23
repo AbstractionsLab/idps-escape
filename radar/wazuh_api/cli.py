@@ -8,6 +8,7 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
 
 from . import config as config_module
 from . import fleet as fleet_module
@@ -400,6 +401,18 @@ def cmd_manager_volume_path(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_filebeat_pipeline_add_step(args: argparse.Namespace) -> int:
+    from .filebeat_pipeline import PipelineFileError, add_step
+
+    try:
+        step = json.loads(open(args.step, encoding="utf-8").read())
+        print(add_step(Path(args.pipeline_json), step))
+    except (OSError, ValueError, PipelineFileError) as exc:
+        print(f"[!] {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Wazuh API operations for RADAR (groups/agents)")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -563,6 +576,13 @@ def build_parser() -> argparse.ArgumentParser:
                                 help="volumes.yml service key to use instead of the primary manager node "
                                      "(for running against a specific node in a manager cluster)")
     p_mgr_volpath.set_defaults(func=cmd_manager_volume_path)
+
+    p_fb_step = sub.add_parser("filebeat-pipeline-add-step",
+                               help="Append a tagged processor to the archives Filebeat pipeline file (idempotent); "
+                                    "prints added, updated or unchanged")
+    p_fb_step.add_argument("pipeline_json")
+    p_fb_step.add_argument("step")
+    p_fb_step.set_defaults(func=cmd_filebeat_pipeline_add_step)
 
     return parser
 

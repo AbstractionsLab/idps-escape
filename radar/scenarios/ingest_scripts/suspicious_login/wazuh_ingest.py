@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-import csv, glob, json, os, math, hashlib, random, re
+import json
+import os
+import random
+import re
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
-from collections import defaultdict, deque
-from datetime import datetime, date, timedelta, timezone
+from zoneinfo import ZoneInfo
+
 import requests
+import yaml
 from requests.auth import HTTPBasicAuth
+
 
 def _parse_env_value(raw: str):
     raw = raw.strip()
@@ -12,7 +18,7 @@ def _parse_env_value(raw: str):
         end = raw.find("'", 1)
         if end < 0:
             return None
-        rest = raw[end + 1:].strip()
+        rest = raw[end + 1 :].strip()
         return raw[1:end] if (not rest or rest.startswith("#")) else None
     if raw.startswith('"'):
         out, i = [], 1
@@ -23,12 +29,14 @@ def _parse_env_value(raw: str):
                 i += 2
                 continue
             if ch == '"':
-                rest = raw[i + 1:].strip()
+                rest = raw[i + 1 :].strip()
                 return "".join(out) if (not rest or rest.startswith("#")) else None
             out.append(ch)
             i += 1
         return None
     return re.split(r"\s+#", raw, maxsplit=1)[0].strip()
+
+
 # end _parse_env_value
 
 
@@ -49,64 +57,57 @@ def load_env(env_path: Path) -> None:
         if value is not None:
             os.environ.setdefault(m.group(1), value)
 
+
 # ────────────────────────────
 # Config
 # ────────────────────────────
-load_env(Path(".env"))
-ES_URL = (os.environ.get("OS_URL") or "https://wazuh.indexer:9200").rstrip("/")
-AUTH = HTTPBasicAuth(os.environ.get("OS_USER", "admin"), os.environ.get("OS_PASS", ""))
+ES_URL = "https://wazuh.indexer:9200"
+AUTH = HTTPBasicAuth("admin", "SecretPassword")
 CA_CERT = "config/wazuh_indexer_ssl_certs/root-ca.pem"
 CHUNK_SIZE = 200
 REQUEST_TIMEOUT = 60
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-INDEX_PREFIX = "wazuh-ad-suspicious-login"
-DATE_FIELD = "Login Timestamp"
-DATE_FMT = "%Y-%m-%d %H:%M:%S.%f"
 
-# Travel/novelty knobs
-WIN_90D = 90 * 24 * 3600   # seconds
-VEL_CAP = 2000.0           # km/h
-IMPOSSIBLE_KMH = 900.0
+load_env(Path(".env"))
+if os.environ.get("OS_URL"):
+    ES_URL = os.environ["OS_URL"].rstrip("/")
+if os.environ.get("OS_USER") or os.environ.get("OS_PASS"):
+    AUTH = HTTPBasicAuth(os.environ.get("OS_USER", ""), os.environ.get("OS_PASS", ""))
+OS_VERIFY_SSL = os.environ.get("OS_VERIFY_SSL", "true").lower() in ("1", "true", "yes", "on")
 
-# Dataset field names
-FIELD_USER    = "User ID"
-FIELD_SUCCESS = "Login Successful"
-FIELD_ASN     = "ASN"
-FIELD_COUNTRY = "Country"
-FIELD_REGION  = "Region"
-FIELD_CITY    = "City"
-FIELD_OS      = "OS Name"
-FIELD_BROWSER = "Browser Name"
-FIELD_DTYPE   = "Device Type"
 
-COUNTRY_CENTROIDS = {
-    "LUXEMBOURG": (49.8153, 6.1296), "LU": (49.8153, 6.1296),
-    "NORWAY": (60.4720, 8.4689),     "NO": (60.4720, 8.4689),
-    "GERMANY": (51.1657, 10.4515),   "DE": (51.1657, 10.4515),
-    "NETHERLANDS": (52.1326, 5.2913),"NL": (52.1326, 5.2913),
-    "FRANCE": (46.2276, 2.2137),     "FR": (46.2276, 2.2137),
-    "TURKEY": (38.9637, 35.2433),    "TR": (38.9637, 35.2433),
-    "KAZAKHSTAN": (48.0196, 66.9237),"KZ": (48.0196, 66.9237),
-    "AZERBAIJAN": (40.1431, 47.5769),"AZ": (40.1431, 47.5769),
-    "UNITED KINGDOM": (55.3781, -3.4360), "UK": (55.3781, -3.4360), "GB": (55.3781, -3.4360),
-    "SPAIN": (40.4637, -3.7492),     "ES": (40.4637, -3.7492),
-    "ITALY": (41.8719, 12.5674),     "IT": (41.8719, 12.5674),
-    "SWEDEN": (60.1282, 18.6435),    "SE": (60.1282, 18.6435),
-    "FINLAND": (61.9241, 25.7482),   "FI": (61.9241, 25.7482),
-    "POLAND": (51.9194, 19.1451),    "PL": (51.9194, 19.1451),
-    "UNITED STATES": (39.8283, -98.5795), "US": (39.8283, -98.5795),
-    "CANADA": (56.1304, -106.3468),  "CA": (56.1304, -106.3468),
-}
+def _load_full_config():
+    cfg_path = Path(__file__).resolve().parent.parent / "config.yaml"
+    with cfg_path.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def _get_ingest_cfg(cfg):
+    return cfg.get("scenarios", {}).get("suspicious_login", {}).get("ingest", {})
+
 
 # ────────────────────────────
-# Helpers
+# Bulk indexing
 # ────────────────────────────
-def send_bulk(lines):
+# Same name as off_hours.PIPELINE_NAME (this script runs without /app on its import path).
+OFF_HOURS_PIPELINE = "radar-off-hours"
+# Must match Wazuh's legacy `wazuh` template (wazuh-archives-4.x-*), which maps strings as
+# keyword. Under any other wazuh-archives-* name, dynamic mapping makes agent.name `text`,
+# and AD then refuses every detector on wazuh-archives-* that uses it as a category field.
+DEFAULT_ARCHIVES_INDEX_PREFIX = "wazuh-archives-4.x"
+
+
+def send_bulk(lines, pipeline=None):
     data = "\n".join(lines) + "\n"
-    resp = requests.post(f"{ES_URL}/_bulk?refresh=true",
-        auth=AUTH, headers={"Content-Type": "application/x-ndjson"},
-        data=data, verify=CA_CERT, timeout=REQUEST_TIMEOUT)
+    params = "refresh=true" + (f"&pipeline={pipeline}" if pipeline else "")
+    resp = requests.post(
+        f"{ES_URL}/_bulk?{params}",
+        auth=AUTH,
+        headers={"Content-Type": "application/x-ndjson"},
+        data=data,
+        verify=OS_VERIFY_SSL,
+        timeout=REQUEST_TIMEOUT,
+    )
     resp.raise_for_status()
     result = resp.json()
     if result.get("errors"):
@@ -114,191 +115,130 @@ def send_bulk(lines):
     else:
         print(f"Indexed chunk of {len(lines)//2} docs")
 
-def bool_from_any(v):
-    if isinstance(v, bool): return v
-    s = str(v).strip().lower()
-    return s in ("1","true","t","yes","y")
-
-def asn_is_placeholder(asn):
-    try: return int(asn) >= 500000
-    except: return True
-
-def device_fingerprint(os_name, browser_name, dtype):
-    base = f"{os_name or 'NA'}|{browser_name or 'NA'}|{dtype or 'NA'}"
-    return hashlib.sha1(base.encode("utf-8")).hexdigest()[:16]
-
-def haversine_km(p1, l1, p2, l2):
-    R = 6371.0088
-    p1, l1, p2, l2 = map(math.radians, (p1, l1, p2, l2))
-    dp, dl = p2 - p1, l2 - l1
-    a = math.sin(dp/2)**2 + math.cos(p1)*math.cos(p2)*math.sin(dl/2)**2
-    return 2*R*math.asin(math.sqrt(a))
-
-def country_centroid(country: str):
-    if not country: return None
-    key = country.strip().upper()
-    return COUNTRY_CENTROIDS.get(key)
-
-def syslog_stamp(dt_local: datetime) -> str:
-    #"Nov 11 14:49:44"
-    return dt_local.strftime("%b %e %H:%M:%S")
-
-def make_sshd_full_log(dt_local: datetime, host: str, user: str, srcip: str, port: int, success: bool) -> str:
-    pid = random.randint(20000, 99999)
-    if success:
-        return (f"{syslog_stamp(dt_local)} {host} sshd[{pid}]: Accepted publickey for {user} "
-                f"from {srcip} port {port} ssh2")
-    else:
-        return (f"{syslog_stamp(dt_local)} {host} sshd[{pid}]: Failed password for {user} "
-                f"from {srcip} port {port} ssh2")
 
 # ────────────────────────────
-# Per-user state for novelty/velocity
+# Off-hour activity generator
 # ────────────────────────────
-class UserState:
-    __slots__ = ("last_ts","last_country","asn_hist","asn_set","dev_hist","dev_set")
-    def __init__(self):
-        self.last_ts = None
-        self.last_country = None
-        self.asn_hist = deque() 
-        self.asn_set  = set()
-        self.dev_hist = deque()
-        self.dev_set  = set()
+ACTIVITY_DECODERS = {
+    "auth_success": "sshd",
+    "file_access": "auditd",
+    "process_exec": "auditd",
+    "web_request": "nginx",
+}
 
-USERS = defaultdict(UserState)
 
-def remove_90d(us: UserState, now_sec: int):
-    while us.asn_hist and us.asn_hist[0][1] < now_sec - WIN_90D:
-        old,_ = us.asn_hist.popleft()
-        if all(a != old for a,_ in us.asn_hist): us.asn_set.discard(old)
-    while us.dev_hist and us.dev_hist[0][1] < now_sec - WIN_90D:
-        old,_ = us.dev_hist.popleft()
-        if all(d != old for d,_ in us.dev_hist): us.dev_set.discard(old)
+def _sample_shift_anchor_hour(start_h: float, end_h: float, drift_min: float) -> float:
+    """Hours after local midnight of the day the shift starts. Not wrapped at 24:
+    the part of a shift that crosses midnight lands on the next calendar day."""
+    drift_h = drift_min / 60.0
+    span = end_h - start_h if start_h <= end_h else (24 - start_h) + end_h
+    return start_h + random.uniform(0, span) + random.uniform(-drift_h, drift_h)
 
-# ────────────────────────────
-# Ingest
-# ────────────────────────────
-def shift_and_bulk(file_pattern, day_shift):
-    target_date = date.today() + timedelta(days=day_shift)
-    mode = "Training" if day_shift < 0 else "Simulation"
 
-    host = "agent.suspicious"
-    default_srcip = "192.0.2.10"
-    default_port  = 60000
+def _to_utc_iso(day: date, hour_float: float, tz=timezone.utc) -> str:
+    """`hour_float` hours of wall-clock time after midnight of `day` in `tz`, as UTC.
+    Aware datetime arithmetic is wall-clock arithmetic, so summer time is respected."""
+    when = datetime.combine(day, time(0), tzinfo=tz) + timedelta(hours=hour_float)
+    return when.astimezone(timezone.utc).replace(second=0, microsecond=0).isoformat()
 
-    for path in glob.glob(file_pattern):
-        buffer = []
-        print(f"{mode} load from {path}")
 
-        with open(path, newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                # time shift
-                orig = datetime.strptime(row[DATE_FIELD], DATE_FMT)
-                new_ts_local = datetime.combine(target_date, orig.time())
-                utc_ts = new_ts_local.astimezone(timezone.utc)
-                ts_sec = int(utc_ts.timestamp())
-                iso_ts = utc_ts.isoformat()
+def _workday(day: date) -> bool:
+    return day.weekday() < 5  # Mon-Fri only, matches the shift model itself
 
-                # CSV fields
-                user_id = row.get(FIELD_USER) or "unknown"
-                success = bool_from_any(row.get(FIELD_SUCCESS))
-                asn     = row.get(FIELD_ASN, "")
-                country = (row.get(FIELD_COUNTRY) or "").strip() or "NA"
-                region  = row.get(FIELD_REGION) or ""
-                city    = row.get(FIELD_CITY) or ""
-                os_name = row.get(FIELD_OS) or ""
-                browser = row.get(FIELD_BROWSER) or ""
-                dtype   = row.get(FIELD_DTYPE) or ""
-                dev_fp  = device_fingerprint(os_name, browser, dtype)
 
-                srcip = row.get("IP") or default_srcip
-                try:
-                    port = int(row.get("Port") or default_port)
-                except:
-                    port = default_port
+def _burst_day(today: date, days_ago: int) -> date:
+    """The workday closest to `days_ago` days before today, looking further back."""
+    day = today - timedelta(days=days_ago)
+    while not _workday(day):
+        day -= timedelta(days=1)
+    return day
 
-                # novelty state
-                us = USERS[user_id]
-                remove_90d(us, ts_sec)
 
-                asn_ph = asn_is_placeholder(asn)
-                asn_nov = False
-                if not asn_ph:
-                    asn_nov = (asn not in us.asn_set)
-                    us.asn_hist.append((asn, ts_sec))
-                    us.asn_set.add(asn)
+def generate_archive_events(ingest_cfg: dict, today: date | None = None) -> list:
+    history_days = int(ingest_cfg.get("history_days", 45))
+    future_days = int(ingest_cfg.get("future_days", 14))
+    agent_name = ingest_cfg.get("agent_name", "edge.vm")
+    index_prefix = ingest_cfg.get("archives_index_prefix", DEFAULT_ARCHIVES_INDEX_PREFIX)
+    activity_types = ingest_cfg.get("activity_types", ["auth_success"])
+    events_min = int(ingest_cfg.get("events_per_login_min", 1))
+    events_max = int(ingest_cfg.get("events_per_login_max", 1))
+    users = ingest_cfg.get("users", [])
 
-                dev_nov = (dev_fp not in us.dev_set)
-                us.dev_hist.append((dev_fp, ts_sec))
-                us.dev_set.add(dev_fp)
+    today = today or date.today()
+    out = []
 
-                # country change + centroid velocity
-                country_change = False
-                geo_v_kmh = None
-                prev_country = us.last_country
-                if prev_country is not None:
-                    country_change = (country != prev_country)
-                    c1 = country_centroid(prev_country)
-                    c2 = country_centroid(country)
-                    if c1 and c2 and us.last_ts is not None:
-                        dist_km = haversine_km(c1[0], c1[1], c2[0], c2[1])
-                        dt_h = max((ts_sec - us.last_ts)/3600.0, 1e-6)
-                        geo_v_kmh = min(dist_km/dt_h, VEL_CAP)
+    def add(name: str, day: date, hour: float, tz) -> None:
+        activity = random.choice(activity_types)
+        iso_ts = _to_utc_iso(day, hour, tz)
+        doc = {
+            "@timestamp": iso_ts,
+            "timestamp": iso_ts,
+            "agent": {"name": agent_name},
+            "predecoder": {"program_name": activity},
+            "decoder": {"name": ACTIVITY_DECODERS.get(activity, "generic")},
+            "data": {
+                "user": name,
+                "action": activity,
+            },
+            "full_log": f"synthetic off-hour training event: user={name} activity={activity}",
+        }
+        out.append((f"{index_prefix}-{iso_ts[:10].replace('-', '.')}", doc))
 
-                us.last_ts = ts_sec
-                us.last_country = country
+    for u in users:
+        name = u["name"]
+        tz = ZoneInfo(u["timezone"]) if u.get("timezone") else timezone.utc
+        start_h, end_h = float(u["start_hour"]), float(u["end_hour"])
+        drift_min = float(u.get("drift_minutes", 45))
+        evenings = u.get("evenings") or {}
 
-                full_log = make_sshd_full_log(new_ts_local, host, user_id, srcip, port, success)
+        for day_offset in range(-history_days, future_days):
+            day = today + timedelta(days=day_offset)  # a calendar day in the user's time zone
+            if not _workday(day):
+                continue
+            for _ in range(random.randint(events_min, events_max)):
+                add(name, day, _sample_shift_anchor_hour(start_h, end_h, drift_min), tz)
+            # Occasional evening work: per_week of the five workdays on average.
+            if evenings and random.random() < float(evenings.get("per_week", 2)) / 5.0:
+                for _ in range(random.randint(int(evenings.get("events_min", 1)), int(evenings.get("events_max", 3)))):
+                    add(name, day, random.uniform(float(evenings["start_hour"]), float(evenings["end_hour"])), tz)
 
-                out = {
-                    "@timestamp": iso_ts,
-                    "decoder": {"name": "sshd"},
-                    "predecoder": {"program_name": "sshd"},
-                    "location": "/var/log/auth.log",
-                    "agent": {"name": host},
+        burst = u.get("burst")
+        if burst and 0 < int(burst.get("days_ago", 7)) <= history_days:
+            day = _burst_day(today, int(burst.get("days_ago", 7)))
+            start = float(burst.get("local_hour", 2.0))
+            for _ in range(int(burst.get("events", 30))):
+                add(name, day, start + random.uniform(0, 25) / 60.0, tz)  # inside one 30-minute interval
 
-                    # Fields Wazuh decoders set for sshd:
-                    "data": {
-                        "user": user_id,
-                        "srcip": srcip,
-                        "port": str(port),
-                        "radar_outcome": "success" if success else "failure",
-                        "radar_asn": asn,
-                        "radar_asn_placeholder_flag": bool(asn_ph),
-                        "radar_country": country,
-                        "radar_region": region,
-                        "radar_city": city,
-                        "radar_geo_velocity_kmh": float(geo_v_kmh) if geo_v_kmh is not None else 0.0,
-                        "radar_country_change_i": 1 if country_change else 0,
-                        "radar_asn_novelty_i": 1 if asn_nov else 0
-                    },
+    return out
 
-                    # Original syslog line
-                    "full_log": full_log,
 
-                }
+def bulk_index_archive_events(events: list, pipeline=None) -> None:
+    buffer = []
+    indexed = 0
+    for index_name, doc in events:
+        buffer.append(json.dumps({"index": {"_index": index_name}}))
+        buffer.append(json.dumps(doc))
+        if len(buffer) >= CHUNK_SIZE * 2:
+            send_bulk(buffer, pipeline)
+            indexed += len(buffer) // 2
+            buffer.clear()
+    if buffer:
+        send_bulk(buffer, pipeline)
+        indexed += len(buffer) // 2
+    print(f"Indexed {indexed} synthetic archive events across " f"{len({idx for idx, _ in events})} daily indices")
 
-                idx = f"{INDEX_PREFIX}-{new_ts_local.strftime('%Y.%m.%d')}"
-                buffer.append(json.dumps({"index": {"_index": idx}}))
-                buffer.append(json.dumps(out))
 
-                if len(buffer) >= CHUNK_SIZE * 2:
-                    send_bulk(buffer); buffer.clear()
+def run_off_hour_ingest():
+    cfg = _load_full_config()
+    ingest_cfg = _get_ingest_cfg(cfg)
+    if not ingest_cfg.get("users"):
+        print("No scenarios.suspicious_login.ingest.users configured in config.yaml; nothing to ingest")
+        return
+    events = generate_archive_events(ingest_cfg)
+    off_hours_cfg = cfg.get("scenarios", {}).get("suspicious_login", {}).get("off_hours") or {}
+    pipeline = OFF_HOURS_PIPELINE if off_hours_cfg and off_hours_cfg.get("enabled", True) else None
+    bulk_index_archive_events(events, pipeline)
 
-        if buffer: send_bulk(buffer)
-        print(f" → Completed {mode}, indexed into {idx}")
 
 if __name__ == "__main__":
-    to_load = [
-        ("rba-dataset-3.csv", -3),
-        ("rba-dataset-2.csv", -2),
-        ("rba-dataset-1.csv", -1),
-        ("rba-dataset+0.csv", 0),
-        ("rba-dataset+1.csv", 1),
-        ("rba-dataset+2.csv", 2),
-        ("rba-dataset+3.csv", 3),
-    ]
-    for filename, shift in to_load:
-        file_pattern = os.path.join(BASE_DIR, "dataset", filename)
-        shift_and_bulk(file_pattern, day_shift=shift)
+    run_off_hour_ingest()

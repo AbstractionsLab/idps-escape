@@ -8,6 +8,7 @@ This script creates two JSON files:
 
 Usage:
     python generate_resource_data.py [--output-dir ./resource_monitoring]
+    python generate_resource_data.py --evaluation --output-dir <dir>   # labelled splits for sonar evaluate
 
 The generated data simulates realistic system resource patterns with:
 - Normal CPU and memory usage fluctuations
@@ -23,6 +24,8 @@ import random
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
+
+from labelled_splits import labelled_split, write_json
 
 # Seed for reproducibility
 random.seed(42)
@@ -327,6 +330,52 @@ def inject_fork_bomb(
     return alerts
 
 
+# --- Labelled evaluation splits (sonar evaluate) ---
+
+EVALUATION_EVENTS = ["cpu_spike", "memory_leak", "fork_bomb"] * 4
+
+
+def _inject_cpu_spike(alerts: List[Dict[str, Any]], at: datetime, rng: random.Random) -> float:
+    minutes = rng.randint(20, 45)
+    inject_cpu_spike_attack(alerts, at, 0, duration_minutes=minutes, affected_agents=rng.sample(AGENTS, k=rng.randint(2, 3)))
+    return minutes
+
+
+def _inject_memory_leak(alerts: List[Dict[str, Any]], at: datetime, rng: random.Random) -> float:
+    inject_memory_leak(alerts, at, 0, duration_minutes=60, target_agent=rng.choice(AGENTS))
+    return 60
+
+
+def _inject_fork_bomb(alerts: List[Dict[str, Any]], at: datetime, rng: random.Random) -> float:
+    minutes = rng.randint(5, 10)
+    inject_fork_bomb(alerts, at, 0, duration_minutes=minutes, target_agent=rng.choice(AGENTS))
+    return minutes
+
+
+INJECTORS = {"cpu_spike": _inject_cpu_spike, "memory_leak": _inject_memory_leak, "fork_bomb": _inject_fork_bomb}
+
+
+def generate_evaluation_splits(output_dir: Path, seed: int, training_hours: int, context_hours: int, evaluation_hours: int) -> None:
+    """
+    Write training.json (normal only) and validation/test splits with their label files.
+
+    Each split is ``context_hours`` of normal data, then ``evaluation_hours`` with four CPU
+    spikes, four memory leaks and four fork bombs at random times.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    normal = lambda start, hours: generate_normal_resource_data(start, hours, samples_per_hour=60)
+    random.seed(seed)
+    training = generate_normal_resource_data(datetime(2024, 12, 1), training_hours, samples_per_hour=60)
+    training.sort(key=lambda a: a["timestamp"])
+    write_json(output_dir / "training.json", training)
+    print(f"training.json: {len(training)} alerts, {training_hours} h")
+    for offset, split, start in ((1, "validation", datetime(2024, 12, 10)), (2, "test", datetime(2024, 12, 13))):
+        alerts, labels = labelled_split(normal, INJECTORS, EVALUATION_EVENTS, start, context_hours, evaluation_hours, seed + 10 * offset, f"resource_monitoring {split} split", max_minutes=60)
+        write_json(output_dir / f"{split}.json", alerts)
+        write_json(output_dir / f"{split}_labels.json", labels)
+        print(f"{split}.json: {len(alerts)} alerts, {len(labels['events'])} labelled events")
+
+
 def main():
     """Generate resource monitoring test data."""
     parser = argparse.ArgumentParser(
@@ -341,50 +390,85 @@ def main():
     parser.add_argument(
         "--training-hours",
         type=int,
-        default=168,
-        help="Hours of normal data for training (default: 168 = 7 days)",
+        default=None,
+        help="Hours of normal data for training (default: 168 = 7 days; 24 with --evaluation, the scenario's lookback)",
     )
     parser.add_argument(
         "--detection-hours",
         type=int,
         default=6,
-        help="Hours of data for detection testing (default: 6)",
+        help="Hours of detection data after the context, containing the attacks at hours 1, 3 and 5 (default: 6)",
     )
+    parser.add_argument(
+        "--context-hours",
+        type=int,
+        default=2,
+        help=(
+            "Hours of normal data before the detection hours (default: 2). MVAD needs "
+            "input_size + threshold_window - 1 buckets before the first bucket it scores "
+            "(119 one-minute buckets for sliding_window 120); in debug mode the file is all there is."
+        ),
+    )
+    parser.add_argument(
+        "--detection-only",
+        action="store_true",
+        help="Regenerate only the detection file and keep the existing training file",
+    )
+    parser.add_argument(
+        "--evaluation",
+        action="store_true",
+        help="Write labelled evaluation splits (training.json, validation.json, test.json and their *_labels.json) instead of the debug files",
+    )
+    parser.add_argument("--seed", type=int, default=42, help="Random seed of the evaluation splits (default: 42)")
+    parser.add_argument("--evaluation-hours", type=int, default=46, help="Hours with events in each evaluation split, after the context hours (default: 46)")
     
     args = parser.parse_args()
-    
+
+    if args.training_hours is None and not args.evaluation:
+        args.training_hours = 168
+    if args.evaluation:
+        generate_evaluation_splits(Path(args.output_dir), args.seed, args.training_hours or 24, args.context_hours, args.evaluation_hours)
+        return
+
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"Generating resource monitoring test data...")
     print(f"Output directory: {output_dir}")
     
-    # Generate training data (normal patterns only)
-    print(f"\n1. Generating {args.training_hours} hours of normal training data...")
-    training_start = datetime(2024, 12, 1, 0, 0, 0)
-    training_data = generate_normal_resource_data(
-        training_start, 
-        args.training_hours,
-        samples_per_hour=60  # 1 per minute
-    )
-    
-    print(f"   Generated {len(training_data)} training alerts")
-    
-    # Sort by timestamp
-    training_data.sort(key=lambda x: x["timestamp"])
-    
-    # Save training data
     training_file = output_dir / "resource_monitoring_training.json"
-    with open(training_file, "w") as f:
-        json.dump(training_data, f, indent=2)
-    print(f"   Saved to: {training_file}")
+    if args.detection_only:
+        print(f"\n1. Keeping the existing training data: {training_file}")
+        with open(training_file) as f:
+            training_data = json.load(f)
+    else:
+        # Generate training data (normal patterns only)
+        print(f"\n1. Generating {args.training_hours} hours of normal training data...")
+        training_start = datetime(2024, 12, 1, 0, 0, 0)
+        training_data = generate_normal_resource_data(
+            training_start, 
+            args.training_hours,
+            samples_per_hour=60  # 1 per minute
+        )
+
+        print(f"   Generated {len(training_data)} training alerts")
+
+        # Sort by timestamp
+        training_data.sort(key=lambda x: x["timestamp"])
+
+        # Save training data
+        with open(training_file, "w") as f:
+            json.dump(training_data, f, indent=2)
+        print(f"   Saved to: {training_file}")
     
     # Generate detection data (with anomalies)
-    print(f"\n2. Generating {args.detection_hours} hours of detection data with anomalies...")
-    detection_start = datetime(2024, 12, 15, 0, 0, 0)
+    print(f"\n2. Generating {args.context_hours} + {args.detection_hours} hours of detection data with anomalies...")
+    # The attacks stay at 01:00, 03:00 and 05:00 on 2024-12-15; the context hours come before.
+    attack_base = datetime(2024, 12, 15, 0, 0, 0)
+    detection_start = attack_base - timedelta(hours=args.context_hours)
     detection_data = generate_normal_resource_data(
         detection_start,
-        args.detection_hours,
+        args.context_hours + args.detection_hours,
         samples_per_hour=60
     )
     
@@ -397,7 +481,7 @@ def main():
     print("     - CPU spike attack (crypto mining) at hour 1")
     detection_data = inject_cpu_spike_attack(
         detection_data,
-        detection_start,
+        attack_base,
         attack_start_hour=1,
         duration_minutes=45
     )
@@ -406,7 +490,7 @@ def main():
     print("     - Memory leak pattern at hour 3")
     detection_data = inject_memory_leak(
         detection_data,
-        detection_start,
+        attack_base,
         attack_start_hour=3,
         duration_minutes=60
     )
@@ -415,7 +499,7 @@ def main():
     print("     - Fork bomb attack at hour 5")
     detection_data = inject_fork_bomb(
         detection_data,
-        detection_start,
+        attack_base,
         attack_start_hour=5,
         duration_minutes=8
     )

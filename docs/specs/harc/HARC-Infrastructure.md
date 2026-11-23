@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: zzDpPqOnC31-BhdKJclQvb2Iro9mWEeKPkijwUHI-W0=
 ---
 
 # Infrastructure High-Level Architecture

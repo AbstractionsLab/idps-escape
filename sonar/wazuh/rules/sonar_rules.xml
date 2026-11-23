@@ -1,0 +1,48 @@
+<!--
+  SONAR (SIEM-Oriented Neural Anomaly Recognition) rules.
+
+  SONAR sends one JSON event per anomalous time bucket, through a <localfile> with
+  log_format json (SONAR on the manager host) or the server API POST /events (SONAR on a
+  dedicated host). Wazuh's JSON decoder puts the fields under data.* in the alert:
+  data.anomaly_grade (MVAD severity, 0-1), data.anomaly_confidence (0-1) and data.sonar.*.
+
+  ID range reserved for SONAR: 100500-100519.
+    100500          any SONAR anomaly (base rule)
+    100501-100503   severity bands low / medium / high
+    100510-100519   free for per-scenario rules, e.g. <if_sid>100503</if_sid> with
+                    <field name="sonar.scenario">^brute_force$</field>
+
+  Alerts from these rules carry the rule group "sonar", which SONAR's alert search excludes
+  (wazuh.exclude_rule_groups), so SONAR never learns from its own alerts.
+-->
+<group name="sonar,anomaly,">
+
+  <rule id="100500" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="integration">^sonar$</field>
+    <description>SONAR: multivariate anomaly in scenario $(sonar.scenario)</description>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100501" level="3">
+    <if_sid>100500</if_sid>
+    <field name="sonar.severity_band">^low$</field>
+    <description>SONAR: low-severity anomaly in scenario $(sonar.scenario) (severity $(sonar.severity))</description>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100502" level="7">
+    <if_sid>100500</if_sid>
+    <field name="sonar.severity_band">^medium$</field>
+    <description>SONAR: medium-severity anomaly in scenario $(sonar.scenario) (severity $(sonar.severity))</description>
+    <options>no_full_log</options>
+  </rule>
+
+  <rule id="100503" level="10">
+    <if_sid>100500</if_sid>
+    <field name="sonar.severity_band">^high$</field>
+    <description>SONAR: high-severity anomaly in scenario $(sonar.scenario) (severity $(sonar.severity))</description>
+    <options>no_full_log</options>
+  </rule>
+
+</group>

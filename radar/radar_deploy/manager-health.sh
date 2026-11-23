@@ -125,7 +125,7 @@ while IFS= read -r node; do
 done <<< "$MANAGER_CONTAINERS"
 
 RESOLVED_WEBHOOK_URL="${WEBHOOK_URL:-}"
-if has log_volume && [[ -n "$RESOLVED_WEBHOOK_URL" ]]; then
+if { has log_volume || has linux_resource_utilization; } && [[ -n "$RESOLVED_WEBHOOK_URL" ]]; then
   echo ""
   check_reachable "Webhook ($RESOLVED_WEBHOOK_URL)" "$INDEXER_CONTAINER" "$RESOLVED_WEBHOOK_URL"
 fi

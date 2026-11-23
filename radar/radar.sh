@@ -2,6 +2,7 @@
 # radar.sh
 # Usage:
 #   ./radar.sh gui                                   Start the Web GUI
+#   ./radar.sh gui-url                               Print the login URL of the running Web GUI
 #   ./radar.sh build <scenario>                       = sudo ./build-radar.sh <scenario>
 #   ./radar.sh run <scenario> [--ingest true]         = ./run-radar.sh
 #   ./radar.sh health [--scenario ...] [--agent-name ...]  = ./health-radar.sh
@@ -17,6 +18,22 @@ cd "$SCRIPT_DIR"
 VENV_DIR="$SCRIPT_DIR/.venv"
 REQ_FILE="$SCRIPT_DIR/gui/requirements.txt"
 REQ_HASH_FILE="$VENV_DIR/.requirements.sha256"
+
+GUI_STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/radar-gui/gui-${RADAR_GUI_PORT:-5000}.env"
+
+running_gui_url() {
+  [[ -f "$GUI_STATE_FILE" ]] || return 1
+  local pid url
+  pid="$(sed -n 's/^PID=//p' "$GUI_STATE_FILE")"
+  url="$(sed -n 's/^URL=//p' "$GUI_STATE_FILE")"
+  if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null &&
+     { [[ ! -d /proc ]] || tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -q 'app\.py'; }; then
+    echo "$url"
+    return 0
+  fi
+  rm -f "$GUI_STATE_FILE"
+  return 1
+}
 
 usage() {
   grep '^#' "$0" | grep -v '#!/' | sed 's/^# \{0,2\}//' | head -20
@@ -50,10 +67,25 @@ shift || true
 
 case "$CMD" in
   gui)
+    if url="$(running_gui_url)"; then
+      echo ">>> RADAR GUI is already running. Login URL (keep it private):"
+      echo "    $url"
+      echo "    To restart it, use Log out in the GUI (or stop the running process) and run ./radar.sh gui again."
+      exit 0
+    fi
     ensure_venv
     echo ">>> Starting RADAR GUI..."
     cd gui
     exec python3 app.py
+    ;;
+
+  gui-url)
+    if url="$(running_gui_url)"; then
+      echo "$url"
+    else
+      echo "The RADAR GUI is not running on port ${RADAR_GUI_PORT:-5000}. Start it with: ./radar.sh gui" >&2
+      exit 1
+    fi
     ;;
 
   build)

@@ -121,7 +121,8 @@ async function saveConfig() {
       `/api/scenarios/${encodeURIComponent(scenarioId)}/ar-config`,
       { method: "PUT", body: JSON.stringify(patch) }
     );
-    _setMsg(data.ok ? "Saved to ar.yaml" : (data.error || "Save failed"), data.ok);
+    _setMsg(data.ok ? "Saved to ar.yaml. Deploy the scenario to apply it on the manager."
+                    : (data.error || "Save failed"), data.ok);
   } catch (e) {
     _setMsg(e.message, false);
   }

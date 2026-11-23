@@ -29,8 +29,8 @@ scenarios:
     delay_minutes: 1
     monitor_name: "LogVolume-Monitor"
     trigger_name: "LogVolume-Growth-Detected"
-    anomaly_grade_threshold: 0.3
-    confidence_threshold: 0.3
+    anomaly_grade_threshold: 0.01
+    confidence_threshold: 0.01
     features:
       - feature_name: log_volume_max
         feature_enabled: true
@@ -83,8 +83,126 @@ scenarios:
 
   suspicious_login:
     display_name: "Suspicious Login"
-    description: "Brute force and impossible travel detection using signature + RCF baseline."
+    description: "Brute force and impossible travel (signature rules) plus off-hours activity against declared working hours (rule mode, and a per-user RCF baseline in model mode)."
     gui_visible: true
+
+    # --- Off-hours activity: declared working hours per schedule group ---
+    # An ingest pipeline flags each user-attributed archive event with
+    # radar.off_hours (0/1). Each group picks one consumer with `mode`:
+    #   rule:  alert once per burst of off-hours events (staff whose normal count is zero)
+    #   model: per-user AD detector on the count of off-hours events (admins, on-call)
+    # Times are local to `timezone` and must be quoted. start > end crosses midnight;
+    # the part after midnight belongs to the shift that started the day before.
+    # `workdays` are the ISO weekdays (1 = Monday) on which a shift starts.
+    off_hours:
+      enabled: true
+      # run-radar.sh flags archive events this many days back (model mode trains on them).
+      backfill_days: 45
+      # The first non-empty field names the user. sudo puts the actor in
+      # srcuser and the target (often root) in dstuser; sshd puts the login in dstuser.
+      user_fields: [data.user, data.srcuser, data.dstuser]
+      # Users not listed under `users` are not evaluated unless default_group is set.
+      # default_group: synthetic_day
+      # Accounts never evaluated, even with a default group (e.g. root, cron, service users).
+      ignore_users: []
+      groups:
+        synthetic_early:        # Alice, 05:00-14:00 UTC plus a 60 min margin
+          timezone: UTC
+          workdays: [1, 2, 3, 4, 5]
+          start: "04:00"
+          end: "15:00"
+          mode: rule
+        synthetic_day:          # Bob, 09:00-18:00 UTC
+          timezone: UTC
+          workdays: [1, 2, 3, 4, 5]
+          start: "08:00"
+          end: "19:00"
+          mode: rule
+        synthetic_late:         # Oscar, 17:00-02:00 UTC, crosses midnight
+          timezone: UTC
+          workdays: [1, 2, 3, 4, 5]
+          start: "16:00"
+          end: "03:00"
+          mode: rule
+        synthetic_admin:        # Trent, administrator with occasional evening work
+          timezone: Europe/Luxembourg
+          workdays: [1, 2, 3, 4, 5]
+          start: "08:00"
+          end: "19:00"
+          mode: model
+      users:
+        alice: synthetic_early
+        bob: synthetic_day
+        oscar: synthetic_late
+        trent: synthetic_admin
+      # Restrict both modes to some event types (empty values = every user-attributed event).
+      event_filter:
+        field: decoder.name
+        values: []
+      rule_mode:
+        # Every interval, a user is reported when their off-hours burst starts: at least
+        # min_events off-hours events in the last interval and none in the quiet_minutes
+        # before it. A long session or a burst notifies once.
+        interval_minutes: 5
+        delay_minutes: 1          # windows end this far back, so late-indexed events still count
+        quiet_minutes: 30         # off-hours activity notifies again only after this long without any
+        min_events: 1
+        anomaly_grade: 1.0        # fixed grade/confidence sent with rule-mode alerts (scored as AD)
+        anomaly_confidence: 1.0
+      model_mode:
+        # Per-user AD detector on sum(radar.off_hours) per interval, over model-mode users only.
+        interval_minutes: 30
+        window_delay_minutes: 10  # time for late events to be indexed
+        shingle_size: 1           # the flag already encodes day and hour
+        anomaly_grade_threshold: 0.01
+        confidence_threshold: 0.01
+        min_events: 1             # report an anomaly only with at least this many off-hours events in the interval
+        max_entities: 10          # users reported per monitor run, highest grade first
+
+    # --- Data ingestion configuration (for run-radar.sh --ingest true) ---
+    ingest:
+      # Keep "4.x": Wazuh's template (keyword strings) only covers wazuh-archives-4.x-*.
+      # Other names get dynamic text mappings that break AD detectors on wazuh-archives-*.
+      archives_index_prefix: "wazuh-archives-4.x"
+      history_days: 45
+      future_days: 14   # also pre-populate normal-behavior events for the next N days
+      agent_name: "edge.vm"
+      activity_types: ["auth_success", "file_access", "process_exec", "web_request"]
+      events_per_login_min: 15   # spread across the FULL shift window, not clustered --
+      events_per_login_max: 25   # a 9h shift at 30min buckets has ~18 slots; this aims to fill most of them
+      users:
+        - name: alice
+          start_hour: 5.0
+          end_hour: 14.0
+          drift_minutes: 45
+        - name: bob
+          start_hour: 9.0
+          end_hour: 18.0
+          drift_minutes: 45
+        - name: oscar
+          start_hour: 17.0
+          end_hour: 2.0
+          drift_minutes: 45
+        # Administrator (model mode). Hours are Luxembourg time; no drift, so ordinary
+        # work stays inside the declared 08:00-19:00 shift.
+        - name: trent
+          timezone: Europe/Luxembourg
+          start_hour: 8.0
+          end_hour: 19.0
+          drift_minutes: 0
+          # About two workday evenings a week with 1-3 events between 21:00 and 24:00 local.
+          evenings:
+            per_week: 2
+            start_hour: 21.0
+            end_hour: 24.0
+            events_min: 1
+            events_max: 3
+          # One unusual burst in the history: 30 events within one 30-minute interval
+          # at about 02:00 local, on the workday closest to days_ago days before today.
+          burst:
+            days_ago: 7
+            local_hour: 2.0
+            events: 30
 
   geoip_detection:
     display_name: "GeoIP Detection"
@@ -95,3 +213,75 @@ scenarios:
     display_name: "Scanning Detection"
     description: "Detects web-layer scanning and vulnerability scanner probes."
     gui_visible: true
+
+  linux_resource_utilization:
+    display_name: "Linux Resource Utilization"
+    description: "Detects anomalous CPU/memory utilization on Linux endpoints using an RCF baseline over average and peak usage."
+    gui_visible: true
+    index_prefix: "wazuh-archives"
+    time_field: "@timestamp"
+    result_index: "opensearch-ad-plugin-result-linux-resource-utilization"
+    categorical_field: "agent.name"
+    filter_query:
+      exists:
+        field: "data.mem_usage_pct"
+    detector_interval: 1
+    delay_minutes: 1
+    shingle_size: 8
+    monitor_name: "LinuxResourceUtilization-Monitor"
+    trigger_name: "LinuxResourceUtilization-Anomaly-Detected"
+    anomaly_grade_threshold: 0.01
+    confidence_threshold: 0.01
+    ingest:
+      agent_names: []
+      seed_index: "wazuh-archives-radar-seed"
+      history_minutes: 240
+      step_seconds: 30
+      baseline_window: "now-30m"
+      baseline_cpu_pct: 1.5
+      baseline_mem_pct: 72.50
+      cpu_jitter: 0.5
+      mem_jitter: 0.05
+    imputation_option:
+      method: ZERO
+    features:
+      - feature_name: cpu_usage_avg
+        feature_enabled: true
+        aggregation_query:
+          cpu_usage_avg:
+            avg:
+              script:
+                lang: painless
+                source: >-
+                  def v = doc['data.cpu_usage_pct'];
+                  return v.size() == 0 ? 0.0 : Double.parseDouble(v.value);
+      - feature_name: cpu_usage_max
+        feature_enabled: true
+        aggregation_query:
+          cpu_usage_max:
+            max:
+              script:
+                lang: painless
+                source: >-
+                  def v = doc['data.cpu_usage_pct'];
+                  return v.size() == 0 ? 0.0 : Double.parseDouble(v.value);
+      - feature_name: memory_usage_avg
+        feature_enabled: true
+        aggregation_query:
+          memory_usage_avg:
+            avg:
+              script:
+                lang: painless
+                source: >-
+                  def v = doc['data.mem_usage_pct'];
+                  return v.size() == 0 ? 0.0 : Double.parseDouble(v.value);
+      - feature_name: memory_usage_max
+        feature_enabled: true
+        aggregation_query:
+          memory_usage_max:
+            max:
+              script:
+                lang: painless
+                source: >-
+                  def v = doc['data.mem_usage_pct'];
+                  return v.size() == 0 ? 0.0 : Double.parseDouble(v.value);

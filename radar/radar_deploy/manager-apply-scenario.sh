@@ -188,6 +188,26 @@ if [[ "$SCENARIO" == "log_volume" ]]; then
   fi
 fi
 
+if [[ "$SCENARIO" == "suspicious_login" ]]; then
+  # Off-hours flag: call the radar-off-hours ingest pipeline (created by run-radar.sh
+  # via off_hours.py deploy) from the archives pipeline. A template final_pipeline
+  # can't do this: it doesn't run for documents rerouted by date_index_name.
+  # The step must keep ignore_failure: this pipeline's on_failure drops the event.
+  STEP="$RADAR_ROOT/scenarios/pipelines/$SCENARIO/radar-off-hours-step.json"
+  if [[ -z "$PIPELINE_JSON" || ! -f "$PIPELINE_JSON" ]]; then
+    echo "[WARN] No volumes.yml mapping for /usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json" >&2
+    echo "       on $CONTAINER: archive events won't get the off-hours flag (signature rules still work)." >&2
+  else
+    STEP_RESULT=$(PYTHONPATH="$RADAR_ROOT" python3 -m wazuh_api.cli filebeat-pipeline-add-step "$PIPELINE_JSON" "$STEP")
+    if [[ "$STEP_RESULT" == "unchanged" ]]; then
+      echo "OK - off-hours step already in pipeline.json"
+    else
+      echo "OK - off-hours step ${STEP_RESULT} in pipeline.json"
+      CHANGED=true
+    fi
+  fi
+fi
+
 FILEBEAT_YML="$FILEBEAT_ETC/filebeat.yml"
 
 if [[ -f "$FILEBEAT_YML" ]]; then

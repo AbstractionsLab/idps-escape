@@ -3,128 +3,127 @@ active: true
 derived: false
 level: 2.7
 links:
-- MRS-007: hXM-PkC-g29wtz-Qe3MbM2viHIYzarGh2jFtSD-7N18=
-- MRS-012: JTNuTLP6JJZdPo_d_XYH5pxtJBAYucascA5JbOTcAVg=
+- MRS-007: T_irYXTjWbTLRStypNV_lJ0NrCpz_1UXPGaQK7pMs2k=
+- MRS-021: JNEBtHLFz9j_TWTSczFmgK2yyaMqYbHvZlh6v2bgmGg=
 normative: true
 ref: ''
-reviewed: gkvYNTzHk892xQxfE_tvWxj1KV_lOUba51N2F5Ntsd8=
+reviewed: VTz4xqc_m4ApVLslDYbg9nMJHFFkBYIMnTtywz9MG_c=
 ---
 
-# RADAR Ansible automation architecture
+# RADAR deployment automation architecture
 
-The diagram below depicts the high-level architecture of RADAR's Ansible-based deployment automation system. The architecture enables flexible deployment across three modes: local Docker, remote Docker, and remote host installations.
+RADAR's deployment automation (the deployment control plane) is made of shell entry points, a manager-side shell backbone and a Python Wazuh API layer, driven either from the command line or from the RADAR GUI. It replaced the Ansible-based automation, which was removed in v2.0.0. SWD-042 specifies its design.
 
-Key architectural components:
+Key architectural decisions:
 
-- **RADAR Controller**: Orchestrates deployment via build-radar.sh and run-radar.sh scripts
-- **Ansible Playbooks**: Define scenario-specific configuration and deployment workflows
-- **Role Modules**: Modular roles for wazuh_manager, wazuh_agent, and scenario configurations
-- **Volume-Based Strategy**: Direct host-side manipulation of bind-mounted Wazuh configuration directories, eliminating docker cp overhead
+- **One privileged host, no remote execution.** The control plane runs on the Docker host that runs the Wazuh manager containers. Nothing is pushed to endpoints over SSH, and there is no inventory or vault. `sudo` is needed only to bring up the containers, to write under the bind-mounted manager directories and to manage the `iptables` rule guarding the enrollment port.
+- **API first, files second.** Whatever the Wazuh REST API can do (agent groups and their `agent.conf`, decoders, rules, CDB lists, `ossec.conf` blocks, agent assignment and deregistration, health) goes through `radar/wazuh_api/`. Files the API cannot place (`radar_ar.py`, `ar.yaml`, the manager's copy of `.env`, enrichment integrations, GeoLite2 databases, Filebeat pipeline patches) are written by `radar/radar_deploy/` on the host side of the bind mounts listed in `radar/volumes.yml`.
+- **Marker-delimited, idempotent changes.** `ossec.conf` is changed only inside `<!-- RADAR: <name> BEGIN/END -->` blocks. Re-applying a scenario converges to the same state, and undoing a scenario keeps everything another deployed scenario still needs.
+- **Self-onboarding endpoints.** An endpoint runs `radar/radar-agent/bootstrap-agent.sh` with a short-lived enrollment token. Enrollment is hardened (`use_password=yes`, `purge=no`, port 1515 closed outside a timed window).
+- **Runtime address resolution.** `radar/infra.yaml` registers the manager node(s), indexer, dashboard and webhook. `wazuh_api/infra.py` tries a component's declared host first and falls back to its container name, so the same scripts serve a stack RADAR deployed itself and a pre-existing containerised Wazuh installation.
 
-The volume-first approach maps Wazuh configuration directories (etc, active-response/bin, filebeat/etc) from host to container, enabling idempotent configuration updates without container rebuilds. Configuration injection uses marker-based appending for scenario isolation.
-
-## Architecture Diagram
+## Architecture diagram
 
 ```plantuml
 @startuml
-!define CONTROLLER #e1f5ff
-!define PLAYBOOK #fff3cd
-!define ROLE #d4edda
+!define ENTRY #e1f5ff
+!define BACKBONE #fff3cd
+!define API #d4edda
 !define SERVICE #f8d7da
 !define VOLUME #cfe2ff
 
-package "RADAR Controller" <<Rectangle>> {
-  component [build-radar.sh] as build CONTROLLER
-  component [run-radar.sh] as run CONTROLLER
-  component [stop-radar.sh] as stop CONTROLLER
-  component [inventory.yaml\nDefines targets] as inv CONTROLLER
-  component [config.yaml\nScenario configs] as config CONTROLLER
+actor Operator
+actor "Endpoint admin" as EpAdmin
+
+package "Operator interfaces" <<Rectangle>> {
+  component [RADAR GUI\ngui/app.py + gui/orchestrator] as gui ENTRY
+  component [radar.sh] as radar ENTRY
 }
 
-package "Ansible Playbook Layer" <<Rectangle>> {
-  component [site.yaml\nMain orchestration] as site PLAYBOOK
-
-  package "Deployment Modes" {
-    component [Local Docker Mode\nlocalhost + docker.sock] as local PLAYBOOK
-    component [Remote Docker Mode\nSSH + docker.sock] as rdocker PLAYBOOK
-    component [Remote Host Mode\nSSH + native install] as rhost PLAYBOOK
-  }
+package "Entry-point scripts" <<Rectangle>> {
+  component [build-radar.sh] as build ENTRY
+  component [run-radar.sh] as run ENTRY
+  component [health-radar.sh] as health ENTRY
+  component [stop-radar.sh] as stop ENTRY
 }
 
-package "Ansible Roles" <<Rectangle>> {
-  package "Core Roles" {
-    component [wazuh_manager\nConfigure manager] as wm ROLE
-    component [wazuh_agent\nDeploy helpers] as wa ROLE
-    component [scenario_config\nScenario setup] as sc ROLE
-  }
-
-  package "Role Tasks" {
-    component [Volume Mapping\nBind mount config] as vol ROLE
-    component [Marker-Based Injection\nIdempotent appends] as marker ROLE
-    component [Service Restart\nApply configurations] as restart ROLE
-  }
+package "Configuration" <<Rectangle>> {
+  component [config.yaml] as cfg ENTRY
+  component [.env] as env ENTRY
+  component [volumes.yml] as vols ENTRY
+  component [infra.yaml] as infra ENTRY
+  component [scenarios/] as scen ENTRY
 }
 
-package "Wazuh Services (Target)" <<Rectangle>> {
-  package "Volume Mounts" {
-    database "/var/ossec/etc/\nrules, decoders" as etc VOLUME
-    database "/var/ossec/active-response/bin/\nAR scripts" as ar VOLUME
-    database "/var/ossec/integrations/filebeat/etc/\nFilebeat config" as fb VOLUME
-  }
-
-  component [Wazuh Manager\nContainer/Service] as wazuh_mgr SERVICE
-  component [Wazuh Agent\nContainer/Service] as wazuh_agt SERVICE
-  component [RADAR Helper\nLog enrichment] as helper SERVICE
+package "Manager-side shell backbone\nradar_deploy/" <<Rectangle>> {
+  component [manager-apply-scenario(-all).sh\nmanager-undo-scenario.sh] as apply BACKBONE
+  component [manager-harden-enrollment.sh\nmanager-mint-token.sh\nmanager-revoke-token.sh\nmanager-enrollment-window.sh] as enroll BACKBONE
+  component [manager-health.sh] as mhealth BACKBONE
 }
 
-build --> site
-run --> site
-inv --> site
-config --> site
+package "Wazuh API layer\nwazuh_api/" <<Rectangle>> {
+  component [cli.py / scenario_ops.py\nruleset.py / manager_config.py\ngroups.py / health.py] as wapi API
+  component [infra.py\ncredentials.py] as winfra API
+}
 
-site --> local
-site --> rdocker
-site --> rhost
+component [radar-cli container\ndetector.py / monitor.py / off_hours.py] as cli API
 
-local --> wm
-rdocker --> wm
-rhost --> wm
+package "RADAR host (Docker)" <<Rectangle>> {
+  package "Bind mounts" {
+    database "/var/ossec/etc\n/var/ossec/active-response/bin\n/var/ossec/integrations\n/etc/filebeat" as mounts VOLUME
+  }
+  component [Wazuh manager\nnode(s)] as mgr SERVICE
+  component [Wazuh indexer\n(OpenSearch + AD plugin)] as idx SERVICE
+  component [Wazuh dashboard] as dash SERVICE
+  component [ad-webhook\n(Wazuh agent)] as hook SERVICE
+  component [iptables DOCKER-USER\nport 1515 rule] as fw SERVICE
+}
 
-local --> wa
-rdocker --> wa
-rhost --> wa
+package "Monitored endpoint" <<Rectangle>> {
+  component [radar-agent/bootstrap-agent.sh] as boot ENTRY
+  component [Wazuh agent\n+ AR dispatchers\n+ collectors] as agent SERVICE
+}
 
-wm --> sc
-wa --> sc
+Operator --> gui
+Operator --> radar
+gui --> build
+gui --> run
+gui --> wapi
+gui --> enroll
+radar --> build
+radar --> run
+radar --> health
+radar --> stop
+radar --> enroll
 
-sc --> vol
-vol --> marker
-marker --> restart
+build --> apply
+build --> enroll
+build --> wapi
+build --> winfra
+health --> mhealth
+health --> wapi
+run --> cli
 
-vol ..> etc : Host side\nmanipulation
-vol ..> ar : Host side\nmanipulation
-vol ..> fb : Host side\nmanipulation
+cfg --> build
+env --> build
+vols --> apply
+infra --> winfra
+scen --> apply
+scen --> wapi
 
-etc --> wazuh_mgr
-ar --> wazuh_mgr
-fb --> wazuh_mgr
+apply ..> mounts : host-side writes
+mounts --> mgr
+enroll --> fw
+enroll --> mgr : authd.pass\n(docker exec)
+wapi --> mgr : REST :55000
+cli --> idx : REST :9200
+idx --> hook : monitor POST /notify
+hook --> mgr : ad_alert log line
 
-wa --> helper
-helper --> wazuh_agt
-
-note right of vol
-  **Volume-First Strategy**
-  Direct host-side manipulation
-  No docker cp overhead
-  Idempotent marker-based injection
-end note
-
-note right of local
-  **Supported Modes**
-  1. Local: Docker Compose + localhost
-  2. Remote Docker: SSH + Docker API
-  3. Remote Host: SSH + native install
-end note
-
+EpAdmin --> boot
+boot --> agent
+agent --> mgr : enroll :1515\nevents :1514
 @enduml
 ```
+
+See: `docs/manual/radar_docs/radar-operations.md`.

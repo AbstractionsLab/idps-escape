@@ -119,7 +119,7 @@ detector = IsolationForest(
 - Implement feedback loops where analysts can flag incorrect classifications
 - Use analyst feedback to improve models (with contamination awareness)
 
-**UI/Dashboard integration:** See our [SONAR dashboard tutorial](/docs/manual/adbox_docs/dashboard_tutorial.md) for visualization best practices.
+**UI/Dashboard integration:** See our [ADBox dashboard tutorial](/docs/manual/adbox_docs/dashboard_tutorial.md) for visualization best practices.
 
 ### 7. System hardening
 
@@ -203,7 +203,7 @@ Over the past decade, awareness of adversarial threats to intrusion detection sy
 
 ## Additional resources
 
-- [RADAR architecture](/docs/manual/radar_docs/radar-architecture.md) - System design principles
+- [RADAR architecture (HARC-004)](../../specs/harc/HARC-004.md) - System design principles
 - [RADAR test framework](/radar/radar-test-framework/README.md) - Automated testing pipelines
 - [SONAR troubleshooting](/docs/manual/sonar_docs/troubleshooting.md) - Debugging detection issues
 

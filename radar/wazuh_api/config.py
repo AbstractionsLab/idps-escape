@@ -1,17 +1,34 @@
 from __future__ import annotations
 
-from functools import lru_cache
+import threading
 from pathlib import Path
-
 import yaml
 
+_cache_lock = threading.Lock()
+_cache: dict[str, tuple[float, dict]] = {}
 
-@lru_cache(maxsize=None)
+
 def load(radar_root: str = ".") -> dict:
     path = Path(radar_root) / "config.yaml"
     if not path.exists():
         return {}
-    return yaml.safe_load(path.read_text()) or {}
+    key = str(path.resolve())
+    mtime = path.stat().st_mtime
+    with _cache_lock:
+        cached = _cache.get(key)
+        if cached is not None and cached[0] == mtime:
+            return cached[1]
+    data = yaml.safe_load(path.read_text()) or {}
+    with _cache_lock:
+        _cache[key] = (mtime, data)
+    return data
+
+
+def _cache_clear() -> None:
+    with _cache_lock:
+        _cache.clear()
+        
+load.cache_clear = _cache_clear
 
 
 def valid_scenarios(radar_root: str = ".") -> set[str]:

@@ -1,16 +1,15 @@
 ---
-active: true
+active: false
 derived: false
 level: 2.3
-links:
-- MRS-007: hXM-PkC-g29wtz-Qe3MbM2viHIYzarGh2jFtSD-7N18=
+links: []
 normative: true
 ref: ''
-reviewed: nBgnsRf9FyZS8ZSKI8sAO_S5C1hPGrevKQoMbvtwt2c=
+reviewed: PzlJ9aV4tapnUCiKyrzDxCUP9KHQlnw9JL5AHohRrxc=
 ---
 
 # RADAR deployment: Remote Agent and Remote Manager mode
 
-The diagram below illustrates the RADAR build-time and run-time architecture for a deployment in which both the Wazuh Manager and the Wazuh agents are hosted on remote endpoints.
+> **Status: obsolete.** RADAR no longer deploys to or configures a manager on a remote host: the SSH/Ansible remote-manager mode was removed in v2.0.0 together with the Ansible playbooks, and every manager-side step now runs on the Docker host that runs the manager containers (see HARC-007, HARC-013).
 
-![RADAR architecture in Remote Agent and Remote Manager mode](assets/RADAR-deployment-modes-remote-remote.drawio.png "RADAR: Remote Agent and Remote Manager"){: width="70%"}
+This mode covered a deployment in which both the Wazuh Manager and the Wazuh agents are hosted on remote endpoints. The diagram was removed with the deployment mode.

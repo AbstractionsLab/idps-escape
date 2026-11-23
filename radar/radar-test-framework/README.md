@@ -10,6 +10,7 @@ This document presents the design and implementation of the **RADAR Test Framewo
 - **Non-whitelist GeoIP Detection**: Authentication events originating from countries outside a configured whitelist.
 - **Log Volume Growth**: Anomalous spikes in filesystem log volume indicative of DDoS, malware outbreak, or data exfiltration.
 - **Web Scanning Detection**: Volumetric requests, suspicious HTTP methods, and other web scanning/enumeration patterns.
+- **Linux Resource Utilization**: Anomalous CPU and memory utilization on a Linux endpoint, generated as real load (or injected collector samples).
 
 The following scenarios have no dedicated simulation script currently and are not production-ready:
 
@@ -29,3 +30,6 @@ Each simulation phase is a standalone Python script (`radar-test-framework/simul
 ## Configuration
 
 Each simulation script has its own parameters as a `CONFIG` dictionary at the top of the file, edited directly to match your environment (target hostname, log paths, IP pools, etc.) — see [RADAR simulation](/radar/radar-test-framework/simulate/README.md#configuration) for details.
+## Live checks
+
+`checks/` holds scripts that run from the RADAR host against the indexer (`OS_URL` and credentials from `radar/.env`) rather than on an agent. Today they cover off-hours activity detection: `off_hours_simulate.py` (the marking pipeline), `off_hours_rule_e2e.py` (rule mode) and `off_hours_model_history.py` (model mode on the synthetic history). `off_hours_phase0.py` records the cluster facts the design relies on. See [Off-hours activity](/docs/manual/radar_docs/radar-scenarios/off-hours-activity.md#checking-it-works).

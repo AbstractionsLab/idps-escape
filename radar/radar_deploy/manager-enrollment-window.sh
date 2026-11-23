@@ -66,7 +66,7 @@ cmd_open() {
   fi
 
   local seconds_total=$((minutes * 60))
-  nohup bash -c "
+  nohup setsid bash -c "
     sleep '$seconds_total'
     while iptables -C DOCKER-USER -p tcp --dport 1515 -m comment --comment '$RULE_COMMENT' -j DROP 2>/dev/null; do :; done
     iptables -I DOCKER-USER -p tcp --dport 1515 -m comment --comment '$RULE_COMMENT' -j DROP

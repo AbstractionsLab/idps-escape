@@ -5,10 +5,14 @@
 name: "Brute Force Detection Example"
 description: "Detect SSH/RDP brute force authentication attempts"
 
-# Optional: Specify a custom model name
-# If not provided, a unique name is auto-generated from the scenario name + timestamp
-# Example: "brute_force_detection_example_20260112_143022"
+# Optional: the model's name. Without it, the scenario's name is used, in lower case with
+# underscores ("brute_force_detection_example"), so every run of this scenario trains and
+# loads the same model. Use a new name (e.g. brute_force_v2) to keep the previous model.
 model_name: "brute_force_v1"
+
+# Optional: where models are kept, relative to this file. Without it, models/ in the SONAR
+# home ($SONAR_HOME, else sonar/ in a source checkout, else ~/.sonar).
+# models_dir: "../models"
 
 # Wazuh connection (optional - uses defaults if omitted)
 wazuh:
@@ -20,19 +24,19 @@ training:
   lookback_hours: 168  # 7 days
   numeric_fields:
     - "rule.level"
-    - "data.srcip"
   categorical_fields:
     - "agent.name"
     - "rule.groups"
+    - "data.srcip"  # an IP address is a category, not a number
   bucket_minutes: 5
   sliding_window: 200
+  extra_params:
+    interval: 1  # every window position: 2016 buckets -> 1100 gradient steps
 
 detection:
   mode: "historical"
-  lookback_minutes: 60
+  lookback_minutes: 1440  # 24 hours of complete buckets; context is fetched automatically
 
-# With model_name specified:
-# Model will be saved to: ./sonar/models/brute_force_v1.pkl
-# 
-# Without model_name:
-# Model will be saved to: ./sonar/models/brute_force_detection_example_20260112_143022.pkl
+# With model_name specified, the model is the directory <models_dir>/brute_force_v1/
+# (metadata.json plus the backend's state files).
+# Without model_name: <models_dir>/brute_force_detection_example/

@@ -1,12 +1,25 @@
 [tool.poetry]
 name = "idps-escape"
-version = "2.1.0"
+version = "2.2.0"
 description = "IDPS-ESCAPE suite of tools and its subsystems RADAR and SONAR, all part of project CyFORT."
 authors = ["Arash Atashpendar <arash@abstractionslab.lu>", "Gulsezim Duisen <duisen@itrust.lu>", "Itzel Vazquez Sandoval <itzel@abstractionslab.lu>", "Agnese Gini <agnese@abstractionslab.lu>", "Mashal Zainab <zainab@itrust.lu>"]
 readme = "README.md"
 packages = [
     {include = "sonar"},
     {include = "adbox"},
+]
+# Never package secrets or local state. Poetry only leaves out gitignored files, so an
+# untracked file in these places would otherwise end up in the wheel.
+exclude = [
+    "adbox/assets/secrets/**",
+    "**/.env",
+    "sonar/models/**",
+    "sonar/payloads/**",
+    # SONAR ships the debug datasets its example scenarios use; not the generators or extra sets.
+    "sonar/test_data/*.py",
+    "sonar/test_data/generated_scenarios/**",
+    "sonar/test_data/resource_monitoring/resource_monitoring_training-2.json",
+    "sonar/test_data/resource_monitoring/sample-resource-monitoring-training.json",
 ]
 
 [tool.poetry.scripts]
@@ -15,6 +28,19 @@ adbox = "adbox.ad_driver.driver:main"
 
 [tool.poetry.dependencies]
 python = "3.10.12" 
+# SONAR's runtime dependencies again, as optional package requirements: groups are not part of
+# the built package, so `pip install idps_escape-<version>.whl[sonar]` needs these to install
+# a working SONAR. Keep them identical to the sonar group below.
+time-series-anomaly-detector = {version = "0.4.0", optional = true}
+torch = {version = "2.3.0", optional = true}
+numpy = {version = "1.26.4", optional = true}
+pandas = {version = "2.2.2", optional = true}
+opensearch-py = {version = "3.0.0", optional = true}
+pyyaml = {version = "^6.0", optional = true}
+requests = {version = "^2.31", optional = true}
+
+[tool.poetry.extras]
+sonar = ["time-series-anomaly-detector", "torch", "numpy", "pandas", "opensearch-py", "pyyaml", "requests"]
 
 [tool.poetry.group.adbox.dependencies]
 # ADBox v1 (original - maintained)
@@ -37,7 +63,13 @@ plotly = "^5.23.0"
 nbformat = "^5.10.4"
 
 [tool.poetry.group.sonar.dependencies]
+# Everything SONAR imports, so `--only main,sonar` installs a working SONAR. The pins match the
+# adbox group's (one lock file serves both).
 time-series-anomaly-detector = "0.4.0"
+torch = "2.3.0"
+numpy = "1.26.4"
+pandas = "2.2.2"
+opensearch-py = "3.0.0"
 pyyaml = "^6.0"
 requests = "^2.31"
 

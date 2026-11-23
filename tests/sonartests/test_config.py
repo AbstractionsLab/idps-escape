@@ -5,6 +5,10 @@ Tests WazuhIndexerConfig, MVADConfig, FeatureConfig, DebugConfig, and PipelineCo
 """
 
 import unittest
+from pathlib import Path
+
+import sonar
+from sonar.paths import sonar_home
 from sonar.config import (
     WazuhIndexerConfig,
     MVADConfig,
@@ -101,9 +105,7 @@ class TestFeatureConfig(unittest.TestCase):
 
     def test_custom_numeric_fields(self):
         """Test custom numeric fields."""
-        cfg = FeatureConfig(
-            numeric_fields=["rule.level", "data.srcport", "data.dstport"]
-        )
+        cfg = FeatureConfig(numeric_fields=["rule.level", "data.srcport", "data.dstport"])
         self.assertEqual(len(cfg.numeric_fields), 3)
         self.assertIn("rule.level", cfg.numeric_fields)
         self.assertIn("data.srcport", cfg.numeric_fields)
@@ -135,7 +137,8 @@ class TestDebugConfig(unittest.TestCase):
         """Test default debug configuration."""
         cfg = DebugConfig()
         self.assertFalse(cfg.enabled)
-        self.assertEqual(cfg.data_dir, "./test_data/synthetic_alerts")
+        # The packaged debug data, independent of the working directory
+        self.assertEqual(Path(cfg.data_dir), Path(sonar.__file__).resolve().parent / "test_data" / "synthetic_alerts")
         self.assertEqual(cfg.training_data_file, "normal_baseline.json")
         self.assertEqual(cfg.detection_data_file, "with_anomalies.json")
 
@@ -163,7 +166,8 @@ class TestPipelineConfig(unittest.TestCase):
         self.assertIsInstance(cfg.mvad, MVADConfig)
         self.assertIsInstance(cfg.features, FeatureConfig)
         self.assertIsInstance(cfg.debug, DebugConfig)
-        self.assertEqual(cfg.model_path, "./mvad_model.pkl")
+        self.assertEqual((cfg.model_name, cfg.backend), ("sonar", "mvad"))
+        self.assertEqual(Path(cfg.model_path), sonar_home() / "models" / "sonar")
 
     def test_custom_nested_configs(self):
         """Test custom nested configuration objects."""
@@ -177,14 +181,15 @@ class TestPipelineConfig(unittest.TestCase):
             mvad=mvad_cfg,
             features=feature_cfg,
             debug=debug_cfg,
-            model_path="./custom_model.pkl",
+            models_dir="/srv/sonar/models",
+            model_name="custom_model",
         )
 
         self.assertEqual(cfg.wazuh.base_url, "https://custom:9200")
         self.assertEqual(cfg.mvad.sliding_window, 100)
         self.assertEqual(cfg.features.bucket_minutes, 10)
         self.assertTrue(cfg.debug.enabled)
-        self.assertEqual(cfg.model_path, "./custom_model.pkl")
+        self.assertEqual(cfg.model_path, "/srv/sonar/models/custom_model")
 
     def test_default_nested_values(self):
         """Test that nested configs have their defaults."""

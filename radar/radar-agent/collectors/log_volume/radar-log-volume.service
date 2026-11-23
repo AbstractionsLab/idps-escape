@@ -1,0 +1,6 @@
+[Unit]
+Description=RADAR log_volume metric collector
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/radar-log-volume-metric.sh

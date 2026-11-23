@@ -3,7 +3,7 @@
 setup() {
   TEST_TMP="$(mktemp -d)"
   export LOG_DIR="$TEST_TMP"
-  mkdir -p "$TEST_TMP/suspicious_login/dataset"
+  mkdir -p "$TEST_TMP/suspicious_login/dataset" "$TEST_TMP/log_volume/dataset"
   touch "$TEST_TMP/config.yaml"
   cat > "$TEST_TMP/.env" <<'ENV'
 WEBHOOK_URL=https://example.test/webhook
@@ -23,7 +23,7 @@ teardown() {
 }
 
 @test "default run ingest dataset, cert, and passes DET_ID to monitor" {
-  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login --ingest true
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" log_volume --ingest true
   [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; echo "---- calls.log ----"; cat "$LOG_DIR/calls.log" 2>/dev/null || true; echo "-------------------"; false; }
 
   # final docker build
@@ -33,24 +33,24 @@ teardown() {
 
   # Ingest call (no --network in current script)
   grep -F \
-    "docker run --rm -v $TEST_TMP/suspicious_login/dataset:/app/suspicious_login/dataset -v $TEST_TMP/config/wazuh_indexer_ssl_certs/root-ca.pem:/app/config/wazuh_indexer_ssl_certs/root-ca.pem -e WEBHOOK_URL radar-cli:latest python suspicious_login/wazuh_ingest.py" \
+    "docker run --rm -v $TEST_TMP/log_volume/dataset:/app/log_volume/dataset -v $TEST_TMP/config/wazuh_indexer_ssl_certs/root-ca.pem:/app/config/wazuh_indexer_ssl_certs/root-ca.pem -e WEBHOOK_URL radar-cli:latest python log_volume/wazuh_ingest.py" \
     "$LOG_DIR/calls.log"
 
   # Detector call -> stub prints det-12345
   grep -F \
-    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python detector.py suspicious_login" \
+    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python detector.py log_volume" \
     "$LOG_DIR/calls.log"
 
   # Monitor call should include det-12345 (an optional -e WEBHOOK_URL=...
   # flag may appear before radar-cli:latest depending on whether WEBHOOK_URL
   # resolves from .env; that resolution isn't what this test is about)
   grep -E \
-    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python monitor.py suspicious_login det-12345" \
+    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python monitor.py log_volume det-12345" \
     "$LOG_DIR/calls.log"
 }
 
 @test "default run without ingest" {
-  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" log_volume
   [ "$status" -eq 0 ] || { echo "status=$status"; echo "$output"; echo "---- calls.log ----"; cat "$LOG_DIR/calls.log" 2>/dev/null || true; echo "-------------------"; false; }
 
   if grep -Fq "wazuh_ingest.py" "$LOG_DIR/calls.log"; then
@@ -60,11 +60,11 @@ teardown() {
   fi
 
   grep -F \
-    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python detector.py suspicious_login" \
+    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python detector.py log_volume" \
     "$LOG_DIR/calls.log"
 
   grep -E \
-    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python monitor.py suspicious_login det-12345" \
+    "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python monitor.py log_volume det-12345" \
     "$LOG_DIR/calls.log"
 }
 
@@ -76,7 +76,7 @@ OS_PASS='s3cr3t$(id) x'
 WEBHOOK_SHARED_SECRET=abcdef0123
 ENV
   chmod 600 "$TEST_TMP/.env"
-  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login --ingest true
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" log_volume --ingest true
   [ "$status" -eq 0 ] || { echo "$output"; cat "$LOG_DIR/calls.log"; false; }
   ! grep -F "/app/.env" "$LOG_DIR/calls.log"
   ! grep -F "s3cr3t" "$LOG_DIR/calls.log"
@@ -84,6 +84,38 @@ ENV
   grep -F -- "-e OS_URL -e OS_USER -e OS_PASS -e WEBHOOK_SHARED_SECRET radar-cli:latest python detector.py" "$LOG_DIR/calls.log"
 }
 
+@test "--ingest true is refused for a scenario with no ingest script, before any docker call" {
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" geoip_detection --ingest true
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"has no ingest script"* ]]
+  ! grep -F "docker" "$LOG_DIR/calls.log"
+}
+
 @test "shellcheck (informational)" {
   shellcheck "${BATS_TEST_DIRNAME}/../../run-radar.sh" || true
+}
+
+@test "suspicious_login deploys the off-hours pipeline before ingest, backfills after it, then runs its consumers instead of the generic detector" {
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" suspicious_login --ingest true
+  [ "$status" -eq 0 ] || { echo "$output"; cat "$LOG_DIR/calls.log"; false; }
+  deploy_line=$(grep -n "python off_hours.py deploy" "$LOG_DIR/calls.log" | cut -d: -f1)
+  ingest_line=$(grep -n "python suspicious_login/wazuh_ingest.py" "$LOG_DIR/calls.log" | cut -d: -f1)
+  backfill_line=$(grep -n "python off_hours.py backfill" "$LOG_DIR/calls.log" | cut -d: -f1)
+  monitors_line=$(grep -n "python off_hours.py monitors" "$LOG_DIR/calls.log" | cut -d: -f1)
+  [ -n "$deploy_line" ] && [ -n "$backfill_line" ] && [ -n "$monitors_line" ]
+  [ "$deploy_line" -lt "$ingest_line" ]
+  [ "$ingest_line" -lt "$backfill_line" ]
+  [ "$backfill_line" -lt "$monitors_line" ]
+  ! grep -q "python detector.py" "$LOG_DIR/calls.log"
+  ! grep -q "python monitor.py" "$LOG_DIR/calls.log"
+  grep -F "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python off_hours.py deploy" "$LOG_DIR/calls.log"
+  grep -F "docker run --rm -v $TEST_TMP/config.yaml:/app/config.yaml:ro -e WEBHOOK_URL radar-cli:latest python off_hours.py monitors" "$LOG_DIR/calls.log"
+}
+
+@test "other scenarios don't touch the off-hours pipeline" {
+  run "${BATS_TEST_DIRNAME}/../../run-radar.sh" log_volume
+  [ "$status" -eq 0 ] || { echo "$output"; cat "$LOG_DIR/calls.log"; false; }
+  ! grep -q "off_hours.py" "$LOG_DIR/calls.log"
+  grep -q "python detector.py log_volume" "$LOG_DIR/calls.log"
+  grep -q "python monitor.py log_volume det-12345" "$LOG_DIR/calls.log"
 }

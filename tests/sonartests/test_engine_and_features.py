@@ -11,46 +11,93 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 
 from sonar.config import MVADConfig, FeatureConfig, PipelineConfig
+from sonar.backends import PointResult
 from sonar.engine import MVADModelEngine
-from sonar.features import WazuhFeatureBuilder
+from sonar.features import FEATURE_SCHEMA_VERSION, WazuhFeatureBuilder
+from sonar.training_plan import InsufficientTrainingDataError
 
 
 class TestMVADModelEngine(unittest.TestCase):
     """Test MVADModelEngine training and prediction."""
 
     def setUp(self):
-        """Set up test fixtures."""
+        """Set up test fixtures.
+
+        250 buckets with sliding_window=20 and batch_size=8 give 2 batches per epoch and
+        15 validation windows, so the training pre-flight check passes.
+        """
         self.cfg = PipelineConfig()
+        self.cfg.mvad.sliding_window = 20
+        self.cfg.mvad.extra_params = {"batch_size": 8}
         self.engine = MVADModelEngine(self.cfg)
 
-    @patch("sonar.engine.MultivariateAnomalyDetector")
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
     def test_train_success(self, mock_mad_class):
         """Test successful model training."""
         mock_model = MagicMock()
         mock_mad_class.return_value = mock_model
 
         # Create training data with enough samples
-        ts_data = pd.DataFrame({
-            "rule.level": list(range(250))
-        })
+        ts_data = pd.DataFrame({"rule.level": list(range(250))})
 
         self.engine.train(ts_data)
 
         # Verify model was created and fit was called
         mock_mad_class.assert_called_once()
         mock_model.fit.assert_called_once()
-        self.assertIsNotNone(self.engine.model)
+        self.assertIsNotNone(self.engine.backend)
 
     def test_train_raises_on_sliding_window_too_large(self):
         """Test that training fails when sliding_window > num_samples."""
         self.cfg.mvad.sliding_window = 300
-        ts_data = pd.DataFrame({
-            "rule.level": list(range(250))
-        })
+        ts_data = pd.DataFrame({"rule.level": list(range(250))})
 
         with self.assertRaises(ValueError) as ctx:
             self.engine.train(ts_data)
         self.assertIn("sliding_window", str(ctx.exception))
+
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
+    def test_train_refuses_when_library_would_not_update(self, mock_mad_class):
+        """288 buckets with the default window give no training batch: refuse, never fit."""
+        cfg = PipelineConfig()  # sliding_window=200, library batch_size=128, interval=10
+        engine = MVADModelEngine(cfg)
+        ts_data = pd.DataFrame({"rule.level": [float(i % 7) for i in range(288)]})
+
+        with self.assertRaises(InsufficientTrainingDataError) as ctx:
+            engine.train(ts_data)
+        self.assertIn("1725 buckets", str(ctx.exception))
+        mock_mad_class.return_value.fit.assert_not_called()
+        self.assertIsNone(engine.backend)
+
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
+    def test_train_rejects_unknown_extra_param_with_hint(self, mock_mad_class):
+        """A parameter the library would silently drop is an error that names the fix."""
+        self.cfg.mvad.extra_params = {"batch_size": 8, "learning_rate": 0.01}
+        with self.assertRaises(ValueError) as ctx:
+            self.engine.train(pd.DataFrame({"rule.level": list(range(250))}))
+        self.assertIn("'lr'", str(ctx.exception))
+        mock_mad_class.return_value.fit.assert_not_called()
+
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
+    def test_train_uses_private_checkpoint_dir(self, mock_mad_class):
+        """Each fit gets its own checkpoint directory instead of ./model."""
+        self.engine.train(pd.DataFrame({"rule.level": list(range(250))}))
+        engine2 = MVADModelEngine(self.cfg)
+        engine2.train(pd.DataFrame({"rule.level": list(range(250))}))
+        saves = [c.kwargs["params"]["save"] for c in mock_mad_class.return_value.fit.call_args_list]
+        self.assertEqual(len(saves), 2)
+        self.assertNotEqual(saves[0], saves[1])
+        self.assertTrue(all("sonar-mvad-" in s for s in saves))
+
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
+    def test_train_records_metadata(self, mock_mad_class):
+        """The engine records how the model was trained."""
+        self.engine.train(pd.DataFrame({"rule.level": list(range(250))}))
+        md = self.engine.metadata
+        self.assertEqual(md["gradient_steps"], 200)  # 2 batches/epoch x 100 epochs
+        self.assertEqual(md["feature_schema_version"], FEATURE_SCHEMA_VERSION)
+        self.assertEqual(md["mvad_params"]["sliding_window"], 20)
+        self.assertNotIn("save", md["mvad_params"])
 
     def test_train_raises_on_empty_data(self):
         """Test that training fails with empty data."""
@@ -59,7 +106,7 @@ class TestMVADModelEngine(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.engine.train(ts_data)
 
-    @patch("sonar.engine.MultivariateAnomalyDetector")
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
     def test_predict_success(self, mock_mad_class):
         """Test successful prediction."""
         mock_model = MagicMock()
@@ -72,112 +119,62 @@ class TestMVADModelEngine(unittest.TestCase):
         mock_mad_class.return_value = mock_model
 
         # Train first
-        ts_data = pd.DataFrame({
-            "rule.level": list(range(250))
-        })
+        ts_data = pd.DataFrame({"rule.level": list(range(250))})
         self.engine.train(ts_data)
 
         # Now predict
-        pred_data = pd.DataFrame({
-            "rule.level": [5, 6, 15]
-        })
+        pred_data = pd.DataFrame({"rule.level": [5, 6, 15]})
         results = self.engine.predict(pred_data)
 
-        # Results should be a list
-        self.assertIsInstance(results, list)
+        # Results are PointResults, in the library's order
         self.assertEqual(len(results), 3)
-        # Each result should have expected keys
-        self.assertIn("is_anomaly", results[0])
-        self.assertIn("score", results[0])
+        self.assertTrue(all(isinstance(r, PointResult) for r in results))
+        self.assertEqual([r.is_anomaly for r in results], [False, False, True])
+        self.assertEqual((results[2].severity, results[2].raw_score), (0.8, 0.9))
 
     def test_predict_raises_without_model(self):
         """Test that prediction fails if model not trained."""
-        pred_data = pd.DataFrame({
-            "rule.level": [5, 6, 7]
-        })
+        pred_data = pd.DataFrame({"rule.level": [5, 6, 7]})
 
         with self.assertRaises(RuntimeError) as ctx:
             self.engine.predict(pred_data)
         self.assertIn("not loaded", str(ctx.exception).lower())
 
-    @patch("sonar.engine.MultivariateAnomalyDetector")
-    def test_predict_passes_context_to_model(self, mock_mad_class):
-        """Test that context is passed to model if it accepts it."""
-        mock_model = MagicMock()
-        mock_model.predict = MagicMock()
-        # Mock MVAD's actual return format
-        mock_model.predict.return_value = [
-            {"index": pd.Timestamp.now(), "is_anomaly": False, "score": 0.1, "severity": 0.0, "interpretation": []}
-        ]
-        mock_mad_class.return_value = mock_model
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
+    def test_predict_calls_the_library_with_the_aligned_frame(self, mock_mad_class):
+        """The library's predict(context, data) gets the frame in the training column order."""
+        mock_model = mock_mad_class.return_value
+        mock_model.predict.return_value = [{"index": pd.Timestamp("2026-01-01T00:00Z"), "is_anomaly": False, "score": 0.1, "severity": 0.0, "interpretation": []}]
+        self.engine.train(pd.DataFrame({"rule.level": list(range(250)), "alert_count": [1.0] * 250}))
+        self.engine.predict(pd.DataFrame({"alert_count": [2.0], "rule.level": [5.0]}))
+        args, kwargs = mock_model.predict.call_args
+        self.assertEqual(args, (None,))
+        self.assertEqual(list(kwargs["data"].columns), ["rule.level", "alert_count"])
 
-        # Train
-        ts_data = pd.DataFrame({"rule.level": list(range(250))})
-        self.engine.train(ts_data)
-
-        # Predict
-        pred_data = pd.DataFrame({"rule.level": [5]})
-        self.engine.predict(pred_data)
-
-        # Check if context was passed as a keyword argument
-        call_args = mock_model.predict.call_args
-        # Should be called with data= and context= kwargs
-        self.assertIn("context", call_args[1])
-        self.assertIn("pipeline_config", call_args[1]["context"])
-
-    @patch("sonar.engine.MultivariateAnomalyDetector")
-    def test_predict_handles_model_without_context_param(self, mock_mad_class):
-        """Test fallback when model doesn't accept context parameter."""
-        # Create a model that raises TypeError when context is passed
-        mock_model = MagicMock()
-        
-        def predict_no_context(data, context=None):
-            if context is not None:
-                raise TypeError("predict() got an unexpected keyword argument 'context'")
-            # Mock MVAD's actual return format
-            return [
-                {"index": pd.Timestamp.now(), "is_anomaly": False, "score": 0.1, "severity": 0.0, "interpretation": []}
-            ]
-        
-        mock_model.predict = predict_no_context
-        mock_mad_class.return_value = mock_model
-
-        # Train
-        ts_data = pd.DataFrame({"rule.level": list(range(250))})
-        self.engine.train(ts_data)
-
-        # Predict should fallback to calling without context
-        pred_data = pd.DataFrame({"rule.level": [5]})
-        results = self.engine.predict(pred_data)
-        
-        # Results should be a list
-        self.assertIsInstance(results, list)
-        self.assertIn("is_anomaly", results[0])
-
-    @patch("sonar.engine.MultivariateAnomalyDetector")
+    @patch("sonar.backends.mvad.MultivariateAnomalyDetector")
     def test_mvad_config_params_passed_to_model(self, mock_mad_class):
         """Test that MVAD config parameters are passed to model."""
         mock_model = MagicMock()
         mock_mad_class.return_value = mock_model
 
-        # Custom config
+        # Custom config (1500 buckets, sliding_window 100, batch 16: 7 batches/epoch)
         self.cfg.mvad.sliding_window = 100
         self.cfg.mvad.device = "cuda"
-        self.cfg.mvad.extra_params = {"custom_param": "value"}
+        self.cfg.mvad.extra_params = {"batch_size": 16, "lr": 0.01}
 
         engine = MVADModelEngine(self.cfg)
-        ts_data = pd.DataFrame({"rule.level": list(range(150))})
+        ts_data = pd.DataFrame({"rule.level": list(range(1500))})
         engine.train(ts_data)
 
         # Check that model was instantiated (no params in __init__)
         mock_mad_class.assert_called_once_with()
-        
+
         # Check that model.fit was called with data and params
         mock_model.fit.assert_called_once()
         fit_call_args = mock_model.fit.call_args
         self.assertEqual(fit_call_args[1]["params"]["sliding_window"], 100)
         self.assertEqual(fit_call_args[1]["params"]["device"], "cuda")
-        self.assertEqual(fit_call_args[1]["params"]["custom_param"], "value")
+        self.assertEqual(fit_call_args[1]["params"]["lr"], 0.01)
 
 
 class TestWazuhFeatureBuilder(unittest.TestCase):
@@ -336,8 +333,8 @@ class TestWazuhFeatureBuilder(unittest.TestCase):
 
         ts_data = builder.build_timeseries(alerts)
 
-        # Should only have basic numeric fields (no derived features)
-        self.assertEqual(list(ts_data.columns), ["rule.level"])
+        # Only the alert count and the numeric fields (no derived features)
+        self.assertEqual(list(ts_data.columns), ["alert_count", "rule.level"])
 
 
 class TestMaxAggregation(unittest.TestCase):
@@ -347,11 +344,13 @@ class TestMaxAggregation(unittest.TestCase):
         """Build minimal resource-monitoring alerts with given CPU values."""
         alerts = []
         for i, cpu in enumerate(cpu_values):
-            alerts.append({
-                "timestamp": f"2026-01-01T10:0{i}:00.000Z",
-                "rule": {"level": 3, "groups": ["performance_metric"]},
-                "data": {"cpu_usage_%": cpu, "memory_usage_%": 50.0},
-            })
+            alerts.append(
+                {
+                    "timestamp": f"2026-01-01T10:0{i}:00.000Z",
+                    "rule": {"level": 3, "groups": ["performance_metric"]},
+                    "data": {"cpu_usage_%": cpu, "memory_usage_%": 50.0},
+                }
+            )
         return alerts
 
     def test_max_column_produced(self):
@@ -400,8 +399,8 @@ class TestMaxAggregation(unittest.TestCase):
         ts = builder.build_timeseries(alerts)
         self.assertFalse(any(c.endswith("__max") for c in ts.columns))
 
-    def test_max_column_unrecognised_field_skipped(self):
-        """max_numeric_fields entries not in the data produce a warning but no error."""
+    def test_max_column_for_absent_field_is_zero(self):
+        """A configured max field absent from the data still gets its column (stable contract), filled with 0."""
         cfg = FeatureConfig(
             numeric_fields=["data.cpu_usage_%"],
             bucket_minutes=5,
@@ -412,7 +411,8 @@ class TestMaxAggregation(unittest.TestCase):
             {"timestamp": "2026-01-01T10:00:00.000Z", "rule": {"level": 3}, "data": {"cpu_usage_%": 70.0}},
         ]
         ts = builder.build_timeseries(alerts)  # must not raise
-        self.assertNotIn("data.nonexistent_field__max", ts.columns)
+        self.assertIn("data.nonexistent_field__max", ts.columns)
+        self.assertEqual(ts["data.nonexistent_field__max"].iloc[0], 0.0)
 
 
 class TestResourceDerivedFeatures(unittest.TestCase):
@@ -425,15 +425,17 @@ class TestResourceDerivedFeatures(unittest.TestCase):
             derived_features=True,
         )
         builder = WazuhFeatureBuilder(cfg)
-        alerts = [{
-            "timestamp": "2026-01-01T10:00:00.000Z",
-            "rule": {"level": 3, "groups": []},
-            "data": {
-                "cpu_usage_%": cpu,
-                "memory_usage_%": mem,
-                "1min_loadAverage": load1,
-            },
-        }]
+        alerts = [
+            {
+                "timestamp": "2026-01-01T10:00:00.000Z",
+                "rule": {"level": 3, "groups": []},
+                "data": {
+                    "cpu_usage_%": cpu,
+                    "memory_usage_%": mem,
+                    "1min_loadAverage": load1,
+                },
+            }
+        ]
         return builder.build_timeseries(alerts)
 
     def test_is_cpu_high_when_cpu_over_80(self):

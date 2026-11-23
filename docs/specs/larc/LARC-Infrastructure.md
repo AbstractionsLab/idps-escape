@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: 3VqyJ7wwmwojzkHHiagMZSiY73TojWQHG8PPg3OPtKU=
 ---
 
 # Infrastructure Low-Level Architecture

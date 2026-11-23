@@ -10,6 +10,8 @@ Tests for:
 import json
 import tempfile
 import unittest
+
+from sonar.paths import default_models_dir
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch, call
@@ -35,11 +37,7 @@ class TestTrainingScenario(unittest.TestCase):
         assert ts.sliding_window == 200
         assert ts.device == "cpu"
         assert ts.extra_params == {}
-        assert ts.fill_with_synthetic is False
-        assert ts.synthetic_count == 100
-        assert ts.synthetic_mode == "random"
-        assert ts.synthetic_level == 5
-        assert ts.synthetic_srcip == "192.0.2.0"
+        assert not hasattr(ts, "fill_with_synthetic")  # synthetic fill was removed
 
     def test_custom_values(self):
         """Test custom initialization."""
@@ -51,9 +49,6 @@ class TestTrainingScenario(unittest.TestCase):
             bucket_minutes=10,
             sliding_window=150,
             device="cuda",
-            fill_with_synthetic=True,
-            synthetic_count=500,
-            synthetic_mode="copy",
         )
         assert ts.lookback_hours == 48
         assert ts.numeric_fields == ["rule.level", "data.srcport"]
@@ -62,9 +57,6 @@ class TestTrainingScenario(unittest.TestCase):
         assert ts.bucket_minutes == 10
         assert ts.sliding_window == 150
         assert ts.device == "cuda"
-        assert ts.fill_with_synthetic is True
-        assert ts.synthetic_count == 500
-        assert ts.synthetic_mode == "copy"
 
     def test_extra_params(self):
         """Test extra_params dictionary."""
@@ -82,8 +74,7 @@ class TestDetectionScenario(unittest.TestCase):
         assert ds.mode == "historical"
         assert ds.lookback_minutes == 10
         assert ds.polling_interval_seconds is None
-        assert ds.fill_with_synthetic is False
-        assert ds.synthetic_count == 50
+        assert ds.threshold is None
         assert ds.print_payloads is False
         assert ds.dry_run is False
         assert ds.payload_dir is None
@@ -94,8 +85,7 @@ class TestDetectionScenario(unittest.TestCase):
             mode="realtime",
             lookback_minutes=30,
             polling_interval_seconds=300,
-            fill_with_synthetic=True,
-            synthetic_count=100,
+            threshold=0.6,
             print_payloads=True,
             dry_run=True,
             payload_dir="/tmp/payloads",
@@ -103,8 +93,7 @@ class TestDetectionScenario(unittest.TestCase):
         assert ds.mode == "realtime"
         assert ds.lookback_minutes == 30
         assert ds.polling_interval_seconds == 300
-        assert ds.fill_with_synthetic is True
-        assert ds.synthetic_count == 100
+        assert ds.threshold == 0.6
         assert ds.print_payloads is True
         assert ds.dry_run is True
         assert ds.payload_dir == "/tmp/payloads"
@@ -205,7 +194,8 @@ detection:
             yaml_path = f.name
 
         try:
-            uc = UseCase.from_yaml(yaml_path)
+            with self.assertLogs("sonar.scenario", level="WARNING") as logs:
+                uc = UseCase.from_yaml(yaml_path)
             assert uc.name == "Complete Scenario"
             assert uc.description == "Full configuration"
             assert uc.enabled is True
@@ -218,20 +208,56 @@ detection:
             assert uc.training.bucket_minutes == 10
             assert uc.training.sliding_window == 150
             assert uc.training.device == "cuda"
-            assert uc.training.fill_with_synthetic is True
-            assert uc.training.synthetic_count == 500
-            assert uc.training.synthetic_mode == "copy"
+            # The removed synthetic-fill keys are reported as obsolete, in both sections
+            obsolete = [line for line in logs.output if "obsolete key" in line]
+            assert len(obsolete) == 7, logs.output
+            assert all("synthetic fill was removed" in line for line in obsolete)
             
             # Detection config
             assert uc.detection.mode == "realtime"
             assert uc.detection.lookback_minutes == 30
             assert uc.detection.polling_interval_seconds == 300
-            assert uc.detection.fill_with_synthetic is True
             assert uc.detection.print_payloads is True
             assert uc.detection.dry_run is True
             assert uc.detection.payload_dir == "/tmp/payloads"
         finally:
             Path(yaml_path).unlink()
+
+    def _load(self, yaml_content):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write(yaml_content)
+            path = f.name
+        try:
+            return UseCase.from_yaml(path)
+        finally:
+            Path(path).unlink()
+
+    def test_threshold_is_a_severity_between_0_and_1(self):
+        assert self._load("detection:\n  threshold: 0.4\n").detection.threshold == 0.4
+        assert self._load("detection:\n  threshold: null\n").detection.threshold is None
+        assert self._load("detection:\n  mode: historical\n").detection.threshold is None
+        with self.assertRaises(ValueError):
+            self._load("detection:\n  threshold: 1.4\n")
+        with self.assertRaises(ValueError):
+            self._load("detection:\n  threshold: high\n")
+
+    def test_realtime_delivery_settings(self):
+        detection = self._load("detection:\n  mode: realtime\n").detection
+        assert (detection.ingest_delay_seconds, detection.max_consecutive_failures) == (60, 5)
+        detection = self._load("detection:\n  ingest_delay_seconds: 0\n  max_consecutive_failures: 1\n").detection
+        assert (detection.ingest_delay_seconds, detection.max_consecutive_failures) == (0, 1)
+        for bad in ("ingest_delay_seconds: -1", "max_consecutive_failures: 0", "ingest_delay_seconds: soon"):
+            with self.assertRaises(ValueError):
+                self._load(f"detection:\n  {bad}\n")
+
+    def test_output_section_reaches_the_config(self):
+        from sonar.cli import apply_scenario_to_config, load_config
+
+        with self.assertNoLogs("sonar.scenario", "WARNING"):
+            uc = self._load("name: s\noutput:\n  state_dir: /var/lib/sonar/state\n")
+        cfg = load_config(None)
+        apply_scenario_to_config(cfg, uc, {"output": {"state_dir": "/var/lib/sonar/state"}})
+        assert cfg.output.state_dir == "/var/lib/sonar/state"
 
     def test_from_yaml_file_not_found(self):
         """Test handling of missing YAML file."""
@@ -465,12 +491,9 @@ detection:
 
             result = cmd_scenario(args)
 
-            # Should have loaded engine (no training, detection-only mode)
-            mock_engine.assert_called_once()
-            mock_engine_instance.load.assert_called_once()
-
-            # Should have called detection phase
+            # Detection-only: the detection phase (which loads the model) runs in the YAML's mode
             mock_detect.assert_called_once()
+            self.assertEqual(mock_detect.call_args.args[3], "historical")
             assert result == 0
         finally:
             Path(yaml_path).unlink()
@@ -667,8 +690,7 @@ detection:
                 result = cmd_scenario(args)
 
                 # Should have loaded model (no training section)
-                mock_engine.assert_called_once()
-                mock_engine_instance.load.assert_called_once()
+                # The detection phase loads the model itself
 
                 # Should have called detection phase
                 mock_detect.assert_called_once()
@@ -764,6 +786,120 @@ training:
             self.assertEqual(uc2.training.max_numeric_fields, ["data.cpu_usage_%"])
         finally:
             Path(yaml_path).unlink()
+
+
+class TestScenarioConfigAlignment(unittest.TestCase):
+    """All three CLI entry points apply the same scenario keys."""
+
+    YAML = """
+name: Align
+model_name: align_model
+wazuh:
+  base_url: "https://scenario-host:9200"
+training:
+  lookback_hours: 48
+  numeric_fields: ["rule.level"]
+  categorical_fields:
+  sliding_window: 50
+  derived_features: false
+  alert_filter: {"terms": {"rule.groups": ["sshd"]}}
+  max_numeric_fields: ["rule.level"]
+detection:
+  lookback_minutes: 300
+  threshold: 0.6
+  min_consecutive: 2
+"""
+
+    def setUp(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write(self.YAML)
+            self.path = f.name
+
+    def tearDown(self):
+        Path(self.path).unlink()
+
+    def test_empty_yaml_key_uses_default(self):
+        uc = UseCase.from_yaml(self.path)
+        self.assertEqual(uc.training.categorical_fields, [])
+
+    def test_empty_training_section_uses_defaults(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write("name: Empty\ntraining:\ndetection:\n")
+            path = f.name
+        try:
+            uc = UseCase.from_yaml(path)
+            self.assertEqual(uc.training.sliding_window, 200)
+            self.assertIsNone(uc.detection.threshold)  # MVAD's own decision unless set
+        finally:
+            Path(path).unlink()
+
+    def test_load_scenario_for_phase_applies_all_feature_keys(self):
+        from sonar.cli import load_scenario_for_phase
+
+        for phase in ("training", "detection"):
+            cfg, _ = load_scenario_for_phase(self.path, phase, None)
+            self.assertFalse(cfg.features.derived_features, phase)
+            self.assertEqual(cfg.features.alert_filter, {"terms": {"rule.groups": ["sshd"]}}, phase)
+            self.assertEqual(list(cfg.features.max_numeric_fields), ["rule.level"], phase)
+            self.assertEqual(cfg.mvad.sliding_window, 50, phase)
+            self.assertEqual(cfg.wazuh.base_url, "https://scenario-host:9200", phase)
+            self.assertEqual(cfg.model_path, str(default_models_dir() / "align_model"), phase)
+
+    def test_cmd_scenario_applies_wazuh_section(self):
+        from sonar import cli
+
+        captured = {}
+
+        def fake_training(cfg, training, args):
+            captured["cfg"] = cfg
+            return 0
+
+        args = MagicMock(use_case=self.path, config=None, mode=None, debug=False)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write(self.YAML.replace("detection:", "unused_detection:"))
+            path = f.name
+        try:
+            args.use_case = path
+            with patch("sonar.cli._execute_training_phase", side_effect=fake_training):
+                self.assertEqual(cli.cmd_scenario(args), 0)
+        finally:
+            Path(path).unlink()
+        self.assertEqual(captured["cfg"].wazuh.base_url, "https://scenario-host:9200")
+        self.assertEqual(captured["cfg"].mvad.sliding_window, 50)
+
+    def _run_cmd(self, cmd, expected_exit=0, **overrides):
+        """Run cmd_train/cmd_detect with a mocked client (no alerts) and return the search window in minutes."""
+        from sonar import cli
+
+        client = MagicMock()
+        client.check_connection.return_value = True
+        client.search_alerts.return_value = []
+        args = MagicMock(scenario=self.path, config=None, debug=False, model_name=None, fill_with_synthetic=False,
+                         synthetic_count=None, synthetic_mode="constant", synthetic_level=None, synthetic_srcip=None,
+                         lookback_hours=None, lookback_minutes=None, print_payloads=False, dry_run=False, payload_dir=None, agent=None)
+        for k, v in overrides.items():
+            setattr(args, k, v)
+        engine = MagicMock(context_buckets=0, min_detection_points=1, feature_config=None)
+        with patch("sonar.cli.WazuhIndexerClient", return_value=client), patch("sonar.cli.MVADModelEngine", return_value=engine):
+            self.assertEqual(cmd(args), expected_exit)
+        start, end = client.search_alerts.call_args.args[:2]
+        self.assertEqual(client.search_alerts.call_args.kwargs.get("query"), {"terms": {"rule.groups": ["sshd"]}})
+        return round((end - start).total_seconds() / 60)
+
+    def test_train_uses_scenario_lookback_unless_cli_given(self):
+        from sonar.cli import cmd_train
+
+        # No alerts: training fails (exit 1) after searching the right window.
+        self.assertEqual(self._run_cmd(cmd_train, expected_exit=1), 48 * 60)
+        self.assertEqual(self._run_cmd(cmd_train, expected_exit=1, lookback_hours=24), 24 * 60)
+
+    def test_detect_uses_scenario_lookback_unless_cli_given(self):
+        from sonar.cli import cmd_detect
+
+        # No alerts: nothing could be scored (exit 2). With no context needed, the search
+        # window is exactly the scored window.
+        self.assertEqual(self._run_cmd(cmd_detect, expected_exit=2), 300)
+        self.assertEqual(self._run_cmd(cmd_detect, expected_exit=2, lookback_minutes=10), 10)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,31 @@
+# SONAR next to a Wazuh 4.14.1 manager container: the "file" transport of the wazuh sink.
+#
+# Overlay for a compose project that defines the wazuh.manager service (radar/docker-compose.core.yml,
+# or Wazuh's single-node docker deployment):
+#
+#   sudo install -d -o 1000 -g 1000 /srv/sonar/anomalies    # writable by the image's user (uid 1000)
+#   docker compose -f docker-compose.yml -f sonar/wazuh/docker-compose.sonar.yml up -d
+#
+# The manager reads the shared directory read-only; its ossec.conf needs the <localfile> block of
+# sonar/wazuh/ossec-localfile.xml (location /var/log/sonar/anomalies.json), and its ruleset the
+# rules of sonar/wazuh/rules/sonar_rules.xml (`sonar wazuh install-rules`).
+services:
+  wazuh.manager:
+    volumes:
+      - /srv/sonar/anomalies:/var/log/sonar:ro
+
+  sonar:
+    image: sonar:v0.8
+    container_name: sonar
+    restart: unless-stopped
+    depends_on:
+      - wazuh.manager
+    # Your realtime scenario; it needs output.sinks: [wazuh] (the default) with transport: file.
+    command: ["scenario", "--use-case", "sonar/scenarios/my_realtime_monitor.yaml"]
+    volumes:
+      - /srv/sonar/anomalies:/var/log/sonar
+      - ./sonar/models:/home/alab/soar/sonar/models
+      - ./sonar/scenarios:/home/alab/soar/sonar/scenarios
+      # A config whose wazuh.base_url reaches the indexer from this container,
+      # e.g. https://wazuh.indexer:9200 on the compose network.
+      - ./sonar/default_config.yaml:/home/alab/soar/sonar/default_config.yaml:ro

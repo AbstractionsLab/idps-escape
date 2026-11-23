@@ -8,6 +8,7 @@ This script creates two JSON files:
 
 Usage:
     python generate_attack_data.py [--output-dir ./generated_scenarios]
+    python generate_attack_data.py --evaluation --output-dir <dir>   # labelled splits for sonar evaluate
 
 The generated data simulates realistic enterprise authentication patterns with:
 - Normal business-hours activity
@@ -21,6 +22,8 @@ import random
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
+
+from labelled_splits import labelled_split, write_json
 
 # Seed for reproducibility
 random.seed(42)
@@ -341,10 +344,79 @@ def inject_password_spray(
     return alerts
 
 
+# --- Labelled evaluation splits (sonar evaluate) ---
+
+# Four of each; the scenarios count their own types (sonar evaluate --event-types).
+EVALUATION_EVENTS = ["brute_force", "password_spray", "lateral_movement", "privilege_escalation"] * 4
+
+
+def _inject_brute_force(alerts: List[Dict[str, Any]], at: datetime, rng: random.Random) -> float:
+    inject_brute_force_attack(alerts, at, 0, duration_minutes=30, attempts=rng.randint(100, 250))
+    return 30
+
+
+def _inject_password_spray(alerts: List[Dict[str, Any]], at: datetime, rng: random.Random) -> float:
+    inject_password_spray(alerts, at, 0, duration_minutes=120)
+    return 120
+
+
+def _inject_lateral_movement(alerts: List[Dict[str, Any]], at: datetime, rng: random.Random) -> float:
+    inject_lateral_movement(alerts, at, 0)
+    return 50  # five hops about 10 minutes apart
+
+
+def _inject_privilege_escalation(alerts: List[Dict[str, Any]], at: datetime, rng: random.Random) -> float:
+    inject_privilege_escalation(alerts, at, 0)
+    return 11  # last event at +10 minutes
+
+
+INJECTORS = {
+    "brute_force": _inject_brute_force,
+    "password_spray": _inject_password_spray,
+    "lateral_movement": _inject_lateral_movement,
+    "privilege_escalation": _inject_privilege_escalation,
+}
+
+
+def generate_evaluation_splits(output_dir: Path, seed: int, training_days: int, context_hours: int, evaluation_hours: int) -> None:
+    """
+    Write training.json (normal only) and validation/test splits with their label files.
+
+    Each split is ``context_hours`` of normal traffic, then ``evaluation_hours`` with four of
+    each attack (brute force, password spray, lateral movement, privilege escalation) at
+    random times.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    normal = lambda start, hours: generate_normal_traffic(start, hours=hours, alerts_per_hour=40)
+    random.seed(seed)
+    training = generate_normal_traffic(datetime(2024, 12, 1), hours=training_days * 24, alerts_per_hour=40)
+    training.sort(key=lambda a: a["timestamp"])
+    write_json(output_dir / "training.json", training)
+    print(f"training.json: {len(training)} alerts, {training_days} days")
+    for offset, split, start in ((1, "validation", datetime(2024, 12, 20)), (2, "test", datetime(2025, 1, 1))):
+        alerts, labels = labelled_split(normal, INJECTORS, EVALUATION_EVENTS, start, context_hours, evaluation_hours, seed + 10 * offset, f"authentication attacks {split} split", max_minutes=120)
+        write_json(output_dir / f"{split}.json", alerts)
+        write_json(output_dir / f"{split}_labels.json", labels)
+        print(f"{split}.json: {len(alerts)} alerts, {len(labels['events'])} labelled events")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate Wazuh test data with attack patterns")
     parser.add_argument("--output-dir", type=Path, default=Path("./generated_scenarios"))
+    parser.add_argument(
+        "--evaluation",
+        action="store_true",
+        help="Write labelled evaluation splits (training.json, validation.json, test.json and their *_labels.json) instead of the default files",
+    )
+    parser.add_argument("--seed", type=int, default=42, help="Random seed of the evaluation splits (default: 42)")
+    parser.add_argument("--training-days", type=int, default=14, help="Days of normal training traffic for --evaluation (default: 14)")
+    parser.add_argument("--context-hours", type=int, default=48, help="Hours of normal traffic before the attacks of each split (default: 48, enough context for every bundled scenario)")
+    parser.add_argument("--evaluation-hours", type=int, default=192, help="Hours with attacks in each split (default: 192)")
     args = parser.parse_args()
+
+    if args.evaluation:
+        generate_evaluation_splits(args.output_dir, args.seed, args.training_days, args.context_hours, args.evaluation_hours)
+        return
     
     args.output_dir.mkdir(parents=True, exist_ok=True)
     

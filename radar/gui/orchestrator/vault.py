@@ -62,6 +62,11 @@ def clear_sudo_password(session_id: str) -> None:
         _sudo_passwords.pop(session_id, None)
 
 
+def clear_all() -> None:
+    with _lock:
+        _sudo_passwords.clear()
+
+
 def _get_sudo_password(session_id: str) -> str:
     with _lock:
         now = time.monotonic()

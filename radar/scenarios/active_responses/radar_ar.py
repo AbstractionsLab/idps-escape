@@ -32,6 +32,8 @@ def _safe_str(v):
 _AR_USERNAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9._-]{0,31}$")
 _AR_SERVICE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9@._:-]*$")
 
+SUPPORTED_MITIGATIONS = frozenset({"firewall-drop", "lock_user_linux.sh", "terminate_service.sh"})
+
 
 def _strip_service_suffix(name: str) -> str:
     return name[:-len(".service")] if name.endswith(".service") else name
@@ -437,6 +439,12 @@ class IOCExtractor:
                         out["domain"].add(dom)
 
 
+def _alert_users(alert: dict) -> list:
+    """Users named by the alert itself. Context events cover every log on the
+    agent in the window, so their users are not the alert's subject."""
+    return IOCExtractor().extract(alert or {}, [])["user"]
+
+
 class BaseScenario:
     def __init__(self, logger: Logger, os_client: OpenSearchClient):
         self.logger = logger
@@ -576,14 +584,56 @@ class GeoipDetection(BaseScenario):
 
 
 class SuspiciousLogin(BaseScenario):
+    """The off-hour detector is per user (entity = username), so an AD alert's
+    context is that user's events on any agent, not the webhook agent's logs."""
+
+    USER_FIELDS = ("data.dstuser", "data.srcuser", "data.user", "data.username")
+
+    def __init__(self, logger, os_client):
+        super().__init__(logger, os_client)
+        self._ad_user = ""
+
+    @staticmethod
+    def ad_user(scenario: dict) -> str:
+        if scenario.get("detection") != "ad":
+            return ""
+        return _safe_str(((scenario.get("alert") or {}).get("data") or {}).get("entity_keyword")).strip()
+
+    def collect_context(self, scenario: dict):
+        self._ad_user = self.ad_user(scenario)
+        try:
+            return super().collect_context(scenario)
+        finally:
+            self._ad_user = ""
+
+    def build_filters(self, t_start: datetime, t_end: datetime, effective_agent_name: str):
+        filters = super().build_filters(t_start, t_end, effective_agent_name)
+        if self._ad_user:
+            should = [{"term": {f: self._ad_user}} for f in self.USER_FIELDS]
+            should += [{"term": {f"{f}.keyword": self._ad_user}} for f in self.USER_FIELDS]
+            filters.append({"bool": {"should": should, "minimum_should_match": 1}})
+        return filters
+
+    def resolve_effective_agent_name(self, scenario: dict, context_events: list):
+        if scenario.get("detection") != "ad":
+            return super().resolve_effective_agent_name(scenario, context_events)
+        webhook_agent, _ = AdAlertOrigin.expected()
+        counts = {}
+        for ev in context_events or []:
+            name = _safe_str((ev.get("agent") or {}).get("name")).strip()
+            if name and name != webhook_agent:
+                counts[name] = counts.get(name, 0) + 1
+        return max(sorted(counts), key=counts.get) if counts else None
+
     def build_analyze_payload(self, scenario: dict, context: dict) -> dict:
         alert = scenario["alert"]
         iocs = context.get("iocs") or {}
-        users = iocs.get("user") or []
+        ad_user = self.ad_user(scenario)
+        users = _alert_users(alert) or ([ad_user] if ad_user else []) or iocs.get("user") or []
         return {
             "title":       "RADAR: suspicious login attempts",
             "username":    users[0] if users else None,
-            "target_host": _safe_str((alert.get("agent") or {}).get("name")).strip(),
+            "target_host": _safe_str(context.get("effective_agent")).strip() or _safe_str((alert.get("agent") or {}).get("name")).strip(),
             "src_ips":     iocs.get("ip") or [],
             "timestamp":   _safe_str(alert.get("timestamp")),
         }
@@ -621,6 +671,10 @@ class LogVolume(BaseScenario):
         if entity:
             return entity
         return super().resolve_effective_agent_name(scenario, context_events)
+
+
+class LinuxResourceUtilization(LogVolume):
+    pass
 
 
 class ScanningDetection(BaseScenario):
@@ -749,6 +803,7 @@ class Registry:
             "geoip_detection": GeoipDetection(logger, os_client),
             "suspicious_login": SuspiciousLogin(logger, os_client),
             "log_volume": LogVolume(logger, os_client),
+            "linux_resource_utilization": LinuxResourceUtilization(logger, os_client),
             "scanning_detection": ScanningDetection(logger, os_client),
             "default": BaseScenario(logger, os_client),
         }
@@ -961,6 +1016,7 @@ class DecipherClient:
             "suspicious_login": "RADAR: suspicious login attempts",
             "geoip_detection": "RADAR: suspicious geographic access",
             "log_volume": "RADAR: abnormal log volume",
+            "linux_resource_utilization": "RADAR: abnormal CPU/memory utilization",
             "scanning_detection": "RADAR: scanning detected",
             "default": "RADAR: security incident detected",
         }
@@ -1013,7 +1069,8 @@ class RiskEngine:
 
         return 0.0
 
-    def compute(self, scenario: dict, cti_score_T: float, ad_grade: Optional[float], ad_conf: Optional[float]) -> dict:
+    def compute(self, scenario: dict, cti_score_T: float, ad_grade: Optional[float], ad_conf: Optional[float],
+                fusion: Optional[dict] = None) -> dict:
         cfg = scenario.get("config")
         alert = scenario.get("alert")
 
@@ -1029,11 +1086,22 @@ class RiskEngine:
             A = 0.0
             ad_component = 0.0
 
-        # Compute S (signature risk): S = L x I
-        likelihood = self._signature_likelihood(cfg, alert)
+        # Compute S (signature risk): S = L x I, only for an alert that matched a signature rule
+        likelihood = 0.0 if scenario.get("detection") == "ad" else self._signature_likelihood(cfg, alert)
         impact = _to_float(cfg.get("signature_impact"), 0.0)
         S = likelihood * impact
         sig_component = S * w_sig
+
+        # Temporal fusion (FusionCorrelator): the term this alert cannot carry is filled
+        # with the time-discounted score of the strongest counterpart alert. It can only
+        # raise A or S, so with no counterpart the score is exactly the single-alert one.
+        fused = None
+        if fusion:
+            value = max(0.0, min(1.0, _to_float(fusion.get("value"), 0.0)))
+            if fusion.get("counterpart") == "ad" and value > A:
+                A, ad_component, fused = value, value * w_ad, fusion
+            elif fusion.get("counterpart") == "signature" and value > S:
+                S, sig_component, fused = value, value * w_sig, fusion
 
         # Compute T (CTI score): T from DECIPHER analyze endpoint
         T = max(0.0, min(1.0, _to_float(cti_score_T, 0.0)))
@@ -1066,6 +1134,8 @@ class RiskEngine:
             "cti_score_T": round(T, 6),
             "risk_score": round(risk_0_1, 6),
         }
+        if fused:
+            components["fusion"] = fused
 
         out = {"risk_score": risk_0_1, "tier": tier, "components": components}
         self.logger.log("INFO", "Risk computed", risk_score=risk_0_1, tier=tier)
@@ -1150,7 +1220,6 @@ class EmailNotifier:
             "",
             f"Risk score: {risk['risk_score']}",
             f"Tier: {risk['tier']}",
-            f"Threshold: {risk.get('threshold', '')}",
             f"Components: {json.dumps(risk.get('components', {}), ensure_ascii=False)}",
             "",
             f"CTI score (T): {(risk.get('components') or {}).get('cti_score_T', 0.0)}",
@@ -1478,6 +1547,12 @@ class ActionExecutor:
             self.logger.log("ERROR", "Mitigation skipped, agent_id unresolved", command=command)
             return []
 
+        if command not in SUPPORTED_MITIGATIONS:
+            self.logger.log("ERROR", "Mitigation skipped, unsupported command (fix the scenario's mitigations in ar.yaml)",
+                            command=command, supported=sorted(SUPPORTED_MITIGATIONS))
+            self.last_refusal = "unsupported_mitigation"
+            return []
+
         args_list = self._build_args(command, scenario, iocs, _safe_str(decision.get("target_ip")))
         if not args_list:
             self.logger.log("ERROR", "Mitigation skipped, args unresolved", command=command)
@@ -1525,7 +1600,10 @@ class ActionExecutor:
 
         if command == "lock_user_linux.sh":
             protected = {"root"} | {_safe_str(u).lower() for u in (cfg.get("protected_users") or [])}
-            return [[u] for u in (iocs.get("user") or [])
+            users = _alert_users(scenario.get("alert") or {})
+            if not users:
+                self.last_refusal = "no_alert_user"
+            return [[u] for u in users
                     if _AR_USERNAME_RE.match(u) and u.lower() not in protected]
 
         if command == "terminate_service.sh":
@@ -1550,16 +1628,225 @@ class AdAlertOrigin:
         return agent, location
 
     @staticmethod
+    def is_trusted(alert: dict) -> bool:
+        exp_agent, exp_location = AdAlertOrigin.expected()
+        agent = _safe_str((alert.get("agent") or {}).get("name")).strip()
+        location = _safe_str(alert.get("location")).strip()
+        return agent == exp_agent and (location == exp_location or location.endswith("->" + exp_location))
+
+    @staticmethod
     def verify(alert: dict, logger) -> bool:
         exp_agent, exp_location = AdAlertOrigin.expected()
         agent = _safe_str((alert.get("agent") or {}).get("name")).strip()
         location = _safe_str(alert.get("location")).strip()
-        ok = agent == exp_agent and (location == exp_location or location.endswith("->" + exp_location))
+        ok = AdAlertOrigin.is_trusted(alert)
         if not ok:
             logger.log("WARNING", "AD alert rejected: not from the webhook agent's log",
                        agent=agent, location=location,
                        expected_agent=exp_agent, expected_location=exp_location)
         return ok
+
+
+def _as_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+
+
+class FusionCorrelator:
+    """Temporal fusion of signature and anomaly evidence, opt-in per scenario
+    (`fusion:` in ar.yaml).
+
+    The two kinds of alert never arrive together, and either may never come:
+    anomaly alerts lag the data they describe by the detector interval, its delay
+    and the monitor interval. So nothing waits. On each alert this looks back in
+    the alerts index for the other kind on the same entity and returns the
+    strongest one, discounted linearly by its time gap (1 inside the anomaly's
+    data window, 0 at `window_minutes` from it). Whichever alert arrives second
+    gets the combined score. A missing counterpart, or any failure here, means no
+    fusion: the score is then exactly the single-alert score. Counterparts only
+    contribute to the score; mitigation targets still come from the triggering
+    alert alone."""
+
+    DEFAULT_AD_KEYS = ("data.entity_keyword",)
+    DEFAULT_SIGNATURE_KEYS = ("agent.name",)
+    MAX_HITS = 200
+
+    def __init__(self, logger: Logger, os_client: OpenSearchClient, risk_engine: "RiskEngine"):
+        self.logger = logger
+        self.os = os_client
+        self.risk_engine = risk_engine
+        self.indices = _safe_str(os.environ.get("OS_ALERTS_INDEX")).strip() or "wazuh-alerts-*"
+
+    @staticmethod
+    def _as_list(v) -> list:
+        if v is None:
+            return []
+        items = v if isinstance(v, list) else [v]
+        return [_safe_str(x).strip() for x in items if _safe_str(x).strip()]
+
+    @classmethod
+    def settings(cls, scfg: dict) -> Optional[dict]:
+        """Validated fusion settings, or None when fusion does not apply."""
+        f = (scfg or {}).get("fusion")
+        if not isinstance(f, dict) or not _parse_bool(f.get("enabled"), False):
+            return None
+        ad_ids = ScenarioIdentifier._rule_ids(scfg.get("ad") or {})
+        sig_block = scfg.get("signature") or {}
+        sig_ids = ScenarioIdentifier._rule_ids(sig_block)
+        sig_groups = ScenarioIdentifier._rule_groups(sig_block)
+        if not ad_ids or not (sig_ids or sig_groups):
+            return None
+        if _to_float(scfg.get("w_ad"), 0.0) <= 0.0 or _to_float(scfg.get("w_sig"), 0.0) <= 0.0:
+            return None
+        window = _to_float(f.get("window_minutes"), 30.0)
+        if window <= 0.0:
+            return None
+        key = f.get("key") if isinstance(f.get("key"), dict) else {}
+        return {
+            "window": window,
+            "lead": max(0.0, _to_float(f.get("ad_lead_minutes"), 0.0)),
+            "ad_keys": cls._as_list(key.get("ad")) or list(cls.DEFAULT_AD_KEYS),
+            "sig_keys": cls._as_list(key.get("signature")) or list(cls.DEFAULT_SIGNATURE_KEYS),
+            "ad_ids": ad_ids, "sig_ids": sig_ids, "sig_groups": sig_groups,
+        }
+
+    @staticmethod
+    def _values(alert: dict, fields: list) -> list:
+        out = []
+        for field in fields:
+            v = _safe_str(_dotted_get(alert, field)).strip()
+            if v and v not in out:
+                out.append(v)
+        return out
+
+    @staticmethod
+    def ad_window(alert: dict):
+        """The anomaly's data window: data_start/data_end when the monitor sends
+        them, else the monitor's period (later than the data), else the alert time."""
+        data = alert.get("data") or {}
+        for a, b in (("data_start", "data_end"), ("period_start", "period_end")):
+            s, e = _as_utc(_parse_iso(data.get(a))), _as_utc(_parse_iso(data.get(b)))
+            if s and e and s <= e:
+                return s, e
+        t = _as_utc(_parse_iso(alert.get("timestamp")))
+        return t, t
+
+    @staticmethod
+    def _gap_minutes(t: datetime, start: datetime, end: datetime) -> float:
+        if t < start:
+            return (start - t).total_seconds() / 60.0
+        if t > end:
+            return (t - end).total_seconds() / 60.0
+        return 0.0
+
+    def _search(self, ids: set, groups: set, key_fields: list, values: list, t_from: datetime, t_to: datetime) -> list:
+        rule_should = [{"terms": {"rule.id": sorted(ids)}}] if ids else []
+        if groups:
+            rule_should.append({"terms": {"rule.groups": sorted(groups)}})
+        key_should = []
+        for field in key_fields:
+            key_should += [{"terms": {field: values}}, {"terms": {f"{field}.keyword": values}}]
+        body = {
+            "size": self.MAX_HITS,
+            "sort": [{"@timestamp": {"order": "desc"}}],
+            "query": {"bool": {"filter": [
+                {"range": {"@timestamp": {"gte": t_from.isoformat(), "lte": t_to.isoformat()}}},
+                {"bool": {"should": rule_should, "minimum_should_match": 1}},
+                {"bool": {"should": key_should, "minimum_should_match": 1}},
+            ]}},
+        }
+        return self.os.search(self.indices, body)
+
+    def _best(self, st: dict, hits: list, trigger_id: str, key_fields: list, values: list, score_fn, gap_fn) -> Optional[dict]:
+        best, candidates = None, 0
+        for hit in hits:
+            if trigger_id and _safe_str(hit.get("id")) == trigger_id:
+                continue
+            # Re-check the key here: the index mapping decides how `terms` matches.
+            if not set(self._values(hit, key_fields)) & set(values):
+                continue
+            scored = score_fn(hit)
+            if scored is None:
+                continue
+            raw, extra = scored
+            gap = gap_fn(hit)
+            if gap is None:
+                continue
+            weight = max(0.0, 1.0 - gap / st["window"])
+            if weight <= 0.0 or raw <= 0.0:
+                continue
+            candidates += 1
+            value = raw * weight
+            if best is None or value > best["value"]:
+                best = dict(extra, value=round(value, 6), raw_score=round(raw, 6), weight=round(weight, 6),
+                            gap_minutes=round(gap, 3), alert_id=_safe_str(hit.get("id")),
+                            rule_id=_safe_str((hit.get("rule") or {}).get("id")),
+                            timestamp=_safe_str(hit.get("timestamp")))
+        if best:
+            best["candidates"] = candidates
+        return best
+
+    def _ad_score(self, hit: dict):
+        if not AdAlertOrigin.is_trusted(hit):
+            return None
+        data = hit.get("data") or {}
+        g, c = _to_float(data.get("anomaly_grade"), None), _to_float(data.get("anomaly_confidence"), None)
+        if g is None or c is None:
+            return None
+        g, c = max(0.0, min(1.0, g)), max(0.0, min(1.0, c))
+        return g * c, {"anomaly_grade": round(g, 6), "anomaly_confidence": round(c, 6)}
+
+    def correlate(self, scenario: dict) -> Optional[dict]:
+        scfg = scenario.get("config") or {}
+        detection = scenario.get("detection")
+        st = self.settings(scfg)
+        if not st or detection not in ("ad", "signature"):
+            return None
+        alert = scenario.get("alert") or {}
+        trigger_id = _safe_str(alert.get("id"))
+        window = timedelta(minutes=st["window"])
+        lead = timedelta(minutes=st["lead"])
+
+        if detection == "signature":
+            t = _as_utc(_parse_iso(alert.get("timestamp")))
+            values = self._values(alert, st["sig_keys"])
+            if not t or not values:
+                return None
+            hits = self._search(st["ad_ids"], set(), st["ad_keys"], values, t - window - lead, t + window)
+
+            def gap(hit):
+                s, e = self.ad_window(hit)
+                return None if not s else self._gap_minutes(t, s - lead, e)
+            best = self._best(st, hits, trigger_id, st["ad_keys"], values, self._ad_score, gap)
+            counterpart = "ad"
+        else:
+            start, end = self.ad_window(alert)
+            arrived = _as_utc(_parse_iso(alert.get("timestamp"))) or end
+            values = self._values(alert, st["ad_keys"])
+            if not start or not values:
+                return None
+            impact = _to_float(scfg.get("signature_impact"), 0.0)
+            hits = self._search(st["sig_ids"], st["sig_groups"], st["sig_keys"], values,
+                                start - lead - window, max(end, arrived))
+
+            def score(hit):
+                likelihood = self.risk_engine._signature_likelihood(scfg, hit)
+                return likelihood * impact, {"signature_likelihood": round(likelihood, 6), "signature_impact": round(impact, 6)}
+
+            def gap(hit):
+                ts = _as_utc(_parse_iso(hit.get("timestamp")))
+                return None if not ts else self._gap_minutes(ts, start - lead, end)
+            best = self._best(st, hits, trigger_id, st["sig_keys"], values, score, gap)
+            counterpart = "signature"
+
+        if not best:
+            self.logger.log("INFO", "Fusion: no counterpart in window", counterpart=counterpart,
+                            entity=values, window_minutes=st["window"], hits=len(hits))
+            return None
+        best["counterpart"] = counterpart
+        self.logger.log("INFO", "Fusion: counterpart matched", **best)
+        return best
 
 
 class DecisionId:
@@ -1590,6 +1877,7 @@ class RadarActiveResponse:
         self.strategies = Registry(self.logger, self.os)
         self.decipher = DecipherClient(self.logger)
         self.risk_engine = RiskEngine(self.logger)
+        self.fusion = FusionCorrelator(self.logger, self.os, self.risk_engine)
         self.email = EmailNotifier(self.logger)
         self.wazuh_api = WazuhApiClient(self.logger)
         self.planner = ActionPlanner(self.logger)
@@ -1645,14 +1933,22 @@ class RadarActiveResponse:
 
         ad_grade = None
         ad_conf = None
-        if scenario["detection"] == "ad":
+        if scenario["detection"] in ("ad", "hybrid"):
             ad_grade, ad_conf = strategy.resolve_ad_scores(scenario)
 
-        risk = self.risk_engine.compute(scenario, cti["cti_score_T"], ad_grade, ad_conf)
+        fusion = None
+        try:
+            fusion = self.fusion.correlate(scenario)
+        except Exception as e:
+            self.logger.log("ERROR", "Fusion failed; scoring this alert on its own", error=str(e))
+
+        risk = self.risk_engine.compute(scenario, cti["cti_score_T"], ad_grade, ad_conf, fusion=fusion)
 
         decision_id = DecisionId.build(scenario, context)
         target_ip = strategy.resolve_target_ip(scenario, context)
         extras = strategy.build_display_extras(scenario, context)
+        if (risk.get("components") or {}).get("fusion"):
+            extras = dict(extras, fusion=risk["components"]["fusion"])
         decision = {"decision_id": decision_id, "scenario": scenario, "context": context,
                     "cti": cti, "risk": risk, "target_ip": target_ip, "extras": extras}
 

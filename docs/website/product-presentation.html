@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="assets/charts.css" rel="stylesheet">
   <style>
     :root {
       --bg: #eef1f5;
@@ -291,6 +292,20 @@
       font-size: 0.93rem;
     }
 
+    .scenario-kind {
+      margin-top: 0.3rem;
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .feature.is-new {
+      border-color: var(--brand);
+      box-shadow: 0 6px 24px rgba(13, 139, 148, 0.18);
+    }
+
     .stack {
       margin-top: 0.65rem;
       display: flex;
@@ -474,8 +489,25 @@
       line-height: 1;
     }
 
+    .section-lead {
+      margin: 0 0 0.4rem;
+      color: var(--muted);
+      max-width: 80ch;
+    }
+
+    .viz-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .viz-pair .viz {
+      margin: 0.6rem 0 0;
+    }
+
     @media (max-width: 1080px) {
       .hero-grid,
+      .viz-pair,
       .showcase {
         grid-template-columns: 1fr;
       }
@@ -527,6 +559,8 @@
       <nav class="topnav" aria-label="Page sections">
         <a href="#value">Value</a>
         <a href="#features">Features</a>
+        <a href="#scenarios">Scenarios</a>
+        <a href="#fusion">Fusion</a>
         <a href="#gallery">Screens</a>
         <a href="#workflow">Workflow</a>
         <a href="release-notes.html">What's new</a>
@@ -542,8 +576,8 @@
           <h1>IDPS-ESCAPE: AI-driven intrusion detection and automated security response</h1>
           <p class="lead">
             IDPS-ESCAPE turns detection into action. It combines signature-based engines (Wazuh, Suricata)
-            with machine learning anomaly detection to catch both known and emerging threats — then
-            automatically fires risk-scaled responses, from alert emails to host isolation, enriched with
+            with machine learning anomaly detection to catch both known and emerging threats, combines
+            their evidence over time, then automatically fires risk-scaled responses, from alert emails to host isolation, enriched with
             live cyber threat intelligence. Incident cases are created automatically, closing the loop from
             detection to remediation. Built for SMEs, SOC teams, and CERT/CSIRT entities under the CyFORT project.
           </p>
@@ -554,7 +588,7 @@
           <div class="metrics" aria-label="Product metrics">
             <div class="metric">
               <strong>Hybrid detection</strong>
-              <span>Signature + AI-based anomaly detection</span>
+              <span>Signature + AI anomaly evidence, fused per user or host</span>
             </div>
             <div class="metric">
               <strong>3-tier response</strong>
@@ -594,20 +628,20 @@
           </article>
           <article class="feature">
             <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/sonar_docs/README.md">SONAR</a> — multivariate anomaly detection</h3>
-            <p>Microsoft MTAD-GAT multivariate time-series anomaly detection on Wazuh alerts. Scenario-driven YAML configuration, offline debug mode, and direct RADAR data shipping in Wazuh.</p>
+            <p>Multivariate time-series anomaly detection on Wazuh alerts, with a choice of detector: Microsoft MVAD (MTAD-GAT), a fast PCA model or an EWMA baseline. Anomalies come back as Wazuh alerts, each delivered once, and <code>sonar evaluate</code> measures detection quality on labelled data. Runs as a standalone package.</p>
             <div class="stack">
-              <span class="chip">Microsoft MTAD-GAT</span>
-              <span class="chip">YAML scenarios</span>
-              <span class="chip">Debug mode</span>
+              <span class="chip">MVAD · PCA · EWMA</span>
+              <span class="chip">Wazuh alerts</span>
+              <span class="chip">sonar evaluate</span>
             </div>
           </article>
           <article class="feature">
-            <h3>Hybrid detection engine</h3>
-            <p>Three-layer defense in depth: Wazuh/Suricata signature rules catch known patterns, RADAR (RRCF) detects behavioral anomalies, and SONAR (MTAD-GAT) identifies multivariate ML anomalies.</p>
+            <h3>Hybrid detection with temporal fusion</h3>
+            <p>Three layers of defense: Wazuh/Suricata signature rules catch known patterns, RADAR (RRCF) detects behavioral anomalies per user or host, and SONAR identifies multivariate anomalies. RADAR combines a signature alert with a recent anomaly on the same user or host, so together they can reach a response tier that neither reaches alone.</p>
             <div class="stack">
               <span class="chip">Wazuh</span>
               <span class="chip">Suricata</span>
-              <span class="chip">Defense-in-depth</span>
+              <span class="chip">Temporal fusion</span>
             </div>
           </article>
           <article class="feature">
@@ -630,11 +664,11 @@
           </article>
           <article class="feature">
             <h3>Manager-centric enrichment &amp; deployment</h3>
-            <p>Enrichment logic (GeoIP, web) now lives in the Wazuh manager instead of per-endpoint helpers. Onboarding, group assignment, enrollment hardening, and scenario teardown are all driven by scripted manager entrypoints (<code>radar.sh</code>, <code>bootstrap-agent.sh</code>) — no Ansible required.</p>
+            <p>Enrichment logic (GeoIP, web) now lives in the Wazuh manager instead of per-endpoint helpers. Onboarding, group assignment, enrollment hardening, and scenario teardown are all driven by scripted manager entrypoints (<code>radar.sh</code>, <code>bootstrap-agent.sh</code>) — no Ansible required. Everything installed on endpoints ships as one <code>radar-agent</code> folder, with versioned active-response scripts.</p>
             <div class="stack">
               <span class="chip">manager-enrichment</span>
-              <span class="chip">bootstrap-agent.sh</span>
-              <span class="chip">Docker</span>
+              <span class="chip">radar-agent</span>
+              <span class="chip">ar-scripts.yaml</span>
             </div>
           </article>
           <article class="feature">
@@ -646,6 +680,129 @@
               <span class="chip">Real-time streaming</span>
             </div>
           </article>
+          <article class="feature">
+            <h3><a href="https://abstractionslab.github.io/idps-escape/traceability/index.html">Specifications that match the code</a></h3>
+            <p>Requirements, architecture, design, test cases and test reports are Doorstop items linked from mission need to executed test, and checked against the implementation: 80% of software requirements are covered by test cases and 72% by architecture or design. Features not built yet are marked as planned, and diagrams are written as code (Mermaid) and rendered at publish time.</p>
+            <div class="stack">
+              <span class="chip">Doorstop</span>
+              <span class="chip">C5-DEC SpecEngine</span>
+              <span class="chip">Mermaid</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="scenarios">
+      <div class="container">
+        <div class="section-head">
+          <h2>Detection scenarios</h2>
+          <div class="section-kicker">Self-contained, deployed one by one</div>
+        </div>
+        <p class="section-lead">
+          A RADAR scenario is a complete use case: decoders, rules, agent configuration, risk
+          weights and responses, deployed and undone on its own from the command line or the GUI.
+          A fleet-wide baseline rule set for PowerShell and command-shell execution is always active
+          alongside them.
+        </p>
+        <div class="features">
+          <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md">Suspicious login</a></h3>
+            <div class="scenario-kind">Signature · per user</div>
+            <p>Failed-login bursts, impossible travel computed from manager-side GeoIP and ASN enrichment, credential compromise (failures followed by an impossible-travel success) and Microsoft 365 brute force. The response escalates from an email to <code>firewall-drop</code>, and to locking the named Linux user only when the alert is combined with off-hours evidence.</p>
+            <div class="stack">
+              <span class="chip">rules 210013–210031</span>
+              <span class="chip">firewall-drop</span>
+              <span class="chip">lock_user_linux.sh</span>
+            </div>
+          </article>
+          <article class="feature is-new">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/radar-scenarios/off-hours-activity.md">Off-hours activity</a></h3>
+            <div class="scenario-kind">Rule mode and model mode · per user · new in v2.2.0</div>
+            <p>Working hours are declared per schedule group (time zone, workdays, overnight shifts) and every archived event is marked on or off hours as it is indexed. Staff with fixed hours are alerted once per off-hours burst, from the first event; administrators who sometimes work late are judged by a per-user model of their usual off-hours count. Both feed <code>suspicious_login</code>'s anomaly side and fuse with its signature alerts.</p>
+            <div class="stack">
+              <span class="chip">radar-off-hours pipeline</span>
+              <span class="chip">rules 210040–210041</span>
+              <span class="chip">Temporal fusion</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md">GeoIP detection</a></h3>
+            <div class="scenario-kind">Signature · per source</div>
+            <p>SSH logins and web requests from countries outside an approved whitelist, checked against a CDB list on the manager. With no CTI source for locations, the whole risk weight sits on the signature, so its main rules reach the blocking tier.</p>
+            <div class="stack">
+              <span class="chip">rules 100900–100903</span>
+              <span class="chip">whitelist_countries</span>
+              <span class="chip">firewall-drop</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/radar-scenarios/scanning_detection_explained.md">Web scanning</a></h3>
+            <div class="scenario-kind">Signature · per source IP</div>
+            <p>Scanner tool User-Agents, failed-request floods and HTTP method abuse. A scan is confirmed only when two of these indicators come from the same source IP within a short window, so an isolated 404 burst or scanner string is recorded but does not alert.</p>
+            <div class="stack">
+              <span class="chip">rules 100810–100840</span>
+              <span class="chip">Suricata eve.json</span>
+              <span class="chip">firewall-drop (opt-in)</span>
+            </div>
+          </article>
+          <article class="feature">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/radar-scenarios/log_volume_explained.md">Log volume growth</a></h3>
+            <div class="scenario-kind">Anomaly (RRCF) · per endpoint</div>
+            <p>Learns each endpoint's own baseline of <code>/var/log</code> size and flags unexplained growth, a sign of malware, brute force or runaway processes. At the top tier it can stop allowlisted services found in the alert's context.</p>
+            <div class="stack">
+              <span class="chip">rules 100300, 100309</span>
+              <span class="chip">OpenSearch AD</span>
+              <span class="chip">terminate_service.sh</span>
+            </div>
+          </article>
+          <article class="feature is-new">
+            <h3><a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/radar_docs/radar-scenarios/linux_resource_utilization_explained.md">Linux resource utilization</a></h3>
+            <div class="scenario-kind">Anomaly (RRCF) · per endpoint · new in v2.2.0</div>
+            <p>Samples CPU and memory on each Linux endpoint and flags sustained load that is abnormal for that endpoint, such as cryptomining, runaway processes or resource exhaustion, which fixed thresholds tuned for normal peaks miss.</p>
+            <div class="stack">
+              <span class="chip">rules 100320, 100321</span>
+              <span class="chip">resource collector</span>
+              <span class="chip">terminate_service.sh</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="fusion">
+      <div class="container">
+        <div class="section-head">
+          <h2>Signature and anomaly fusion</h2>
+          <div class="section-kicker">New in v2.2.0</div>
+        </div>
+        <p class="section-lead">
+          A failed-login burst and off-hours activity by the same user are stronger evidence
+          together than apart. RADAR combines them as they arrive: each alert looks back for the
+          strongest alert of the other kind on the same user or host and uses it for the evidence it
+          cannot carry itself. Nothing waits for a counterpart. A missing anomaly never lowers a
+          score, and a counterpart never changes what is blocked or locked.
+        </p>
+        <div class="viz-pair">
+          <figure class="viz">
+            <h3 class="viz-title">How much a counterpart counts</h3>
+            <div data-chart="fusion-weight"></div>
+            <figcaption>
+              Weight 1 inside the anomaly's data window, extended back by <code>ad_lead_minutes</code>,
+              falling linearly to 0 at <code>window_minutes</code> from it. Shown with the shipped
+              <code>suspicious_login</code> settings and a 5-minute data window. Hover the plot to
+              read the weight at any time.
+            </figcaption>
+          </figure>
+          <figure class="viz">
+            <h3 class="viz-title">What it does to <code>suspicious_login</code> tiers</h3>
+            <div data-chart="fusion-tiers"></div>
+            <figcaption>
+              A signature alert alone peaks at 0.468. Combined with an off-hours alert and CTI
+              evidence it reaches T3, where only the user named in the alert is locked. Hover a
+              marker for its breakdown.
+            </figcaption>
+          </figure>
         </div>
       </div>
     </section>
@@ -767,11 +924,11 @@
           </article>
           <article class="step">
             <strong>2. Analyze</strong>
-            <p>SONAR (MTAD-GAT multivariate ML) and RADAR (RRCF behavioral) detect anomalies. Wazuh rules simultaneously match known signature attack patterns.</p>
+            <p>SONAR (multivariate ML) and RADAR (RRCF behavioral) detect anomalies. Wazuh rules simultaneously match known signature attack patterns.</p>
           </article>
           <article class="step">
             <strong>3. Plan</strong>
-            <p>The RADAR risk engine fuses anomaly intensity A, signature risk S, and DECIPHER CTI score T into a weighted R = w&#x2090;&#xB7;A + w&#x209B;&#xB7;S + w&#x209C;&#xB7;T, assigning a Low, Medium, or High response tier.</p>
+            <p>The RADAR risk engine fuses anomaly intensity A, signature risk S, and DECIPHER CTI score T into a weighted R = w&#x2090;&#xB7;A + w&#x209B;&#xB7;S + w&#x209C;&#xB7;T, assigning a Low, Medium, or High response tier. With fusion, a recent alert of the other kind on the same entity fills the missing term.</p>
           </article>
           <article class="step">
             <strong>4. Execute</strong>
@@ -802,6 +959,7 @@
     </figure>
   </div>
 
+  <script src="assets/charts.js" charset="utf-8"></script>
   <script>
     (function () {
       var lightbox = document.getElementById("lightbox");

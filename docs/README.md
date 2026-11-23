@@ -276,7 +276,6 @@ The `specs/c5publish.py` custom publisher can be extended to automatically inclu
 | Add new requirement | `poetry run doorstop add srs` |
 | Link requirement | `poetry run doorstop link CHILD_UID PARENT_UID` |
 | Browse manual | Start at `docs/manual/README.md` |
-| AI context guides | See `docs/dev/` directory |
 
 ---
 

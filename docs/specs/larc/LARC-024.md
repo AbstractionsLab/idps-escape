@@ -3,130 +3,72 @@ active: true
 derived: false
 level: 2.8
 links:
-- HARC-006: 6rkS6X050Xmdq2IKckYulMoM0OAMumiJ1HXrxtCxnZo=
-- HARC-007: DzyMReBOsBksJ4GhX2_mwUhZyXJX5VLyJHnpbha9y8M=
-- HARC-008: BVyt44yJgtgUv8ntSQR8ZdoEzOopkJAfLo3PMkyaiZ0=
-- HARC-013: 6bGjiy1XvE-7UMsZ7dhn9HkuxmUmQCeZN0IRROAunf4=
+- SRS-067: K7Av1b3_rMMG3_W7gTKr1I_mXwuuo2-MagLLcUEQZzs=
+- SRS-069: vMOJ_kIdjLXiTyqpLIiR4EZzv1RRm7P0-z-h4JQwxDQ=
+- SRS-070: w9L1D2Sv-0CpXlt8QNg4i9yfvK5T2KXVBHLr972Fw_A=
 normative: true
 ref: ''
 release: Alpha
-reviewed: vshVlwYUr3LAfQRsuE_3ZxcXfeXHnwlq4s-nAMGY0lQ=
+reviewed: z6YChoPswM8Pm9qEq3ntznd2nyz3vYdiiy6SZbs8QrA=
 version: '0.1'
 ---
 
-# RADAR Ansible deployment pipeline flow
+# RADAR deployment pipeline flow
 
-The diagram below depicts the end-to-end deployment flow orchestrated by `build-radar.sh` and Ansible playbooks. The pipeline automates infrastructure setup, scenario configuration, and service initialization across multiple deployment modes.
+This item describes the flow `radar/build-radar.sh` runs to deploy a scenario, or with `--core-only` to bring up a plain Wazuh stack. The GUI's Deploy action (`radar/gui/orchestrator/deploy.py`, `stream_build`) runs the same stages with the same scripts and `wazuh_api` calls, streaming their output to the browser. Two differences: it does not revoke an expired enrollment token when the manager is already running, and on success it records the scenario as deployed (`active: true`) in `ar.yaml`, which the GUI uses to show deployment status. It replaced the Ansible deployment pipeline, which was removed in v2.0.0. The component design is in SWD-042.
+
+```plantuml
+@startuml
+start
+:Validate arguments (scenario name or --core-only)\nwazuh_api.cli scenario-info;
+:Require radar/.env and load it;
+if (Manager container running?) then (no)
+  :manager-ensure-certs.sh\n(generate TLS certs if absent);
+  :wazuh_api.credentials ensure\n(per-deployment passwords, no stock defaults);
+  :Render volumes.yml overlay, create host-side\nbind-mount paths, seed archives pipeline.json;
+  :docker compose -f docker-compose.core.yml -f overlay up -d;
+else (yes)
+  :manager-revoke-token.sh --if-expired;
+endif
+:wazuh_api.infra register-radar-components\n(record components in infra.yaml);
+if (Scenario requested?) then (yes)
+  :Ensure WEBHOOK_SHARED_SECRET in .env;
+  if (Webhook already enrolled?) then (no)
+    :manager-mint-token.sh default 60;
+  endif
+  :docker compose -f docker-compose.webhook.yml up -d --build;
+endif
+:Wait for the Wazuh API;
+:manager-harden-enrollment.sh\n(use_password=yes, purge=no, cluster key,\nclose port 1515);
+if (--core-only?) then (yes)
+  stop
+endif
+:Wait for OpenSearch;
+:manager-apply-scenario-all.sh SCENARIO\n(every registered manager node: AR files,\nenrichment, GeoLite2, Filebeat pipeline);
+:wazuh_api.cli deploy-scenario-config\n(group agent.conf, radar_shared if shared);
+:wazuh_api.cli deploy-manager-config\n(default + scenario decoders, rules, lists,\nossec.conf blocks; one restart if changed);
+stop
+@enduml
+```
 
 ## Pipeline stages
 
-### 1. Mode selection and validation
-- Parse command-line arguments: `./build-radar.sh <scenario> --manager <local|remote> --agent <local|remote>`
-- Validate deployment mode combination
-- Set Ansible variables: `manager_mode`, `agent_mode`, `scenario_name`
-- Load inventory configuration from `inventory.yaml`
+1. **Validation.** The scenario must be listed in `radar/config.yaml`, and `radar/.env` must exist. `WAZUH_API_URL`, `WAZUH_AUTH_USER` and `WAZUH_AUTH_PASS` must be set before any API stage runs.
+2. **Core stack.** Skipped when the registered manager container is already running; an expired enrollment token is then revoked. Otherwise certificates and per-deployment credentials are created if missing, every host-side path of the `volumes.yml` overlay is created, the Filebeat archives `pipeline.json` is seeded (the build aborts if `volumes.yml` does not map it), and the core compose project is started.
+3. **Component registration.** The running components are recorded in `radar/infra.yaml`, which later stages use to resolve addresses.
+4. **Webhook** (scenario builds only). A shared secret is ensured. If the webhook has no agent key yet, a 60-minute token for group `default` is minted so the container can enroll on first start.
+5. **Enrollment hardening.** After the Wazuh API is reachable, `authd` requires a password, auto-purge is disabled, the cluster key is set, and port 1515 is closed (the firewall step needs root).
+6. **Manager-side files.** Applied to the primary manager node first, then to each additional registered node. A failure on an additional node is reported as a warning and does not stop the build.
+7. **API-side configuration.** The scenario's agent-group configuration, then its ruleset (always together with the `default` ruleset) and its marker-delimited `ossec.conf` blocks. The manager is restarted at most once, and only if something changed.
 
-### 2. Volume resolution
-The volume-first architecture maps Wazuh configuration directories to host paths:
+The anomaly detector and monitor are created afterwards, separately, by `run-radar.sh` (LARC-015, LARC-017).
 
-- Parse `volumes.yml` Docker Compose configuration
-- Extract bind mount mappings (container path → host path)
-- Key volumes:
+## Idempotency
 
-    - `/var/ossec/etc` → `/radar-srv/wazuh/manager/etc`
-    - `/var/ossec/active-response/bin` → `/radar-srv/wazuh/manager/active-response/bin`
-    - `/etc/filebeat` → `/radar-srv/wazuh/manager/filebeat/etc`
+- Files and `ossec.conf` blocks are compared with what is deployed and written only when they differ. `ossec.conf` changes stay inside `<!-- RADAR: <name> BEGIN/END -->` markers.
+- Certificates, credentials, the webhook enrollment and the GeoLite2 databases are created only when absent.
+- Re-running the pipeline for a deployed scenario converges to the same state.
 
-- Derive host-side file paths for direct manipulation
+See: `docs/manual/radar_docs/radar-operations.md#deploy-a-scenario`.
 
-### 3. Infrastructure deployment
-
-- Deploy Wazuh core stack (if manager_mode != existing):
-
-    - Wazuh Manager container
-    - Wazuh Indexer (OpenSearch)
-    - Wazuh Dashboard
-
-- Deploy Wazuh agents (if agent_mode == local):
-    - Agent Docker containers
-    - Register with manager
-
-- Install OpenSearch AD plugin in indexer
-
-### 4. Scenario configuration injection
-For the specified scenario, inject configurations via Ansible roles:
-
-**Decoders** (`/var/ossec/etc/decoders/`):
-
-- Copy scenario-specific XML decoders
-- Marker-based appending to avoid duplicates
-- Set ownership: `root:wazuh`, permissions: `640`
-
-**Rules** (`/var/ossec/etc/rules/`):
-
-- Copy scenario-specific XML rules
-- Use unique markers: `<!-- BEGIN RADAR {scenario} -->` / `<!-- END RADAR {scenario} -->`
-- Idempotent insertion (skip if marker exists)
-
-**Active Response** (`/var/ossec/active-response/bin/`):
-
-- Copy `radar_ar.py` and dependencies
-- Set executable permissions: `750`
-- Copy `ar.yaml` configuration
-
-**OSSEC Configuration** (`/var/ossec/etc/ossec.conf`):
-
-- Inject localfile, command, and active_response blocks
-- Use marker-based insertion for idempotency
-- Configure log monitoring and response commands
-
-**Filebeat Pipelines** (if applicable):
-
-- Configure ingest pipelines for data enrichment
-- Set up index templates
-
-### 5. RADAR Helper deployment (if scenario requires)
-For geographic-enrichment scenarios (geoip_detection, suspicious_login):
-
-- Copy `radar-helper.py` to `/opt/radar/` on agent hosts
-- Install Python dependencies (maxminddb)
-- Copy MaxMind GeoLite2 databases to `/usr/share/GeoIP/`
-- Deploy systemd service: `radar-helper.service`
-- Start and enable service
-
-### 6. Service management
-- Restart Wazuh Manager: `/var/ossec/bin/wazuh-control restart`
-- Reload Filebeat configuration
-- Verify service health
-
-### 7. Build radar-cli container
-- Build Docker image with detector.py, monitor.py, webhook.py
-- Load environment variables from `.env`
-- Image used by `run-radar.sh` for detector/monitor setup
-
-## Idempotency mechanisms
-
-- **File checksums**: Compare content before copying to avoid unnecessary operations
-- **Marker-based injection**: Scenario-specific markers prevent duplicate configuration
-- **Conditional logic**: Check for existing resources before creation
-- **State tracking**: Ansible facts maintain deployment state
-
-**Diagram**: Ansible deployment pipeline showing mode selection, infrastructure setup, scenario injection, and service management. See [assets/RADAR-ansible-deployment-flow.md](assets/RADAR-ansible-deployment-flow.mermaid.md) for detailed documentation.
-
-## Deployment modes
-
-| manager_mode | agent_mode | Execution context |
-|--------------|------------|-------------------|
-| docker_local | N/A | Docker on controller host |
-| docker_remote | N/A | Docker on remote host via SSH |
-| host_remote | N/A | Bare metal installation via SSH |
-
-All modes accept local or remote agents independently.
-
-**Note**: Diagram placeholder - to be created in Phase 7 showing flowchart: mode selection → volume resolution → infrastructure → config injection → helper deploy → service restart.
-
-See also:
-
-- `/radar/roles/wazuh_manager/tasks/main.yml` for playbook implementation
-- `/radar/build-radar.sh` for orchestration script
-- `/docs/manual/radar_docs/radar-manager-ansible-playbook.md` for detailed documentation
+Related: HARC-007, HARC-013.

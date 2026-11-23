@@ -1,4 +1,4 @@
-## Integration Procedure 
+## Integration procedure 
 Once Suricata and Wazuh are installed, proceed with the integration process outlined in this readme file. This integration aims to enhance the capabilities of intrusion detection and threat hunting within the environment, facilitating centralized management and monitoring of security incidents and events across multiple hosts. 
  
 
@@ -8,7 +8,7 @@ Once Suricata and Wazuh are installed, proceed with the integration process outl
 3. An installation of a Wazuh agent
 
 
-### Using Docker Volumes to integrate Suricata and Wazuh 
+### Using Docker volumes to integrate Suricata and Wazuh 
 
 Docker volumes facilitate data sharing between containers, allowing multiple containers to access the same data simultaneously. By creating a volume on the host machine, we can store Suricata logs for the Wazuh agent to access. Through Docker volumes, we establish a connection between the Suricata container's log directory and a directory on the host machine where the Wazuh agent operates. To set up the volume for the log files, we update the run command with the -v argument, specifying the paths for data exchange between the containers and the host machine. The modified command incorporating the -v argument for volumes and the respective paths ensures seamless data communication between the Suricata container and the Wazuh agent. 
 

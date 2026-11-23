@@ -1,3 +1,86 @@
+# 2.2.0 (2026-11-23)
+
+- **Upgrading from 2.1.0**:
+  - SONAR:
+    - Retrain every model. Earlier models are refused (pickled `.pkl` files, old feature schema), and models trained on too few time buckets were never actually trained (see *SONAR training*). Models now live in `sonar/models/<name>/`; the resource-monitoring model is now `linux_resource_monitoring`.
+    - Anomalies now go to the Wazuh manager by default. Install the rules (`sonar wazuh install-rules`) and either the `<localfile>` block or an `event:ingest` API user, or keep the previous behaviour with `output.sinks: [index]` (or `[datastream]`). `debug.enabled: true` no longer writes to the indexer.
+    - In scenarios, remove `fill_with_synthetic` and `synthetic_*` keys and revisit any `threshold` (it now applies to the 0–1 severity). Scenarios copied from the bundled ones keep their old detection settings; copy the calibrated values or calibrate on your own labelled data.
+    - Scenario-relative `debug.data_dir` values must be relative to the scenario file. Without `shipping.scenario_id`, data streams and watermark files are named after the model; set it to keep an existing stream. `model_path` in configuration files is deprecated (still read).
+    - Keep `output.state_dir` (default `sonar/models/state/`, inside the models volume of `sonar.sh`) on persistent storage.
+    - The indexer user needs permission to create and delete point-in-time searches on the alert indices (Wazuh's `admin` has it). With `verify_ssl` set to `true` or a CA path, the host in `base_url` must match the indexer certificate.
+    - One-shot detection exits with 2 when it had too little data to score anything.
+  - RADAR: see the **Behaviour changes** under *RADAR signature and anomaly fusion* and *RADAR off-hours activity detection*.
+- **RADAR Linux resource utilization scenario**:
+  - New scenario detecting anomalous CPU and memory usage on Linux endpoints: collector, decoder, rules, detector, monitor and active response, with a simulation script, an ingest script that seeds detector history, tests and test specifications.
+  - AD trigger rules now attach through the `radar_ad_received` group that every AD catch-all rule carries, so several AD scenarios can be deployed on one manager (Wazuh only follows the first catch-all loaded).
+- **RADAR agent-side refactoring (`radar-agent` folder)**:
+  - Everything installed on monitored endpoints (bootstrap and uninstall scripts, active response scripts, metric collectors, Wazuh repository file) now lives in `radar/radar-agent/`. The bootstrap script no longer embeds them; the folder is copied to each endpoint and the scripts run from inside it.
+  - Active response scripts are versioned and selected in `radar-agent/ar-scripts.yaml`, so a version can be switched without re-running the bootstrap. Every endpoint receives all of them, so actions bound to a scenario in the GUI work on any enrolled endpoint.
+  - The GUI's mitigation list is read from `ar-scripts.yaml`; unknown mitigations are rejected on save.
+  - Fixed scenarios showing as "not deployed" after the stack was stopped and started again.
+  - Fixed re-running the bootstrap after an uninstall failing with "Duplicate agent name" and the agent losing its groups.
+- **RADAR signature and anomaly fusion**:
+  - `radar_ar.py` can combine a scenario's signature and anomaly alerts for the same entity (`fusion:` in `ar.yaml`, opt-in per scenario, enabled for `suspicious_login`). Each alert takes the term it cannot carry itself from the strongest alert of the other kind within `window_minutes`, discounted by the time gap. Nothing waits for a counterpart, and mitigation targets still come only from the alert being decided. The match is reported in the email and the Flowintel case.
+  - The anomaly monitor reports up to `monitor_max_entities` (default 5) anomalous entities per run instead of only the top one, each with its own data window. Old and new monitor and webhook versions accept each other's format. `monitor.py` now updates a deployed monitor whenever its payload changed.
+  - Added `inject_ad_alert.py` to the test framework, to test fusion without a trained baseline.
+  - **Behaviour changes**: `suspicious_login` `tier2_max` is 0.55 (was 0.66). A signature alert alone still never exceeds 0.468, so its tier is unchanged; T3 (`lock_user_linux.sh`) is now reached when a signature alert is combined with an off-hours alert. `geoip_detection` has no CTI source, so its CTI weight moves to the signature (`w_sig` 1.0, `w_cti` 0.0): rules 100900, 100901 and 100903 now reach T2 and run `firewall-drop`.
+- **RADAR off-hours activity detection (`suspicious_login`)**:
+  - Working hours are declared per schedule group in `scenarios.suspicious_login.off_hours` (time zone, workdays, start and end, overnight shifts). A new ingest pipeline, `radar-off-hours`, marks each archived event of a listed user as in or out of hours. Unlisted users are skipped unless `default_group` is set; `ignore_users` excludes accounts.
+  - Each group picks a mode: **rule mode** (rule 210041) reports the start of each user's off-hours burst once; **model mode** (rule 210040) runs a per-user detector on the count of off-hours events. Both are the scenario's anomaly side and are fused with signature alerts; DECIPHER is asked about the alert's user.
+  - Managed with `off_hours.py` (`validate`, `deploy`, `backfill`, `monitors`, `summary`, `dry-run`, `status`, `undeploy`). See [Off-hours activity](docs/manual/radar_docs/radar-scenarios/off-hours-activity.md).
+  - Fixed the `suspicious_login` ingest script, which crashed on missing imports and dated the post-midnight part of night shifts to the day before. It now writes to `wazuh-archives-4.x-YYYY.MM.DD` (was `wazuh-archives-YYYY.MM.DD`), so Wazuh's index template maps its fields.
+  - Fixed the suspicious-login simulation for the burst and composite cases.
+  - **Behaviour changes**: the time-of-day detector (`SUSPICIOUS_LOGIN_DETECTOR`) and the unused `off_hour_login` scenario are removed; redeploying stops those detectors and disables their monitors, and `off_hour_login` no longer appears in the GUI. `run-radar.sh suspicious_login` now runs `off_hours.py` instead of `detector.py`/`monitor.py`.
+- **RADAR risk engine fixes**:
+  - `lock_user_linux.sh` now targets only the users named in the alert. It used to target every user in the agent's logs in the context window, so a bystander (for example an admin who ran `sudo` in that minute) could be locked.
+  - `suspicious_login` now sends DECIPHER the user named in the alert instead of the alphabetically first user in the agent's recent logs (falling back to the old behaviour when the alert names no user). This can change the CTI score on hosts with several users.
+  - Alerts whose rule ID is in both `ad.rule_ids` and `signature.rule_ids` (`hybrid`) now get their anomaly score, as SWD-027 specifies. They used to be scored as if the detector had reported nothing.
+  - Anomaly alerts no longer get a signature term from a scalar `signature_likelihood`. The shipped AD scenarios set it to 0.0, so their scores are unchanged.
+  - Removed the always-empty "Threshold" line from the alert email.
+  - Documented the reachable tiers per scenario, what each alert contributes and what the `delta_*_minutes` windows do.
+- **SONAR training**:
+  - SONAR no longer saves models that were never trained. With too few time buckets, the MVAD library finished training without a single update and SONAR saved the random network; this affected the default configuration and several bundled scenarios. SONAR now refuses to train when the model would not learn, exits with status 1 and states how many buckets are needed. It warns when training performs fewer than `min_gradient_steps` updates (default 500).
+  - Model files record how they were trained (effective parameters, gradient steps, library threshold and versions).
+  - Unknown keys in `extra_params` are rejected with a suggestion (`learning_rate` → `lr`); unknown keys elsewhere in scenario and config files now log a warning.
+  - Concurrent trainings no longer overwrite each other's checkpoints.
+  - Feature schema 2: alert counts and category columns are per-bucket counts instead of averages (one failed login and two hundred used to produce identical rows), buckets without alerts are kept on a regular time grid, and numeric fields are averaged only over the alerts that carry them. New `numeric_fill` (`zero` or `ffill`) and `count_transform` (`none` or `log1p`); `derived_features` accepts a list of names.
+  - The categorical vocabulary is fitted at training and stored in the model; detection counts unseen values in `<field>__other` instead of silently dropping them. Detection uses the feature settings stored in the model, and a column mismatch is an error instead of being zero-filled.
+  - The bundled scenarios and `default_config.yaml` are resized to train properly. `min_samples`, which never had an effect, is removed.
+- **SONAR detection**:
+  - `lookback_minutes` is now the period to score: every complete bucket in it gets a verdict, and SONAR fetches the earlier context the model needs. Before, only the last `lookback − sliding_window` buckets were scored, so attacks early in the window could be missed.
+  - `detection.threshold` is now a minimum severity between 0 and 1 instead of a bound on the raw score, which could suppress anomalies confined to a few features. The default is MVAD's own decision.
+  - Anomaly documents: `anomaly_score` is the severity and `mvad_score` the raw score; new `model_name`; each contributor carries its value. Plain `sonar detect` now writes the same fields as scenario runs.
+  - Removed synthetic fill (`--fill-with-synthetic` and related options): it wrote fabricated alerts into the live `wazuh-alerts-*` indices and trained on them.
+  - Alert searches now return every matching alert. Before, at most 10,000 alerts were returned in no particular order, so a large training lookback silently trained on an arbitrary subset. New `wazuh.max_alerts` (default 2,000,000) bounds memory; a capped search keeps the most recent alerts and warns. Only the fields the features use are fetched.
+  - Every indexer request has a timeout (`wazuh.timeout_seconds`, default 30). Alert search, the anomalies index and data-stream shipping share one OpenSearch client, so a CA bundle in `wazuh.verify_ssl` now also applies to shipping (shipping to an indexer with a self-signed certificate used to always fail).
+- **SONAR delivery and Wazuh integration**:
+  - Each anomalous bucket is delivered once per scenario. Before, every realtime poll re-indexed every anomaly in its window, so one anomaly in a 24-hour window was stored about 288 times. A per-scenario watermark in `output.state_dir` survives restarts, and each anomaly has a stable `anomaly_id`.
+  - A run whose anomalies were not all delivered exits with 1 (it exited with 0) and leaves them to the next run. Realtime mode retries failed polls with backoff and exits after `detection.max_consecutive_failures` (default 5); polls run once per bucket, `detection.ingest_delay_seconds` (default 60) after it ends.
+  - SONAR now reports anomalies to the Wazuh manager, which raises them as Wazuh alerts (rules 100500–100503 in `sonar/wazuh/rules/sonar_rules.xml`), so rules, integrations and active responses can act on them. SONAR runs on the manager host (`file` transport) or on a dedicated host (`api` transport, with a user allowed only `event:ingest`); no Wazuh agent is needed.
+  - The SONAR event carries `anomaly_grade` and `anomaly_confidence`, so a RADAR scenario can map SONAR rules in `ar.yaml` without code changes (mitigations must stay off). Severity bands (`output.wazuh.severity_medium`/`severity_high`) select the rule.
+  - Outputs are sinks: `output.sinks` (default `[wazuh]`; also `datastream`, `index`, `jsonl`, `stdout`), with an explicit `output.fallback`. Each sink keeps its own watermark; a run fails only when every sink failed. Alert searches exclude SONAR's own alerts.
+  - `--debug` prints the SONAR events on stdout and `--dry-run` writes them to `<payload_dir>/anomalies.jsonl`; neither writes to the indexer.
+  - The data stream's ISM rollover and retention policy (`shipping.rollover_days`, `shipping.retention_days`) is now actually installed and attached.
+- **SONAR packaging and security**:
+  - SONAR no longer depends on the directory it is started from. Relative paths are relative to the file that sets them; unset paths default to the SONAR home (`$SONAR_HOME`, else `sonar/` in a source checkout, else `~/.sonar`). Every command uses `<models_dir>/<model_name>/`, and a scenario without `model_name` uses its name, so separate `train` and `detect` runs find the same model.
+  - Model files no longer use pickle, which runs code when loaded.
+  - The wheel ships the example scenarios, their debug data and the Wazuh files, and its `sonar` extra declares SONAR's dependencies (`pip install "idps_escape-<version>-py3-none-any.whl[sonar]"`). The package excludes `adbox/assets/secrets/`, `.env` files, local models and payloads.
+  - The SONAR Docker image no longer contains the whole repository: `COPY .` used to bake in `adbox/assets/secrets/`, any `.env` file, RADAR, the docs and ADBox's models. It now copies only what SONAR needs, installs only the `main` and `sonar` dependency groups, and uses the `sonar` command as entry point. The image tag is now `sonar:v0.8`.
+- **SONAR detectors and evaluation**:
+  - The detector is pluggable (`training.backend`): `mvad` (unchanged, still the default), `ewma` (an EWMA-smoothed robust z-score per feature) and `pca` (probabilistic PCA over short windows, sensitive to correlations between features). Both new backends need only NumPy and train in seconds or less.
+  - New `sonar evaluate`: trains a scenario on a training file and scores labelled test data (event-level precision, recall and F1, detection delay, false alarms per day). With a validation split it calibrates `threshold` and `min_consecutive` and reports the test precision as the scenario's `anomaly_confidence`. `--detections` scores another detector's results the same way. The data generators write labelled splits with `--evaluation`.
+  - New packaged scenario `radar_linux_resource_utilization`, which reads the events of RADAR's `linux_resource_utilization` collector with RADAR's four features. `--agent NAME` trains and runs one model per host, like RADAR's per-entity detector. New `sonar export` writes a live window's alerts, labels and RADAR detector results, so `sonar evaluate` can score SONAR and RADAR on the same data.
+  - The bundled scenarios ship `threshold`, `min_consecutive` and `anomaly_confidence` calibrated on synthetic data from SONAR's own generators. These results are preliminary (4 to 12 attacks per test split, same generator as the training data) and do not rank the detectors on real traffic; a comparison on labelled lab data, including RADAR's RCF detectors, remains future work. Until then SONAR stays in this repository (`DEC-2026-11-19-sonar-extraction-gate`) and `mvad` stays the default (`DEC-2026-11-20-sonar-pca-backend`).
+  - Added end-to-end tests with the real MVAD library (marked `slow`).
+- **Specifications and documentation**:
+  - Every Doorstop item in `docs/specs/` was checked against the v2.2.0 code. Items describing removed parts were rewritten around their successors: Ansible deployment (now `radar_deploy` and the GUI), the endpoint `radar-helper` (now manager-side enrichment), a separate risk engine (now `radar_ar.py` and `ar.yaml`) and the MVAD-only SONAR design.
+  - Specified but unimplemented features (DLP, DDoS, C2 beaconing and ransomware scenarios, adversarial-ML defence, ruleset-as-code, inline IPS, RATF evaluation) are kept with `status: planned`. HARC-006 and HARC-008 (deployment modes removed in v2.0.0) are deactivated.
+  - Links now go only to the direct parent document; the 43 cross-level and downward links were replaced with `Related:` text.
+  - New items: SRS-072 to SRS-090, LARC-032 to LARC-042, SWD-043 to SWD-050, TST-063 to TST-088 and TRP-053 to TRP-073. TST-068 is a lab test still to be executed. Coverage: SRS → design 72 % (was 26 %), SRS → TST 80 % (was 56 %), MRS → SRS 98 % (was 69 %).
+  - The 18 non-ADBox image diagrams are now Mermaid code rendered at publish time.
+  - Updated the main README, the SONAR manual (including a new RADAR comparison guide and an evaluation guide) and the RADAR scenario pages.
+
+
 # 2.1.0 (2026-09-26)
 
 - **IP resolution fallback**:

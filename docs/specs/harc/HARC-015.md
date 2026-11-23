@@ -3,18 +3,20 @@ active: true
 derived: false
 level: 2.9
 links:
-- MRS-007: hXM-PkC-g29wtz-Qe3MbM2viHIYzarGh2jFtSD-7N18=
-- MRS-019: XwUNC5T2_yICrRsWY8ZyWYFBtvAbrxSEja1ZwL0TB3Q=
+- MRS-007: T_irYXTjWbTLRStypNV_lJ0NrCpz_1UXPGaQK7pMs2k=
 normative: true
 ref: ''
-reviewed: q2Wt6-_Fzp1ajQ-SRyGtHSXzXXxWTPRXz8_nYxd3xN4=
+reviewed: pEzBDEcIWggJLrIwOmjGr1le_nDc1KurqDUK0oIp6Eg=
+status: planned
 ---
 
 # RADAR adversarial ML defense architecture
 
-The diagram below depicts the defense-in-depth architecture for protecting RADAR's anomaly detection systems against adversarial machine learning attacks.
+> **Status: planned.** Not implemented as of v2.2.0. This item specifies intended behaviour; no code implements it yet.
 
-The architecture implements multiple defensive layers:
+The diagram below depicts the intended defense-in-depth architecture for protecting RADAR's anomaly detection against adversarial machine learning attacks (data poisoning, evasion, backdoors, model stealing).
+
+The architecture is to provide five defensive layers:
 
 **Layer 1: Baseline Protection**
 
@@ -49,7 +51,17 @@ The architecture implements multiple defensive layers:
 - Training pipeline authentication
 - Audit logging of all model operations
 
-## Defense Architecture Diagram
+## Relation to the current implementation
+
+None of the five layers exists as specified: RADAR has no gold-standard baseline management, drift monitor, approval gate, analyst feedback loop, log hashing or model access control. Some existing mechanisms reduce the same risks and would be building blocks for it:
+
+- Hybrid scoring: a scenario can weight signature, anomaly and CTI evidence together, and `suspicious_login` fuses a signature alert with an anomaly alert for the same user (HARC-012, `radar/scenarios/active_responses/radar_ar.py`).
+- Alert origin checks: anomaly alerts are accepted only from the webhook container's agent and log file, and the webhook requires a shared secret (`radar/webhook/ad_alerts_webhook.py`).
+- Bounded mitigation: mitigation is opt-in per scenario and its targets are validated against allowlists on manager and endpoint.
+
+Practitioner guidance on these attacks is in `docs/manual/radar_docs/adversarial-ml-guidance.md`.
+
+## Defense architecture diagram
 
 ```plantuml
 @startuml

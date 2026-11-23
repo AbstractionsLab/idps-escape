@@ -1,0 +1,610 @@
+{
+ "params": {
+  "sliding_window": 30,
+  "interval": 1,
+  "epochs": 4,
+  "batch_size": 32
+ },
+ "results": [
+  {
+   "timestamp": "2026-01-03T02:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.045151988665262856
+  },
+  {
+   "timestamp": "2026-01-03T02:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.1971710787879096
+  },
+  {
+   "timestamp": "2026-01-03T02:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.2986397478315565
+  },
+  {
+   "timestamp": "2026-01-03T02:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.12131554550594753
+  },
+  {
+   "timestamp": "2026-01-03T02:20:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.40513939327663845
+  },
+  {
+   "timestamp": "2026-01-03T02:25:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.27241199848865333,
+   "score": 0.4680805868572659
+  },
+  {
+   "timestamp": "2026-01-03T02:30:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.11514948474036323
+  },
+  {
+   "timestamp": "2026-01-03T02:35:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.20357047186957464
+  },
+  {
+   "timestamp": "2026-01-03T02:40:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.06571247842576768
+  },
+  {
+   "timestamp": "2026-01-03T02:45:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.38956815666622585
+  },
+  {
+   "timestamp": "2026-01-03T02:50:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.34324053923288983
+  },
+  {
+   "timestamp": "2026-01-03T02:55:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.2984784046808879
+  },
+  {
+   "timestamp": "2026-01-03T03:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.43125091658698184
+  },
+  {
+   "timestamp": "2026-01-03T03:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.32684963279300266
+  },
+  {
+   "timestamp": "2026-01-03T03:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.27307622962527806
+  },
+  {
+   "timestamp": "2026-01-03T03:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.15399799082014295
+  },
+  {
+   "timestamp": "2026-01-03T03:20:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.1587616867489285
+  },
+  {
+   "timestamp": "2026-01-03T03:25:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.42593305900653783,
+   "score": 0.7318730354309082
+  },
+  {
+   "timestamp": "2026-01-03T03:30:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.40360509024726016
+  },
+  {
+   "timestamp": "2026-01-03T03:35:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.28057969941033256
+  },
+  {
+   "timestamp": "2026-01-03T03:40:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.3181271674338632,
+   "score": 0.5466321309407552
+  },
+  {
+   "timestamp": "2026-01-03T03:45:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.23278499974144828
+  },
+  {
+   "timestamp": "2026-01-03T03:50:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.1809412638346354
+  },
+  {
+   "timestamp": "2026-01-03T03:55:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.30604279888197394,
+   "score": 0.525867780049642
+  },
+  {
+   "timestamp": "2026-01-03T04:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.4031439489788479
+  },
+  {
+   "timestamp": "2026-01-03T04:05:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.2825762421135241,
+   "score": 0.485545621977912
+  },
+  {
+   "timestamp": "2026-01-03T04:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.23917553159925672
+  },
+  {
+   "timestamp": "2026-01-03T04:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.29127785894605845
+  },
+  {
+   "timestamp": "2026-01-03T04:20:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.2725839301855188,
+   "score": 0.46837601396772593
+  },
+  {
+   "timestamp": "2026-01-03T04:25:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3237331045998467
+  },
+  {
+   "timestamp": "2026-01-03T04:30:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.4386841947743423,
+   "score": 0.7537830803129407
+  },
+  {
+   "timestamp": "2026-01-03T04:35:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3292037645975749
+  },
+  {
+   "timestamp": "2026-01-03T04:40:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3422121074464586
+  },
+  {
+   "timestamp": "2026-01-03T04:45:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.4751280943552653
+  },
+  {
+   "timestamp": "2026-01-03T04:50:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.24042526880900064
+  },
+  {
+   "timestamp": "2026-01-03T04:55:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3622172673543294
+  },
+  {
+   "timestamp": "2026-01-03T05:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.4377419816123114
+  },
+  {
+   "timestamp": "2026-01-03T05:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.2344654401143392
+  },
+  {
+   "timestamp": "2026-01-03T05:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3698938555187649
+  },
+  {
+   "timestamp": "2026-01-03T05:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.19428797562917074
+  },
+  {
+   "timestamp": "2026-01-03T05:20:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3077632188796997
+  },
+  {
+   "timestamp": "2026-01-03T05:25:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.21727738115522596
+  },
+  {
+   "timestamp": "2026-01-03T05:30:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.28997577561272514
+  },
+  {
+   "timestamp": "2026-01-03T05:35:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.25117144319746226
+  },
+  {
+   "timestamp": "2026-01-03T05:40:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.21661869684855142
+  },
+  {
+   "timestamp": "2026-01-03T05:45:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3747896485858493
+  },
+  {
+   "timestamp": "2026-01-03T05:50:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.39730433622996014
+  },
+  {
+   "timestamp": "2026-01-03T05:55:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.31019548575083417
+  },
+  {
+   "timestamp": "2026-01-03T06:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.32871286074320477
+  },
+  {
+   "timestamp": "2026-01-03T06:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.48681921429104275
+  },
+  {
+   "timestamp": "2026-01-03T06:10:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.4777755301346502,
+   "score": 0.8209530115127563
+  },
+  {
+   "timestamp": "2026-01-03T06:15:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.5471252176373612,
+   "score": 0.940115319357978
+  },
+  {
+   "timestamp": "2026-01-03T06:20:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.38496667066287954,
+   "score": 0.6614812347624037
+  },
+  {
+   "timestamp": "2026-01-03T06:25:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.4274850462879679,
+   "score": 0.734539786974589
+  },
+  {
+   "timestamp": "2026-01-03T06:30:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.7607928097349238,
+   "score": 1.3072564601898193
+  },
+  {
+   "timestamp": "2026-01-03T06:35:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.5383977800073995,
+   "score": 0.9251191218694051
+  },
+  {
+   "timestamp": "2026-01-03T06:40:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.4275336025002418,
+   "score": 0.734623220231798
+  },
+  {
+   "timestamp": "2026-01-03T06:45:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.6149989705003779,
+   "score": 1.0567415555318196
+  },
+  {
+   "timestamp": "2026-01-03T06:50:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.38558534418005264,
+   "score": 0.6625442902247111
+  },
+  {
+   "timestamp": "2026-01-03T06:55:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.44863870392968674,
+   "score": 0.7708877325057983
+  },
+  {
+   "timestamp": "2026-01-03T07:00:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.3381746083360429,
+   "score": 0.5810792843500773
+  },
+  {
+   "timestamp": "2026-01-03T07:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.37747661272684735
+  },
+  {
+   "timestamp": "2026-01-03T07:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3515901433096991
+  },
+  {
+   "timestamp": "2026-01-03T07:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.2946586608886719
+  },
+  {
+   "timestamp": "2026-01-03T07:20:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.15302028920915392
+  },
+  {
+   "timestamp": "2026-01-03T07:25:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.20880019664764404
+  },
+  {
+   "timestamp": "2026-01-03T07:30:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3831562863455878
+  },
+  {
+   "timestamp": "2026-01-03T07:35:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.30800567732916934
+  },
+  {
+   "timestamp": "2026-01-03T07:40:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.21324662367502847
+  },
+  {
+   "timestamp": "2026-01-03T07:45:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.28231510851118297
+  },
+  {
+   "timestamp": "2026-01-03T07:50:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.24636956055959067
+  },
+  {
+   "timestamp": "2026-01-03T07:55:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.17882373597886825
+  },
+  {
+   "timestamp": "2026-01-03T08:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.17570839987860784
+  },
+  {
+   "timestamp": "2026-01-03T08:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.40591270393795437
+  },
+  {
+   "timestamp": "2026-01-03T08:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.07231908374362521
+  },
+  {
+   "timestamp": "2026-01-03T08:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.26081883907318115
+  },
+  {
+   "timestamp": "2026-01-03T08:20:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3328165610631307
+  },
+  {
+   "timestamp": "2026-01-03T08:25:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.34103564766635663,
+   "score": 0.5859953562418619
+  },
+  {
+   "timestamp": "2026-01-03T08:30:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.255504846572876
+  },
+  {
+   "timestamp": "2026-01-03T08:35:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.4924805561701457
+  },
+  {
+   "timestamp": "2026-01-03T08:40:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.465513880146045,
+   "score": 0.799884041150411
+  },
+  {
+   "timestamp": "2026-01-03T08:45:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.38200096289316815
+  },
+  {
+   "timestamp": "2026-01-03T08:50:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.4112753576667537,
+   "score": 0.7066869735717773
+  },
+  {
+   "timestamp": "2026-01-03T08:55:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.2039933204650879
+  },
+  {
+   "timestamp": "2026-01-03T09:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.3418773015340169
+  },
+  {
+   "timestamp": "2026-01-03T09:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.30500070254007977
+  },
+  {
+   "timestamp": "2026-01-03T09:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.31178687678443057
+  },
+  {
+   "timestamp": "2026-01-03T09:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.18023916085561117
+  },
+  {
+   "timestamp": "2026-01-03T09:20:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.2602285279168023
+  },
+  {
+   "timestamp": "2026-01-03T09:25:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.2215052843093872
+  },
+  {
+   "timestamp": "2026-01-03T09:30:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.16887456840938989
+  },
+  {
+   "timestamp": "2026-01-03T09:35:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.47008323633151683,
+   "score": 0.8077354828516642
+  },
+  {
+   "timestamp": "2026-01-03T09:40:00+00:00",
+   "is_anomaly": true,
+   "severity": 0.3931512253264026,
+   "score": 0.6755446063147651
+  },
+  {
+   "timestamp": "2026-01-03T09:45:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.19481134414672852
+  },
+  {
+   "timestamp": "2026-01-03T09:50:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.431104924943712
+  },
+  {
+   "timestamp": "2026-01-03T09:55:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.46390464570787215
+  },
+  {
+   "timestamp": "2026-01-03T10:00:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.40550888909233934
+  },
+  {
+   "timestamp": "2026-01-03T10:05:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.4200263023376465
+  },
+  {
+   "timestamp": "2026-01-03T10:10:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.45618467860751677
+  },
+  {
+   "timestamp": "2026-01-03T10:15:00+00:00",
+   "is_anomaly": false,
+   "severity": 0.0,
+   "score": 0.19151957829793295
+  }
+ ]
+}

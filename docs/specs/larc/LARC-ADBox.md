@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: w76eNWK43KDfbJPoSev6JKaF08ORIH0__ntHxD_lpt0=
 ---
 
 # ADBox v1 Low-Level Architecture (Maintenance)

@@ -1,10 +1,10 @@
-# RADAR Rules Overview
+# RADAR rules overview
 
 ## Purpose
 
 RADAR rules are custom Wazuh detection rules designed to identify anomalous behavior and security threats in real-time. These rules are deployed to `/var/ossec/etc/rules/` by `build-radar.sh` via the Wazuh REST API, and work in conjunction with custom decoders to extract and analyze event data.
 
-## Repository Structure
+## Repository structure
 
 ```
 radar/scenarios/rules/
@@ -12,16 +12,17 @@ radar/scenarios/rules/
 ├── geoip_detection/   # Geographic access control rules
 ├── log_volume/        # OpenSearch AD integration rules
 ├── suspicious_login/  # Credential attack detection rules
-└── scanning_detection/ # Web scanning and injection detection rules
+├── scanning_detection/ # Web scanning and injection detection rules
+└── linux_resource_utilization/ # OpenSearch AD integration rules (CPU/memory)
 ```
 
 Each scenario has its own subdirectory containing XML rule files that are automatically deployed based on the selected scenario.
 
 ---
 
-## Rule Scenarios
+## Rule scenarios
 
-### Default Rules
+### Default rules
 
 **Purpose**: Provide low-friction baseline threat detection rules that require **no prerequisite data preparation** (no custom decoders, no manager-side enrichment integration, no index schema modifications). The Default scenario establishes a **detection floor** for any RADAR deployment by leveraging existing Wazuh data structures and standard event formats. These rules integrate seamlessly with CTI analysis and automated case creation, enabling rapid threat response without infrastructure investment.
 
@@ -64,7 +65,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 
 ---
 
-### 1. Log Volume Growth Detection
+### 1. Log volume growth detection
 
 **Purpose**: Detect anomalous increases in log volume that may indicate attacks, system issues, or data exfiltration attempts.
 
@@ -79,20 +80,22 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 
 | Rule ID | Level | Description | Trigger Condition |
 |---------|-------|-------------|-------------------|
-| `100300` | 5 | OpenSearch AD alert received | Any alert from OpenSearch AD module with `opensearch_ad` decoder |
-| `100309` | 12 | Log Volume Growth Detected | Specific AD alert matching "LogVolume-Growth-Detected" |
+| `100300` | 5 | OpenSearch AD alert received | Any alert from OpenSearch AD module with `opensearch_ad` decoder, read from `/var/log/ad_alerts.log`. Group `radar_ad_received` |
+| `100309` | 12 | Log Volume Growth Detected | `if_group radar_ad_received` + AD alert matching "LogVolume-Growth-Detected" |
 
 **Alert Flow**:
 ```
 1. OpenSearch AD detects anomaly 
 2. Wazuh receives AD alert 
-3. Rule 100300 catches all AD alerts (level 5) 
+3. An AD catch-all rule matches (level 5): 100300, or another AD scenario's catch-all if log_volume's rules are not loaded
 4. Rule 100309 escalates if "LogVolume-Growth-Detected" (level 12)
 ```
 
+See [AD catch-all rules](#ad-catch-all-rules) for why the trigger rules use `if_group` rather than `if_sid`.
+
 ---
 
-### 2. Non-GeoIP Connection Detection
+### 2. Non-GeoIP connection detection
 
 **Purpose**: Detect and block authentication attempts from non-whitelisted geographic locations.
 
@@ -108,16 +111,16 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 | `100900` | 10 | Connection from non-whitelist country | Authentication success + `radar_country` field not in whitelist |
 | `100901` | 10 | Connection from non-whitelist country | Authentication success + source GeoIP not in EU Greater Region |
 | `100902` | 10 | Connection from non-whitelist country (access log) | Web access log (group `accesslog`) + `radar_country` field not in whitelist |
-| `100903` | 12 | High number of connections from non-whitelist countries | 300+ auth events from non-whitelisted countries within 300 seconds |
+| `100903` | 12 | High number of connections from non-whitelist countries | 300+ matches of rule 100902 (web access from non-whitelisted countries) within 300 seconds |
 
 **Alert Flow**:
 ```
-1. Authentication success event
+1. Authentication success event, or web access-log event
 2. Custom decoder extracts `radar_country` field
-3. Rule 100900 checks against whitelist_countries list
-4. Rule 100901 checks against hardcoded countries
+3. Rule 100900 (authentication) or 100902 (web access) checks against whitelist_countries list
+4. Rule 100901 checks authentication events against hardcoded countries
 5. Alert if country not whitelisted (level 10)
-6. Rule 100903 detects frequency: if ≥300 alerts in 300 seconds → escalate to level 12 (high-frequency anomaly)
+6. Rule 100903 detects frequency: if ≥300 rule-100902 alerts in 300 seconds → escalate to level 12 (high-frequency anomaly)
 ```
 
 **Whitelist mechanism**:
@@ -125,7 +128,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 - **Hardcoded** (Rule 100901): Fallback to countries using `srcgeoip` field
 
 **Frequency escalation** (Rule 100903):
-- Triggers when 300+ non-whitelisted country alerts occur within 300 seconds
+- Triggers when 300+ non-whitelisted web-access alerts (rule 100902) occur within 300 seconds
 - Indicates coordinated or sustained geographic anomaly attack
 - Escalated to level 12 for higher-priority response
 
@@ -133,7 +136,7 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 
 ---
 
-### 3. Suspicious Login Detection
+### 3. Suspicious login detection
 
 **Purpose**: Detect credential-based attacks including brute force attempts and impossible travel scenarios.
 
@@ -152,6 +155,9 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
 | `210022` | 12 | Credential compromise (composite) | ≥4 raw failed-auth events (rule 5760) within 300s, same user, followed by an impossible travel success (210021) | 300 seconds |
 | `210030` | 5  | O365 login failure | Single Microsoft 365 authentication failure | N/A |
 | `210031` | 10 | O365 brute force | ≥3 O365 login failures for same user | 300 seconds |
+| `210039` | 5  | OpenSearch AD alert received | Catch-all for any `opensearch_ad` alert from `/var/log/ad_alerts.log`. Group `radar_ad_received` (see [AD catch-all rules](#ad-catch-all-rules)) | N/A |
+| `210040` | 10 | Off-hours activity (model mode) | `if_group radar_ad_received` + AD alert matching "SuspiciousLogin-OffHour-Detected" (per-user detector on the count of off-hours events; the entity is the username) | N/A |
+| `210041` | 10 | Off-hours activity (rule mode) | `if_group radar_ad_received` + alert line matching "SuspiciousLogin-OffHours-Rule-Detected" (a user's off-hours burst against declared hours; carries `off_hours_count` and `schedule_group`) | N/A |
 
 **Alert Flow - Brute Force**:
 ```
@@ -168,9 +174,20 @@ Rules 100401/100402 and 100404/100405 apply this whitelist to reduce false posit
     - Velocity >= 900 km/h? (physically impossible travel)
 ```
 
+**Alert Flow - Off-hours activity** (see [Off-hours activity](./radar-scenarios/off-hours-activity.md)):
+```
+1. The radar-off-hours ingest pipeline marks each archived event of a listed user (radar.off_hours)
+2. Rule mode: a monitor reports the start of each user's off-hours burst
+   Model mode: a per-user detector reports an unusual count of off-hours events
+3. The monitor posts to the webhook, which writes the line to /var/log/ad_alerts.log
+4. An AD catch-all rule matches (level 5), then 210041 (rule mode) or 210040 (model mode), level 10
+5. radar_ar.py scores either as the scenario's anomaly side, combined with the
+   user's signature alerts by fusion (see radar-tuning.md)
+```
+
 ---
 
-### 4. Web Scanning Detection
+### 4. Web scanning detection
 
 **Purpose**: Detect web scanning, enumeration, and probing behavior.
 
@@ -193,11 +210,52 @@ Only **100830** triggers notification/active response for this scenario.
 
 ---
 
-# Rule matching and precedence in Wazuh used by RADAR
+### 5. Linux resource utilization detection
 
-## Rule loading order
+**Purpose**: Detect anomalous CPU/memory utilization on Linux endpoints that may indicate cryptomining, resource-exhaustion attacks, runaway processes, or other endpoint misuse.
 
-Wazuh loads rule files from the configured rule directory in alphabetical order by filename. This is why we use deterministic prefixes such as `a1_*`, `a2_*`, `a3_*`. 
+**How it works**:
+- A local agent-side collector (`radar-linux-resource-utilization.timer`, installed by `bootstrap-agent.sh`) samples `/proc/stat` and `/proc/meminfo` every 30 seconds and writes `resource_usage_metric: cpu=<pct> mem=<pct>` lines to `/var/log/radar/resource_usage_metric.log`
+- The `resource_usage_metric` decoder extracts `cpu_usage_pct`/`mem_usage_pct` into fields consumed by an OpenSearch Anomaly Detector (per-endpoint RCF baseline over average/peak CPU and memory usage)
+- Same integration pattern as Log Volume Growth Detection: the anomaly is sent to the webhook, decoded via `opensearch_ad`, and the rule below fires from the resulting Wazuh event
+
+**Rules** (group `opensearch_ad_alerts`, `rules/linux_resource_utilization/a5-linux-resource-utilization.xml`):
+
+| Rule ID | Level | Description | Trigger Condition |
+|---------|-------|-------------|-------------------|
+| `100320` | 5 | OpenSearch AD alert received | Any alert from OpenSearch AD module with `opensearch_ad` decoder. Group `radar_ad_received` |
+| `100321` | 12 | Linux CPU/memory utilization anomaly detected | `if_group radar_ad_received` + AD alert matching "LinuxResourceUtilization-Anomaly-Detected" |
+
+**Alert Flow**:
+```
+1. OpenSearch AD detects a CPU/memory anomaly for an endpoint
+2. Wazuh receives the AD alert via the webhook
+3. An AD catch-all rule matches (level 5): the first-loaded of 100300, 210039, 100320
+4. Rule 100321 escalates if "LinuxResourceUtilization-Anomaly-Detected" (level 12)
+```
+
+#### AD catch-all rules
+
+Every AD scenario ships a level-5 catch-all for the shared `opensearch_ad`
+decoder (100300, 210039 and 100320), so that each scenario can be deployed on
+its own. Wazuh stops at the first top-level rule that matches, and rule files
+load in name order (`a1-…`, `a3-…`, `a5-…`). With several of these scenarios
+deployed, the first-loaded catch-all therefore catches every AD alert and the
+others never fire. The trigger rules 100309, 210040, 210041 and 100321 attach with
+`if_group radar_ad_received`, a group every catch-all carries, so they fire
+under whichever catch-all matched. A
+trigger rule attached with `if_sid` to its own scenario's catch-all would never
+fire in that case. Any new AD scenario must follow the same pattern.
+
+Rule `100321` is the sole active-response trigger for this scenario (`ar.yaml`'s `linux_resource_utilization.ad.rule_ids` and the ossec `<rules_id>` both reference it) — the same one-rule-drives-AR pattern as Log Volume's rule `100309`.
+
+---
+
+## Rule matching and precedence in Wazuh used by RADAR
+
+### Rule loading order
+
+Wazuh loads rule files from the configured rule directory in alphabetical order by filename. This is why we use deterministic prefixes such as `a1-*`, `a2-*`, `a3-*`. 
 
 Wazuh evaluates rules in a tree/layer model:
 
@@ -211,29 +269,33 @@ Wazuh evaluates rules in a tree/layer model:
 
 > Important clarification for our documentation: Wazuh does not inherently sort by rule ID. In RADAR, "lower ID matches first" is true because we intentionally place rules in ascending ID order within files, and we control file loading order via filename prefixes. So the effective priority becomes "lower ID first" only as a consequence of our ordering strategy (read order). 
 
-## Scenario rules order
-
-- a0 — Default threat detection
-
-Placed first to ensure baseline security threats (shell execution) are caught earliest. Universal applicability across all Windows deployments makes this a foundational security floor that evaluates before scenario-specific rules.
+### Scenario rules order
 
 - a1 — Log volume
 
-Placed second to normalize OpenSearch AD alerts into Wazuh events early, and because it is self-contained (parent + specific child rule in the same pack). 
+Placed first to normalize OpenSearch AD alerts into Wazuh events early, and because it is self-contained (parent + specific child rule in the same pack). 
 
 - a2 — GeoIP detection 
 
-Placed third because it represents a baseline policy violation ("successful auth from non-whitelist country") and is designed to be the primary classification when multiple geolocation-related conditions could apply.
+Placed second because it represents a baseline policy violation ("successful auth from non-whitelist country") and is designed to be the primary classification when multiple geolocation-related conditions could apply.
 
 - a3 — Suspicious login
 
-Placed fourth because it contains more advanced behavioral logic (frequency correlation and enriched geo-velocity conditions). It is intentionally evaluated after baseline policy checks to avoid duplicate or competing alerts for the same authentication event.
+Placed third because it contains more advanced behavioral logic (frequency correlation and enriched geo-velocity conditions). It is intentionally evaluated after baseline policy checks to avoid duplicate or competing alerts for the same authentication event.
 
 - a4 — Scanning detection
 
-Placed fifth because it operates on a different event source (web access logs via `web-log` decoder) and does not compete with authentication-based rules.
+Placed fourth because it operates on a different event source (Suricata `eve.json` events, Wazuh group `ids`) and does not compete with authentication-based rules.
 
-# Summary
+- a5 — Linux resource utilization
+
+Placed fifth, independent stream of OpenSearch AD alerts into Wazuh events, and is self-contained.
+
+- `radar_rules.xml` — Default threat detection
+
+The default rules are uploaded with every scenario under the file name `radar_rules.xml`, which has no `a<N>-` prefix and therefore sorts, and loads, after the `a1-` to `a5-` scenario packs. They do not compete with them: they match Windows Sysmon process-creation events (`sysmon_event1`), which no scenario pack handles.
+
+## Summary
 
 RADAR rules provide scenario-specific threat detection capabilities:
 
@@ -241,6 +303,7 @@ RADAR rules provide scenario-specific threat detection capabilities:
 - **log_volume**: Anomaly detection via OpenSearch AD integration
 - **geoip_detection**: Geographic access control and policy enforcement
 - **suspicious_login**: Credential attack detection (brute force, impossible travel)
-- **scanning_detection**: Web scanning, injection, and enumeration detection (volumetric, UA signatures, SQLi, XSS, method abuse)
+- **scanning_detection**: Web scanning and enumeration detection from Suricata HTTP events (scanner User-Agent, failed-request rate, HTTP method abuse)
+- **linux_resource_utilization**: Anomalous CPU/memory utilization via OpenSearch AD integration
 
 Rules are automatically deployed via `build-radar.sh` (through the Wazuh REST API), and generate alerts indexed in OpenSearch for analysis and response.

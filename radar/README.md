@@ -25,7 +25,10 @@ We leverage [OpenSearch's latest advances](https://opensearch.org/anomaly-detect
 
 ## RADAR scenarios
 
-Currently, four production scenarios are implemented, each integrating a decoder, rule, and active response in a deployable solution. **Log Volume Growth** additionally has an OpenSearch detector, monitor, webhook and dataset ingestor (`wazuh_ingest.py`), since it is the only scenario driven by anomaly detection rather than signatures alone.
+Currently, five production scenarios are implemented alongside the Default rules, each integrating decoders, rules, and active responses in a deployable solution. The three scenarios driven by anomaly detection additionally have an OpenSearch monitor, the AD alert webhook, and a dataset ingestor (`wazuh_ingest.py`) that seeds a baseline:
+
+- **Log Volume Growth** and **Linux Resource Utilization** are purely anomaly-based: a per-endpoint RCF detector models log growth, or CPU and memory usage.
+- **Suspicious Login** is hybrid. Signature rules catch failed-login bursts and impossible travel; off-hours activity is checked against declared working hours, either by a rule monitor or by a per-user RCF detector that learns each user's usual off-hours activity. RADAR fuses both kinds of alert for the same user over time. See [Off-hours activity](/docs/manual/radar_docs/radar-scenarios/off-hours-activity.md).
 
 ### Default rules
 
@@ -41,9 +44,10 @@ Current rule set focuses on command shell execution detection (PowerShell, CMD.e
 |----------|--------|-------------|----------------|---------------|
 | **Default** | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-rules.md#default-rules) |
 | **GeoIP Detection** | ✅ Production | Real Wazuh (SSH + Apache/Nginx) | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/geoip_detection_explained.md) |
-| **Log Volume Growth** | ✅ Production | Real Wazuh | RRCF-based | [Guide](/docs/manual/radar_docs/radar-scenarios/log_volume_explained.md) |
-| **Suspicious Login** | ✅ Production | Real Wazuh | Signature[^1] | [Guide](/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md#signature-based-approach) |
+| **Log Volume Growth** | ✅ Production | Real Wazuh | Anomaly (RCF) | [Guide](/docs/manual/radar_docs/radar-scenarios/log_volume_explained.md) |
+| **Suspicious Login** | ✅ Production | Real Wazuh (SSH, Office 365, archived user events) | Hybrid: signature + off-hours (rule or per-user RCF) | [Guide](/docs/manual/radar_docs/radar-scenarios/suspicious_login_explained.md), [Off-hours](/docs/manual/radar_docs/radar-scenarios/off-hours-activity.md) |
 | **Web Scanning Detection** | ✅ Production | Real Wazuh | Signature | [Guide](/docs/manual/radar_docs/radar-scenarios/scanning_detection_explained.md) |
+| **Linux Resource Utilization** | ✅ Production | Real Wazuh (agent CPU/memory collector) | Anomaly (RCF) | [Guide](/docs/manual/radar_docs/radar-scenarios/linux_resource_utilization_explained.md) |
 
 > **CTI enrichment and incident case creation via DECIPHER** run for every production scenario, not only Suspicious Login: `radar_ar.py` queries DECIPHER's analyze endpoint on every alert regardless of which scenario matched, and creates a FlowIntel incident case whenever DECIPHER is reachable and the computed tier is 1 or above. See the [**DECIPHER deployment guide**](https://github.com/AbstractionsLab/satrap-dl/tree/main/decipher) for setup instructions.
 
@@ -51,15 +55,15 @@ Current rule set focuses on command shell execution detection (PowerShell, CMD.e
 
 ## RADAR outcome
 
-Here we provide a screenshot of a successful run of the Suspicious Login detection RADAR scenario:
+Here we provide a screenshot of a successful run of the Suspicious Login detection RADAR scenario (impossible travel, rule 210021):
 
-![Wazuh Dashboard Discover RADAR geo IP detection](/docs/manual/_figures/RADAR-wazuh-dashboard.png "Wazuh Dashboard Discover RADAR Geo IP detection")
+![Wazuh Dashboard RADAR Suspicious Login impossible travel detection](/docs/manual/_figures/RADAR-wazuh-dashboard.png "Wazuh Dashboard RADAR Suspicious Login impossible travel detection")
 
 The active response sends an email to a designated recipient at every tier from Tier 1 upward, and, depending on the tier and the scenario's `ar.yaml` configuration, can also execute an automated mitigation — blocking the source IP (`firewall-drop`), locking the implicated Linux account (`lock_user_linux.sh`), or terminating the offending service (`terminate_service.sh`). Automated mitigation execution is governed per scenario by `allow_mitigation`.
 
 ![](/docs/manual/_figures/RADAR-email-scanning-detection.png)
 
-Additionally, the active response component creates a case in FlowIntel on high risk alerts via the DECIPHER service.
+Additionally, the active response component creates a case in FlowIntel via the DECIPHER service for every alert that reaches Tier 1 or above, whenever DECIPHER is reachable.
 
 To compute the threat context for that response, RADAR calls DECIPHER's dedicated analysis endpoint — a distinct API endpoint separate from ordinary RADAR flows. It passes an information bundle assembled from the detection of the given scenario: alert metadata, source IP, relevant event fields, and scenario-specific context. DECIPHER processes this bundle and returns a CTI score together with enriched threat intelligence results to RADAR, which feeds the score directly into its risk computation. As part of scoring, DECIPHER performs a series of indicator lookups in MISP via `pymisp` — for example, checking whether a source IP appears as a known malicious attribute on any MISP event — and factors those findings into the final CTI score. The screenshot below shows an example MISP event consulted during this process, recording a malicious `ip-src` indicator that DECIPHER would match against the bundle supplied by RADAR:
 
@@ -83,9 +87,11 @@ The RADAR subsystem comes with a dedicated test framework aimed at automating th
 More precisely, we provide a pipeline automating the ingestion of datasets, preprocessing,
 training and ML model baseline establishment, attack simulation, data collection, followed by post-processing and
 computation of statistical measures, which are then reported to the user. Attack simulation runs as standalone
-Python scripts (`radar-test-framework/simulate/scenarios/<scenario>.py`) executed directly on the target agent
-endpoint, writing agent-realistic attack artifacts so the full Wazuh decoder/rule/active-response pipeline is
-exercised the same way it would be in production.
+scripts (`radar-test-framework/simulate/scenarios/<scenario>.py`, or `.sh` for `linux_resource_utilization`) executed
+directly on the target agent endpoint, writing agent-realistic attack artifacts so the full Wazuh decoder/rule/active-response
+pipeline is exercised the same way it would be in production. `inject_ad_alert.py` is the exception: it runs on the host
+that publishes the webhook port and posts the alert an anomaly monitor would send, to test the response and fusion without
+waiting for a detector baseline.
 
 See [RADAR test framework](/radar/radar-test-framework/README.md) for more details.
 
@@ -112,7 +118,7 @@ RADAR responds to attackers who may already be inside the network, so it treats 
 
 - **Single-operator admin host.** The web GUI, the deploy scripts and `.env` live on a host that only RADAR operators log in to. Operators already hold `sudo` there.
 - **The browser reaches the GUI through an SSH tunnel.** Run the browser on your own workstation and forward the port with `ssh -L 5000:127.0.0.1:5000 <gui-host>`. Don't open the GUI in a browser running on the GUI host itself, even if it's a single-operator host. Browsers share cookies across ports on the same host, so a page served from any other local port can read the GUI's login and vault cookies, and any local user can open such a port. With the tunnel, the cookies stay in your workstation's browser.
-- **Monitored endpoints can be hostile.** Any local user on an agent can write to its logs (for example with `logger`). RADAR therefore acts only on the triggering alert's own source IP, and it trusts anomaly-detection alerts only when they come from the webhook agent's `/var/log/ad_alerts.log`. Login enrichment is the exception: see the first item under [Known limitations](#known-limitations).
+- **Monitored endpoints can be hostile.** Any local user on an agent can write to its logs (for example with `logger`). RADAR therefore acts only on the triggering alert's own source IP and user names, and it trusts anomaly-detection alerts only when they come from the webhook agent's `/var/log/ad_alerts.log`. When it combines a signature alert with an anomaly alert, the other alert only raises the risk score and never chooses what gets blocked or locked. Login enrichment is the exception: see the first item under [Known limitations](#known-limitations).
 - **Enrollment secrets are sensitive.** Anyone holding a valid enrollment token can register an agent, including one that impersonates the webhook agent. Keep tokens short-lived, which is the default, and share them only with the endpoint being enrolled.
 - **Docker bypasses host firewalls.** Ports that Docker publishes are not filtered by `ufw`/`firewalld` INPUT rules. Put restrictions for published ports in the `DOCKER-USER` iptables chain, as in the examples below.
 
@@ -147,7 +153,7 @@ sudo iptables -I DOCKER-USER -p udp --dport 514 -j DROP
 
 - **`global.never_block`** in `scenarios/active_responses/ar.yaml`: add gateways, DNS servers, jump hosts and admin subnets. Loopback, link-local, multicast/broadcast and the manager's own address are always protected.
 - **`trusted_proxies`** (`scanning_detection` in `ar.yaml`): list your reverse proxies or load balancers. `X-Forwarded-For` is ignored unless the connecting peer is one of them.
-- **`terminable_services`** (`log_volume` in `ar.yaml`): anomaly alerts carry no source IP, and IPs found in logs are never used as targets. With this list empty, tier 3 notifies but takes no mitigation.
+- **`terminable_services`** (`log_volume` and `linux_resource_utilization` in `ar.yaml`): anomaly alerts carry no source IP, and IPs found in logs are never used as targets. With this list empty, tier 3 notifies but takes no mitigation.
 - **Credentials**: new deployments get unique passwords in `.env` on the first build. A deployment still on the stock wazuh-docker credentials should run `sudo ./radar.sh rotate-credentials`. Keep `.env`, `.radar-generated/` and `.radar-state/` private; RADAR writes them with owner-only permissions.
 
 ### Known limitations
@@ -161,7 +167,6 @@ These medium-severity items from the September 2026 security audit are still ope
 
 - TLS certificate verification is off by default for the indexer, Wazuh API and DECIPHER clients. Turn it on with `OS_VERIFY_SSL`, `WAZUH_VERIFY_SSL` and `DECIPHER_VERIFY_SSL` pointing at `config/wazuh_indexer_ssl_certs/root-ca.pem`.
 - Some secrets are still passed as process arguments or shown in deploy output.
-- `lock_user_linux.sh` can lock more than the triggering user.
 - Agent lookup by name takes the first fuzzy match.
 - Indexer and dashboard hostname verification is off.
 - Agents enrol without verifying the manager's certificate.

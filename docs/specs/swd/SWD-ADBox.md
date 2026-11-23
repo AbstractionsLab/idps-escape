@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: bwRanNo0PyyjuNVHOenKJyfXIGzo_TVUpIbYkAX-wms=
 ---
 
 # ADBox v1 Software Design (Maintenance)

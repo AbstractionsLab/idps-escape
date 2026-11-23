@@ -4,7 +4,7 @@ Reference for `run-radar.sh`, the script that creates and configures the OpenSea
 
 `run-radar.sh` executes a three-stage pipeline: data ingestion (optional), detector creation, and monitor creation.
 
-### Execution Flow
+### Execution flow
 
 ```
 run-radar.sh <scenario> [--ingest true|false]
@@ -15,6 +15,10 @@ run-radar.sh <scenario> [--ingest true|false]
      ↓
 [3] Monitor Setup → monitor.py → returns MONITOR_ID
 ```
+
+`suspicious_login` takes a different path: `off_hours.py deploy` (ingest pipeline) before
+the ingestion, `off_hours.py backfill` after it, then `off_hours.py monitors` instead of
+stages 2 and 3. See [Off-hours activity](./radar-scenarios/off-hours-activity.md#commands).
 
 ### Usage
 
@@ -29,16 +33,16 @@ run-radar.sh <scenario> [--ingest true|false]
 ```
 
 **Parameters:**
-- `<scenario>`: name of the scenario to deploy — in practice only `log_volume` (see [Supported scenarios](#supported-scenarios) below)
+- `<scenario>`: name of the scenario to deploy: `log_volume`, `linux_resource_utilization` or `suspicious_login` (see [Supported scenarios](#supported-scenarios) below)
 - `--ingest true|false`: whether to ingest synthetic training data
 
-> **The script's own `--help` text says the default is `true`; the code's actual default is `false`.** Pass `--ingest` explicitly rather than relying on either.
+The default is `--ingest false`.
 
 ### Required environment variables
 
-- `OS_URL`: OpenSearch/Wazuh Indexer endpoint — read directly by `detector.py`, `monitor.py`, `webhook.py`, and `wazuh_ingest.py`
+- `OS_URL`: OpenSearch/Wazuh Indexer endpoint — read directly by `detector.py`, `monitor.py`, `webhook.py`, `off_hours.py`, and `wazuh_ingest.py`
 - `OS_USER` / `OS_PASS`: OpenSearch authentication
-- `OS_VERIFY_SSL`: TLS certificate verification for OpenSearch (`DASHBOARD_VERIFY_SSL` is accepted as a fallback if `OS_VERIFY_SSL` is unset, for historical reasons — set `OS_VERIFY_SSL` directly)
+- `OS_VERIFY_SSL`: TLS certificate verification for OpenSearch (`monitor.py` alone also accepts `DASHBOARD_VERIFY_SSL` as a fallback if `OS_VERIFY_SSL` is unset, for historical reasons — set `OS_VERIFY_SSL` directly)
 - `WEBHOOK_URL`: webhook endpoint the monitor posts to (the `ad-webhook` container `build-radar.sh` brings up)
 - `WEBHOOK_NAME`: webhook destination name registered with OpenSearch (default: `RADAR Webhook`)
 - `WEBHOOK_SHARED_SECRET`: secret the notification channel sends to the webhook, generated on the first deployment
@@ -48,11 +52,11 @@ itself stays private to its owner and is not mounted into them.
 
 > `DASHBOARD_URL`, `DASHBOARD_USER`, and `DASHBOARD_PASS` are not read by this pipeline — they configure the separate Dashboards connector tested on the GUI's Connectors page, unrelated to `run-radar.sh`.
 
-Note `radar_ar.py` (the active-response script) reads the same OpenSearch endpoint through a differently named variable, `WAZUH_INDEXER_HOST`, not `OS_URL` — both must point at the same instance. See SWD-032.
+`radar_ar.py` (the active-response script) also reads `OS_URL`, but from its own `active_responses.env` on the manager, written at deployment with the indexer address as the manager resolves it. See SWD-032.
 
 ### Supported scenarios
 
-`log_volume` is the only scenario with a working detector/monitor pipeline in the current codebase.
+`log_volume` and `linux_resource_utilization` use the detector/monitor pipeline described here. `suspicious_login` uses `off_hours.py` for its off-hours detection (see above).
 
 Each supported scenario has its own:
 
@@ -67,10 +71,10 @@ Before, ingestion and simulation parameters were in separate configuration files
 
 ### Container execution
 
-- The image `radar-cli:latest` is built (or rebuilt) on every run from `Dockerfile.radar-cli`, which bakes in `detector.py`, `monitor.py`, `webhook.py`, and the ingest script for the scenarios it knows about
+- The image `radar-cli:latest` is built (or rebuilt) on every run from `Dockerfile.radar-cli`, which bakes in `detector.py`, `monitor.py`, `webhook.py`, `off_hours.py`, and the ingest script for the scenarios it knows about
 - Each stage runs as a separate, short-lived container; output IDs are captured from stdout to chain into the next stage
 
-## About Data Ingestion
+## About data ingestion
 
 Data ingestion is **optional** and controlled by the `--ingest` flag. 
 
@@ -108,6 +112,8 @@ Data ingestion parameters are defined in `radar/config.yaml` under each scenario
 
 **Scenarios with `ingest:` configuration:**
 - `log_volume` — parameters like `agent_id`, `agent_name`, `log_path`, `history_minutes`, baseline calculation
+- `linux_resource_utilization` — `agent_names`, `seed_index`, `history_minutes`, `step_seconds`, CPU and memory baselines and jitter
+- `suspicious_login` — synthetic users and shifts written to `wazuh-archives-4.x-*` (see [Off-hours activity](./radar-scenarios/off-hours-activity.md#synthetic-data))
 
 > **Important:** `agent_name`/`agent_id` here are placeholders (`"edge.vm"`/`"001"`) and must be customized to match the real, currently-enrolled agent that will actually be sending `log_volume` production data. Since the anomaly detector's `categorical_field` is `agent.name`, OpenSearch maintains a separate model per distinct agent name. If this placeholder doesn't match the real agent, the synthetic baseline gets seeded under a category that agent never reports under, and the ingest step provides no benefit at all for that agent's detection.
 
@@ -189,7 +195,7 @@ Creates or retrieves ID of an OpenSearch Anomaly Detection detector configured f
     - Reads its settings from the environment passed in by `run-radar.sh`
     - Validates scenario exists
 2. Detector existence check
-    - Searches for existing detector by name pattern: `{SCENARIO}_DETECTOR`
+    - Searches for existing detector by name pattern: the scenario name in upper case plus `_DETECTOR` (e.g. `LOG_VOLUME_DETECTOR`)
     - Uses query: `{"term": {"name.keyword": "<detector_name>"}}`
     - Returns ID of Detector if found
 3. Creates detector with:
@@ -212,13 +218,14 @@ log_volume:
     result_index: opensearch-ad-plugin-result-log-volume
     log_index_pattern: wazuh-ad-log-volume-*
     time_field: "@timestamp"
+    shingle_size: 8
     categorical_field: "agent.name"
-    detector_interval: 5
+    detector_interval: 1
     delay_minutes: 1
     monitor_name: "LogVolume-Monitor"
     trigger_name: "LogVolume-Growth-Detected"
-    anomaly_grade_threshold: 0.3
-    confidence_threshold: 0.3
+    anomaly_grade_threshold: 0.01
+    confidence_threshold: 0.01
     features:
       - feature_name: log_volume_max
         feature_enabled: true
@@ -232,13 +239,13 @@ log_volume:
           - feature_name: "log_volume_max"
             threshold_type: "ACTUAL_OVER_EXPECTED_RATIO"
             operator: "LTE"
-            value: 0.0001
+            value: 0.001
       - action: "IGNORE_ANOMALY"
         conditions:
           - feature_name: "log_volume_max"
             threshold_type: "EXPECTED_OVER_ACTUAL_RATIO"
             operator: "LTE"
-            value: 0.0001
+            value: 0.2
 
 ```
 
@@ -253,12 +260,15 @@ Creates alerting monitors that trigger notifications when anomalies exceed defin
 1. Webhook setup
     - Calls `ensure_webhook()` from `webhook.py`
     - Retrieves or creates notification channel with destination types: Custom webhook (HTTP POST)
-2. Checks for existing monitor by name
-3. If it does not exist, creates monitor with trigger conditions:
+2. Builds the monitor. Each run searches the detector's results from the last monitor interval for entities with `anomaly_grade ≥ anomaly_grade_threshold` and `confidence ≥ confidence_threshold`, highest grade first, up to `monitor_max_entities` (default 5). The trigger condition is:
 
 ```
-ctx.results[0].aggregations.max_anomaly_grade.value > {anomaly_grade_threshold} &&
-ctx.results[0].hits.hits[0]._source.confidence > {confidence_threshold}
+ctx.results[0].aggregations.max_anomaly_grade.value >= {anomaly_grade_threshold} &&
+ctx.results[0].hits.hits[0]._source.confidence >= {confidence_threshold}
 ```
 
+   The webhook message lists every entity found, each with its own data window, and the webhook writes one alert line per entity (see the [webhook README](/radar/webhook/README.md#request)).
+3. Checks for an existing monitor by name:
+    - none: creates it.
+    - one exists: updates it when it points at another detector or its configuration differs from what RADAR would create now (a fingerprint stored in the monitor's `ui_metadata`); otherwise leaves it unchanged. Rerunning after changing the thresholds or upgrading RADAR therefore updates the deployed monitor.
 4. Returns monitor ID to stdout

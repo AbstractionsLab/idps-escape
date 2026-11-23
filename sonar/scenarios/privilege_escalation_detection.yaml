@@ -15,7 +15,7 @@ description: "Detect privilege escalation attempts and anomalous elevated access
 enabled: true
 
 training:
-  lookback_hours: 168  # 7 days
+  lookback_hours: 336  # 14 days: 1344 buckets at 15 min
   
   numeric_fields:
     - "rule.level"
@@ -28,16 +28,33 @@ training:
   categorical_top_k: 12
   bucket_minutes: 15  # Privilege events are less frequent
   sliding_window: 96   # ~24 hours at 15-min buckets
-  min_samples: 200
+  # interval: 1 trains on every window position: 1344 buckets -> 800 gradient steps.
+  # Training needs at least 490 buckets from the first alert (empty buckets count) with these settings.
+  extra_params:
+    interval: 1
+  # Per-bucket counts of privilege and high-severity events
+  derived_features:
+    - is_privilege_event
+    - is_auth_failure
+    - is_high_severity
+    - is_critical_severity
 
 # Shipping configuration (optional - enables data streaming to Wazuh)
 shipping:
-  enabled: false  # Set to true to enable data shipping for RADAR integration
+  enabled: false  # Set to true to ship anomalies to a sonar_anomalies_mvad_<id> data stream
   install_templates: true  # Install base templates on first run
   scenario_id: "privilege_escalation"  # Custom ID for this scenario
 
 detection:
   mode: "historical"
-  lookback_minutes: 180
-  threshold: 0.6  # More sensitive for privilege escalation
-  min_consecutive: 1  # Single anomalous window is concerning
+  # Minutes of complete buckets to score, ending at the last complete bucket. SONAR
+  # fetches the earlier context MVAD needs on its own (input_size + threshold_window - 1
+  # buckets), so any lookback of at least one bucket works.
+  lookback_minutes: 1800
+  # Decision rule and confidence calibrated with `sonar evaluate` on the labelled synthetic
+  # splits of sonar/test_data (validation split for threshold and min_consecutive, test
+  # split precision for anomaly_confidence); see docs/specs/trp/assets/sonar-evaluation/privilege_escalation-mvad.md.
+  # Recalibrate on labelled data from your own environment.
+  threshold: 0.35  # minimum MVAD severity (0-1) on top of MVAD's own anomaly decision
+  min_consecutive: 1  # minimum run of consecutive anomalous buckets
+  anomaly_confidence: 0.67  # measured precision, sent to Wazuh and used by RADAR

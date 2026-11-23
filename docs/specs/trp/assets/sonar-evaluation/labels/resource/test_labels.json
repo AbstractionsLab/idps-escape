@@ -1,0 +1,84 @@
+{
+ "format": "sonar-labels/1",
+ "dataset": "resource_monitoring test split",
+ "span": {
+  "start": "2024-12-13T00:00:00Z",
+  "end": "2024-12-15T00:00:00Z"
+ },
+ "seed": 62,
+ "context_hours": 2,
+ "events": [
+  {
+   "id": "memory_leak_1",
+   "type": "memory_leak",
+   "start": "2024-12-13T02:37:00Z",
+   "end": "2024-12-13T03:37:00Z"
+  },
+  {
+   "id": "fork_bomb_1",
+   "type": "fork_bomb",
+   "start": "2024-12-13T05:59:00Z",
+   "end": "2024-12-13T06:06:00Z"
+  },
+  {
+   "id": "fork_bomb_2",
+   "type": "fork_bomb",
+   "start": "2024-12-13T11:25:00Z",
+   "end": "2024-12-13T11:32:00Z"
+  },
+  {
+   "id": "cpu_spike_1",
+   "type": "cpu_spike",
+   "start": "2024-12-13T14:50:00Z",
+   "end": "2024-12-13T15:11:00Z"
+  },
+  {
+   "id": "cpu_spike_2",
+   "type": "cpu_spike",
+   "start": "2024-12-13T17:59:00Z",
+   "end": "2024-12-13T18:38:00Z"
+  },
+  {
+   "id": "cpu_spike_3",
+   "type": "cpu_spike",
+   "start": "2024-12-13T22:57:00Z",
+   "end": "2024-12-13T23:32:00Z"
+  },
+  {
+   "id": "fork_bomb_3",
+   "type": "fork_bomb",
+   "start": "2024-12-14T02:35:00Z",
+   "end": "2024-12-14T02:40:00Z"
+  },
+  {
+   "id": "memory_leak_2",
+   "type": "memory_leak",
+   "start": "2024-12-14T06:08:00Z",
+   "end": "2024-12-14T07:08:00Z"
+  },
+  {
+   "id": "cpu_spike_4",
+   "type": "cpu_spike",
+   "start": "2024-12-14T08:47:00Z",
+   "end": "2024-12-14T09:31:00Z"
+  },
+  {
+   "id": "memory_leak_3",
+   "type": "memory_leak",
+   "start": "2024-12-14T12:58:00Z",
+   "end": "2024-12-14T13:58:00Z"
+  },
+  {
+   "id": "fork_bomb_4",
+   "type": "fork_bomb",
+   "start": "2024-12-14T17:44:00Z",
+   "end": "2024-12-14T17:53:00Z"
+  },
+  {
+   "id": "memory_leak_4",
+   "type": "memory_leak",
+   "start": "2024-12-14T21:58:00Z",
+   "end": "2024-12-14T22:58:00Z"
+  }
+ ]
+}

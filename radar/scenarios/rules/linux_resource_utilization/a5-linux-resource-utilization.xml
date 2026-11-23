@@ -1,0 +1,15 @@
+<group name="opensearch_ad_alerts,">
+  <!-- Catch-all for any OpenSearch AD alert. Children attach through the
+       radar_ad_received group, not if_sid: see a1-log-volume.xml. -->
+  <rule id="100320" level="5">
+    <decoded_as>opensearch_ad</decoded_as>
+    <description>OpenSearch AD alert received</description>
+    <group>radar_ad_received,</group>
+  </rule>
+  <rule id="100321" level="12">
+    <if_group>radar_ad_received</if_group>
+    <match>LinuxResourceUtilization-Anomaly-Detected</match>
+    <description>OpenSearch AD: Linux CPU/memory utilization anomaly detected</description>
+  </rule>
+
+</group>

@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the RADAR Linux resource utilization collector every 30 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+Unit=radar-linux-resource-utilization.service
+
+[Install]
+WantedBy=timers.target

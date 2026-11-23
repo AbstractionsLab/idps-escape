@@ -1,222 +1,22 @@
 """
-Unit tests for WazuhIndexerClient and MVADPostProcessor.
+Unit tests for MVADPostProcessor: anomaly document post-processing.
 
-Tests Wazuh Indexer API interactions and anomaly document post-processing.
+The indexer client is tested in test_indexer_client.py.
 """
 
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from sonar.config import WazuhIndexerConfig, FeatureConfig
-from sonar.wazuh_client import WazuhIndexerClient
+from sonar.config import FeatureConfig
+from sonar.backends.mvad import mvad_results_to_points
 from sonar.pipeline import MVADPostProcessor
 
 
-class TestWazuhIndexerClient(unittest.TestCase):
-    """Test WazuhIndexerClient API operations."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.cfg = WazuhIndexerConfig()
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_initialization(self, mock_session_cls):
-        """Test client initialization with config."""
-        client = WazuhIndexerClient(self.cfg)
-        
-        self.assertEqual(client.cfg, self.cfg)
-        mock_session_cls.assert_called_once()
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_search_alerts_success(self, mock_session_cls):
-        """Test successful alert search."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {
-            "hits": {
-                "hits": [
-                    {
-                        "_id": "1",
-                        "_source": {
-                            "timestamp": "2025-12-30T10:00:00Z",
-                            "rule": {"level": 5, "id": "5710"},
-                        },
-                    },
-                    {
-                        "_id": "2",
-                        "_source": {
-                            "timestamp": "2025-12-30T10:05:00Z",
-                            "rule": {"level": 10, "id": "5711"},
-                        },
-                    },
-                ]
-            }
-        }
-        mock_session.post.return_value = mock_resp
-
-        client = WazuhIndexerClient(self.cfg)
-        start = datetime(2025, 12, 30, 10, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2025, 12, 30, 11, 0, 0, tzinfo=timezone.utc)
-
-        alerts = client.search_alerts(start, end)
-
-        self.assertEqual(len(alerts), 2)
-        self.assertEqual(alerts[0]["rule"]["level"], 5)
-        self.assertEqual(alerts[1]["rule"]["level"], 10)
-        mock_session.post.assert_called_once()
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_search_alerts_with_query(self, mock_session_cls):
-        """Test alert search with custom query filter."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {"hits": {"hits": []}}
-        mock_session.post.return_value = mock_resp
-
-        client = WazuhIndexerClient(self.cfg)
-        start = datetime(2025, 12, 30, 10, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2025, 12, 30, 11, 0, 0, tzinfo=timezone.utc)
-        query = {"query": {"term": {"rule.id": "5710"}}}
-
-        client.search_alerts(start, end, query=query)
-
-        # Verify query was included in request
-        call_args = mock_session.post.call_args
-        request_body = call_args[1]["json"]
-        self.assertIn("must", request_body["query"]["bool"])
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_search_alerts_empty_results(self, mock_session_cls):
-        """Test search with no results."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {"hits": {"hits": []}}
-        mock_session.post.return_value = mock_resp
-
-        client = WazuhIndexerClient(self.cfg)
-        start = datetime(2025, 12, 30, 10, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2025, 12, 30, 11, 0, 0, tzinfo=timezone.utc)
-
-        alerts = client.search_alerts(start, end)
-
-        self.assertEqual(len(alerts), 0)
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_search_alerts_with_size_limit(self, mock_session_cls):
-        """Test search with custom size limit."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {"hits": {"hits": []}}
-        mock_session.post.return_value = mock_resp
-
-        client = WazuhIndexerClient(self.cfg)
-        start = datetime(2025, 12, 30, 10, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2025, 12, 30, 11, 0, 0, tzinfo=timezone.utc)
-
-        client.search_alerts(start, end, size=5000)
-
-        # Verify size was set correctly
-        call_args = mock_session.post.call_args
-        request_body = call_args[1]["json"]
-        self.assertEqual(request_body["size"], 5000)
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_index_anomaly_success(self, mock_session_cls):
-        """Test successful anomaly indexing."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {"_id": "anomaly-123"}
-        mock_session.post.return_value = mock_resp
-
-        client = WazuhIndexerClient(self.cfg)
-        doc = {
-            "timestamp": "2025-12-30T10:00:00Z",
-            "rule": {"id": "900001", "description": "Anomaly detected"},
-            "score": 0.95,
-        }
-
-        doc_id = client.index_anomaly(doc)
-
-        self.assertEqual(doc_id, "anomaly-123")
-        mock_session.post.assert_called_once()
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_index_anomaly_with_special_types(self, mock_session_cls):
-        """Test anomaly indexing with pandas/numpy types."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {"_id": "anomaly-124"}
-        mock_session.post.return_value = mock_resp
-
-        client = WazuhIndexerClient(self.cfg)
-        
-        import pandas as pd
-        doc = {
-            "timestamp": pd.Timestamp("2025-12-30T10:00:00Z"),
-            "score": 0.95,
-        }
-
-        doc_id = client.index_anomaly(doc)
-
-        # Should handle pandas types via json.dumps default=str
-        self.assertEqual(doc_id, "anomaly-124")
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_check_connection_success(self, mock_session_cls):
-        """Test successful connection check."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_session.get.return_value = mock_resp
-
-        client = WazuhIndexerClient(self.cfg)
-        
-        self.assertTrue(client.check_connection())
-        mock_session.get.assert_called_once()
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_check_connection_failure(self, mock_session_cls):
-        """Test failed connection check."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.side_effect = Exception("Connection refused")
-
-        client = WazuhIndexerClient(self.cfg)
-        
-        self.assertFalse(client.check_connection())
-
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_dry_run_mode(self, mock_session_cls):
-        """Test dry run mode doesn't make actual API calls."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-
-        client = WazuhIndexerClient(self.cfg, dry_run=True)
-        doc = {"timestamp": "2025-12-30T10:00:00Z", "score": 0.95}
-
-        doc_id = client.index_anomaly(doc)
-
-        # Should return synthetic ID without calling API
-        self.assertIsNotNone(doc_id)
-        # API should not be called in dry run mode
-        mock_session.post.assert_not_called()
+def _build(processor, timestamps, results, context, **kwargs):
+    """Post-process MVAD-style result dicts (converted as the mvad backend does)."""
+    return processor.build_wazuh_anomaly_docs(mvad_results_to_points(results), context, **kwargs)
 
 
 class TestMVADPostProcessor(unittest.TestCase):
@@ -234,24 +34,24 @@ class TestMVADPostProcessor(unittest.TestCase):
             datetime(2025, 12, 30, 10, 5, tzinfo=timezone.utc),
             datetime(2025, 12, 30, 10, 10, tzinfo=timezone.utc),
         ]
-        
+
         results = [
             {"index": pd.Timestamp("2025-12-30 10:00:00+00:00"), "is_anomaly": False, "score": 0.1, "severity": 0.0, "interpretation": []},
             {"index": pd.Timestamp("2025-12-30 10:05:00+00:00"), "is_anomaly": False, "score": 0.2, "severity": 0.0, "interpretation": []},
             {"index": pd.Timestamp("2025-12-30 10:10:00+00:00"), "is_anomaly": True, "score": 0.9, "severity": 0.8, "interpretation": []},
         ]
-        
+
         context = {
             "bucket_minutes": 5,
             "lookback_minutes": 30,
         }
 
-        docs = self.processor.build_wazuh_anomaly_docs(timestamps, results, context)
+        docs = _build(self.processor, timestamps, results, context)
 
         # Should generate one document for the anomaly
         self.assertEqual(len(docs), 1)
         self.assertIn("timestamp", docs[0])
-        self.assertIn("rule", docs[0])
+        self.assertNotIn("rule", docs[0])  # documents are not Wazuh alerts; the manager raises those
         self.assertIn("data", docs[0])
         self.assertIn("mvad_score", docs[0]["data"])
 
@@ -262,16 +62,16 @@ class TestMVADPostProcessor(unittest.TestCase):
             datetime(2025, 12, 30, 10, 5, tzinfo=timezone.utc),
             datetime(2025, 12, 30, 10, 10, tzinfo=timezone.utc),
         ]
-        
+
         results = [
             {"index": pd.Timestamp("2025-12-30 10:00:00+00:00"), "is_anomaly": True, "score": 0.8, "severity": 0.7, "interpretation": []},
             {"index": pd.Timestamp("2025-12-30 10:05:00+00:00"), "is_anomaly": False, "score": 0.2, "severity": 0.0, "interpretation": []},
             {"index": pd.Timestamp("2025-12-30 10:10:00+00:00"), "is_anomaly": True, "score": 0.9, "severity": 0.8, "interpretation": []},
         ]
-        
+
         context = {"bucket_minutes": 5}
 
-        docs = self.processor.build_wazuh_anomaly_docs(timestamps, results, context)
+        docs = _build(self.processor, timestamps, results, context)
 
         # Should generate two documents
         self.assertEqual(len(docs), 2)
@@ -282,50 +82,34 @@ class TestMVADPostProcessor(unittest.TestCase):
             datetime(2025, 12, 30, 10, 0, tzinfo=timezone.utc),
             datetime(2025, 12, 30, 10, 5, tzinfo=timezone.utc),
         ]
-        
+
         results = [
             {"index": pd.Timestamp("2025-12-30 10:00:00+00:00"), "is_anomaly": False, "score": 0.1, "severity": 0.0, "interpretation": []},
             {"index": pd.Timestamp("2025-12-30 10:05:00+00:00"), "is_anomaly": False, "score": 0.2, "severity": 0.0, "interpretation": []},
         ]
-        
+
         context = {"bucket_minutes": 5}
 
-        docs = self.processor.build_wazuh_anomaly_docs(timestamps, results, context)
+        docs = _build(self.processor, timestamps, results, context)
 
         # Should generate no documents
         self.assertEqual(len(docs), 0)
 
+    def test_build_wazuh_anomaly_docs_rejects_unexpected_format(self):
+        """A result that is not a list of per-bucket dicts is an error, never a fabricated anomaly."""
+        with self.assertRaises(ValueError):
+            self.processor.build_wazuh_anomaly_docs({}, {"scenario_id": "test"}, threshold=0.8)
+        with self.assertRaises(ValueError):  # raw library output must go through a backend first
+            self.processor.build_wazuh_anomaly_docs([{"index": pd.Timestamp("2025-12-30T10:00Z"), "is_anomaly": True}], {})
+
     def test_build_wazuh_anomaly_docs_empty_results(self):
-        """Test handling of empty results."""
-        timestamps = []
-        results = {}
-        context = {"scenario_id": "test", "alert_count": 0}
-
-        docs = self.processor.build_wazuh_anomaly_docs(timestamps, results, context, threshold=0.8)
-
-        # Empty results dict creates one fallback document
-        self.assertEqual(len(docs), 1)
-        
-        # Check required fields are present
-        self.assertIn("is_anomaly", docs[0])
-        self.assertTrue(docs[0]["is_anomaly"])
-        self.assertIn("anomaly_score", docs[0])
-        self.assertIn("threshold", docs[0])
-        self.assertEqual(docs[0]["threshold"], 0.8)
-        self.assertIn("scenario_name", docs[0])
-        self.assertIn("@timestamp", docs[0])
-        
-        # Check fallback data (new format uses result_type and result_repr)
-        self.assertIn("data", docs[0])
-        self.assertIn("result_type", docs[0]["data"])
-        self.assertEqual(docs[0]["data"]["result_type"], "dict")
+        """An empty result list gives no documents."""
+        self.assertEqual(self.processor.build_wazuh_anomaly_docs([], {}), [])
 
     def test_build_wazuh_anomaly_docs_includes_context(self):
         """Test that context information is included in docs."""
         timestamps = [datetime(2025, 12, 30, 10, 0, tzinfo=timezone.utc)]
-        results = [
-            {"index": pd.Timestamp("2025-12-30 10:00:00+00:00"), "is_anomaly": True, "score": 0.9, "severity": 0.8, "interpretation": []}
-        ]
+        results = [{"index": pd.Timestamp("2025-12-30 10:00:00+00:00"), "is_anomaly": True, "score": 0.9, "severity": 0.8, "interpretation": []}]
         context = {
             "bucket_minutes": 5,
             "lookback_minutes": 60,
@@ -335,37 +119,43 @@ class TestMVADPostProcessor(unittest.TestCase):
             "model_path": "/path/to/model.pkl",
             "training_samples": 1000,
             "sliding_window": 200,
+            "model_name": "model",
+            "feature_names": ["alert_count", "rule.level", "is_ssh_event"],
         }
 
-        docs = self.processor.build_wazuh_anomaly_docs(timestamps, results, context, threshold=0.85)
+        docs = _build(self.processor, timestamps, results, context, threshold=0.75)
 
         self.assertEqual(len(docs), 1)
-        
+
         # Check required top-level fields
         self.assertIn("is_anomaly", docs[0])
         self.assertTrue(docs[0]["is_anomaly"])
         self.assertIn("anomaly_score", docs[0])
-        self.assertEqual(docs[0]["anomaly_score"], 0.9)
+        self.assertEqual(docs[0]["anomaly_score"], 0.8)  # severity, 0-1
+        self.assertEqual(docs[0]["mvad_score"], 0.9)  # raw MVAD score
         self.assertIn("threshold", docs[0])
-        self.assertEqual(docs[0]["threshold"], 0.85)
+        self.assertEqual(docs[0]["threshold"], 0.75)
+        self.assertEqual(docs[0]["model_name"], "model")
         self.assertIn("scenario_name", docs[0])
         self.assertEqual(docs[0]["scenario_name"], "test_scenario")
         self.assertIn("detection_timestamp", docs[0])
         self.assertIn("alert_count", docs[0])
         self.assertEqual(docs[0]["alert_count"], 100)
-        self.assertIn("feature_count", docs[0])
-        
+        self.assertEqual(docs[0]["feature_count"], 3)  # every model column, not only numeric_fields
+        self.assertEqual(docs[0]["context"]["feature_names"], ["alert_count", "rule.level", "is_ssh_event"])
+        self.assertEqual(docs[0]["sliding_window"], 200)
+
         # Check timestamps
         self.assertIn("@timestamp", docs[0])
         self.assertIn("timestamp", docs[0])
-        
+
         # Context should be structured object
         self.assertIn("context", docs[0])
         self.assertIn("model_path", docs[0]["context"])
         self.assertEqual(docs[0]["context"]["model_path"], "/path/to/model.pkl")
         self.assertIn("training_samples", docs[0]["context"])
         self.assertEqual(docs[0]["context"]["training_samples"], 1000)
-        
+
         # Data field should contain MVAD-specific values
         self.assertIn("data", docs[0])
         self.assertIn("mvad_score", docs[0]["data"])
@@ -376,65 +166,63 @@ class TestMVADPostProcessor(unittest.TestCase):
     def test_build_wazuh_anomaly_docs_timestamp_format(self):
         """Test that timestamps are properly formatted."""
         timestamps = [datetime(2025, 12, 30, 10, 0, tzinfo=timezone.utc)]
-        results = [
-            {"index": pd.Timestamp("2025-12-30 10:00:00+00:00"), "is_anomaly": True, "score": 0.9, "severity": 0.8, "interpretation": []}
-        ]
+        results = [{"index": pd.Timestamp("2025-12-30 10:00:00+00:00"), "is_anomaly": True, "score": 0.9, "severity": 0.8, "interpretation": []}]
         context = {}
 
-        docs = self.processor.build_wazuh_anomaly_docs(timestamps, results, context)
+        docs = _build(self.processor, timestamps, results, context)
 
         # Timestamp should be ISO format string
         self.assertIsInstance(docs[0]["timestamp"], str)
         self.assertIn("2025-12-30", docs[0]["timestamp"])
 
 
-class TestAlertFilterForwarding(unittest.TestCase):
-    """Tests that alert_filter from FeatureConfig is forwarded to search_alerts."""
+class TestThresholdAndMinConsecutive(unittest.TestCase):
+    """threshold and min_consecutive filter MVAD's anomalies (sonar/pipeline.py)."""
 
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_search_alerts_passes_alert_filter_as_query(self, mock_session_cls):
-        """When cfg.features.alert_filter is set, search_alerts receives it as query."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {"hits": {"hits": []}}
-        mock_session.post.return_value = mock_resp
+    def setUp(self):
+        self.processor = MVADPostProcessor(FeatureConfig())
+        base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        self.ts = [base + pd.Timedelta(minutes=5 * i) for i in range(8)]
 
-        cfg = WazuhIndexerConfig()
-        client = WazuhIndexerClient(cfg)
+    def _results(self, flags_severities):
+        # The raw score is deliberately unrelated to the severity: the threshold must use severity.
+        return [{"index": self.ts[i], "is_anomaly": a, "score": 1.5, "severity": sev} for i, (a, sev) in enumerate(flags_severities)]
 
-        alert_filter = {"terms": {"rule.groups": ["performance_metric"]}}
-        start = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2026, 1, 1, 1, 0, 0, tzinfo=timezone.utc)
+    def test_no_threshold_keeps_every_mvad_anomaly(self):
+        results = self._results([(True, 0.1), (False, 0.9), (True, 0.5)])
+        docs = _build(self.processor, self.ts, results, {})
+        self.assertEqual(len(docs), 2)
+        self.assertIsNone(docs[0]["threshold"])
 
-        client.search_alerts(start, end, query=alert_filter)
+    def test_threshold_is_a_minimum_severity(self):
+        results = self._results([(True, 0.69), (True, 0.7), (False, 0.99), (True, 0.95)])
+        docs = _build(self.processor, self.ts, results, {}, threshold=0.7)
+        self.assertEqual([d["anomaly_score"] for d in docs], [0.7, 0.95])
+        self.assertTrue(all(d["mvad_score"] == 1.5 for d in docs))
 
-        call_args = mock_session.post.call_args
-        request_body = call_args[1]["json"]
-        # The query fragment is merged into bool.must
-        self.assertIn("must", request_body["query"]["bool"])
-        must_clauses = request_body["query"]["bool"]["must"]
-        self.assertIn(alert_filter, must_clauses)
+    def test_threshold_outside_0_1_rejected(self):
+        with self.assertRaises(ValueError):
+            _build(self.processor, self.ts, self._results([(True, 0.5)]), {}, threshold=1.2)
 
-    @patch("sonar.wazuh_client.requests.Session")
-    def test_search_alerts_no_must_when_filter_is_none(self, mock_session_cls):
-        """When query=None, no extra must clause is added to the bool query."""
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_resp = MagicMock()
-        mock_resp.json.return_value = {"hits": {"hits": []}}
-        mock_session.post.return_value = mock_resp
+    def test_contributors_carry_the_bucket_value(self):
+        frame = pd.DataFrame({"alert_count": [3.0, 212.0]}, index=pd.DatetimeIndex(self.ts[:2]))
+        results = [{"index": self.ts[1], "is_anomaly": True, "score": 1.0, "severity": 0.6, "interpretation": [{"variable_name": "alert_count", "contribution_score": 0.61}, {"variable_name": "gone", "contribution_score": 0.1}]}]
+        docs = _build(self.processor, self.ts[:2], results, {}, feature_values=frame)
+        self.assertEqual(docs[0]["mvad_interpretation"], [{"variable": "alert_count", "contribution": 0.61, "value": 212.0}, {"variable": "gone", "contribution": 0.1, "value": None}])
 
-        client = WazuhIndexerClient(WazuhIndexerConfig())
-        start = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2026, 1, 1, 1, 0, 0, tzinfo=timezone.utc)
+    def test_min_consecutive_keeps_only_long_enough_runs(self):
+        # runs of qualifying points: [0,1] (len 2), [3] (len 1), [5,6,7] (len 3)
+        flags = [(True, 0.9), (True, 0.9), (False, 0.9), (True, 0.9), (True, 0.1), (True, 0.9), (True, 0.9), (True, 0.9)]
+        docs = _build(self.processor, self.ts, self._results(flags), {}, threshold=0.5, min_consecutive=2)
+        self.assertEqual([d["timestamp"] for d in docs], [self.ts[i].isoformat() for i in (0, 1, 5, 6, 7)])
 
-        client.search_alerts(start, end, query=None)
+        docs = _build(self.processor, self.ts, self._results(flags), {}, threshold=0.5, min_consecutive=3)
+        self.assertEqual(len(docs), 3)
 
-        call_args = mock_session.post.call_args
-        request_body = call_args[1]["json"]
-        # No must clause should be present when no filter is given
-        self.assertNotIn("must", request_body["query"]["bool"])
+    def test_library_result_without_index_is_an_error(self):
+        # Every PointResult carries its bucket; a library entry without one is not guessed.
+        with self.assertRaises(ValueError):
+            mvad_results_to_points([{"is_anomaly": True, "score": 0.9}])
 
 
 if __name__ == "__main__":

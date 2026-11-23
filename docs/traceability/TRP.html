@@ -70,10 +70,33 @@
 <li><a href="#TRP-048">2.17 TCER: GUI: Build &amp; validate <code>log_volume</code></a></li>
 <li><a href="#TRP-049">2.18 TCER: GUI: Unenroll, undeploy, and deregister <code>log_volume</code></a></li>
 <li><a href="#TRP-050">2.19 TCER: GUI: Deploy scenario on pre-existing SN Wazuh</a></li>
+<li><a href="#TRP-051">2.20 TCER: GUI - Build and deploy <code>linux_resource_utilization</code></a></li>
+<li><a href="#TRP-052">2.21 TCER: Validation of <code>linux_resource_utilization</code> detection</a></li>
+<li><a href="#TRP-067">2.22 TCER: RADAR: signature and anomaly fusion in the risk engine</a></li>
+<li><a href="#TRP-068">2.23 TCER: RADAR: anomaly monitor, webhook and decoder contract</a></li>
+<li><a href="#TRP-069">2.24 TCER: RADAR: off-hours marking, configuration and deployment logic</a></li>
+<li><a href="#TRP-070">2.25 TCER: RADAR manager-side enrichment</a></li>
+<li><a href="#TRP-071">2.26 TCER: RADAR GUI REST API contract</a></li>
+<li><a href="#TRP-072">2.27 TCER: RADAR agent onboarding and enrollment hardening</a></li>
+<li><a href="#TRP-073">2.28 TCER: RADAR scenario group delivery and undo</a></li>
 </ul>
 </li>
 <li><a href="#TRP-039">3.0 SONAR test case execution results</a><ul>
 <li><a href="#TRP-040">3.1 TCER: Linux resource usage monitoring scenario</a></li>
+<li><a href="#TRP-053">3.2 TCER: Linux resource usage monitoring scenario</a></li>
+<li><a href="#TRP-054">3.3 TCER: SONAR refuses to persist untrained models</a></li>
+<li><a href="#TRP-055">3.4 TCER: SONAR feature schema 2 and feature contract</a></li>
+<li><a href="#TRP-056">3.5 TCER: SONAR detection window, severity threshold and no alert writes</a></li>
+<li><a href="#TRP-057">3.6 TCER: SONAR at-most-once anomaly delivery and realtime resilience</a></li>
+<li><a href="#TRP-058">3.7 TCER: SONAR anomaly sinks and Wazuh manager events</a></li>
+<li><a href="#TRP-059">3.8 TCER: SONAR paths, detector backends, model files and package</a></li>
+<li><a href="#TRP-060">3.9 TCER: SONAR evaluation metrics, calibration and <code>sonar evaluate</code></a></li>
+<li><a href="#TRP-061">3.10 TCER: SONAR end-to-end detection with the real MVAD library</a></li>
+<li><a href="#TRP-062">3.11 TCER: SONAR paths, detector backends, model files and package</a></li>
+<li><a href="#TRP-063">3.12 TCER: SONAR evaluation of the <code>pca</code> backend</a></li>
+<li><a href="#TRP-064">3.13 TCER: SONAR end-to-end detection with real detectors</a></li>
+<li><a href="#TRP-065">3.14 TCER: SONAR on RADAR's resource-utilization data</a></li>
+<li><a href="#TRP-066">3.15 TCER: SONAR indexer client: complete, filtered alert reads and one connection</a></li>
 </ul>
 </li>
 </ul>
@@ -2955,7 +2978,7 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
 <li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
 </ul>
-<p><em>Parent links:</em> <a href="TST.html#TST-053">TST-053 Validate default scenario rules detection</a></p>
+<p><em>Parent links:</em> <a href="TST.html#TST-053">TST-053 Validate default scenario rules deployment</a></p>
 <table>
 <thead>
 <tr>
@@ -3554,6 +3577,888 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 </tr>
 </tbody>
 </table>
+<h2 id="TRP-051">2.20 TCER: GUI - Build and deploy <code>linux_resource_utilization</code> <small><a href="TRP.html#TRP-051">TRP-051</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test specifications.</li>
+<li>Hardware deviations: aligned with test specifications.</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>.env</code> prepared on the controller host</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the required IPs and the SMTP host were configured; all passwords were left empty as there was no Wazuh stack deployed.</li>
+</ul>
+<p><strong>Test case step 2</strong>: RADAR GUI up</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>./radar.sh gui</code> successfully started the RADAR GUI and login was successful using the displayed URL (which included an authentication token). The expected tabs are present along with "Status" and "Teardown".</li>
+</ul>
+<p><strong>Test case step 3</strong>: Scenario deployment</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: <code>Linux Resource Utilization (not deployed)</code> was listed in the scenario dropbox list and the deployment finished with no error lines and with:</li>
+</ul>
+<pre><code>=== SUCCESS: Wazuh manager and 'linux_resource_utilization' deployment completed ===
+
+[4:29:03 PM] Done.
+</code></pre>
+<p>Moreover, the non-existent Wazuh stack was successful deployed and the <code>.env</code> file was updated with the generated passwords.</p>
+<p><strong>Test case step 4</strong>: Generate token for agent</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: In the output display, the “Minting enrollment token…” process finished with exit code '0'; a command with the expected format was printed.</li>
+</ul>
+<p><strong>Test case step 5</strong>: Bootstrapping the agent</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The command copied from step 4 ran successfully in the agent host and printed the expected lines. The Wazuh Dashboard shows that the agent was registered and added to the 'linux_resource_utilization' group.</li>
+</ul>
+<p><img alt="Agent registered" src="assets/trp-051-stp5.png" width="80%" /></p>
+<p><strong>Test case step 6</strong>: Check the metric collector</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the timer is listed and the log messages have the expected format.</li>
+</ul>
+<p><strong>Test case step 7</strong>: Run anomaly detector with ingestion</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The output contained all the expected messages and no errors.</li>
+</ul>
+<p><strong>Test case step 8</strong>: Agent's metrics reach the controller</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: the count was greater than 0.</li>
+</ul>
+<p>{
+  "count" : 476,
+  "_shards" : {
+    "total" : 4,
+    "successful" : 4,
+    "skipped" : 0,
+    "failed" : 0
+  }
+}</p>
+<p><strong>Test case step 9</strong>: Detector health check</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The health check ran for the MANAGER (filesystem/container) and MANAGER (Wazuh API / OpenSearch / webhook), showing "OK" for all the listed resources and exit code '0'.</li>
+</ul>
+<p><strong>Test case step 10</strong>: Cleanup</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: Cleanup executed with the expected outcome.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: - <span style="color:green"><strong>0 = flawless</strong></span>.</p>
+<h3>Text execution evidence</h3>
+<p>See logs and screenshots reported above.</p>
+<h3>Comments</h3>
+<p>N/A</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-061">TST-061 GUI: Build and deploy <code>linux_resource_utilization</code></a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-06</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>IVS</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>10</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-052">2.21 TCER: Validation of <code>linux_resource_utilization</code> detection <small><a href="TRP.html#TRP-052">TRP-052</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Agent host: Debian 6.12.63-1 (2025-12-30) x86_64</li>
+<li>Software deviations: aligned with test specifications.</li>
+<li>Hardware deviations: aligned with test specifications.</li>
+<li>
+<p>Setup actions: steps 1 and 4 were executed before the first round; the normal CPU and memory usage values were obtained on the agent and set in <code>config.yaml</code> before certain rounds, to account for change in the normal behavior, as reported below:</p>
+<ul>
+<li>R1: cpu=0.3, mem=12.34</li>
+<li>R2: cpu=0.4, mem=12.32</li>
+<li>R3: cpu=0.5, mem=11.86</li>
+<li>R4: cpu=0.1, mem=12.32</li>
+<li>R6: cpu=0.2, mem=13.45</li>
+<li>R8: cpu=0.3, mem=13.29</li>
+</ul>
+</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case. Steps 3–9 and the cleanup were repeated for every run.</p>
+<p><strong>Test case step 1</strong>: Deploy scenario and onboard agent</p>
+<ul>
+<li><span style="color:orange"><strong>2 = minor defect</strong></span>: The scenario was created and the agent onboarded in all rounds.
+  However, after the first round, a red pop-up with the legend <code>"build failed"</code> was shown at every round when deploying the scenario and the log showed a connection error to the Wazuh API; yet the process finished with a <code>SUCCESS</code> message and the deployment was functional.</li>
+</ul>
+<pre><code class="language-bash">Starting build…
+...
+&gt;&gt;&gt; Webhook not yet enrolled; minting a short-lived token...
+$ sudo -A bash $HOME/idps-escape/radar/radar_deploy/manager-mint-token.sh default 60
+&gt;&gt;&gt; Ensuring the manager accepts password-based enrollment...
+[!] Wazuh API error (HTTP 0, code None): Could not reach the Wazuh API at https://192.168.5.3:55000 (ConnectionError): HTTPSConnectionPool(host='192.168.5.3', port=55000): Max retries exceeded with url: /security/user/authenticate (Caused by NewConnectionError('&lt;urllib3.connection.HTTPSConnection object at 0x7f6c9c3cf340&gt;: Failed to establish a new connection: [Errno 111] Connection refused'))
+NOTE: could not confirm/set &lt;use_password&gt;yes&lt;/use_password&gt; via the API -- if enrollment below fails with 'Invalid request for new agent', check this manager's &lt;auth&gt; block manually.
+&gt;&gt;&gt; Setting enrollment token (expires in 60m)...
+&gt;&gt;&gt; Restarting manager to activate the token...
+...
+Completed.
+&gt;&gt;&gt; Waiting for the Wazuh API to become reachable...
+{&quot;api_reachable&quot;: true}
+&gt;&gt;&gt; Scheduling automatic revocation in 60 minutes (on the host)...
+...
+[exit code: 0]
+&gt;&gt;&gt; Deploying 'linux_resource_utilization' group/agent.conf via Wazuh API...
+{'linux_resource_utilization': {'group_created': True, 'config_message': 'Agent configuration was successfully updated'}}
+&gt;&gt;&gt; Deploying decoders/rules/lists and ossec.conf via Wazuh API...
+...
+
+=== SUCCESS: Wazuh manager and 'linux_resource_utilization' deployment completed ===
+
+[11:29:03 AM] Done.
+</code></pre>
+<p><strong>Test case step 2</strong>: Run CPU stress on the agent host</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The CPU stress script completed with the line <code>linux_resource_utilization simulation completed. Load released.</code> each time.</li>
+</ul>
+<p><strong>Test case step 3</strong>: Run anomaly detector with ingestion</p>
+<ul>
+<li><span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>: In rounds 5, 7, 8, and 10 the following error was received:</li>
+</ul>
+<pre><code class="language-bash">[11:01:18 AM] Starting run…
+
+$ bash &lt;path&gt;/run-radar.sh linux_resource_utilization --ingest true
+&gt;&gt;&gt; Building radar-cli image...
+...
+#13 naming to docker.io/library/radar-cli:latest done
+#13 DONE 0.0s
+/usr/local/lib/python3.12/site-packages/urllib3/connectionpool.py:1129: InsecureRequestWarning: Unverified HTTPS request is being made to host '192.168.5.3'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+  warnings.warn(
+ERROR: no resource_usage_metric samples in wazuh-archives-* within now-30m and no agent_names configured. Check:
+  1. The agent is enrolled in the linux_resource_utilization group and its radar-linux-resource-utilization.timer is running.
+  2. /var/log/radar/resource_usage_metric.log on the endpoint is growing.
+  3. ./radar.sh health --scenario linux_resource_utilization reports no FAIL.
+
+[exit code: 1]
+
+[11:01:24 AM] Done.
+</code></pre>
+<p>At run 5, I successfully validated the three checks displayed in the error message; thus, I re-ran the step and it succeeded. In all the upcoming rounds, re-running the step when the error appeared (sometimes even 3-4 times and waiting for few seconds in between) allowed to continue with the test.</p>
+<p><strong>Test case step 4</strong>: Validate anomaly detection</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: An anomaly meeting the acceptance criteria was reported within 5 minutes in each run. The results are listed in the table below.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Run</th>
+<th>Expected avg CPU usage (%)</th>
+<th>Expected max CPU usage (%)</th>
+<th>Detected avg CPU usage (%)</th>
+<th>Detected max CPU usage (%)</th>
+<th>Anomaly grade</th>
+<th>Confidence</th>
+<th>Risk score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.5</td>
+<td>0.6</td>
+<td>90.5</td>
+<td>90.5</td>
+<td>1</td>
+<td>0.37</td>
+<td>0.3357799527502766</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0.35</td>
+<td>0.53</td>
+<td>91.04</td>
+<td>91.04</td>
+<td>1</td>
+<td>0.37</td>
+<td>0.3357799527502766</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0.24</td>
+<td>0.48</td>
+<td>90.59</td>
+<td>90.59</td>
+<td>1</td>
+<td>0.37</td>
+<td>0.3357799527502766</td>
+</tr>
+<tr>
+<td>4</td>
+<td>0.49</td>
+<td>0.48</td>
+<td>91.09</td>
+<td>91.09</td>
+<td>1</td>
+<td>0.37</td>
+<td>0.3357799527502766</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.29</td>
+<td>0.61</td>
+<td>91.13</td>
+<td>91.13</td>
+<td>1</td>
+<td>0.36</td>
+<td>0.3230182644649463</td>
+</tr>
+<tr>
+<td>6</td>
+<td>0.3</td>
+<td>0.61</td>
+<td>90.5</td>
+<td>90.5</td>
+<td>1</td>
+<td>0.37</td>
+<td>0.3357799527502766</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0.37</td>
+<td>0.7</td>
+<td>45.64</td>
+<td>91.04</td>
+<td>1</td>
+<td>0.36</td>
+<td>0.3230182644649463</td>
+</tr>
+<tr>
+<td>8</td>
+<td>0.298</td>
+<td>0.601</td>
+<td>45.59</td>
+<td>91.04</td>
+<td>1</td>
+<td>0.36</td>
+<td>0.3230182644649463</td>
+</tr>
+<tr>
+<td>9</td>
+<td>0.298</td>
+<td>0.6</td>
+<td>45.32</td>
+<td>90.5</td>
+<td>1</td>
+<td>0.36</td>
+<td>0.3230182644649463</td>
+</tr>
+<tr>
+<td>10</td>
+<td>0.37</td>
+<td>0.6</td>
+<td>45.89</td>
+<td>91.63</td>
+<td>1</td>
+<td>0.36</td>
+<td>0.3230182644649463</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Test case step 5</strong>: Validate active response actions</p>
+<ul>
+<li>
+<p><span style="color:green"><strong>0 = flawless</strong></span>: the expected active-response message exists in <code>active-responses.log</code>; the risk score per run is reported in the table on step 4 above.</p>
+</li>
+<li>
+<p><span style="color:green"><strong>0 = flawless</strong></span>: an email notification was received each time; the message included a link to a Flowintel case for the round where it was enabled.</p>
+</li>
+<li>
+<p><span style="color:green"><strong>0 = flawless</strong></span>: case 154 was created in Flowintel with title "[DECIPHER] RADAR: abnormal CPU/memory utilization - 20261109-135935". The <code>active-responses.log</code> in the Wazuh manager showed the corresponding entries:</p>
+</li>
+</ul>
+<pre><code class="language-bash">2026-11-09T13:59:35Z [INFO] DECIPHER health check passed {&quot;url&quot;:&quot;http://192.168.5.3:8000&quot;}
+2026-11-09T13:59:35Z [WARNING] No DECIPHER analyze endpoint defined for scenario; skipping CTI enrichment {&quot;scenario&quot;:&quot;linux_resource_utilization&quot;}
+2026-11-09T13:59:35Z [INFO] Risk computed {&quot;risk_score&quot;:0.3230182644649463,&quot;tier&quot;:1}
+2026-11-09T13:59:35Z [INFO] DECIPHER incident created {&quot;case_id&quot;:&quot;154&quot;,&quot;case_url&quot;:&quot;http://localhost:7006/case/154&quot;}
+</code></pre>
+<p><strong>Test case step 6</strong>: Cleanup</p>
+<ul>
+<li><span style="color:green"><strong>0 = flawless</strong></span>: The cleanup steps were executed as described in each run with the expected outcome observed.</li>
+</ul>
+<h3>Defect summary description</h3>
+<p>Minor defect, i.e., <span style="color:orange"><strong>2 = minor defect</strong></span>.</p>
+<p>Two steps (see 1 and 3 above) returned error messages, however, one seems to have no impact on the test and the second one was overcome by retrying. Nonetheless, the error messages are misleading, especially the one in step 1 which signals a failed build to the user.</p>
+<p>Regardless of these errors, the detection was successfully validated as per the acceptance criteria.</p>
+<h3>Text execution evidence</h3>
+<p>See the reported results in the steps above.</p>
+<h3>Comments</h3>
+<p>The test passed the detection validation as per the acceptance criteria; the reported errors can be moved to bug reports to deal with them separately.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-062">TST-062 Validate detection of <code>linux_resource_utilization</code></a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-09</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>IVS</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:orange"><strong>2 = minor defect</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>4</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-067">2.22 TCER: RADAR: signature and anomaly fusion in the risk engine <small><a href="TRP.html#TRP-067">TRP-067</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification (the "only these tests" variant of step 1); code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12; a clean virtual environment with the pip set of <code>radar/Dockerfile.test</code> (pytest 9.2.0, responses, pyyaml, requests, tzdata, Flask 3), used instead of the Poetry environment because the Poetry environment's <code>anomaly_detector</code> package (the MVAD library) shadows RADAR's <code>radar/anomaly_detector</code> module; no live Wazuh manager or indexer</li>
+<li>Execution: from <code>radar/</code>, <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_radar_ar_fusion.py tests/py/test_radar_ar.py -v</code>: 158 passed, 0 failed, 0 skipped, in 1.0 s. The whole suite, <code>radar/tests/run-tests.sh</code>, also ran the same day: pytest 613 passed, 4 skipped, 0 failed (the suite as a whole is reported failed because of shellcheck warnings and one bats case outside this test's scope, see <a href="TRP.html#TRP-072">TRP-072</a>)</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/py/test_radar_ar_fusion.py</code> (46) and <code>tests/py/test_radar_ar.py</code> (112): 158 passed, among them fusion settings and prerequisites (<code>TestSettings</code> 15, <code>TestFusionPrerequisites</code> 7, expected outcome 1), fused score computation (<code>TestComputeWithFusion</code> 5, expected outcome 2), signature- and anomaly-triggered matching (<code>TestSignatureTriggered</code> 10, <code>TestAnomalyTriggered</code> 4, <code>TestAdAlertOrigin</code> 8, expected outcomes 3 and 4), decisions with fusion (<code>TestRunWithFusion</code> 2, expected outcome 5), anomaly targets (<code>TestNeverBlockAndAlertOwnTarget</code> 14, <code>TestBuildArgsTargetValidation</code> 14, expected outcome 6) and calibration (<code>TestRecalibration</code> 2, <code>TestSuspiciousLoginAnomaly</code> 8, <code>TestRiskEngine</code> 22, expected outcome 7) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Console output of the run, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>Run on the v2.2.0 code base.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-073">TST-073 RADAR: signature and anomaly fusion in the risk engine</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-068">2.23 TCER: RADAR: anomaly monitor, webhook and decoder contract <small><a href="TRP.html#TRP-068">TRP-068</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12; a clean virtual environment with the pip set of <code>radar/Dockerfile.test</code> (pytest 9.2.0, responses, pyyaml, requests, tzdata, Flask 3), used instead of the Poetry environment because the Poetry environment's <code>anomaly_detector</code> package (the MVAD library) shadows RADAR's <code>radar/anomaly_detector</code> module (precondition 2); bats 1.x from npm, shellcheck; no jq, no Docker, not root (uid 1000); no live Wazuh manager or indexer</li>
+<li>Execution: <code>radar/tests/run-tests.sh</code> with that environment active: py_compile passed; pytest 613 passed, 4 skipped, 0 failed; the script exited 1 because shellcheck reported 4 warnings and one bats case of <code>bootstrap-agent.bats</code> failed, both outside this test's scope (see Comments). The tests of this test case were then run on their own, from <code>radar/</code>: <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_monitor.py tests/py/test_webhook.py tests/py/test_ad_alerts_webhook.py -v</code>: 44 passed, 0 failed, 0 skipped; and <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_radar_ar.py -v</code>: 112 passed, 0 failed, 0 skipped</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: every test behind the expected outcomes passed: monitor query and message template, stale-fingerprint update and detector ID read from a stored monitor (<code>tests/py/test_monitor.py</code>, 7, expected outcomes 1 and 2); webhook lines per entity, data window, skipped and rejected entries, injection attempts, identical copies of <code>0001-ad-common.xml</code> matched by both decoder regexes, and the <code>inject_ad_alert.py</code> body (<code>tests/py/test_ad_alerts_webhook.py</code>, 32, expected outcomes 3, 4 and 6); webhook channel set-up (<code>tests/py/test_webhook.py</code>, 5); trigger rules attached through <code>if_group radar_ad_received</code> without <code>if_sid</code> (<code>tests/py/test_radar_ar.py::test_ad_child_rules_reachable_from_every_ad_catch_all</code>, expected outcome 5) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Console output of the runs, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p><code>run-tests.sh</code> marks the shellcheck stage failed on 4 warnings (SC2155 at <code>build-radar.sh</code> lines 43 and 113, SC2034 for <code>SCENARIO_INFO</code> in <code>build-radar.sh</code> and <code>MON_ID</code> in <code>run-radar.sh</code>); these scripts are not part of this test case. The failing bats case, "non-root invocation is rejected, even with all required args present", is a test defect recorded in <a href="TRP.html#TRP-072">TRP-072</a> (<a href="TST.html#TST-082">TST-082</a>).</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-074">TST-074 RADAR: anomaly monitor, webhook and decoder contract</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-069">2.24 TCER: RADAR: off-hours marking, configuration and deployment logic <small><a href="TRP.html#TRP-069">TRP-069</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only; <code>poetry run</code> replaced by the clean virtual environment below for steps 1 and 2; step 3 not executed</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12; a clean virtual environment with the pip set of <code>radar/Dockerfile.test</code> (pytest 9.2.0, responses, pyyaml, requests, tzdata, Flask 3), used instead of the Poetry environment because the Poetry environment's <code>anomaly_detector</code> package (the MVAD library) shadows RADAR's <code>radar/anomaly_detector</code> module; no live Wazuh manager or indexer</li>
+<li>Execution: from <code>radar/</code>, <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_off_hours.py tests/py/test_suspicious_login_ingest.py tests/py/test_ad_alerts_webhook.py tests/py/test_filebeat_pipeline.py -v</code>: 159 passed, 0 failed, 0 skipped, in 0.7 s; from <code>radar/anomaly_detector/</code>, <code>python off_hours.py validate --config ../config.yaml</code>: exit status 0. The whole suite, <code>radar/tests/run-tests.sh</code>, also ran the same day: pytest 613 passed, 4 skipped, 0 failed</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: 159 passed: <code>tests/py/test_off_hours.py</code> (112), <code>tests/py/test_suspicious_login_ingest.py</code> (9), <code>tests/py/test_ad_alerts_webhook.py</code> (32) and <code>tests/py/test_filebeat_pipeline.py</code> (6) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: logged <code>[off_hours] INFO valid: 4 groups (rule mode: ['synthetic_day', 'synthetic_early', 'synthetic_late']; model mode: ['synthetic_admin']), 4 users</code> — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: not executed: needs a running Wazuh indexer reachable as <code>OS_URL</code>, which was not available</p>
+<h3>Defect summary description</h3>
+<p>Defect-free execution of the executed steps 1 and 2, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span>; step 3 not executed</p>
+<h3>Text execution evidence</h3>
+<p>Console output of the runs, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>Step 3 (Painless pipeline against the Python implementation on a deployed cluster) remains to be run on a RADAR host.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-077">TST-077 RADAR: off-hours marking, configuration and deployment logic</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-070">2.25 TCER: RADAR manager-side enrichment <small><a href="TRP.html#TRP-070">TRP-070</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only; step 1 run with the clean virtual environment below instead of <code>poetry run</code>; step 2 checked with <code>find</code> instead of <code>git ls-files</code> (see step 2); live part (steps 3 to 7) not executed</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12; a clean virtual environment with the pip set of <code>radar/Dockerfile.test</code> (pytest 9.2.0, responses, pyyaml, requests, tzdata, Flask 3), used instead of the Poetry environment because the Poetry environment's <code>anomaly_detector</code> package (the MVAD library) shadows RADAR's <code>radar/anomaly_detector</code> module; no Docker, not root (uid 1000); no RADAR host, Wazuh manager, endpoint, GeoLite2 database or MaxMind licence key</li>
+<li>Execution: from <code>radar/</code>, <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_manager_enrichment.py -v</code>: 25 passed, 0 failed, 0 skipped, in 0.2 s; from the repository root, <code>find . -path ./.git -prune -o -iname '*.mmdb' -print</code>: no output. The whole suite, <code>radar/tests/run-tests.sh</code>, also ran the same day: pytest 613 passed, 4 skipped, 0 failed</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/py/test_manager_enrichment.py</code>: all 25 tests passed (GeoIP lookup, <code>sshd</code> parsing, velocity and country change, ASN novelty and history, shared history across endpoints, state store, decoder expressions of <code>0310-ssh.xml</code>) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: no <code>.mmdb</code> file exists anywhere in the working tree, which is HEAD plus uncommitted spec changes, so none is tracked; <code>git ls-files</code> itself was not used — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: not executed: needs a RADAR host with a deployed <code>suspicious_login</code> scenario and Docker</p>
+<p><strong>Test case step 4</strong>: not executed: needs an onboarded Linux endpoint and the Wazuh manager container</p>
+<p><strong>Test case step 5</strong>: not executed: needs the Wazuh manager container with the GeoLite2 databases</p>
+<p><strong>Test case step 6</strong>: not executed: needs a deployed <code>geoip_detection</code> scenario and an onboarded endpoint</p>
+<p><strong>Test case step 7</strong>: not executed: needs the Wazuh manager container</p>
+<h3>Defect summary description</h3>
+<p>Defect-free execution of the executed steps 1 and 2, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span>; steps 3 to 7 (live part) not executed</p>
+<h3>Text execution evidence</h3>
+<p>Console output of the runs, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>The web-access enrichment has no automated test; its only verification, step 6, remains to be run on a RADAR host.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-080">TST-080 RADAR manager-side enrichment</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>5</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-071">2.26 TCER: RADAR GUI REST API contract <small><a href="TRP.html#TRP-071">TRP-071</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only; step 1 run with the clean virtual environment below instead of <code>poetry run</code>; manual part (steps 2 to 10) not executed</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12; a clean virtual environment with the pip set of <code>radar/Dockerfile.test</code> (pytest 9.2.0, responses, pyyaml, requests, tzdata, Flask 3), used instead of the Poetry environment because the Poetry environment's <code>anomaly_detector</code> package (the MVAD library) shadows RADAR's <code>radar/anomaly_detector</code> module; no Docker, not root (uid 1000), no <code>sudo</code> session; no RADAR host</li>
+<li>Execution: from <code>radar/</code>, <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_gui_ar_config.py -v</code>: 40 passed, 0 failed, 0 skipped, in 1.2 s. The whole suite, <code>radar/tests/run-tests.sh</code>, also ran the same day: pytest 613 passed, 4 skipped, 0 failed</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/py/test_gui_ar_config.py</code>: all 40 tests passed (offered and accepted mitigation names, partial <code>PUT .../ar-config</code> and <code>bind</code> storing normalised names, HTTP 400 for unknown or non-list mitigations with <code>ar.yaml</code> unchanged, broken catalog reported, catalog never written) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: not executed: manual check against a running GUI on the RADAR host</p>
+<p><strong>Test case step 3</strong>: not executed: manual check against a running GUI on the RADAR host</p>
+<p><strong>Test case step 4</strong>: not executed: manual check against a running GUI on the RADAR host</p>
+<p><strong>Test case step 5</strong>: not executed: manual check against a running GUI on the RADAR host</p>
+<p><strong>Test case step 6</strong>: not executed: manual check against a running GUI on the RADAR host</p>
+<p><strong>Test case step 7</strong>: not executed: needs a running GUI and reachable OpenSearch and Wazuh API services</p>
+<p><strong>Test case step 8</strong>: not executed: needs a running GUI and a <code>sudo</code> password</p>
+<p><strong>Test case step 9</strong>: not executed: needs a running GUI, a deployed scenario and Docker</p>
+<p><strong>Test case step 10</strong>: not executed: needs a running GUI and a <code>sudo</code> password</p>
+<h3>Defect summary description</h3>
+<p>Defect-free execution of the executed step 1, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span>; steps 2 to 10 (manual part) not executed</p>
+<h3>Text execution evidence</h3>
+<p>Console output of the run, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>The manual part remains to be run on a RADAR host.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-081">TST-081 RADAR GUI REST API contract</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>9</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-072">2.27 TCER: RADAR agent onboarding and enrollment hardening <small><a href="TRP.html#TRP-072">TRP-072</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only; step 1 run with the clean virtual environment below instead of <code>poetry run</code>; manual part (steps 3 to 12) not executed</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12; a clean virtual environment with the pip set of <code>radar/Dockerfile.test</code> (pytest 9.2.0, responses, pyyaml, requests, tzdata, Flask 3), used instead of the Poetry environment because the Poetry environment's <code>anomaly_detector</code> package (the MVAD library) shadows RADAR's <code>radar/anomaly_detector</code> module; bats 1.x from npm, shellcheck; no <code>jq</code> (a precondition of step 2), no Docker, not root (uid 1000); no RADAR host or endpoints</li>
+<li>Execution: from <code>radar/</code>, <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_token_revocation.py tests/py/test_radar_agent_mapping.py tests/py/test_radar_agent_collectors.py -v</code>: 34 passed, 0 failed, 4 skipped, in 0.3 s; from <code>radar/</code>, <code>for s in bootstrap-agent uninstall-agent ar-mapping ar-dispatch collectors; do bats -p tests/bash/$s.bats; done</code>: 120 cases, 63 passed, 1 failed, 56 skipped (<code>bootstrap-agent</code> 46: 6 passed, 1 failed, 39 skipped; <code>uninstall-agent</code> 11: 2 passed, 9 skipped; <code>ar-mapping</code> 32 passed; <code>ar-dispatch</code> 11: 10 passed, 1 skipped; <code>collectors</code> 20: 13 passed, 7 skipped). The whole suite, <code>radar/tests/run-tests.sh</code>, also ran the same day with the same bats results</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/py/test_token_revocation.py</code> (8 passed), <code>tests/py/test_radar_agent_mapping.py</code> (10 passed, 4 skipped) and <code>tests/py/test_radar_agent_collectors.py</code> (16 passed); the 4 skipped cases are <code>test_snippet_shell_executables_are_in_the_catalog</code> for snippets that have no shell active response (<code>radar-default</code>, <code>radar-geoip-detection</code>, <code>radar-scanning-detection</code>, <code>radar-shared-auth-log</code>), skipped by design — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: 1 failure: <code>bootstrap-agent.bats</code> case 6, "non-root invocation is rejected, even with all required args present", fails at <code>[[ "$output" == *"run this as root"* ]]</code>. Its skip guard only checks that <code>runuser</code> and the user <code>nobody</code> exist, but <code>runuser</code> cannot switch users when the suite is not run as root, so <code>bootstrap-agent.sh</code> never ran and the expected message is absent. This is a test defect, not a defect of <code>bootstrap-agent.sh</code>. Skipped, so not verified here: 39 <code>bootstrap-agent</code> and 9 <code>uninstall-agent</code> cases (they need root to <code>chown root:wazuh</code> a fake <code>/var/ossec</code>), 7 <code>collectors</code> cases (<code>install -o root</code> needs root) and 1 <code>ar-dispatch</code> case (end-to-end run of <code>lock_user_linux_v1.sh</code>, needs <code>jq</code>). All other cases passed: argument checks, catalog parsing and resolution, dispatcher refusals, collector destinations and uninstall of nothing installed; the <code>shellcheck</code> cases are informational — <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span></p>
+<p><strong>Test case step 3</strong>: not executed: needs a RADAR host with the Wazuh manager container and an endpoint</p>
+<p><strong>Test case step 4</strong>: not executed: needs a RADAR host with root and an endpoint</p>
+<p><strong>Test case step 5</strong>: not executed: needs a RADAR host and endpoint B</p>
+<p><strong>Test case step 6</strong>: not executed: needs endpoint B with a Wazuh agent</p>
+<p><strong>Test case step 7</strong>: not executed: needs a RADAR host with <code>log_volume</code> deployed and endpoint A</p>
+<p><strong>Test case step 8</strong>: not executed: needs endpoint B and the RADAR host</p>
+<p><strong>Test case step 9</strong>: not executed: needs endpoint A and the RADAR host</p>
+<p><strong>Test case step 10</strong>: not executed: needs endpoint B and the RADAR host with <code>systemd</code></p>
+<p><strong>Test case step 11</strong>: not executed: needs endpoint A and the RADAR host</p>
+<p><strong>Test case step 12</strong>: not executed: needs endpoint A and the RADAR host</p>
+<h3>Defect summary description</h3>
+<p>One insignificant test defect, i.e., defect category: <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>: the skip guard of the bats case "non-root invocation is rejected, even with all required args present" (<code>radar/tests/bash/bootstrap-agent.bats</code>) does not detect that <code>runuser</code> cannot switch users when the suite runs unprivileged; the case should be skipped unless it runs as root. No defect was observed in the code under test. Steps 3 to 12 (manual part) not executed</p>
+<h3>Text execution evidence</h3>
+<p>Console output of the pytest run and of the five bats runs, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>56 bats cases were skipped because the run had neither root nor <code>jq</code>; running the suite in the <code>radar/Dockerfile.test</code> image (<code>radar/test.sh</code>) or as root would exercise them. The manual part remains to be run on a RADAR host with two endpoints.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-082">TST-082 RADAR agent onboarding and enrollment hardening</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>10</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-073">2.28 TCER: RADAR scenario group delivery and undo <small><a href="TRP.html#TRP-073">TRP-073</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only; step 1 run with the clean virtual environment below instead of <code>poetry run</code>; manual part (steps 2 to 9) not executed</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12; a clean virtual environment with the pip set of <code>radar/Dockerfile.test</code> (pytest 9.2.0, responses, pyyaml, requests, tzdata, Flask 3), used instead of the Poetry environment because the Poetry environment's <code>anomaly_detector</code> package (the MVAD library) shadows RADAR's <code>radar/anomaly_detector</code> module; no Docker, not root (uid 1000); no RADAR host, Wazuh manager or endpoint</li>
+<li>Execution: from <code>radar/</code>, <code>PYTHONPATH=anomaly_detector:. pytest tests/py/test_scenario_ops.py tests/py/test_ruleset.py tests/py/test_manager_config.py tests/py/test_wazuh_api.py -v</code>: 75 passed, 0 failed, 0 skipped, in 2.4 s. The whole suite, <code>radar/tests/run-tests.sh</code>, also ran the same day: pytest 613 passed, 4 skipped, 0 failed</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: 75 passed: <code>tests/py/test_scenario_ops.py</code> (27), <code>tests/py/test_ruleset.py</code> (8), <code>tests/py/test_manager_config.py</code> (20) and <code>tests/py/test_wazuh_api.py</code> (20) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: not executed: needs a RADAR host with the core stack, <code>sudo</code> and Docker</p>
+<p><strong>Test case step 3</strong>: not executed: needs the Wazuh API and an enrolled endpoint</p>
+<p><strong>Test case step 4</strong>: not executed: needs a RADAR host with the core stack, <code>sudo</code> and Docker</p>
+<p><strong>Test case step 5</strong>: not executed: needs a RADAR host with the core stack, <code>sudo</code> and Docker</p>
+<p><strong>Test case step 6</strong>: not executed: needs a RADAR host with deployed scenarios and the Wazuh manager container</p>
+<p><strong>Test case step 7</strong>: not executed: needs a RADAR host with deployed scenarios</p>
+<p><strong>Test case step 8</strong>: not executed: needs a RADAR host with deployed scenarios and the Wazuh manager container</p>
+<p><strong>Test case step 9</strong>: not executed: needs the Wazuh manager container</p>
+<h3>Defect summary description</h3>
+<p>Defect-free execution of the executed step 1, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span>; steps 2 to 9 (manual part) not executed</p>
+<h3>Text execution evidence</h3>
+<p>Console output of the run, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>Undo is covered by the manual part only, so it remains unverified by this run.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-084">TST-084 RADAR scenario group delivery and undo</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>8</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
 <h1 id="TRP-039">3.0 SONAR test case execution results</h1>
 <h2 id="TRP-040">3.1 TCER: Linux resource usage monitoring scenario <small><a href="TRP.html#TRP-040">TRP-040</a></small></h2>
 <h2>Relevant test environment and configuration details</h2>
@@ -3619,6 +4524,926 @@ wazuh-alerts-.-2024.04..json  wazuh-alerts-.-2024.06..json
 <tr>
 <td>release-version</td>
 <td>1.0</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-053">3.2 TCER: Linux resource usage monitoring scenario <small><a href="TRP.html#TRP-053">TRP-053</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: Trained with <code>poetry run sonar train --scenario sonar/scenarios/linux_resource_monitoring.yaml --debug</code> (exit 0, 3 min 39 s) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: The log reports <code>Fitting MVAD on 1440 time buckets: 1092 training windows, 8 batches/epoch x 100 epochs = 800 gradient steps, 84 validation windows</code>; training completed and the model directory <code>sonar/models/linux_resource_monitoring/</code> was saved — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: Ran <code>poetry run sonar detect --scenario sonar/scenarios/linux_resource_monitoring.yaml --debug</code> (exit 0): 361 buckets scored, 86 anomalies reported as SONAR events on stdout — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 4</strong>: Anomalies inside each attack window: CPU spike 01:00–01:45, 46 buckets (01:00–01:53, the last 8 just after the spike); memory leak 03:00–04:00, 20 buckets (03:41–04:00, as the leak approaches its peak); fork bomb 05:00–05:08, 8 buckets (every bucket) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 5</strong>: Every reported anomaly belongs to a run of at least 4 consecutive buckets (the calibrated <code>min_consecutive</code>): runs of 4, 54, 20 and 8 buckets — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 6</strong>: <code>is_cpu_high</code>, <code>is_memory_high</code> and <code>is_high_load</code> recomputed from the raw alerts of the detection file (counts of alerts at or above 80 %, 80 % and load 4.0 per bucket) equal the feature matrix in every bucket (98, 28 and 0 alerts in total; the synthetic data has no load averages) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Logs and the event file of the run were inspected in the session; the bucket counts above were computed from the events' <code>sonar.bucket_start</code>.</p>
+<h3>Comments</h3>
+<p>Re-run of <a href="TST.html#TST-050">TST-050</a> after the SONAR remediation, with the calibrated decision rule (<code>threshold: 0.05</code>, <code>min_consecutive: 4</code>). One run of 4 anomalous buckets (00:00–00:03 on 2024-12-15) lies outside the attack windows, right after the context; the test case does not bound false alarms, which the evaluation (<a href="TRP.html#TRP-060">TRP-060</a>) measures.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-050">TST-050 Linux resource usage monitoring scenario</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>6</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-054">3.3 TCER: SONAR refuses to persist untrained models <small><a href="TRP.html#TRP-054">TRP-054</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_engine_and_features.py</code>, run in full as part of the suite (a superset of <code>-k Engine</code>): 33 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: <code>tests/sonartests/test_engine_real_mvad.py</code>: 8 passed, against the installed library — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 3</strong>: With the default configuration (<code>sliding_window: 200</code>) and the library defaults (batch size 128, stride 10), training on 288 five-minute buckets raised <code>InsufficientTrainingDataError</code>: "13 training windows (stride interval=10) fill no batch of batch_size=128; the validation split is shorter than the input window (100 buckets). At least 1725 buckets are needed with these settings." No model directory was created — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output (per-file counts above) and the step 3 run, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after the backend refactoring of issue 08: the pre-flight check lives in the <code>mvad</code> backend and still refuses before the library's <code>fit</code> is called.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-063">TST-063 SONAR refuses to persist untrained models</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>3</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-055">3.4 TCER: SONAR feature schema 2 and feature contract <small><a href="TRP.html#TRP-055">TRP-055</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_features_v2.py</code>: 21 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after the SONAR remediation.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-064">TST-064 SONAR feature schema 2 and feature contract</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-056">3.5 TCER: SONAR detection window, severity threshold and no alert writes <small><a href="TRP.html#TRP-056">TRP-056</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_detection_cli.py</code> (13), <code>tests/sonartests/test_wazuh_and_pipeline.py</code> (13) and <code>tests/sonartests/test_scenario.py</code> (38): 64 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after the SONAR remediation; the threshold and run-length rule now lives in <code>select_anomalies</code>, shared with <code>sonar evaluate</code>.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-065">TST-065 SONAR detection window, severity threshold and no alert writes</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-057">3.6 TCER: SONAR at-most-once anomaly delivery and realtime resilience <small><a href="TRP.html#TRP-057">TRP-057</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_realtime_delivery.py</code> (28) and <code>tests/sonartests/test_detection_cli.py</code> (13): 41 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after the SONAR remediation. <a href="TST.html#TST-071">TST-071</a> (<a href="TRP.html#TRP-061">TRP-061</a>) adds the same property with the real MVAD library.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-066">TST-066 SONAR at-most-once anomaly delivery and realtime resilience</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-058">3.7 TCER: SONAR anomaly sinks and Wazuh manager events <small><a href="TRP.html#TRP-058">TRP-058</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_sinks.py</code> (41), <code>tests/sonartests/test_realtime_delivery.py</code> (28) and <code>tests/sonartests/test_shipper.py</code> (6): 75 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after the SONAR remediation. The lab check of the same chain, <a href="TST.html#TST-068">TST-068</a>, is a manual test that has not been executed yet.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-067">TST-067 SONAR anomaly sinks and Wazuh manager events</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-059">3.8 TCER: SONAR paths, detector backends, model files and package <small><a href="TRP.html#TRP-059">TRP-059</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_paths.py</code> (16), <code>tests/sonartests/test_backends.py</code> (18, including the MVAD regression against <code>tests/assets/sonar_mvad_regression.json</code>) and <code>tests/sonartests/test_packaging.py</code> (2, building the wheel and running its <code>sonar</code> package outside the repository): 36 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after the issue 09 changes; this is extraction gate criterion 4 (<code><a href="DEC.html#DEC-2026">DEC-2026</a>-11-19-sonar-extraction-gate</code>).</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-069">TST-069 SONAR paths, detector backends, model files and package</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-060">3.9 TCER: SONAR evaluation metrics, calibration and <code>sonar evaluate</code> <small><a href="TRP.html#TRP-060">TRP-060</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_evaluation.py</code>: 17 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Generated the labelled splits (seed 42) and ran <code>sonar evaluate</code> with calibration for the four bundled scenarios and both backends, one run at a time: 8 JSON reports and 8 Markdown summaries. Each calibration stayed within the budget of 5 false alarms per day, and each report's <code>anomaly_confidence</code> equals its calibrated test precision. Regenerating the splits with the same seed gave byte-identical files, and every labelled event lies inside its split after the context — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Reports, label files and the summary table: <code>docs/specs/trp/assets/sonar-evaluation/</code> (README.md).</p>
+<h3>Comments</h3>
+<p>Calibrated test F1, MVAD against the <code>ewma</code> baseline: resource monitoring 0.96 against 0.80, brute force 0.74 against 0.35, privilege escalation 0.80 against 0.29, lateral movement 0.25 against 0.50. The data is synthetic and holds 4 to 12 events per scenario; see the README for the limits.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-070">TST-070 SONAR evaluation metrics, calibration and <code>sonar evaluate</code></a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-061">3.10 TCER: SONAR end-to-end detection with the real MVAD library <small><a href="TRP.html#TRP-061">TRP-061</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the issue 09 changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 310 passed, 0 failed, 0 skipped, in 157.6 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_e2e_detection.py</code>: 5 passed (in the suite, and alone in 44.7 s): injected CPU spike, alert burst, silence and never-seen category each flagged in at least 80 % of their buckets and at least twice as often as the rest of the data; realtime polling over overlapping windows wrote anomalies to the <code>jsonl</code> sink with no <code>anomaly_id</code> twice, across a restart — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Check that the delivery test can fail: with the watermark removed, the same test failed (303 lines for 55 distinct anomalies). The test was then restored.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-071">TST-071 SONAR end-to-end detection with real detectors</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-062">3.11 TCER: SONAR paths, detector backends, model files and package <small><a href="TRP.html#TRP-062">TRP-062</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the <code>pca</code> backend changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0, NumPy 1.26.4; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 326 passed, 0 failed, 0 skipped, in 122.8 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_paths.py</code> (16), <code>tests/sonartests/test_backends.py</code> (30: the backend contract for <code>ewma</code>, <code>pca</code> and <code>mvad</code>, the <code>pca</code> checks of outcome 5, and the MVAD regression against <code>tests/assets/sonar_mvad_regression.json</code>) and <code>tests/sonartests/test_packaging.py</code> (2): 48 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after adding the <code>pca</code> backend. The MVAD regression still passes, so adding a backend did not change MVAD's verdicts.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-069">TST-069 SONAR paths, detector backends, model files and package</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-20</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-063">3.12 TCER: SONAR evaluation of the <code>pca</code> backend <small><a href="TRP.html#TRP-063">TRP-063</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the <code>pca</code> backend changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0, NumPy 1.26.4; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 326 passed, 0 failed, 0 skipped, in 122.8 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_evaluation.py</code>: 17 passed — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: Regenerated the labelled splits (seed 42; label files identical to those in <code>docs/specs/trp/assets/sonar-evaluation/labels/</code>) and ran <code>sonar evaluate</code> with calibration for the four bundled scenarios with the <code>pca</code> backend: 4 JSON reports and 4 Markdown summaries; the JSON reports are kept as <code>*-pca.json</code> in <code>docs/specs/trp/assets/sonar-evaluation/</code>. Each calibration stayed within the budget of 5 false alarms per day, and each report's <code>anomaly_confidence</code> equals its calibrated test precision. The <code>mvad</code> and <code>ewma</code> reports of <a href="TRP-060.md">TRP-060</a> were not rerun: their code paths are unchanged — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>The reports in <code>docs/specs/trp/assets/sonar-evaluation/</code> and the results table in its <code>README.md</code>.</p>
+<h3>Comments</h3>
+<p>Calibrated test F1 with <code>pca</code>, against MVAD: resource monitoring 0.96 against 0.96, brute force 1.00 against 0.74, lateral movement 0.67 against 0.25, privilege escalation 1.00 against 0.80; training about 0.1 s against 207 to 363 s. The <code>pca</code> settings (<code>window: 3</code>, <code>variance: 0.95</code>) were chosen on the validation splits before this run; the test splits played no part. The data is synthetic and holds 4 to 12 events per scenario; see the README for the limits and <code><a href="DEC.html#DEC-2026">DEC-2026</a>-11-20-sonar-pca-backend</code> for the decision.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-070">TST-070 SONAR evaluation metrics, calibration and <code>sonar evaluate</code></a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-20</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-064">3.13 TCER: SONAR end-to-end detection with real detectors <small><a href="TRP.html#TRP-064">TRP-064</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; SONAR as on branch <code>275-AAT-sonar-res-use-alignment</code> with the <code>pca</code> backend changes (before their commit)</li>
+<li>Hardware deviations: aligned with test case specification; dev container with 12 CPUs, no GPU</li>
+<li>Environment: Python 3.10.12, torch 2.3.0, <code>time-series-anomaly-detector</code> 0.4.0, NumPy 1.26.4; no live Wazuh indexer or manager (debug mode and mocks)</li>
+<li>Execution:  the whole SONAR suite ran in one invocation, <code>poetry run pytest tests/sonartests -v</code>: 326 passed, 0 failed, 0 skipped, in 122.8 s</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_e2e_detection.py</code>: 9 passed: injected CPU spike, alert burst, silence and never-seen category each flagged in at least 80 % of their buckets and at least twice as often as the rest of the data, with the MVAD library (4) and with the <code>pca</code> backend (4); realtime polling delivered each anomaly once across a restart (1) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Suite output, inspected in the session.</p>
+<h3>Comments</h3>
+<p>Re-run after adding the <code>pca</code> backend and its end-to-end variant.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-071">TST-071 SONAR end-to-end detection with real detectors</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-20</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-065">3.14 TCER: SONAR on RADAR's resource-utilization data <small><a href="TRP.html#TRP-065">TRP-065</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12, Poetry environment (pytest 7.4.4); no live Wazuh indexer or manager (debug mode, mocks and fakes)</li>
+<li>Execution: <code>poetry run pytest tests/sonartests/test_radar_alignment.py -v</code>: 20 passed, 0 failed, 0 skipped, in 1.6 s. The whole SONAR suite, <code>poetry run pytest tests/sonartests</code>, also ran the same day: 346 passed, 0 failed, including the slow tests</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_radar_alignment.py</code>: 20 passed: packaged scenario, index, fields, filter, buckets and string conversion (<code>TestScenario</code> 6, <code>TestConverter</code> 1, expected outcome 1); agent filter, model name, local data filter and <code>pca</code> debug run (<code>TestApplyAgent</code> 5, expected outcome 2); RADAR detector results over every scroll page, scroll cleared also on a failing page, capped count (<code>TestDetectorResults</code> 4, expected outcome 3); export window and context, exit 2 on an empty window, invalid input rejected before connecting (<code>TestExport</code> 4, expected outcome 4) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Console output of the run, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>Run on the v2.2.0 code base.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-072">TST-072 SONAR on RADAR's resource-utilization data</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>1</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>verification-method</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<h2 id="TRP-066">3.15 TCER: SONAR indexer client: complete, filtered alert reads and one connection <small><a href="TRP.html#TRP-066">TRP-066</a></small></h2>
+<h2>Relevant test environment and configuration details</h2>
+<ul>
+<li>Software deviations: aligned with test case specification; code at HEAD <code>6132d74b</code> (v2.2.0), working tree with uncommitted spec changes only</li>
+<li>Hardware deviations: aligned with test case specification, N/A</li>
+<li>Environment: Linux, Python 3.10.12, Poetry environment (pytest 7.4.4); no Wazuh indexer and no network access (in-memory OpenSearch fake and mocks)</li>
+<li>Execution: <code>poetry run pytest tests/sonartests/test_indexer_client.py -v</code>: 22 passed, 0 failed, 0 skipped, in 1.1 s; <code>poetry run pytest tests/sonartests/test_sinks.py -k "OwnAlertsExcluded or rule_group_is_the_one_searches_exclude" -v</code>: 3 passed, 38 deselected, in 0.5 s. The whole SONAR suite, <code>poetry run pytest tests/sonartests</code>, also ran the same day: 346 passed, 0 failed, including the slow tests</li>
+</ul>
+<h2>Test execution results</h2>
+<p>Here we report the results in terms of step-wise alignments or deviations with respect to the expected outcome of the covered test case.</p>
+<p><strong>Test case step 1</strong>: <code>tests/sonartests/test_indexer_client.py</code>: 22 passed: complete read, query contract and cap (<code>TestPaginatedSearch</code> 8, expected outcomes 2 to 4); declared fields (<code>TestRequiredSourceFields</code> 4, expected outcome 5); one connection (<code>TestOneConnection</code> 3, expected outcome 7); writes (<code>TestIndexAnomaly</code> 6, <code>TestJsonSafe</code> 1, expected outcome 8) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<p><strong>Test case step 2</strong>: <code>tests/sonartests/test_sinks.py</code>: the 3 selected tests passed: <code>TestRules::test_rule_group_is_the_one_searches_exclude</code>, <code>TestOwnAlertsExcluded::test_sonar_alerts_are_never_read</code> and <code>TestOwnAlertsExcluded::test_can_be_disabled</code> (expected outcome 6) — <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Defect summary description</h3>
+<p>Defect-free test execution, i.e., defect category: <span style="color:green"><strong>0 = flawless</strong></span></p>
+<h3>Text execution evidence</h3>
+<p>Console output of both runs, inspected in the session; not stored in the repository.</p>
+<h3>Comments</h3>
+<p>Expected outcome 1 (22 and 3 tests pass) is met.</p>
+<h2>Guide</h2>
+<ul>
+<li>Defect category: <span style="color:green"><strong>0 = flawless</strong></span>; <span style="color:SeaGreen"><strong>1 = insignificant defect</strong></span>; <span style="color:orange"><strong>2 = minor defect</strong></span>; <span style="color:DarkOrange"><strong>3 = major defect</strong></span>; <span style="color:red"><strong>4 = critical defect</strong></span></li>
+<li>Verification method (VM): Test (T), Review of design (R), Inspection (I), Analysis (A)</li>
+</ul>
+<p><em>Parent links:</em> <a href="TST.html#TST-087">TST-087 SONAR indexer client: complete, filtered alert reads and one connection</a></p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>test-date</td>
+<td>2026-11-23</td>
+</tr>
+<tr>
+<td>tester</td>
+<td>AAT</td>
+</tr>
+<tr>
+<td>defect-category</td>
+<td><span style="color:green"><strong>0 = flawless</strong></span></td>
+</tr>
+<tr>
+<td>passed-steps</td>
+<td>2</td>
+</tr>
+<tr>
+<td>failed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>not-executed-steps</td>
+<td>0</td>
+</tr>
+<tr>
+<td>release-version</td>
+<td>2.2</td>
 </tr>
 <tr>
 <td>verification-method</td>

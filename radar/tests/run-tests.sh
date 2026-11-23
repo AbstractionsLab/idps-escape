@@ -12,13 +12,15 @@ echo "Repo root: $ROOT_DIR"
 FAILED_SUITES=()
 
 if have shellcheck; then
-  run shellcheck build-radar.sh run-radar.sh bootstrap-agent.sh \
+  run shellcheck -x build-radar.sh run-radar.sh \
+    radar-agent/bootstrap-agent.sh radar-agent/uninstall-agent.sh \
+    radar-agent/helpers/*.sh radar-agent/active_responses/*.sh radar-agent/collectors/*/*.sh \
     || FAILED_SUITES+=("shellcheck")
 else
   echo "shellcheck not found, skipping shell lint"
 fi
 
-run python3 -m py_compile anomaly_detector/detector.py anomaly_detector/monitor.py anomaly_detector/webhook.py \
+run python3 -m py_compile anomaly_detector/detector.py anomaly_detector/monitor.py anomaly_detector/webhook.py anomaly_detector/off_hours.py \
   || FAILED_SUITES+=("py_compile")
 
 export PYTHONPATH="$ROOT_DIR/anomaly_detector:$ROOT_DIR"
@@ -30,7 +32,7 @@ if ! have bats; then
   FAILED_SUITES+=("bats (not found)")
 else
   echo "Running bats..."
-  for suite in build-radar run-radar bootstrap-agent; do
+  for suite in build-radar run-radar bootstrap-agent uninstall-agent ar-mapping ar-dispatch collectors; do
     run bats -p "tests/bash/${suite}.bats" || FAILED_SUITES+=("bats:${suite}")
   done
 fi

@@ -1,0 +1,108 @@
+{
+ "format": "sonar-labels/1",
+ "dataset": "authentication attacks validation split",
+ "span": {
+  "start": "2024-12-20T00:00:00Z",
+  "end": "2024-12-30T00:00:00Z"
+ },
+ "seed": 52,
+ "context_hours": 48,
+ "events": [
+  {
+   "id": "brute_force_1",
+   "type": "brute_force",
+   "start": "2024-12-22T04:27:00Z",
+   "end": "2024-12-22T04:57:00Z"
+  },
+  {
+   "id": "password_spray_1",
+   "type": "password_spray",
+   "start": "2024-12-22T12:57:00Z",
+   "end": "2024-12-22T14:57:00Z"
+  },
+  {
+   "id": "privilege_escalation_1",
+   "type": "privilege_escalation",
+   "start": "2024-12-23T02:53:00Z",
+   "end": "2024-12-23T03:04:00Z"
+  },
+  {
+   "id": "lateral_movement_1",
+   "type": "lateral_movement",
+   "start": "2024-12-23T12:48:00Z",
+   "end": "2024-12-23T13:38:00Z"
+  },
+  {
+   "id": "password_spray_2",
+   "type": "password_spray",
+   "start": "2024-12-24T06:08:00Z",
+   "end": "2024-12-24T08:08:00Z"
+  },
+  {
+   "id": "lateral_movement_2",
+   "type": "lateral_movement",
+   "start": "2024-12-24T15:54:00Z",
+   "end": "2024-12-24T16:44:00Z"
+  },
+  {
+   "id": "privilege_escalation_2",
+   "type": "privilege_escalation",
+   "start": "2024-12-25T07:31:00Z",
+   "end": "2024-12-25T07:42:00Z"
+  },
+  {
+   "id": "brute_force_2",
+   "type": "brute_force",
+   "start": "2024-12-25T15:22:00Z",
+   "end": "2024-12-25T15:52:00Z"
+  },
+  {
+   "id": "brute_force_3",
+   "type": "brute_force",
+   "start": "2024-12-26T03:54:00Z",
+   "end": "2024-12-26T04:24:00Z"
+  },
+  {
+   "id": "password_spray_3",
+   "type": "password_spray",
+   "start": "2024-12-26T14:09:00Z",
+   "end": "2024-12-26T16:09:00Z"
+  },
+  {
+   "id": "password_spray_4",
+   "type": "password_spray",
+   "start": "2024-12-27T02:21:00Z",
+   "end": "2024-12-27T04:21:00Z"
+  },
+  {
+   "id": "lateral_movement_3",
+   "type": "lateral_movement",
+   "start": "2024-12-27T17:59:00Z",
+   "end": "2024-12-27T18:49:00Z"
+  },
+  {
+   "id": "privilege_escalation_3",
+   "type": "privilege_escalation",
+   "start": "2024-12-28T08:39:00Z",
+   "end": "2024-12-28T08:50:00Z"
+  },
+  {
+   "id": "brute_force_4",
+   "type": "brute_force",
+   "start": "2024-12-28T17:25:00Z",
+   "end": "2024-12-28T17:55:00Z"
+  },
+  {
+   "id": "privilege_escalation_4",
+   "type": "privilege_escalation",
+   "start": "2024-12-29T08:43:00Z",
+   "end": "2024-12-29T08:54:00Z"
+  },
+  {
+   "id": "lateral_movement_4",
+   "type": "lateral_movement",
+   "start": "2024-12-29T18:52:00Z",
+   "end": "2024-12-29T19:42:00Z"
+  }
+ ]
+}

@@ -16,9 +16,13 @@ CORE_DAEMONS = ["wazuh-analysisd", "wazuh-remoted", "wazuh-logcollector", "wazuh
 SCENARIO_RULESET_FILES: Dict[str, Dict[str, List[str]]] = {
     "geoip_detection": {"decoders": ["0310-ssh.xml", "0375-web-accesslog.xml"],
                          "rules": ["a2-geoip-detection.xml"]},
-    "suspicious_login": {"decoders": ["0310-ssh.xml"], "rules": ["a3-suspicious-login.xml"]},
+    "suspicious_login": {"decoders": ["0001-ad-common.xml", "0310-ssh.xml"], "rules": ["a3-suspicious-login.xml"]},
     "log_volume": {"decoders": ["0001-ad-common.xml", "0001-log-volume.xml"], "rules": ["a1-log-volume.xml"]},
     "scanning_detection": {"rules": ["a4-scanning-detection.xml"]},
+    "linux_resource_utilization": {
+        "decoders": ["0001-ad-common.xml", "0001-linux-resource-utilization.xml"],
+        "rules": ["a5-linux-resource-utilization.xml"],
+    },
 }
 
 

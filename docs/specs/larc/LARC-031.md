@@ -3,24 +3,26 @@ active: true
 derived: false
 level: 2.15
 links:
-- HARC-015: PQXdsGT7q_k4sii3GFMsEo3ZImBTWmQCQFfDbMmKB9E=
-- LARC-022: tH9LfjIxzDfssQPvlDYNSMqEW06cLQf9ts3l08QvrXI=
+- SRS-090: jsrxXvh1vgoxAr5TNQfgDrkcAkPnR3Vav-7Sx_4r3Xk=
 normative: true
 ref: ''
 release: Alpha
-reviewed: 6QJfJ3XSuhmzfyw6vYk3vDoSbX763o43b1dtApkmaUU=
+reviewed: sLaBPsqvvzck4DhYcZflROOkzxX9ypofy89s8UHJu-E=
+status: planned
 version: '0.1'
 ---
 
 # RADAR adversarial defense implementation flow
 
-The diagram below depicts the implementation flow for adversarial ML defense mechanisms in RADAR, protecting anomaly detection systems against data poisoning, evasion attacks, and model tampering.
+> **Status: planned.** Not implemented as of v2.2.0. This item specifies intended behaviour; no code implements it yet.
+
+The diagram below depicts the intended implementation flow for adversarial ML defense mechanisms in RADAR (HARC-015), protecting anomaly detection against data poisoning, evasion attacks and model tampering. The configuration keys shown in this item are proposed; none of them exists in `radar/config.yaml` or `ar.yaml`.
 
 ## Defense layers
 
 ### Layer 1: Baseline initialization with clean data
 
-**Implementation**:
+**Intended behaviour**:
 
 - **Clean period identification**: Analyze historical data for known-clean periods (pre-incident, honeypot-free)
 - **Gold-standard datasets**: Use verified attack-free data for initial training
@@ -38,7 +40,7 @@ baseline_init:
 
 ### Layer 2: Concept drift detection
 
-**Implementation**:
+**Intended behaviour**:
 
 - **Baseline shift monitoring**: Track mean, variance, and distribution shape changes
 - **Velocity thresholds**: Alert when baseline shift rate exceeds historical norms
@@ -84,12 +86,14 @@ drift_detection:
 
 ### Layer 3: Multi-layer validation (defense in depth)
 
-**Implementation**: RADAR already implements this via hybrid detection:
+**Intended behaviour**: alerts from independent detection layers are cross-checked, and agreement raises confidence:
 
 - **Signature-based** (Wazuh, Suricata): Fast, deterministic, resistant to ML poisoning
 - **Multivariate AD** (SONAR MVAD): Complex patterns, correlation-aware
 - **Streaming AD** (OpenSearch RRCF): Real-time, distinct algorithm
 - **Cross-layer correlation**: Flag events detected by multiple layers as high confidence
+
+What exists today is narrower: a RADAR scenario can weight signature, anomaly and CTI evidence in one risk score, and `suspicious_login` fuses a signature alert with an off-hours anomaly alert for the same user (HARC-012). RADAR does not consume SONAR or Suricata alerts in any shipped scenario, and there is no confidence boost per agreeing layer.
 
 **Validation algorithm**:
 ```
@@ -120,7 +124,7 @@ Algorithm: Validate alert across detection layers
 
 ### Layer 4: Human-in-the-loop (HITL) oversight
 
-**Implementation**:
+**Intended behaviour**:
 
 - **Transparent reasoning**: Expose model decisions (which points anomalous, why)
 - **Analyst review workflows**: Dashboard for reviewing flagged baseline changes
@@ -142,7 +146,7 @@ Algorithm: Validate alert across detection layers
 
 ### Layer 5: System hardening
 
-**Implementation**:
+**Intended behaviour**:
 
 **Log integrity**:
 ```
@@ -172,8 +176,7 @@ Process: Secure model file storage and versioning
      Log all model updates with: timestamp, user, model version
 ```
 
-**Access control specification**:
-See RBAC configuration in YAML section below for role definitions and approval requirements.
+**Access control**: role-based access (viewer, operator, administrator), with model training, baseline reset and model deployment reserved to administrators and subject to approval. See the configuration section below.
 
 ## Integration with RADAR workflows
 
@@ -192,62 +195,9 @@ See RBAC configuration in YAML section below for role definitions and approval r
 - Action planning: Require higher confidence when drift suspected
 - Audit logging: Record all defense layer activations
 
-## Configuration (adversarial_defense.yaml)
+## Configuration
 
-```yaml
-adversarial_defense:
-  baseline_initialization:
-    use_verified_clean_data: true
-    gold_standard_dataset: "/opt/radar/baseline/gold_standard.json"
-    clean_period:
-      start: "2026-01-01T00:00:00Z"
-      end: "2026-01-15T00:00:00Z"
-
-  drift_detection:
-    enabled: true
-    check_interval_hours: 24
-    mean_shift_threshold: 0.20
-    std_shift_threshold: 0.25
-    correlation_threshold: 3
-    freeze_on_drift: true
-
-  multi_layer_validation:
-    enabled: true
-    require_layers: 2  # Minimum layers for high confidence
-    confidence_boost_per_layer: 0.15
-
-  hitl_oversight:
-    enabled: true
-    require_approval_for:
-      - model_retraining
-      - baseline_reset
-      - significant_drift
-    dashboard_url: "https://radar.example.com/oversight"
-
-  system_hardening:
-    log_integrity:
-      enable_hashing: true
-      hash_algorithm: "sha256"
-      append_only_logs: true
-    model_security:
-      enable_versioning: true
-      enable_checksums: true
-      restrict_access: true
-    access_control:
-      enable_rbac: true
-      roles:
-        radar_viewer:
-          permissions: [view_alerts, view_detectors]
-        radar_operator:
-          permissions: [view_alerts, view_detectors, create_detectors, create_monitors]
-        radar_admin:
-          permissions: ["*", model_training, model_deployment]
-      approval_required:
-        - model_training       # Requires radar_admin role
-        - baseline_reset       # Requires radar_admin role + security_approval
-        - model_deployment     # Requires radar_admin role + change_control
-      audit_all_operations: true
-```
+The layers above are to be configured in one proposed `adversarial_defense` section with a block per layer: `baseline_initialization` (gold-standard dataset, clean period), `drift_detection` (interval, mean and standard-deviation thresholds, correlation threshold, freeze on drift), `multi_layer_validation` (required layers, confidence boost per layer), `hitl_oversight` (operations that need approval) and `system_hardening` (log hashing, model checksums and versioning, role-based access with `radar_viewer`, `radar_operator` and `radar_admin` roles).
 
 ## Monitoring and alerting
 
@@ -257,13 +207,13 @@ adversarial_defense:
 - Dashboard visualization of baseline trends
 - Automated freeze of model updates
 
-- **Access control alerts**:
+**Access control alerts**:
 
-  - Failed authentication attempts to model files
-  - Unauthorized model update attempts
-  - Suspicious baseline reset requests
+- Failed authentication attempts to model files
+- Unauthorized model update attempts
+- Suspicious baseline reset requests
 
-## Adversarial Defense Implementation Flow
+## Adversarial defense implementation flow
 
 ```plantuml
 @startuml
@@ -422,9 +372,11 @@ stop
 @enduml
 ```
 
-## Implementation reference
+## Guidance
 
-See [docs/manual/radar_docs/adversarial-ml-guidance.md](../../manual/radar_docs/adversarial-ml-guidance.md) for comprehensive defense guidance.
+See [docs/manual/radar_docs/adversarial-ml-guidance.md](../../manual/radar_docs/adversarial-ml-guidance.md) for practitioner guidance on these attacks.
 
 ## See also
 - HARC-015 for overall adversarial defense architecture
+
+Related: HARC-015, LARC-022.

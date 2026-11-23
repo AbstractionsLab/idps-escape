@@ -47,7 +47,8 @@ Links are **upward-only** (child → parent). Adding downward links causes `Recu
 - **Numbering**: three digits per prefix (e.g., `SRS-001`) as set in each `.doorstop.yml`.
 - **Format**: markdown items with YAML frontmatter followed by a markdown body.
 - **Assets**: place supporting files per document under its `assets/` subfolder (e.g., `harc/assets/`, `tst/assets/`).
-- **Diagrams**: prefer PlantUML in assets; avoid Mermaid in specs.
+- **Diagrams**: write diagrams as code inside the item, never as image files. Use a ` ```mermaid ` fence for new diagrams; `c5mermaid.py` renders it locally at publish time (needs `mmdc` and a Chromium, which it finds on its own). Existing ` ```plantuml ` fences still render, but Doorstop sends their source to the public plantuml.com server, so publishing them needs network access. Only test evidence (screenshots in `trp/assets/` and `tst/assets/`) and legacy ADBox diagrams remain images.
+- **Status of an item**: an item that specifies something not implemented yet carries `status: planned` and a `> **Status: planned.**` banner under its title; partly implemented items keep the unimplemented part under `## Planned extensions`. An item whose subject was removed from the code is set to `active: false` with a `> **Status: obsolete.**` banner.
 - **Review hashes**: Doorstop fingerprints change when text or reviewed attributes update — re-review after edits with `poetry run doorstop review <uid>`.
 - **Named items**: items like `MRS-ADBox` and `SRS-SONAR` are group-summary placeholders used for organisational purposes; they are excluded from numeric coverage statistics by default.
 

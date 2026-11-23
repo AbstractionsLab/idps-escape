@@ -5,7 +5,7 @@
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
 | Page does not load from another computer | The GUI accepts local connections only | Use an SSH tunnel: `ssh -L 5000:127.0.0.1:5000 <user>@<radar-host>` |
-| "Not logged in" | Opened without the login token, or the GUI was restarted | Open the login URL printed in the GUI's terminal again |
+| "Not logged in" | Opened without the login token, or the GUI was restarted | Open the login URL again: it is printed in the GUI's terminal, and `./radar.sh gui-url` prints it too |
 | "Host … is not allowed" | Browsed by a name or address the GUI does not accept | Use `127.0.0.1:5000`, or add the name to `RADAR_GUI_ALLOWED_HOSTS` |
 
 ## Connectors
@@ -51,6 +51,46 @@ indexer's notification channel does not send the webhook's shared secret yet,
 typically on a deployment set up before this was required. Run
 `./radar.sh run log_volume` once to update the channel.
 
+**An anomaly scenario raises no alerts.** Find where the chain stops by
+counting the AD rules in the manager's alerts while a simulation runs:
+
+```bash
+docker exec wazuh.manager grep -oE '"id":"(100300|100320|210039|100309|100321|210040|210041)"' \
+  /var/ossec/logs/alerts/alerts.json | sort | uniq -c
+```
+
+- No catch-all (100300, 100320, 210039): no anomaly line reached Wazuh. Check
+  the detector's state (`state` should be `RUNNING`, not `INIT`) in
+  **Anomaly Detection → Detectors**, whether its results index holds any
+  `anomaly_grade` above 0, and `docker logs ad-webhook`.
+- A catch-all but not the scenario rule (100309, 100321, 210040, 210041): see the next
+  entry.
+
+**Anomaly alerts stop at 100300 or 100320 when several anomaly scenarios are
+deployed.** The scenario rules attach to the `radar_ad_received` group, which
+needs the rule files of every deployed anomaly scenario to come from the same
+release. A manager still holding an older `a1-log-volume.xml` or
+`a5-linux-resource-utilization.xml` shadows the other scenario's rule. Rerun the
+deployment of each anomaly scenario on that manager.
+
+**No off-hours alert (210041 or 210040) for a user who worked off hours.**
+Run `off_hours.py status` (see [Off-hours activity](./radar-scenarios/off-hours-activity.md#checking-it-works)),
+which shows each hop, and `off_hours.py summary --days 1`:
+
+- The user is missing from `summary`: they aren't listed under `users` (and no
+  `default_group` is set), their name is in another field than `user_fields`, or
+  the Filebeat step is missing. Check that the manager's archives pipeline contains
+  the `radar_off_hours` step: the host file `volumes.yml` maps to
+  `/usr/share/filebeat/module/wazuh/archives/ingest/pipeline.json`
+  (`/srv/wazuh/manager/filebeat/pipeline-archives.json` with the shipped mapping).
+  Redeploying the scenario (`sudo ./radar.sh build suspicious_login`) adds it and
+  reloads the Filebeat pipelines (`filebeat setup --pipelines`).
+- The user's events are there but `off-hours` is 0: the event times fall inside
+  the group's declared hours in the group's time zone.
+- Rule mode reports a burst once. A user active off hours within the last
+  `quiet_minutes` is not reported again.
+- Model mode needs a baseline, and reports only counts that are unusual for the user.
+
 ## Agents
 
 **`agent-auth` fails with connection refused on port 1515.** The enrollment
@@ -75,7 +115,22 @@ otherwise supply the exact name the agent registered under from Wazuh Dashboard.
 
 **An agent is in the group but produces no `log_volume` events.** Group
 assignment delivers config but not the systemd timer that writes the metric.
-Re-run `bootstrap-agent.sh --group log_volume` on that endpoint.
+Mint a token (`sudo ./radar.sh mint-token default,log_volume`) and re-run the
+bootstrap on that endpoint, from inside its `radar-agent` folder:
+
+```bash
+sudo ./bootstrap-agent.sh --manager <address> --token <token> --group default,log_volume
+```
+
+**An agent is in the `linux_resource_utilization` group but produces no
+`resource_usage_metric` events.** Same cause as above: group assignment
+delivers agent config but not the systemd timer that samples `/proc/stat` and
+`/proc/meminfo`. Re-run the bootstrap as above, with a token and
+`--group default,linux_resource_utilization`, then confirm the timer is active:
+```bash
+systemctl status radar-linux-resource-utilization.timer
+tail -f /var/log/radar/resource_usage_metric.log
+```
 
 ## Useful commands
 

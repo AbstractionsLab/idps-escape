@@ -1,0 +1,9 @@
+<!--
+  Add to the Wazuh manager's ossec.conf (inside <ossec_config>) when SONAR runs on the
+  manager host and uses the wazuh sink's file transport (output.wazuh.transport: file).
+  The location must be output.wazuh.file_path as seen from the manager.
+-->
+<localfile>
+  <log_format>json</log_format>
+  <location>/var/log/sonar/anomalies.json</location>
+</localfile>

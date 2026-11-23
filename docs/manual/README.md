@@ -4,7 +4,7 @@ This manual documents all IDPS-ESCAPE components implementing a SOAR system foll
 
 **Subsystems:** [**RADAR**](./radar_docs/README.md) (automated response), [**SONAR**](./sonar_docs/README.md) (anomaly detection, at most TRL 6), and [ADBox](./adbox_docs/adbox.md) (legacy, research only).
 
-**Detection approach:** Signature-based (Wazuh, Suricata) + multivariate AD (SONAR) + streaming AD (RRCF via OpenSearch AD plugin).
+**Detection approach:** Signature-based (Wazuh, Suricata) + multivariate AD (SONAR) + streaming AD (RCF via OpenSearch AD plugin).
 
 ## Map of content
 
@@ -19,6 +19,8 @@ This manual documents all IDPS-ESCAPE components implementing a SOAR system foll
 - [Run AD workflow](./radar_docs/radar-run-ad.md) - Detector and monitor creation
 - [Detection rules](./radar_docs/radar-rules.md) - Wazuh rule definitions
 - [Scenarios overview](/radar/scenarios/README.md) - Detailed scenario documentation
+- [Scenario guides](./radar_docs/README.md#scenarios) - Suspicious login, GeoIP detection, log volume growth, web scanning, Linux resource utilization
+- [Off-hours activity](./radar_docs/radar-scenarios/off-hours-activity.md) - Declared working hours, rule and model mode
 - [Suspicious login extensibility](./radar_docs/radar-scenarios/suspicious-login-extensibility-guide.md) - Protocol extensibility guide
 - [Adversarial ML guidance](./radar_docs/adversarial-ml-guidance.md) - Robustness considerations
 - [Webhook service](/radar/webhook/README.md) - Webhook deployment
@@ -30,13 +32,15 @@ This manual documents all IDPS-ESCAPE components implementing a SOAR system foll
 - [Scenario guide](./sonar_docs/scenario-guide.md) - YAML scenario configuration
 - [Data injection guide](./sonar_docs/data-injection-guide.md) - Testing with synthetic data
 - [Data shipping guide](./sonar_docs/data-shipping-guide.md) - Production integration
+- [Evaluation guide](./sonar_docs/evaluation-guide.md) - Detection quality on labelled data, threshold calibration
+- [RADAR comparison guide](./sonar_docs/radar-comparison-guide.md) - SONAR and RADAR on the same resource-utilization data
 - [Troubleshooting](./sonar_docs/troubleshooting.md) - Common issues and solutions
 - [Architecture](./sonar_docs/architecture.md) - System design and patterns
-- [Model naming guide](./sonar_docs/model-naming-guide.md) - Model naming and versioning
+- [Models guide](./sonar_docs/model-naming-guide.md) - Model names, file locations (`SONAR_HOME`), the model file format
 - [UML diagrams](./sonar_docs/uml-diagrams.md) - System UML diagrams
 
 ### Deployment and integration
-- [Getting started with full stack](./getting-started-stack.md) - Quick deployment
+- [RADAR getting started](./radar_docs/radar-getting-started.md) - Full-stack deployment (Wazuh manager, indexer, dashboard and RADAR)
 - [Custom deployment guides](./custom_deployments/README.md) - Optional Suricata + Wazuh deployment patterns
 
 ### ADBox (legacy - research only)

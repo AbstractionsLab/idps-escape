@@ -4,6 +4,7 @@ import re
 import secrets
 import sys
 import subprocess
+import threading
 from urllib.parse import urlsplit
 from flask import Flask, render_template, jsonify, request, Response, stream_with_context, g, make_response, redirect
 from pathlib import Path
@@ -27,6 +28,8 @@ GUI_DEBUG = os.environ.get("RADAR_GUI_DEBUG", "").strip() == "1"
 GUI_TOKEN = os.environ.get("RADAR_GUI_TOKEN", "").strip() or secrets.token_urlsafe(32)
 GUI_AUTH_ENABLED = os.environ.get("RADAR_GUI_AUTH", "").strip().lower() not in ("off", "0", "false", "no")
 AUTH_COOKIE = "radar_gui_auth"
+GUI_STATE_DIR = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "radar-gui"
+GUI_STATE_FILE = GUI_STATE_DIR / f"gui-{GUI_PORT}.env"
 STATE_CHANGING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
 
@@ -70,8 +73,8 @@ def _check_login_token():
     cookie = request.cookies.get(AUTH_COOKIE, "")
     if cookie and hmac.compare_digest(cookie, GUI_TOKEN):
         return None
-    return _refuse(401, "Not logged in. Open the login URL printed in the RADAR GUI console "
-                        "(http://127.0.0.1:<port>/?token=...).")
+    return _refuse(401, "Not logged in. Open the RADAR GUI login URL: run './radar.sh gui-url' "
+                        "on the RADAR host to print it (no restart needed).")
 
 
 @app.before_request
@@ -149,7 +152,7 @@ def _default_scenario_entry() -> dict:
         "id": DEFAULT_SCENARIO_ID,
         "name": "Default (baseline)",
         "description": "Baseline PowerShell / Command Shell detection, applied fleet-wide. "
-                        "Inherited as defaults by every other scenario.",
+                        "Scores alerts that no dedicated scenario claims; other scenarios do not inherit its settings.",
         "status": "active",
         "type": scenario_type,
         "type_label": type_label,
@@ -218,6 +221,7 @@ def active_responses(scenario_id=None):
     bound_list = [_default_scenario_entry()]
     bound_list += [s for s in _enriched_scenarios() if s["bound"] and s["status"] == "active"]
     known_mitigations = ar_module.list_known_mitigations(RADAR_ROOT)
+    catalog_problem = ar_module.catalog_problem(RADAR_ROOT)
     if scenario_id and any(s["id"] == scenario_id for s in bound_list):
         active_id = scenario_id
     else:
@@ -232,7 +236,9 @@ def active_responses(scenario_id=None):
                            active_id=active_id,
                            active_scenario=active_scenario,
                            cfg=cfg,
-                           known_mitigations=known_mitigations)
+                           known_mitigations=known_mitigations,
+                           legacy_mitigations=ar_module.LEGACY_MITIGATION_ALIASES,
+                           catalog_problem=catalog_problem)
 
 
 @app.route("/connectors")
@@ -454,6 +460,8 @@ def api_bind_scenario(scenario_id):
     try:
         ar_module.bind_scenario(RADAR_ROOT, scenario_id, mitigations=mitigations)
         return jsonify({"ok": True, "bound": True, "id": scenario_id})
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -480,6 +488,8 @@ def api_update_ar_config(scenario_id):
     try:
         ar_module.update_scenario(RADAR_ROOT, scenario_id, patch)
         return jsonify({"ok": True})
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
@@ -574,6 +584,66 @@ def api_sudo_lock():
     if sid:
         vault_module.clear_sudo_password(sid)
     return jsonify({"ok": True})
+
+
+def _login_url() -> str:
+    return f"http://127.0.0.1:{GUI_PORT}/?token={GUI_TOKEN}"
+
+
+def _write_state_file() -> None:
+    try:
+        GUI_STATE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+        os.chmod(GUI_STATE_DIR, 0o700)
+        tmp = GUI_STATE_FILE.with_suffix(".tmp")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(f"PID={os.getpid()}\n")
+            f.write(f"URL={_login_url() if GUI_AUTH_ENABLED else f'http://127.0.0.1:{GUI_PORT}/'}\n")
+        os.replace(tmp, GUI_STATE_FILE)
+    except OSError as e:
+        print(f"[!] Could not write {GUI_STATE_FILE} ({e}); './radar.sh gui-url' will not work.",
+              file=sys.stderr)
+
+
+def _remove_state_file() -> None:
+    try:
+        text = GUI_STATE_FILE.read_text()
+    except OSError:
+        return
+    if f"PID={os.getpid()}\n" in text:
+        try:
+            GUI_STATE_FILE.unlink()
+        except OSError:
+            pass
+
+
+_server = None
+_shutdown_started = threading.Event()
+
+
+def _cleanup_session_state() -> int:
+    stopped = deploy_module.stop_all_processes()
+    vault_module.clear_all()
+    return stopped
+
+
+def _request_shutdown() -> None:
+    if _server is None or _shutdown_started.is_set():
+        return
+    _shutdown_started.set()
+    threading.Thread(target=_server.shutdown, name="radar-gui-shutdown", daemon=True).start()
+
+
+@app.route("/api/logout", methods=["POST"])
+def api_logout():
+    stopped = _cleanup_session_state()
+    resp = make_response(jsonify({"ok": True, "stopped_jobs": stopped,
+                                  "server_stopping": _server is not None}))
+    resp.delete_cookie(AUTH_COOKIE, httponly=True, samesite="Strict", secure=request.is_secure)
+    resp.delete_cookie(VAULT_COOKIE, httponly=True, samesite="Strict", secure=request.is_secure)
+    g._new_vault_sid = None
+    resp.call_on_close(_request_shutdown)
+    return resp
 
 
 # ── API: Deploy ──
@@ -672,6 +742,17 @@ def api_deploy_mint_token():
     return Response(stream_with_context(generate()), mimetype="text/plain")
 
 
+@app.route("/api/scenarios/deploy-status", methods=["GET"])
+def api_scenarios_deploy_status():
+    try:
+        data = ar_module.load(RADAR_ROOT)
+        active = {name: bool(cfg.get("active")) for name, cfg in (data.get("scenarios") or {}).items()
+                  if isinstance(cfg, dict) and name != "default"}
+        return jsonify({"ok": True, "active": active})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 @app.route("/api/deploy/assign-agent-group", methods=["POST"])
 def api_deploy_assign_agent_group():
     spec = request.get_json(silent=True) or {}
@@ -747,8 +828,30 @@ if __name__ == "__main__":
         print("[!] RADAR_GUI_DEBUG=1: the Werkzeug debugger is enabled. "
               "Never use this on a reachable interface.", file=sys.stderr)
     if GUI_AUTH_ENABLED:
-        print(f"\n>>> RADAR GUI login URL (keep it private):\n    http://127.0.0.1:{GUI_PORT}/?token={GUI_TOKEN}\n",
+        print(f"\n>>> RADAR GUI login URL (keep it private):\n    {_login_url()}\n"
+              f"    Print it again any time with: ./radar.sh gui-url\n",
               file=sys.stderr, flush=True)
     else:
         print("[!] RADAR_GUI_AUTH=off: the GUI accepts every request that reaches it.", file=sys.stderr)
-    app.run(host=GUI_HOST, debug=GUI_DEBUG, port=GUI_PORT, threaded=True)
+    from werkzeug.serving import make_server
+    wsgi_app = app
+    if GUI_DEBUG:
+        from werkzeug.debug import DebuggedApplication
+        app.debug = True
+        wsgi_app = DebuggedApplication(app, evalex=True)
+        print(f" * Debugger PIN: {wsgi_app.pin}", file=sys.stderr, flush=True)
+    _server = make_server(GUI_HOST, GUI_PORT, wsgi_app, threaded=True)
+    _write_state_file()
+    print(f" * RADAR GUI running on http://{GUI_HOST}:{GUI_PORT} (Ctrl+C or Log out to stop)",
+          file=sys.stderr, flush=True)
+    reason = "logged out from the GUI"
+    try:
+        _server.serve_forever()
+    except KeyboardInterrupt:
+        reason = "interrupted"
+    finally:
+        _server.server_close()
+        _remove_state_file()
+        stopped = _cleanup_session_state()
+        extra = f", {stopped} running job(s) stopped" if stopped else ""
+        print(f"\n>>> RADAR GUI stopped ({reason}{extra}). Port {GUI_PORT} released.", file=sys.stderr, flush=True)

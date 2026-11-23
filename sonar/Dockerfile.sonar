@@ -14,14 +14,8 @@ ENV MY_ENV=${MY_ENV} \
 ENV user=alab
 ENV SOAR_FOLDER=soar
 
-# Update and install dependencies
-RUN apt update --fix-missing && \
-    apt-get install -y git graphviz && \
-    apt-get autoremove -y && apt-get autoclean -y && \
-    rm -rf /var/lib/apt/lists/*
-
 # Create a non-root user
-RUN useradd -ms /bin/bash ${user} && echo '${user} ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
+RUN useradd -ms /bin/bash ${user}
 
 # Add location where pip is installed to the PATH variable
 ENV PATH="/home/${user}/.local/bin:${PATH}"
@@ -31,27 +25,24 @@ USER ${user}
 RUN pip3 install poetry=="${POETRY_VERSION}"
 
 WORKDIR /home/${user}/${SOAR_FOLDER}
-COPY --chown=${user}:${user} pyproject.toml poetry.lock /home/${user}/${SOAR_FOLDER}/
 
-# Install dependencies (--no-root avoids errors when source not yet copied)
-# RUN poetry install --no-root
+# Dependencies first, so source changes don't invalidate this layer.
+# The sonar group declares everything SONAR imports; ADBox's dependencies (and the
+# git-hosted opensearch-sdk-py) stay out of the image.
+COPY --chown=${user}:${user} pyproject.toml poetry.lock README.md /home/${user}/${SOAR_FOLDER}/
+RUN poetry install --only main,sonar --no-root
 
-# Copy project files
-COPY --chown=${user}:${user} . /home/${user}/${SOAR_FOLDER}
-
-# Install only SONAR dependencies
-RUN poetry install --with sonar
-
+# Copy only what SONAR needs: never `COPY .`, which would include adbox/assets/secrets
+# and any .env file (see sonar/Dockerfile.sonar.dockerignore).
+COPY --chown=${user}:${user} sonar /home/${user}/${SOAR_FOLDER}/sonar
+COPY --chown=${user}:${user} adbox/__init__.py /home/${user}/${SOAR_FOLDER}/adbox/__init__.py
 RUN poetry install --only-root
 
-# Install SONAR as editable package (creates sonar CLI entrypoint)
-# RUN poetry install
+ENV PYTHONPATH=/home/${user}/${SOAR_FOLDER}
 
-# Set PYTHONPATH
-ENV PYTHONPATH=/home/${user}/${SOAR_FOLDER}:${PYTHONPATH}
-
-# Set the entrypoint to SONAR CLI
-ENTRYPOINT ["poetry", "run", "python", "sonar/cli.py"]
+# The sonar console script (sonar.cli:main). The image is a source checkout (pyproject.toml
+# next to sonar/), so the SONAR home is sonar/: models in sonar/models (mounted by sonar.sh).
+ENTRYPOINT ["poetry", "run", "sonar"]
 
 # Default command (can be overridden)
 CMD ["--help"]

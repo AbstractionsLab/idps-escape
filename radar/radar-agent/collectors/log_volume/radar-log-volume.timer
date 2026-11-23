@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the RADAR log_volume metric collector every 30 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+Unit=radar-log-volume.service
+
+[Install]
+WantedBy=timers.target

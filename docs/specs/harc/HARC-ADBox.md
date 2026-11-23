@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: RaC7RDD_h8PfvrvyCtVAJBA3kMro9OOFnef2IUTDWO8=
 ---
 
 # ADBox v1 High-Level Architecture (Maintenance)

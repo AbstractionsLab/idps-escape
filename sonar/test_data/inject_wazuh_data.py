@@ -24,6 +24,9 @@ Usage:
     # Custom time range
     python inject_wazuh_data.py --config ../default_config.yaml --start "2025-12-29 00:00:00" --end "2025-12-30 00:00:00"
 
+    # Replay a labelled evaluation split at its own timestamps (its label file stays valid)
+    python inject_wazuh_data.py --config ../default_config.yaml --source <dir>/test.json --keep-timestamps
+
 Features:
 - Reads existing synthetic alerts from JSON files
 - Adjusts timestamps to specified time range
@@ -395,6 +398,11 @@ Examples:
         help="Inject data for last N days (e.g., --days 7)"
     )
     time_group.add_argument(
+        "--keep-timestamps",
+        action="store_true",
+        help="Index the alerts at their own timestamps (for labelled evaluation splits, whose label files give those times)"
+    )
+    time_group.add_argument(
         "--range",
         nargs=2,
         metavar=("START", "END"),
@@ -515,7 +523,10 @@ Examples:
         return 1
     
     # Adjust timestamps
-    alerts = injector.adjust_timestamps(alerts, target_start, target_end)
+    if args.keep_timestamps:
+        logger.info("Keeping the alerts' own timestamps")
+    else:
+        alerts = injector.adjust_timestamps(alerts, target_start, target_end)
     
     # Index alerts
     indexed_count = injector.bulk_index(alerts, dry_run=args.dry_run)

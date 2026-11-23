@@ -1,0 +1,6 @@
+[Unit]
+Description=RADAR Linux resource utilization metric collector
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/radar-linux-resource-utilization-metric.sh

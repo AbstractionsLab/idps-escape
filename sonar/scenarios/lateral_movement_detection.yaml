@@ -29,16 +29,35 @@ training:
   categorical_top_k: 20
   bucket_minutes: 10  # Larger buckets for movement patterns
   sliding_window: 144  # ~24 hours at 10-min buckets
-  min_samples: 300
+  # interval: 1 trains on every window position: 14 days = 2016 buckets -> 1200 gradient
+  # steps. Training needs at least 730 buckets from the first alert (empty buckets count) with these settings.
+  extra_params:
+    interval: 1
+  # Per-bucket counts of authentication and privilege events across hosts
+  derived_features:
+    - is_auth_failure
+    - is_auth_success
+    - is_privilege_event
+    - is_ssh_event
+    - is_windows_logon
+    - is_high_severity
 
 # Shipping configuration (optional - enables data streaming to Wazuh)
 shipping:
-  enabled: false  # Set to true to enable data shipping for RADAR integration
+  enabled: false  # Set to true to ship anomalies to a sonar_anomalies_mvad_<id> data stream
   install_templates: true  # Install base templates on first run
   scenario_id: "lateral_movement"  # Custom ID for this scenario
 
 detection:
   mode: "historical"
-  lookback_minutes: 120
-  threshold: 0.65
-  min_consecutive: 3
+  # Minutes of complete buckets to score, ending at the last complete bucket. SONAR
+  # fetches the earlier context MVAD needs on its own (input_size + threshold_window - 1
+  # buckets), so any lookback of at least one bucket works.
+  lookback_minutes: 1800
+  # Decision rule and confidence calibrated with `sonar evaluate` on the labelled synthetic
+  # splits of sonar/test_data (validation split for threshold and min_consecutive, test
+  # split precision for anomaly_confidence); see docs/specs/trp/assets/sonar-evaluation/lateral_movement-mvad.md.
+  # Recalibrate on labelled data from your own environment.
+  threshold: 0.2  # minimum MVAD severity (0-1) on top of MVAD's own anomaly decision
+  min_consecutive: 5  # minimum run of consecutive anomalous buckets
+  anomaly_confidence: 0.25  # measured precision, sent to Wazuh and used by RADAR

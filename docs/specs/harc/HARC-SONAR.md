@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: QZMmfh8M3BIBorW6oeEIEDcU-d9NNKn6vbBOfFQzkms=
 ---
 
 # SONAR High-Level Architecture

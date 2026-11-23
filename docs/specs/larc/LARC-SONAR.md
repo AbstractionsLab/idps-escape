@@ -6,7 +6,7 @@ links: []
 normative: false
 ref: ''
 release: Alpha
-reviewed: PLACEHOLDER_NEEDS_DOORSTOP_REVIEW
+reviewed: AdYMGC8ivw2dwYj5hYYDZdBBttxE5XSTSMc5boYPIGQ=
 ---
 
 # SONAR Low-Level Architecture

@@ -50,3 +50,34 @@
   </rule>
 
 </group>
+<group name="opensearch_ad_alerts,suspicious_login,">
+
+  <!-- Catch-all for any OpenSearch AD alert, so the off-hour rule below also
+       fires when suspicious_login is deployed without an AD scenario. Children
+       attach through the radar_ad_received group: see a1-log-volume.xml. -->
+  <rule id="210039" level="5">
+    <decoded_as>opensearch_ad</decoded_as>
+    <location>/var/log/ad_alerts.log$</location>
+    <description>OpenSearch AD alert received</description>
+    <group>radar_ad_received,</group>
+  </rule>
+
+  <!-- Off-hours model mode: per-user AD detector on the count of off-hours events
+       (entity = user). off_hours.py keeps this trigger name; renaming it breaks this match. -->
+  <rule id="210040" level="10">
+    <if_group>radar_ad_received</if_group>
+    <match>SuspiciousLogin-OffHour-Detected</match>
+    <description>RADAR SuspiciousLogin: off-hour login activity for user $(entity_keyword)</description>
+    <group>off_hour_login,</group>
+  </rule>
+
+  <!-- Off-hours rule mode: an OpenSearch Alerting query monitor on radar.off_hours
+       (declared schedules, scenarios.suspicious_login.off_hours in config.yaml).
+       The trigger name is fixed in off_hours.py; renaming it breaks this match. -->
+  <rule id="210041" level="10">
+    <if_group>radar_ad_received</if_group>
+    <match>SuspiciousLogin-OffHours-Rule-Detected</match>
+    <description>RADAR SuspiciousLogin: off-hours activity for user $(entity_keyword) outside the declared schedule</description>
+    <group>off_hour_login,off_hours_rule_mode,</group>
+  </rule>
+</group>

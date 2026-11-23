@@ -6,13 +6,13 @@ IDPS-ESCAPE (Intrusion Detection and Prevention System - Enhanced Security throu
 
 **Core components:**
 - [**RADAR**](/radar/README.md) - Risk-aware hybrid detection and automated response, deployed and managed end-to-end from a point-and-click web GUI (backed by an API — no manual config editing needed)
-- [**SONAR**](/sonar/README.md) - SIEM-oriented multivariate anomaly detection powered by deep learning
+- [**SONAR**](/sonar/README.md) - SIEM-oriented multivariate anomaly detection with pluggable detectors (deep learning by default), measured on labelled data
 - [**ADBox**](/docs/manual/adbox_docs/adbox.md) - Legacy research framework
 - **Wazuh integration and management**: all components integrate fully with Wazuh, with RADAR additionally providing Wazuh management and orchestration
 
 **Built on:** [Wazuh](https://wazuh.com/), [OpenSearch](https://opensearch.org/), [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl), [PyFlowintel](https://github.com/AbstractionsLab/PyFlowintel), [Flowintel](https://github.com/flowintel/flowintel), [MISP](https://www.misp-project.org/), [Suricata](https://suricata.io/)
 
-We adopt a **hybrid detection approach** for defense-in-depth against known and emerging threats, combining signature-based engines (Wazuh, Suricata) and machine learning (ML) algorithms for ML-based anomaly detection (AD) through RADAR and SONAR, relying on [RRCF](https://proceedings.mlr.press/v48/guha16.pdf) (random forest) for streaming data and [MTAD-GAT](https://arxiv.org/pdf/2009.02040) (attention mechanism and deep learning), respectively.
+We adopt a **hybrid detection approach** for defense-in-depth against known and emerging threats, combining signature-based engines (Wazuh, Suricata) and machine learning (ML) algorithms for ML-based anomaly detection (AD) through RADAR and SONAR, relying respectively on [random cut forests](https://proceedings.mlr.press/v48/guha16.pdf) (RCF) for streaming data, and on pluggable multivariate detectors, by default a graph-attention deep model in the line of [MTAD-GAT](https://arxiv.org/pdf/2009.02040). Both can run on the same Wazuh data and be scored against the same labelled anomalies.
 
 This repository contains complete [documentation](./docs/manual/README.md), user manual, **[interlinked technical specifications](https://abstractionslab.github.io/idps-escape/traceability/index.html)** for traceability, and validation test results, all based on the [C5-DEC](https://abstractionslab.github.io/c5dec/website/product-presentation.html) method.
 
@@ -37,11 +37,11 @@ For a visual user-oriented tour of IDPS-ESCAPE, visit the **[product presentatio
 
 [**RADAR**](/docs/manual/radar_docs/README.md) enhances Wazuh with hybrid detection and intelligent automated response through a fully API-based steering and management layer, following a scenario-based paradigm. Its browser-based GUI provides the complete deployment and operations experience on top of that API:
 
-- **Hybrid detection**: Signature-based (Wazuh, Suricata) + ML-based anomaly detection ([RRCF](https://proceedings.mlr.press/v48/guha16.pdf))
-- **Risk-aware actions**: Tiered response (low/medium/high risk) with host isolation, process control, network rules, alert escalation, email notification and incident case creation
+- **Hybrid detection**: Signature-based (Wazuh, Suricata) + ML-based anomaly detection ([random cut forest](https://proceedings.mlr.press/v48/guha16.pdf), RCF), with signature and anomaly alerts for the same user combined in the risk score when they occur close in time ([fusion](/docs/manual/radar_docs/radar-tuning.md#combining-signature-and-anomaly-alerts-fusion), enabled for suspicious login)
+- **Risk-aware actions**: Tiered response (low/medium/high risk) with email notification, incident case creation and automated mitigations: blocking the source IP (`firewall-drop`), locking the implicated Linux account (`lock_user_linux.sh`) and terminating an allow-listed service (`terminate_service.sh`)
 - **Automatic case creation**: Incident case creation via integration with the [DECIPHER](https://github.com/AbstractionsLab/satrap-dl/blob/main/decipher/README.md) subsystem of [SATRAP-DL](https://github.com/AbstractionsLab/satrap-dl), [PyFlowintel](https://github.com/AbstractionsLab/PyFlowintel) and [Flowintel](https://github.com/flowintel/flowintel)
 - **Flexible deployment**: Local/remote manager and agent configurations
-- **Production scenarios**: Default baseline detection, GeoIP detection, log volume monitoring, suspicious login, web scanning detection
+- **Production scenarios**: Default baseline detection, GeoIP detection, log volume monitoring, Linux resource utilization, suspicious login, web scanning detection
 - **Web-based GUI**: provides a browser-based control panel covering the full deployment, orchestration and configuration lifecycle
 
 ![RADAR Demonstration](/docs/manual/_figures/RADAR_GUI.gif)
@@ -50,14 +50,15 @@ See [RADAR README](/docs/manual/radar_docs/README.md), [GUI user manual](/docs/m
 
 ### SONAR - SIEM-Oriented Neural Anomaly Recognition via multivariate AD
 
-[**SONAR**](/sonar/README.md) provides a standalone SIEM-oriented anomaly detection solution based on deep learning:
+[**SONAR**](/sonar/README.md) provides a standalone SIEM-oriented anomaly detection solution for Wazuh data:
 
-- **Multivariate time series AD engine**: modular and optimized multivariate time-series detection based on [MTAD-GAT](https://arxiv.org/pdf/2009.02040)
-- **Debug mode**: Offline testing with synthetic data (no infrastructure required)
-- **Wazuh integration**: Integrated with Wazuh, the open-source SIEM, for monitoring data ingestion and detection data provision and visualization
-- **Scenario-based**: YAML configuration for repeatable workflows
-- **RADAR integration**: [SONAR data streams shipping](/docs/manual/sonar_docs/data-shipping-guide.md#integration-with-radar) to Wazuh for automated response and easy ingestion by RADAR
-- **Flexible modes**: Real-time, batch, and historical analysis
+- **Multivariate time-series AD with pluggable detectors**: [`mvad`](/docs/manual/sonar_docs/scenario-guide.md#backend) (default), a graph-attention deep model in the line of [MTAD-GAT](https://arxiv.org/pdf/2009.02040) (Microsoft's multivariate anomaly detector); `pca`, a linear multivariate model that trains in under a second without torch; and `ewma`, a per-feature baseline
+- **Measured detection quality**: [`sonar evaluate`](/docs/manual/sonar_docs/evaluation-guide.md) reports event-level precision, recall, F1, detection delay and false alarms per day on labelled data, and calibrates each scenario's threshold and `anomaly_confidence`
+- **Side by side with RADAR**: the `radar_linux_resource_utilization` scenario reads the events and features of RADAR's Linux resource-utilization detector, with one model per host (`--agent`); [`sonar export`](/docs/manual/sonar_docs/radar-comparison-guide.md) captures a labelled live window so both detectors are scored on the same data
+- **Wazuh and RADAR integration**: [anomalies become Wazuh alerts](/docs/manual/sonar_docs/data-shipping-guide.md#the-wazuh-sink) (rules 100500–100519) that carry `anomaly_grade` and `anomaly_confidence`, so Wazuh active responses and RADAR can act on them; each anomaly is delivered once per sink
+- **Scenario-based**: YAML configuration for repeatable workflows, with realtime, batch and historical modes
+- **Debug mode**: offline runs on packaged synthetic data (no infrastructure required)
+- **Standalone package**: a wheel with the example scenarios and their debug data; models are plain directories (no pickles)
 
 See [SONAR README](/docs/manual/sonar_docs/README.md), [scenario guide](/docs/manual/sonar_docs/scenario-guide.md), [architecture](/docs/manual/sonar_docs/architecture.md) and [developer README](/sonar/README.md).
 
@@ -88,7 +89,7 @@ Ensure your environment meets the [resource and network requirements](#requireme
    - Wazuh API credentials and manager address
    - SMTP settings for email alerts
    - FlowIntel API key (optional, for incident case creation)
-   - Webhook URL (default: `http://<manager-ip>:8080/notify`)
+   - Webhook URL (default: `http://localhost:8080/notify`; use this host's address instead when the indexer runs on another host)
 2. Start the RADAR GUI using the `radar.sh` script from within the `radar/` directory (after making it executable `chmod +x ./radar.sh`):
 
 ```bash
@@ -124,39 +125,41 @@ Screenshots depicting the various stages in a Suspicious Login detection and res
 SONAR provides scenario-based anomaly detection with flexible execution modes:
 
 ```bash
-# Install and connect to Wazuh
-poetry install --only sonar
+# Install
+poetry install --with sonar
 
-# Check Wazuh connection
-poetry run sonar check
+# Check the connection to the Wazuh indexer
+poetry run sonar check --config sonar.yaml
 
-# Run complete scenario (train + detect)
-poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml
+# Load SONAR's rules into the Wazuh manager (once), so anomalies become Wazuh alerts
+poetry run sonar wazuh install-rules --config sonar.yaml --restart
 
-# Debug mode (offline testing with synthetic data)
-poetry run sonar scenario --use-case sonar/scenarios/example_scenario.yaml --debug
+# Run a complete scenario (train + detect); anomalies go to the Wazuh manager
+poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml --config sonar.yaml
 
-# Production mode with data shipping to Wazuh (viewed in custom dashboard) and usable by RADAR
-poetry run sonar scenario --use-case sonar/scenarios/my_scenario.yaml --ship
+# Debug mode (offline, on the scenario's packaged synthetic data)
+poetry run sonar scenario --use-case sonar/scenarios/linux_resource_monitoring.yaml --debug
+
+# Also keep the anomalies in a data stream for dashboards
+poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml --config sonar.yaml --ship
+
+# Measure detection quality on labelled data and calibrate the scenario
+poetry run sonar evaluate --scenario linux_resource_monitoring --train-file F --validation-file F --validation-labels F --test-file F --test-labels F
 ```
 
-See the [SONAR documentation](/docs/manual/sonar_docs/README.md) for details. 
+See the [SONAR documentation](/docs/manual/sonar_docs/README.md) for details.
 
-**Data shipping for Wazuh and RADAR integration:**
+**Where anomalies go:**
 
-What `--ship` does:
+- By default, the `wazuh` sink sends one event per anomaly to the Wazuh manager, which raises it as an alert of SONAR's rules (100500–100519). RADAR and Wazuh active responses act on those alerts.
+- `--ship` (or `shipping.enabled`) adds the scenario's data stream in the Wazuh indexer, with index templates and a retention policy, for dashboards and history.
+- Local files (`jsonl`) and standard output are also available; debug runs print the events instead of delivering them.
 
-- Creates dedicated data streams in Wazuh Indexer for scenario-specific anomalies
-- Enables custom dashboard creation in Wazuh
-- Enables real-time monitoring and RADAR automated response integration
-- Installs index templates for proper field typing and validation
-- Required for production SONAR→RADAR workflows
-
-See the [data shipping guide](/docs/manual/sonar_docs/data-shipping-guide.md) for configuration details and the [dashboard tutorial](/docs/manual/adbox_docs/dashboard_tutorial.md) for visualization and instructions explaining how to build such a dashboard (same process for SONAR and ADBox).
+See the [anomaly output guide](/docs/manual/sonar_docs/data-shipping-guide.md) for configuration details and the [dashboard tutorial](/docs/manual/adbox_docs/dashboard_tutorial.md) for building a dashboard on the data stream (same process for SONAR and ADBox).
 
 ![](/docs/manual/_figures/1BA5_Tutorial_Dashboard/1BA5_25-Dashboard-10.png)
 
-### Evaluating SONAR (5 minutes)
+### Trying SONAR (5 minutes)
 
 No infrastructure required — debug mode runs the full train → detect → report workflow offline with synthetic data:
 
@@ -164,6 +167,22 @@ No infrastructure required — debug mode runs the full train → detect → rep
 poetry install --with sonar
 poetry run sonar scenario --use-case sonar/scenarios/example_scenario.yaml --debug
 ```
+
+To measure how well a scenario detects, rather than watch it run, see the [evaluation guide](/docs/manual/sonar_docs/evaluation-guide.md).
+
+### Comparing SONAR with RADAR
+
+On a deployment where RADAR's `linux_resource_utilization` scenario runs, SONAR can model the same CPU and memory events per host and both detectors can be scored on one labelled window:
+
+```bash
+poetry run sonar train --scenario radar_linux_resource_utilization --config sonar.yaml --agent web-01
+poetry run sonar export --scenario radar_linux_resource_utilization --config sonar.yaml --agent web-01 \
+  --start 2026-11-19T00:00:00Z --end 2026-11-20T00:00:00Z --output-dir cmp/test \
+  --radar-results 'opensearch-ad-plugin-result-linux-resource-utilization*' \
+  --event cpu_load,2026-11-19T09:00:00Z,2026-11-19T09:05:00Z
+```
+
+The [RADAR comparison guide](/docs/manual/sonar_docs/radar-comparison-guide.md) covers the prerequisites, the simulation runs, the training export and both evaluations.
 
 ### Requirements
 
@@ -205,13 +224,13 @@ See the [custom deployment guides](./docs/manual/custom_deployments/README.md) f
 poetry install --with sonar,radar,adbox,test
 
 # Run tests
-poetry run pytest tests/sonartests/  # SONAR
+poetry run pytest tests/sonartests/  # SONAR (-m "not slow" skips the real MVAD library)
 poetry run pytest tests/             # All
 ./radar/test.sh                      # RADAR
 
 # SONAR CLI
 poetry run sonar check
-poetry run sonar scenario --use-case sonar/scenarios/example.yaml --debug
+poetry run sonar scenario --use-case sonar/scenarios/example_scenario.yaml --debug
 
 # Docker builds
 ./build.sh all

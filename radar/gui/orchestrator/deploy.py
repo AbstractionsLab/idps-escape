@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import os
+import re
 import shlex
+import signal
 import subprocess
 import sys
+import threading
 from pathlib import Path
 from typing import Iterator
 
@@ -28,6 +32,54 @@ def _prep_env(radar_root: str) -> dict:
     return env
 
 
+_procs_lock = threading.Lock()
+_running_procs: set[subprocess.Popen] = set()
+
+
+def _signal_group(proc: subprocess.Popen, sig: int) -> None:
+    try:
+        os.killpg(proc.pid, sig)
+    except (ProcessLookupError, PermissionError):
+        try:
+            proc.send_signal(sig)
+        except ProcessLookupError:
+            pass
+
+
+def _end_process(proc: subprocess.Popen) -> None:
+    if proc.poll() is None:
+        _signal_group(proc, signal.SIGTERM)
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            _signal_group(proc, signal.SIGKILL)
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                pass
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+
+
+def running_process_count() -> int:
+    with _procs_lock:
+        return sum(1 for p in _running_procs if p.poll() is None)
+
+
+def stop_all_processes() -> int:
+    with _procs_lock:
+        procs = list(_running_procs)
+        _running_procs.clear()
+    stopped = 0
+    for proc in procs:
+        if proc.poll() is None:
+            stopped += 1
+            _end_process(proc)
+    return stopped
+
+
 def _stream_process(cmd: list[str], cwd: str, env: dict, result: dict | None = None,
                      stdin_data: str | None = None) -> Iterator[str]:
     yield f"$ {' '.join(shlex.quote(x) for x in cmd)}\n"
@@ -35,18 +87,20 @@ def _stream_process(cmd: list[str], cwd: str, env: dict, result: dict | None = N
         proc = subprocess.Popen(cmd, cwd=cwd, env=env,
                                  stdin=subprocess.PIPE if stdin_data is not None else None,
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                 bufsize=1, text=True)
+                                 bufsize=1, text=True, start_new_session=True)
     except FileNotFoundError as e:
         yield f"[ERROR] executable not found: {e}\n"
         if result is not None:
             result["rc"] = 127
         return
-    if stdin_data is not None:
-        assert proc.stdin is not None
-        proc.stdin.write(stdin_data)
-        proc.stdin.close()
-    assert proc.stdout is not None
+    with _procs_lock:
+        _running_procs.add(proc)
     try:
+        if stdin_data is not None:
+            assert proc.stdin is not None
+            proc.stdin.write(stdin_data)
+            proc.stdin.close()
+        assert proc.stdout is not None
         for line in iter(proc.stdout.readline, ""):
             yield line
         proc.stdout.close()
@@ -55,12 +109,9 @@ def _stream_process(cmd: list[str], cwd: str, env: dict, result: dict | None = N
         if result is not None:
             result["rc"] = rc
     finally:
-        if proc.poll() is None:
-            proc.terminate()
-            try:
-                proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.kill()
+        with _procs_lock:
+            _running_procs.discard(proc)
+        _end_process(proc)
 
 
 def _import_wazuh_api(radar_root: str):
@@ -451,6 +502,18 @@ def stream_health(radar_root: str, spec: dict) -> Iterator[str]:
         )
 
 
+_REQUIRED_VAR_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*):\?")
+
+def _missing_required_vars(radar_root: str, compose_files: list[str]) -> list[str]:
+    names = set()
+    for f in compose_files:
+        path = Path(radar_root) / f
+        if f != "-" and path.is_file():
+            names.update(_REQUIRED_VAR_RE.findall(path.read_text()))
+    dotenv = conn_module.load_env(radar_root)
+    return sorted(n for n in names if not dotenv.get(n))
+
+
 def stream_teardown(radar_root: str, spec: dict, vault_session_id: str | None = None) -> Iterator[str]:
     if not spec.get("confirm"):
         yield "[ERROR] Teardown requires explicit confirmation. Refusing without --confirm.\n"
@@ -475,7 +538,11 @@ def stream_teardown(radar_root: str, spec: dict, vault_session_id: str | None = 
             compose_files.append("docker-compose.webhook.yml")
         compose_files.append("-")
 
-        cmd = ["sudo", "-A", "docker", "compose"]
+        cmd = ["sudo", "-A"]
+        missing = _missing_required_vars(radar_root, compose_files)
+        if missing:
+            cmd += ["env", *[f"{n}=unused-for-down" for n in missing]]
+        cmd += ["docker", "compose"]
         for f in compose_files:
             cmd += ["-f", f]
         cmd += ["down", "--remove-orphans"]
@@ -488,14 +555,20 @@ def stream_teardown(radar_root: str, spec: dict, vault_session_id: str | None = 
             yield "[ERROR] docker compose down failed: see the output above.\n"
             return
 
-        try:
-            data = ar_module.load(radar_root)
-            for name, cfg in (data.get("scenarios") or {}).items():
-                if name != "default" and isinstance(cfg, dict) and cfg.get("active"):
-                    ar_module.mark_deployed(radar_root, name, False)
-            yield ">>> Marked all scenarios as not deployed in ar.yaml (manager stack is down).\n"
-        except Exception as e:
-            yield f"[WARNING] manager stack is down but could not reset ar.yaml's 'active' flags: {e}\n"
+        # Without remove_data the manager's config, rules and scripts stay in
+        # their host volumes, so scenarios are still deployed when the stack
+        # comes back up. Only a teardown that removes the data undeploys them.
+        if remove_data:
+            try:
+                data = ar_module.load(radar_root)
+                for name, cfg in (data.get("scenarios") or {}).items():
+                    if name != "default" and isinstance(cfg, dict) and cfg.get("active"):
+                        ar_module.mark_deployed(radar_root, name, False)
+                yield ">>> Marked all scenarios as not deployed in ar.yaml (manager data removed).\n"
+            except Exception as e:
+                yield f"[WARNING] manager data removed but could not reset ar.yaml's 'active' flags: {e}\n"
+        else:
+            yield ">>> Deployed scenarios kept as deployed: their manager data is left in place.\n"
 
         if not remove_data:
             yield "\n=== SUCCESS: manager stack stopped: data left in place ===\n"
@@ -598,7 +671,6 @@ def stream_unassign_agent_group(radar_root: str, spec: dict) -> Iterator[str]:
 def stream_deregister_agent(radar_root: str, spec: dict) -> Iterator[str]:
     agent_name = spec.get("agent_name", "").strip()
     agent_ip = spec.get("agent_ip", "").strip()
-    no_purge = bool(spec.get("no_purge"))
 
     if not agent_name:
         yield "[ERROR] agent name is required\n"
@@ -609,8 +681,6 @@ def stream_deregister_agent(radar_root: str, spec: dict) -> Iterator[str]:
            "--agent-name", agent_name]
     if agent_ip:
         cmd += ["--agent-ip", agent_ip]
-    if no_purge:
-        cmd.append("--no-purge")
     yield from _stream_process(cmd, radar_root, env)
 
 

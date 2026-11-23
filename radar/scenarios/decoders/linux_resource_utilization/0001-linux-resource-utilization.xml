@@ -1,0 +1,9 @@
+<decoder name="resource_usage_metric">
+  <program_name>resource_usage_metric</program_name>
+</decoder>
+
+<decoder name="resource_usage_metric_fields">
+  <parent>resource_usage_metric</parent>
+  <regex>cpu=(\S+) mem=(\S+)</regex>
+  <order>cpu_usage_pct, mem_usage_pct</order>
+</decoder>

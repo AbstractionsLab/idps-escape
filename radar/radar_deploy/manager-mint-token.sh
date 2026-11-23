@@ -58,7 +58,7 @@ else
   if [[ -f "$PID_FILE" ]]; then
     kill "$(cat "$PID_FILE")" 2>/dev/null || true
   fi
-  nohup bash -c 'sleep "$1"; exec bash "${@:2}"' _ "$(( EXPIRY_MINUTES * 60 + 5 ))" "${REVOKE[@]}" \
+  nohup setsid bash -c 'sleep "$1"; exec bash "${@:2}"' _ "$(( EXPIRY_MINUTES * 60 + 5 ))" "${REVOKE[@]}" \
     >> "$STATE_DIR/revoke-timer.log" 2>&1 &
   echo $! > "$PID_FILE"
   disown || true

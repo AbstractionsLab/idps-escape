@@ -9,8 +9,15 @@ enabled: true
 
 # Training phase configuration
 training:
-  # How much historical data to use for training
-  lookback_hours: 24
+  # Detector: mvad (multivariate deep model, the default), pca (multivariate linear model:
+  # fast, no torch) or ewma (per-feature baseline: fast, no torch, ignores correlations
+  # between features). Their settings go under pca: or ewma:
+  # backend: mvad
+  # pca: {window: 3, variance: 0.95, z_threshold: 4.0}
+  # ewma: {alpha: 0.5, z_threshold: 4.0}
+
+  # How much historical data to use for training (7 days = 2016 buckets at 5 min)
+  lookback_hours: 168
 
   # Numeric fields to extract from Wazuh alerts as features
   numeric_fields:
@@ -30,51 +37,96 @@ training:
   # Time-series aggregation bucket size (minutes)
   bucket_minutes: 5
 
-  # MVAD model sliding window (time points)
-  sliding_window: 200
+  # MVAD model sliding window (time points): 96 x 5 min = 8 hours of context.
+  # SONAR refuses to train when the MVAD library would not perform a single gradient
+  # step; the error message states how many buckets the settings need.
+  sliding_window: 96
 
   # Compute device: "cpu" or "cuda"
   device: "cpu"
 
-  # Additional parameters for MVAD library
-  extra_params: {}
+  # Additional parameters for the MVAD library (any MultiADConfig field, e.g. epochs,
+  # batch_size, lr). interval: 1 trains on every window position instead of every 10th:
+  # 2016 buckets -> 12 batches/epoch, 1200 gradient steps.
+  extra_params:
+    interval: 1
 
-  # Enable derived features for enhanced attack detection
-  # Computes security-relevant features like failed_login_count, success_after_failure ratios
+  # Warn when training performs fewer optimiser updates than this
+  min_gradient_steps: 500
+
+  # Derived features: per-bucket counts of alerts matching a rule-group or threshold
+  # condition. true = all, false = none, or a list of names, e.g.
+  #   [is_auth_failure, is_auth_success, is_ssh_event]
+  # (all names: sonar.features.DERIVED_FEATURES). Prefer a focused list: every column
+  # that is irrelevant to the use case dilutes the anomaly score.
   derived_features: true
 
-  # Auto-fill sparse history with synthetic alerts
-  fill_with_synthetic: false
-  synthetic_count: 100
-  synthetic_mode: "random"  # constant, random, or copy
-  synthetic_level: 5
-  synthetic_srcip: "192.0.2.0"
+  # Numeric fields in buckets where no alert carries them: "zero" or "ffill"
+  # (carry the last value forward, for gauge metrics such as CPU)
+  numeric_fill: zero
+
+  # Count columns (alert_count, derived features, categories): "none" or "log1p"
+  count_transform: none
+
 
 # Shipping configuration (optional - can also be set via CLI --ship flag)
-# Enables data streaming to dedicated Wazuh data streams for RADAR integration
+# Enables shipping anomalies to a dedicated sonar_anomalies_mvad_<id> data stream
 shipping:
   enabled: false  # Set to true to enable data shipping
   install_templates: true  # Install base templates on first run
-  scenario_id: null  # Optional custom ID (auto-generated from model_path if null)
+  scenario_id: null  # Optional custom ID (default: the model name)
+
+# Where anomalies go (optional; defaults in sonar/default_config.yaml)
+output:
+  # wazuh: events for the Wazuh manager; datastream: the scenario's data stream (also
+  # added by --ship); index: the legacy anomalies index; jsonl, stdout: local
+  sinks: [wazuh]
+  fallback: none           # none, datastream or index: takes what a sink rejected
+  wazuh:
+    transport: file        # file (SONAR on the manager host) or api (dedicated host)
+    file_path: /var/log/sonar/anomalies.json
+    severity_medium: 0.5   # severity bands for rules 100501 (low), 100502, 100503 (high)
+    severity_high: 0.8
+  # Per-sink watermarks of delivered anomalies, so that none is delivered twice, even
+  # across restarts. null = <models_dir>/state/
+  state_dir: null
 
 # Detection phase configuration
 detection:
   # Detection mode:
   #   - "historical": one-shot detection on past lookback_minutes
-  #   - "batch": train first, then run one-shot detection
+  #   - "batch": same as "historical" (one-shot detection)
+  # Training runs whenever this file has a training: section, whatever the mode.
   #   - "realtime": continuous polling until user stops (Ctrl+C)
   mode: "historical"
 
-  # Minutes of recent data to detect on
-  lookback_minutes: 10
+  # Minutes of complete buckets to score, ending at the last complete bucket. SONAR
+  # fetches the earlier context MVAD needs on its own (input_size + threshold_window - 1
+  # buckets), so any lookback of at least one bucket works.
+  lookback_minutes: 1440
 
-  # For "realtime" mode: polling interval in seconds
-  # If null, defaults to bucket_minutes * 60
-  polling_interval_seconds: 300
+  # Seconds a bucket must have ended before it is scored, so alerts indexed late count
+  ingest_delay_seconds: 60
 
-  # Auto-fill sparse detection windows with synthetic alerts
-  fill_with_synthetic: false
-  synthetic_count: 50
+  # For "realtime" mode: fixed polling interval in seconds. null = poll once per
+  # bucket, as soon as it has ended plus ingest_delay_seconds
+  polling_interval_seconds: null
+
+  # For "realtime" mode: exit with status 1 after this many failed polls in a row
+  # (failed polls are retried with backoff; "too little data" is not a failure)
+  max_consecutive_failures: 5
+
+  # Minimum MVAD severity (0-1) on top of MVAD's own anomaly decision; null = MVAD's
+  # decision alone. Left unset until the evaluation (issue 09) calibrates it.
+  threshold: null
+
+  # Minimum run of consecutive qualifying buckets to report
+  min_consecutive: 1
+
+  # How far this scenario's anomalies can be trusted (0-1), sent to Wazuh as
+  # anomaly_confidence (RADAR reads it). Set it to the scenario's measured precision;
+  # null sends 0.5 with a warning.
+  anomaly_confidence: null
 
   # Debug/inspection options
   print_payloads: false

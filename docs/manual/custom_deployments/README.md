@@ -18,10 +18,10 @@ This folder explains the integration of Suricata, an open-source Intrusion Detec
 
 ### Requirements 
 1. [A running instance of the Suricata service](./suricata/suricata_installation.md)
-2. [A running instance of the Wazuh distribution](./wazuh/wazuh_installation.md)
-3. [An installation of a Wazuh agent](./wazuh/wazuh_agents.md)
+2. A running instance of the Wazuh distribution (see [RADAR getting started](../radar_docs/radar-getting-started.md) or the [Wazuh installation guide](https://documentation.wazuh.com/current/installation-guide/index.html))
+3. An installation of a Wazuh agent (see [Onboard an endpoint](../radar_docs/radar-getting-started.md#3-onboard-an-endpoint) for `bootstrap-agent.sh`, or the [Wazuh agent installation guide](https://documentation.wazuh.com/current/installation-guide/wazuh-agent/index.html))
 
-### Using Docker Volumes to integrate Suricata and Wazuh
+### Using Docker volumes to integrate Suricata and Wazuh
 
 Docker volumes facilitate data sharing between containers, allowing multiple containers to access the same data simultaneously. By creating a volume on the host machine, we can store Suricata logs for the Wazuh agent to access. Through Docker volumes, we establish a connection between the Suricata container's log directory and a directory on the host machine where the Wazuh agent operates. To set up the volume for the log files, we update the run command with the -v argument, specifying the paths for data exchange between the containers and the host machine. The modified command incorporating the -v argument for volumes and the respective paths ensures seamless data communication between the Suricata container and the Wazuh agent. 
 

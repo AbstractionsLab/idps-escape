@@ -6,13 +6,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Define variables
 USER=alab
 CONTAINER_NAME=sonar-container
-IMAGE_NAME=sonar:v0.7
+IMAGE_NAME=sonar:v0.8
 
 # Define volume mounts
 MODELS_VOLUME=$SCRIPT_DIR/models:/home/$USER/soar/sonar/models
 DATA_VOLUME=$SCRIPT_DIR/test_data:/home/$USER/soar/sonar/test_data
 SCENARIOS_VOLUME=$SCRIPT_DIR/scenarios:/home/$USER/soar/sonar/scenarios
 CONFIG_VOLUME=$SCRIPT_DIR/default_config.yaml:/home/$USER/soar/sonar/default_config.yaml
+# Wazuh sink, file transport: the directory the Wazuh manager reads (see sonar/wazuh/)
+ANOMALIES_VOLUME=${SONAR_ANOMALIES_DIR:-/srv/sonar/anomalies}:/var/log/sonar
 
 # Run the Docker container with the specified arguments
 docker run -it --rm --name $CONTAINER_NAME \
@@ -20,5 +22,6 @@ docker run -it --rm --name $CONTAINER_NAME \
   -v $DATA_VOLUME \
   -v $SCENARIOS_VOLUME \
   -v $CONFIG_VOLUME \
+  -v $ANOMALIES_VOLUME \
   --network host \
   $IMAGE_NAME "$@"

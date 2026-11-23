@@ -1,0 +1,8 @@
+{
+  "pipeline": {
+    "tag": "radar_off_hours",
+    "name": "radar-off-hours",
+    "if": "ctx.data != null",
+    "ignore_failure": true
+  }
+}

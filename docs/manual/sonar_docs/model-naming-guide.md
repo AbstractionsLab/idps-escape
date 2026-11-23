@@ -1,308 +1,220 @@
-# Model Naming and Identification in SONAR
+# Models: names, locations and file format
 
-## Overview
+This guide explains where SONAR keeps its models and other files, how a model gets its name, what a model directory contains, and how to protect it. To choose the detector a model uses (`mvad`, `pca` or `ewma`), see [backend](./scenario-guide.md#backend) in the scenario guide.
 
-SONAR now supports unique model naming and identification for trained models. This feature helps you:
-- **Track model versions** (e.g., `brute_force_v1`, `brute_force_v2`)
-- **Prevent conflicts** when training multiple scenarios
-- **Organize models** by scenario or experiment
-- **Enable reproducibility** with timestamped auto-generated names
+## Where SONAR keeps its files
 
-## Model Naming
+No path depends on the directory you run SONAR from:
 
-### Three Ways to Name Models
+- A relative path **in a configuration or scenario file** is relative to that file. This applies to `models_dir`, `debug.data_dir`, `output.state_dir`, `output.jsonl_path`, `output.wazuh.file_path` and, in a scenario, `detection.payload_dir`.
+- A path **on the command line** (`--config`, `--scenario`, `--use-case`, `--payload-dir`) is relative to the shell's current directory, as usual.
+- A path you leave unset defaults to a location in the **SONAR home**.
 
-#### 1. Via CLI `--model-name` (Highest Priority)
-```bash
-poetry run sonar train --scenario scenarios/my_scenario.yaml --model-name custom_model_v1
-# Saves to: ./sonar/models/custom_model_v1.pkl
-```
+The SONAR home is, in this order:
 
-#### 2. Via Scenario YAML `model_name` Field
-```yaml
-# scenarios/my_scenario.yaml
-name: "My Scenario"
-model_name: "my_scenario_v1"  # Model will be saved with this name
+1. `$SONAR_HOME`, if the variable is set;
+2. the `sonar/` package directory, when SONAR runs from a source checkout (`pyproject.toml` next to the package): this repository, and the Docker image built from it;
+3. `~/.sonar`, when SONAR is installed from a wheel.
 
-training:
-  lookback_hours: 24
-  # ...
-```
+| Setting | Default |
+|---------|---------|
+| `models_dir` | `<home>/models` (`sonar/models/` in this repository) |
+| A model | `<models_dir>/<model_name>/` |
+| `output.state_dir` (delivery watermarks) | `<models_dir>/state` |
+| `output.jsonl_path` (`jsonl` sink) | `<home>/anomalies.jsonl` |
+| Dry-run directory (`--payload-dir`, `detection.payload_dir`) | `<home>/payloads` |
+| `debug.data_dir` | the packaged `sonar/test_data/synthetic_alerts` |
+
+For example, a service that keeps everything under `/var/lib/sonar`:
 
 ```bash
-poetry run sonar train --scenario scenarios/my_scenario.yaml
-# Saves to: ./sonar/models/my_scenario_v1.pkl
+export SONAR_HOME=/var/lib/sonar
+poetry run sonar scenario --use-case sonar/scenarios/brute_force_detection.yaml
+# model: /var/lib/sonar/models/brute_force_detection/
+# watermarks: /var/lib/sonar/models/state/brute_force.json
 ```
 
-#### 3. Auto-Generated (Default)
-If no model name is provided, SONAR generates a unique name:
-- **Format**: `<scenario_name>_<timestamp>`
-- **Example**: `brute_force_detection_20260112_143022.pkl`
-
-```bash
-poetry run sonar train --scenario scenarios/brute_force_detection.yaml
-# Saves to: ./sonar/models/brute_force_detection_20260112_143022.pkl
-```
-
-### Model Name Priority
-
-When multiple sources provide a model name:
-
-1. **CLI `--model-name`** (highest priority)
-2. **Scenario YAML `model_name`**
-3. **Auto-generated from scenario name + timestamp** (lowest priority)
-
-Example with multiple sources:
-```bash
-# Scenario YAML has: model_name: "yaml_name"
-# CLI provides: --model-name cli_name
-poetry run sonar train --scenario my_scenario.yaml --model-name cli_name
-# Result: ./sonar/models/cli_name.pkl (CLI wins)
-```
-
-## Commands Supporting Model Naming
-
-### `sonar train` Command
-
-Train with explicit model name:
-```bash
-# Name via CLI
-poetry run sonar train --scenario scenarios/linux_resource_monitoring.yaml --model-name linux_monitor_v1
-
-# Name from scenario YAML
-poetry run sonar train --scenario scenarios/linux_resource_monitoring.yaml
-
-# Standard mode (without scenario)
-poetry run sonar train --config my_config.yaml --model-name my_model
-```
-
-### `sonar scenario` Command
-
-The scenario command automatically uses `model_name` from the YAML file:
-```bash
-poetry run sonar scenario --use-case scenarios/brute_force_detection.yaml
-# Uses model_name from YAML, or auto-generates if not specified
-```
-
-### `sonar detect` Command
-
-Detection automatically loads the model specified during training:
-```bash
-# If you trained with a specific model name, detection uses the same path
-poetry run sonar detect --scenario scenarios/brute_force_detection.yaml
-# Loads model from path determined by scenario's model_name
-```
-
-## Scenario YAML Structure
-
-### Complete Example with Model Naming
+Or, without the variable, in the configuration file:
 
 ```yaml
-name: "Brute Force Detection"
-description: "Detect SSH/RDP brute force attempts"
-
-# Optional: Specify model name (recommended for production)
-model_name: "brute_force_v2"
-
-wazuh:
-  base_url: "https://localhost:9200"
-  username: "admin"
-  password: "admin"
-
-training:
-  lookback_hours: 168  # 7 days
-  numeric_fields:
-    - "rule.level"
-    - "data.srcip"
-  categorical_fields:
-    - "agent.name"
-  bucket_minutes: 5
-  sliding_window: 200
-
-detection:
-  mode: "historical"
-  lookback_minutes: 60
+# /etc/sonar/sonar.yaml
+models_dir: /var/lib/sonar/models   # a relative value would be relative to /etc/sonar/
 ```
 
-### Without Model Name (Auto-Generated)
+In this repository, `.gitignore` ignores everything in `sonar/models/` except `.gitkeep`, so trained models and watermarks are never committed.
+
+## Model names
+
+Every command reads and writes the model `<models_dir>/<model_name>/`. The name comes from:
+
+| Run | Model name |
+|-----|------------|
+| `sonar scenario --use-case`, `sonar train --scenario`, `sonar detect --scenario` | The scenario's `model_name`, else its `name` in lower case with every run of characters outside `[a-z0-9_-]` replaced by `_` (`"Brute Force Detection"` → `brute_force_detection`) |
+| `sonar train`, `sonar detect` with `--config` or the default configuration | The configuration's top-level `model_name` (default `sonar`) |
+| `sonar train --model-name NAME` (with or without `--scenario`) | `NAME` |
+| Any of these with `--agent HOST` | The name above, then `-` and `HOST` in the same character rules (`radar_linux_resource_utilization-web-01`). `train`, `detect`, `scenario`, `evaluate` and `export` all add it, so they find the same per-host model |
+
+`sonar detect` and `sonar scenario` have no `--model-name`; they use the scenario's or the configuration's name. A scenario always sets the name, so a `model_name` in the `--config` file applies only to runs without a scenario.
+
+The name does not change from one run to the next, so separate commands find the same model:
+
+```bash
+# brute_force_detection.yaml has no model_name: both use sonar/models/brute_force_detection/
+poetry run sonar train --scenario sonar/scenarios/brute_force_detection.yaml
+poetry run sonar detect --scenario sonar/scenarios/brute_force_detection.yaml
+```
+
+Training again under the same name replaces the model. To keep the previous one, train under a new name:
+
+```bash
+poetry run sonar train --scenario sonar/scenarios/brute_force_detection.yaml --model-name brute_force_v2
+```
+
+A configuration file may still contain the old `model_path` key. SONAR reads it with a deprecation warning and splits it into `models_dir` (its directory) and `model_name` (its last component, without `.pkl`). Replace it with `models_dir` and `model_name`.
+
+### The scenario ID
+
+The scenario ID names the anomaly data stream (`sonar_anomalies_mvad_<scenario_id>`), the watermark file (`<state_dir>/<scenario_id>.json`), the `sonar.scenario` field of the Wazuh events, and the namespace of every `anomaly_id`. It is `shipping.scenario_id` when set, otherwise the model name in lower case (same character rules as above). With `--agent HOST`, an explicit `shipping.scenario_id` also gets `-HOST`, so every host has its own stream, watermarks and anomaly IDs.
+
+Without `shipping.scenario_id`, a new model name therefore starts a new data stream and new watermarks, and anomalies already delivered under the old ID can be delivered again, also to the Wazuh manager, which cannot recognise duplicates. The bundled detection scenarios (not the `example_*.yaml` templates) set `shipping.scenario_id`; set it in your own scenarios before you version their models. See [Delivery and the watermark](./scenario-guide.md#delivery-and-the-watermark).
+
+## Model file format
+
+A model is a directory:
+
+```
+sonar/models/linux_resource_monitoring/
+├── metadata.json       # what the model is and how it was trained
+├── mvad_config.json    # mvad backend: the library's configuration and training statistics
+└── mvad_weights.pt     # mvad backend: the network's weights, a plain tensor dictionary
+```
+
+A `pca` model holds `pca_state.json` (its settings, the median and scale of each column, the principal components, their variances, the noise variance and the training score distribution) and an `ewma` model `ewma_state.json` (smoothing factor, threshold, and the median and scale of each column) instead of the two `mvad_*` files.
+
+`metadata.json` records:
+
+| Key | Content |
+|-----|---------|
+| `format_version` | Model format version, currently 1 |
+| `sonar_version` | SONAR version that trained the model |
+| `backend` | `mvad`, `pca` or `ewma` |
+| `feature_schema_version` | Feature schema the columns were built with (currently 2) |
+| `feature_config`, `vocabulary`, `columns` | The feature contract: feature settings, categorical vocabulary and column order that detection reproduces |
+| `training_samples` | Number of training buckets |
+| Backend record | `mvad`: `mvad_library`, `mvad_library_version`, `mvad_params`, `training_plan`, `gradient_steps`, `library_threshold`, `train_score_min`, `train_score_max`. `pca`: `pca` (`window`, `variance`, `z_threshold`), `components`, `dimensions`, `noise_variance`, `training_points`. `ewma`: `ewma` (`alpha`, `z_threshold`), `training_points` |
+
+Training writes the new model into a hidden staging directory next to the target and swaps it in only when it is complete, so an interrupted training run leaves the previous model intact.
+
+Loading a model unpickles nothing: the JSON files are parsed, and MVAD's weights are read with `torch.load(weights_only=True)`, which accepts only tensors and plain containers.
+
+SONAR refuses a model it cannot apply correctly, and asks you to retrain it:
+
+- a model in the old single-file pickle format (`<name>.pkl`), which SONAR does not convert (models trained before feature schema 2 need retraining in any case);
+- a model with another `feature_schema_version` or `format_version`.
+
+### Protect the models directory
+
+Loading a model no longer runs code from it, but a model still decides what SONAR reports: someone who can replace a model can make SONAR miss attacks or raise false alerts. Treat `models_dir` like the configuration:
+
+- make it writable only by the user that runs SONAR (`chmod 700`, or a dedicated service account);
+- in Docker, mount the host's models directory only into the SONAR container;
+- copy models between hosts only over a trusted channel, and only from a SONAR version with the same feature schema.
+
+## Examples
+
+### Production model with a stable name
 
 ```yaml
-name: "Quick Test Scenario"
-# No model_name specified
+# sonar/scenarios/prod_brute_force.yaml
+name: "Production Brute Force Detection"
+model_name: "prod_brute_force"
+
+shipping:
+  scenario_id: "prod_brute_force"   # stable stream and watermarks, whatever the model name
 
 training:
-  lookback_hours: 24
+  lookback_hours: 168
   numeric_fields: ["rule.level"]
-  
+  extra_params:
+    interval: 1
+
 detection:
-  lookback_minutes: 10
-
-# Model will be: ./sonar/models/quick_test_scenario_20260112_150322.pkl
+  mode: "realtime"
+  lookback_minutes: 60  # window to score; earlier context is fetched automatically
 ```
 
-## Model Storage
-
-All models are stored in: `./sonar/models/`
-
-Directory structure:
-```
-sonar/
-├── models/
-│   ├── brute_force_v1.pkl
-│   ├── brute_force_v2.pkl
-│   ├── linux_monitor_20260112_143022.pkl
-│   ├── insider_threat_v1.pkl
-│   └── .gitkeep
-├── scenarios/
-│   ├── brute_force_detection.yaml
-│   └── linux_resource_monitoring.yaml
-└── ...
-```
-
-## Best Practices
-
-### Document model configurations
-Keep a log of what each model version includes:
-```
-brute_force_v1: 24h lookback, rule.level only
-brute_force_v2: 7d lookback, rule.level + srcip
-brute_force_v3: 7d lookback, rule.level + srcip + categorical agent.name
-```
-
-## Migration Guide
-
-### Existing Workflows
-
-**Old approach** (single default model):
 ```bash
-poetry run sonar train --config my_config.yaml
-# Always overwrites: ./mvad_model.pkl
+# Train (creates or replaces sonar/models/prod_brute_force/)
+poetry run sonar train --scenario sonar/scenarios/prod_brute_force.yaml
+
+# One-shot detection with that model
+poetry run sonar detect --scenario sonar/scenarios/prod_brute_force.yaml
 ```
 
-**New approach** (unique identified models):
+`sonar detect` always runs once, whatever `mode` says. For realtime polling, run `poetry run sonar scenario --use-case sonar/scenarios/prod_brute_force.yaml`, which retrains first because the file has a `training:` section.
+
+### Comparing two models
+
+Train two versions:
+
 ```bash
-# With explicit name
-poetry run sonar train --config my_config.yaml --model-name my_model_v1
-# Saves to: ./sonar/models/my_model_v1.pkl
-
-# With scenario
-poetry run sonar train --scenario scenarios/my_scenario.yaml
-# Saves to: ./sonar/models/my_scenario_20260112_143022.pkl
+poetry run sonar train --scenario sonar/scenarios/prod_brute_force.yaml --model-name dev_v1
+# ... change the scenario's training settings ...
+poetry run sonar train --scenario sonar/scenarios/prod_brute_force.yaml --model-name dev_v2
 ```
 
-### Updating Scenarios
+`sonar detect` has no `--model-name`, so write one configuration file per model: your usual configuration (with its `wazuh:` connection section) plus the model name and, to compare the results side by side, a local sink:
 
-Add `model_name` field to existing scenarios:
-
-**Before**:
 ```yaml
-name: "My Scenario"
-training:
-  lookback_hours: 24
+# dev_v1.yaml (dev_v2.yaml: the same with dev_v2)
+model_name: dev_v1
+output:
+  sinks: [jsonl]
+  jsonl_path: dev_v1.jsonl   # relative to this file
 ```
 
-**After**:
-```yaml
-name: "My Scenario"
-model_name: "my_scenario_v1"  # Add this line
-training:
-  lookback_hours: 24
+```bash
+poetry run sonar detect --config dev_v1.yaml --lookback-minutes 1440
+poetry run sonar detect --config dev_v2.yaml --lookback-minutes 1440
+```
+
+Detection builds its features from each model's stored feature contract, so the configuration files need no feature settings. Without `shipping.scenario_id`, each model has its own scenario ID (`dev_v1`, `dev_v2`) and its own watermarks.
+
+### Running a packaged example outside the repository
+
+An installed SONAR ships its example scenarios; `--use-case` and `--scenario` accept their names when no file of that name exists:
+
+```bash
+export SONAR_HOME="$HOME/sonar-lab"
+sonar scenario --use-case linux_resource_monitoring --debug
+# model: ~/sonar-lab/models/linux_resource_monitoring/
 ```
 
 ## Troubleshooting
 
-### Model Not Found
+### Model not found
 
-**Error**: `FileNotFoundError: model.pkl not found`
-
-**Solution**: Check model path
-```bash
-# List available models
-ls -la ./sonar/models/
-
-# Verify scenario uses correct model_name
-cat scenarios/my_scenario.yaml | grep model_name
-
-# Train model if missing
-poetry run sonar train --scenario scenarios/my_scenario.yaml
+```
+ERROR: Model not found at /home/alab/soar/sonar/models/my_scenario. Train first, or add a training section to the scenario.
 ```
 
-### Model Overwrite
-
-**Issue**: Training overwrites existing model
-
-**Cause**: Same model name used twice
-
-**Solutions**:
-1. Use versioned names: `model_v1`, `model_v2`
-2. Let auto-generation create unique names (includes timestamp)
-3. Rename old model before retraining
-
-### Wrong Model Loaded
-
-**Issue**: Detection loads wrong model
-
-**Cause**: Model name mismatch between training and detection
-
-**Solution**: Ensure detection uses same scenario as training
-```bash
-# Train
-poetry run sonar train --scenario scenarios/my_scenario.yaml
-
-# Detect with SAME scenario
-poetry run sonar detect --scenario scenarios/my_scenario.yaml
-```
-
-## Examples
-
-### Example 1: Production Model with Stable Name
-
-```yaml
-# scenarios/prod_brute_force.yaml
-name: "Production Brute Force Detection"
-model_name: "prod_brute_force"  # Stable name for production
-
-training:
-  lookback_hours: 168
-  numeric_fields: ["rule.level", "data.srcip"]
-  
-detection:
-  mode: "realtime"
-  lookback_minutes: 10
-```
+The path in the message is the one SONAR looked for. Check that training used the same model name and the same `models_dir` (or `SONAR_HOME`):
 
 ```bash
-# Train (creates/updates ./sonar/models/prod_brute_force.pkl)
-poetry run sonar train --scenario scenarios/prod_brute_force.yaml
-
-# Deploy detection
-poetry run sonar detect --scenario scenarios/prod_brute_force.yaml
+ls sonar/models/
+grep -E '^(name|model_name|models_dir):' sonar/scenarios/my_scenario.yaml
 ```
 
-### Example 2: Versioned Development Models
+A run with `--model-name` trains under that name, which a later `sonar detect --scenario` does not know; put the name in the scenario's `model_name`, or detect with a configuration file that sets it.
 
-```bash
-# Development iteration 1
-poetry run sonar train --scenario scenarios/dev.yaml --model-name dev_v1
+### Model in the old pickle format
 
-# Development iteration 2
-poetry run sonar train --scenario scenarios/dev.yaml --model-name dev_v2
-
-# Compare results
-poetry run sonar detect --scenario scenarios/dev.yaml --model-name dev_v1
-poetry run sonar detect --scenario scenarios/dev.yaml --model-name dev_v2
+```
+ERROR: /home/alab/soar/sonar/models/brute_force_v1.pkl is a model in the old pickle format, which SONAR <version> no longer loads (unpickling can run code). Retrain the model; it will be saved as /home/alab/soar/sonar/models/brute_force_v1/.
 ```
 
-### Example 3: Auto-Generated Names for Experiments
+Retrain under the same name, then delete the `.pkl` file.
 
-```bash
-# Experiment 1 (auto-generates with timestamp)
-poetry run sonar train --scenario scenarios/experiment.yaml
-# Creates: experiment_20260112_100000.pkl
+### Model replaced by a retraining
 
-# Experiment 2 (different timestamp)
-poetry run sonar train --scenario scenarios/experiment.yaml
-# Creates: experiment_20260112_113000.pkl
-
-# Both preserved for comparison
-```
+Every training run under a name replaces that model. Train under a new name (`--model-name`, or a new `model_name` in a copy of the scenario) to keep the previous one, and set `shipping.scenario_id` so that the new name does not start new watermarks.

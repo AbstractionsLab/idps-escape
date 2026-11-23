@@ -1,218 +1,163 @@
 """
-Post-processing: from MVAD output to Wazuh anomalies.
+Post-processing: from detector verdicts (``PointResult``) to anomaly documents.
+
+This module is the single owner of the anomaly document schema. The index templates in
+``sonar/shipper/wazuh_base_template.py`` must map the fields built here
+(``tests/sonartests/test_shipper.py`` checks it).
 """
 
+import math
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
+import pandas as pd
+
+from sonar.backends.base import PointResult
 from sonar.config import FeatureConfig
+from sonar.watermark import anomaly_id
+
+# Contributors (MVAD interpretation entries) copied into each document.
+TOP_CONTRIBUTORS = 3
 
 
 class MVADPostProcessor:
-    """Convert MVAD prediction results into anomaly alerts for Wazuh."""
+    """Convert a backend's verdicts (PointResult) into anomaly documents."""
 
     def __init__(self, feature_cfg: FeatureConfig):
         """
         Initialize post-processor.
 
         Args:
-            feature_cfg: FeatureConfig instance for context.
+            feature_cfg: FeatureConfig the features were built with.
         """
         self.feature_cfg = feature_cfg
 
-    def _extract_score_from_result(self, results: Any) -> float:
-        """
-        Extract anomaly score from MVAD result structure.
-        
-        Handles various result formats including:
-        - Direct score fields: score, anomaly_score, severity
-        - MVAD library format: interpretation.isAnomaly, severity
-        - Nested structures
-        
-        Args:
-            results: MVAD prediction result (dict or other structure).
-            
-        Returns:
-            Extracted score as float, or 0.0 if not found.
-        """
-        if not isinstance(results, dict):
-            return 0.0
-        
-        # Try common top-level score fields
-        for field in ["score", "anomaly_score", "severity"]:
-            if field in results:
-                val = results[field]
-                if isinstance(val, (int, float)):
-                    return float(val)
-        
-        # Try MVAD library interpretation structure
-        if "interpretation" in results:
-            interp = results["interpretation"]
-            if isinstance(interp, dict):
-                # Check for isAnomaly (boolean) or score
-                if "isAnomaly" in interp and interp["isAnomaly"]:
-                    # If boolean isAnomaly is True, check for severity or default to 1.0
-                    if "severity" in interp and isinstance(interp["severity"], (int, float)):
-                        return float(interp["severity"])
-                    return 1.0
-                if "score" in interp and isinstance(interp["score"], (int, float)):
-                    return float(interp["score"])
-        
-        # Try to find severity anywhere in the structure
-        if "severity" in results:
-            val = results["severity"]
-            if isinstance(val, (int, float)):
-                return float(val)
-        
-        # Last resort: look for any numeric field that might be a score
-        for key, val in results.items():
-            if isinstance(val, (int, float)) and key.lower() in ["value", "result", "anomaly"]:
-                return float(val)
-        
-        return 0.0
-
     def build_wazuh_anomaly_docs(
         self,
-        timestamps: Sequence[datetime],
-        results: Any,
+        results: Sequence[PointResult],
         context: Dict[str, Any],
-        threshold: float = None,
+        threshold: Optional[float] = None,
+        min_consecutive: int = 1,
+        feature_values: Optional[pd.DataFrame] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Transform MVAD model results into Wazuh-style anomaly documents.
+        Turn a backend's verdicts into anomaly documents.
 
-        MVAD returns a list of dicts with format:
-            [{'index': Timestamp, 'is_anomaly': bool, 'score': float, 
-              'severity': float, 'interpretation': [...]}, ...]
+        ``severity`` (0-1, and 0 for buckets the backend does not flag) is what thresholds
+        and consumers compare; ``raw_score`` is the backend's own score and scale.
 
         Args:
-            timestamps: List of timestamps corresponding to predictions.
-            results: MVAD prediction result (list of dicts, one per time point).
-            context: Metadata context (time window, bucket size, etc.).
-            threshold: Anomaly detection threshold (from config or results).
+            results: One PointResult per scored bucket, in time order.
+            context: Detection context: ``scenario_id`` (also the namespace of each document's
+                ``anomaly_id``), ``model_name``, ``model_path``, ``feature_names``,
+                ``training_samples``, ``sliding_window``, ``bucket_minutes``,
+                ``lookback_minutes``, ``alert_count``, ``anomaly_confidence``.
+            threshold: Minimum ``severity`` (0-1) a bucket needs, in addition to the backend's
+                own ``is_anomaly`` decision, to be reported. ``None`` means the backend's decision alone.
+            min_consecutive: Minimum length of a run of consecutive qualifying buckets;
+                shorter runs are dropped. Values below 1 are treated as 1.
+            feature_values: The feature matrix that was scored; when given, each contributor
+                carries the feature's value in that bucket.
 
         Returns:
-            List of Wazuh anomaly documents (only for detected anomalies).
-        """
-        docs: List[Dict[str, Any]] = []
-        
-        # Set default threshold
-        threshold_value = threshold if threshold is not None else 0.0
+            One document per reported bucket.
 
-        # Handle MVAD's actual output format: list of dicts
-        if isinstance(results, list):
-            for result in results:
-                if not isinstance(result, dict):
-                    continue
-                
-                # Extract fields from MVAD result
-                is_anom = result.get('is_anomaly', False)
-                score = result.get('score', 0.0)
-                severity = result.get('severity', 0.0)
-                ts = result.get('index')
-                
-                # Skip non-anomalies
-                if not is_anom:
-                    continue
-                
-                # Use timestamp from result if available, otherwise from input
-                if ts is None and timestamps:
-                    ts = timestamps[len(docs)] if len(docs) < len(timestamps) else datetime.now(timezone.utc)
-                elif ts is None:
-                    ts = datetime.now(timezone.utc)
-                
-                doc = {
-                    "@timestamp": ts.isoformat() if hasattr(ts, 'isoformat') else str(ts),
-                    "timestamp": ts.isoformat() if hasattr(ts, 'isoformat') else str(ts),
-                    
-                    # Required top-level fields for data stream template
-                    "is_anomaly": True,
-                    "anomaly_score": float(score),
-                    "threshold": threshold_value,
-                    "scenario_name": context.get("scenario_id", "unknown"),
-                    "detection_timestamp": datetime.now(timezone.utc).isoformat(),
-                    "alert_count": context.get("alert_count", 0),
-                    "feature_count": len(self.feature_cfg.numeric_fields),
-                    
-                    # MVAD-specific fields
-                    "mvad_score": float(score),
-                    "mvad_severity": float(severity),
-                    "mvad_threshold": threshold_value,
-                    "sliding_window": context.get("sliding_window", 0),
-                    "bucket_minutes": context.get("bucket_minutes", 5),
-                    
-                    # Context as structured object
-                    "context": {
-                        "model_path": context.get("model_path", ""),
-                        "feature_names": self.feature_cfg.numeric_fields,
-                        "training_samples": context.get("training_samples", 0),
-                    },
-                    
-                    "rule": {
-                        "level": 10,
-                        "description": "MVAD: multivariate anomaly detected.",
-                        "id": "900001",
-                        "groups": ["mvad", "ml", "anomaly"],
-                    },
-                    "data": {
-                        "mvad_score": float(score),
-                        "mvad_severity": float(severity),
-                        "mvad_threshold": threshold_value,
-                        "bucket_minutes": context.get("bucket_minutes", 5),
-                        "lookback_minutes": context.get("lookback_minutes"),
-                    },
-                }
-                
-                # Add interpretation data if available for explainability
-                interpretation = result.get('interpretation')
-                if interpretation and isinstance(interpretation, list):
-                    doc['mvad_interpretation'] = [
-                        {
-                            'variable': interp.get('variable_name', ''),
-                            'contribution': interp.get('contribution_score', 0.0)
-                        }
-                        for interp in interpretation[:3]  # Top 3 contributors
-                    ]
-                
-                docs.append(doc)
-        
-        else:
-            # Fallback for unexpected format (shouldn't happen with MVAD)
-            # Log warning and create a single document
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(
-                "Unexpected MVAD result format. Expected list, got %s. "
-                "Creating single anomaly document.",
-                type(results).__name__
-            )
-            
-            score_value = self._extract_score_from_result(results)
-            now = datetime.now(timezone.utc)
-            
+        Raises:
+            ValueError: If ``threshold`` is outside [0, 1] or the results are not PointResults.
+        """
+        if threshold is not None and not 0.0 <= float(threshold) <= 1.0:
+            raise ValueError(f"threshold is a minimum severity between 0 and 1; got {threshold}")
+        if not isinstance(results, (list, tuple)) or not all(isinstance(r, PointResult) for r in results):
+            raise ValueError("Detection results must be a list of PointResult (see sonar.backends)")
+
+        threshold_value = float(threshold) if threshold is not None else None
+        keep = select_anomalies(results, threshold_value, min_consecutive)
+
+        scenario_id = context.get("scenario_id", "unknown")
+        feature_names = list(context.get("feature_names") or [])
+        bucket_minutes = context.get("bucket_minutes", self.feature_cfg.bucket_minutes)
+        detected_at = datetime.now(timezone.utc).isoformat()
+
+        docs: List[Dict[str, Any]] = []
+        for result, kept in zip(results, keep):
+            if not kept:
+                continue
+            ts = result.timestamp
+            ts_iso = ts.isoformat()
             doc = {
-                "@timestamp": now.isoformat(),
-                "timestamp": now.isoformat(),
+                # Same scenario and bucket, same id: sinks store by it, so re-delivery is harmless.
+                "anomaly_id": anomaly_id(scenario_id, ts),
+                "@timestamp": ts_iso,
+                "timestamp": ts_iso,
+                # Required top-level fields for data stream template
                 "is_anomaly": True,
-                "anomaly_score": score_value,
+                "anomaly_score": result.severity,
+                # Trust in this scenario's anomalies (its measured precision), for consumers such as RADAR.
+                "anomaly_confidence": context.get("anomaly_confidence"),
                 "threshold": threshold_value,
-                "scenario_name": context.get("scenario_id", "unknown"),
-                "detection_timestamp": now.isoformat(),
+                "scenario_name": scenario_id,
+                "model_name": context.get("model_name", ""),
+                "detection_timestamp": detected_at,
                 "alert_count": context.get("alert_count", 0),
-                "feature_count": len(self.feature_cfg.numeric_fields),
-                "mvad_score": score_value,
+                "feature_count": len(feature_names),
+                # Backend fields (named mvad_* since MVAD was the first backend)
+                "mvad_score": result.raw_score,
+                "mvad_severity": result.severity,
                 "mvad_threshold": threshold_value,
-                "rule": {
-                    "level": 10,
-                    "description": "MVAD: anomaly detected (unexpected format).",
-                    "id": "900001",
-                    "groups": ["mvad", "ml", "anomaly"],
+                "sliding_window": context.get("sliding_window", 0),
+                "bucket_minutes": bucket_minutes,
+                "context": {
+                    "model_path": context.get("model_path", ""),
+                    "feature_names": feature_names,
+                    "training_samples": context.get("training_samples", 0),
                 },
                 "data": {
-                    "result_type": type(results).__name__,
-                    "result_repr": str(results)[:500],
+                    "mvad_score": result.raw_score,
+                    "mvad_severity": result.severity,
+                    "mvad_threshold": threshold_value,
+                    "bucket_minutes": bucket_minutes,
+                    "lookback_minutes": context.get("lookback_minutes"),
                 },
             }
+            if result.contributors:
+                doc["mvad_interpretation"] = [{"variable": c.variable, "contribution": float(c.contribution), "value": _feature_value(feature_values, ts, c.variable)} for c in result.contributors[:TOP_CONTRIBUTORS]]
             docs.append(doc)
 
         return docs
+
+
+def select_anomalies(results: Sequence[PointResult], threshold: Optional[float] = None, min_consecutive: int = 1) -> List[bool]:
+    """
+    Which buckets are reported: the decision rule shared by detection and ``sonar evaluate``.
+
+    A bucket qualifies when the backend flags it and its severity reaches ``threshold``
+    (``None``: the backend's decision alone); only runs of at least ``min_consecutive``
+    consecutive qualifying buckets are kept (values below 1 count as 1).
+
+    Returns:
+        One boolean per result, in order.
+    """
+    min_run = max(1, int(min_consecutive or 1))
+    qualifies = [r.is_anomaly and (threshold is None or r.severity >= threshold) for r in results]
+    keep = [False] * len(results)
+    run_start = None
+    for i, q in enumerate(qualifies + [False]):
+        if q and run_start is None:
+            run_start = i
+        elif not q and run_start is not None:
+            if i - run_start >= min_run:
+                for j in range(run_start, i):
+                    keep[j] = True
+            run_start = None
+    return keep
+
+
+def _feature_value(frame: Optional[pd.DataFrame], ts: Any, column: Optional[str]) -> Optional[float]:
+    """Value of a feature in the scored bucket, or None if unavailable."""
+    if frame is None or column is None or column not in frame.columns:
+        return None
+    try:
+        value = float(frame.at[pd.Timestamp(ts), column])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return None if math.isnan(value) else value

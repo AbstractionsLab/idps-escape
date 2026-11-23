@@ -1,0 +1,8 @@
+/var/log/radar/log_volume_metric.log {
+  daily
+  rotate 7
+  compress
+  missingok
+  notifempty
+  copytruncate
+}

@@ -131,6 +131,7 @@ def detector_spec(scn_name: str, scn: Dict[str, Any]) -> Dict[str, Any]:
         "window_delay": {"period": {"interval": int(scn.get("delay_minutes", 1)), "unit": "Minutes"}},
         "category_field": build_category_field(scn),
         "result_index": scn["result_index"],
+        "imputation_option": scn.get("imputation_option", {"method": "ZERO"}),
         "result_index_min_age": scn.get("result_index_min_age", 10),
         "result_index_min_size":  scn.get("result_index_min_size", 51200),
         "result_index_ttl":  scn.get("result_index_ttl", 60),

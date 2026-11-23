@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="assets/charts.css" rel="stylesheet">
   <style>
     :root {
       --bg: #eef1f5;
@@ -339,6 +340,263 @@
           <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/CHANGELOG.md">changelog</a>.
         </p>
       </div>
+
+      <!-- ═══════════════════════════════════════════
+           v2.2.0
+           ═══════════════════════════════════════════ -->
+      <div class="release" id="v2.2.0">
+        <div class="release-heading">
+          <h2 class="release-title">v2.2.0</h2>
+          <span class="release-date">November 2026</span>
+        </div>
+
+        <!-- ── main feature ── -->
+        <div class="feature-card highlight">
+          <div class="new-badge">New feature</div>
+          <h3>Signature and anomaly evidence, combined over time</h3>
+          <p>
+            RADAR used to score every alert on its own. A signature alert carried no anomaly
+            evidence and an anomaly alert carried no signature evidence, so the two were never
+            combined. Now, with fusion enabled for a scenario, each alert looks back for the
+            strongest alert of the other kind on the same user or host, and uses it for the term it
+            cannot carry itself. Its weight is 1 inside the anomaly's data window and falls linearly
+            to 0 at <code>window_minutes</code> from it. Nothing waits: whichever alert arrives
+            second gets the combined score.
+          </p>
+          <p>
+            Fusion only fills the missing term, using the scenario's existing weights. Without a counterpart the score is
+            exactly what it was before, so existing calibrations stay valid. A missing anomaly never
+            lowers a score, and a counterpart never changes what is blocked or locked: targets
+            come only from the alert being decided. Fusion is opt-in per scenario (a
+            <code>fusion:</code> block in <code>ar.yaml</code>) and enabled for
+            <code>suspicious_login</code>, whose new off-hours activity detection (below) supplies its
+            anomaly side, wired end to end through rules 210039 to 210041, the active-response binding
+            and the anomaly decoder.
+          </p>
+          <figure class="viz">
+            <h4 class="viz-title">What fusion does to <code>suspicious_login</code> tiers</h4>
+            <div data-chart="fusion-tiers"></div>
+            <figcaption>
+              A signature alert alone never exceeds 0.468, so <code>tier2_max</code> moved from 0.66
+              to 0.55 without changing any single alert's tier. T3 now needs a signature alert
+              combined with an off-hours alert and CTI evidence. Hover a marker for its breakdown.
+            </figcaption>
+          </figure>
+          <div class="chips">
+            <span class="chip">FusionCorrelator</span>
+            <span class="chip">fusion: in ar.yaml</span>
+            <span class="chip">suspicious_login</span>
+            <span class="chip">rules 210040–210041</span>
+            <span class="chip">inject_ad_alert.py</span>
+          </div>
+        </div>
+
+        <div class="feature-card highlight">
+          <div class="new-badge">New feature</div>
+          <h3>Off-hours activity against declared working hours</h3>
+          <p>
+            <code>suspicious_login</code>'s off-hour detector learned each user's average login
+            time. One night-time login among a day of normal work barely moves an average, so it
+            missed exactly the event it was meant to catch. Working hours are now declared per
+            schedule group in <code>config.yaml</code>: a time zone, the weekdays a shift starts
+            on, and a start and end time, with shifts that cross midnight and summer time handled.
+            An ingest pipeline marks every archived event of a listed user as on or off hours,
+            both for events from agents and for history marked by a backfill.
+          </p>
+          <p>
+            Each group picks a mode. <strong>Rule mode</strong> (rule 210041) is for staff whose
+            normal off-hours activity is zero: it reports the start of each off-hours burst once,
+            from the first event and without training, with the number of events, their times and
+            the group. <strong>Model mode</strong> (rule 210040) is for administrators and on-call
+            staff: a per-user detector learns their usual number of off-hours events and reports
+            an unusual one. Both are scored as the scenario's anomaly side and fused with the
+            user's signature alerts. Users who aren't listed are not evaluated unless a default
+            group is set.
+          </p>
+          <div class="chips">
+            <span class="chip">off_hours.py</span>
+            <span class="chip">radar-off-hours pipeline</span>
+            <span class="chip">rule 210041</span>
+            <span class="chip">rule 210040</span>
+            <span class="chip">SRS-062</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Synthetic history and live checks</h3>
+          <p>
+            The <code>suspicious_login</code> ingest script works again: it crashed on missing
+            imports and dated the after-midnight part of night shifts to the wrong day. Its
+            history now includes an administrator with evening work and one burst at 02:00, for
+            model mode. New checks run against a live cluster: the marking pipeline on a shared
+            case table, rule mode replayed at chosen times without waiting, and model mode
+            analysed over the synthetic history.
+          </p>
+          <div class="chips">
+            <span class="chip">wazuh_ingest.py</span>
+            <span class="chip">radar-test-framework/checks</span>
+            <span class="chip">TST-077 to TST-079</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Risk engine and anomaly alert chain fixes</h3>
+          <p>
+            <code>lock_user_linux.sh</code> now targets only the users named in the alert itself.
+            It used to target every user found in the agent's logs in the context window, so a
+            bystander, such as an admin who ran <code>sudo</code> that minute, could be locked.
+            <code>suspicious_login</code> now asks DECIPHER about the user named in the alert, not
+            the alphabetically first user on the host. Alerts listed as both signature and anomaly
+            now get their anomaly score.
+          </p>
+          <p>
+            The anomaly monitor reports up to <code>monitor_max_entities</code> (default 5)
+            anomalous hosts or users per run instead of only the top one, and forwards each
+            anomaly's own data window. <code>linux_resource_utilization</code> alerts now fire when
+            <code>log_volume</code> is deployed on the same manager; before, rule 100321 never fired.
+            <code>geoip_detection</code>, which has no CTI source, now puts its full weight on the
+            signature, so rules 100900, 100901 and 100903 reach T2 and run <code>firewall-drop</code>.
+          </p>
+          <div class="chips">
+            <span class="chip">lock_user_linux.sh</span>
+            <span class="chip">monitor_max_entities</span>
+            <span class="chip">radar_ad_received</span>
+            <span class="chip">geoip_detection</span>
+            <span class="chip">behaviour change</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="new-badge">New feature</div>
+          <h3>SONAR: pluggable detectors and an evaluation tool</h3>
+          <p>
+            SONAR's detector is now selectable: <code>mvad</code> (the default, unchanged),
+            <code>pca</code>, a probabilistic PCA over short windows that trains in well under a
+            second, and <code>ewma</code>, a per-feature baseline. The new <code>sonar evaluate</code>
+            command trains a scenario on one file and scores labelled test data: event-level
+            precision, recall and F1, detection delay and false alarms per day. With a validation
+            split it calibrates the scenario's <code>threshold</code> and <code>min_consecutive</code>,
+            and it can score other detectors' results on the same labelled data.
+          </p>
+          <p>
+            First runs on synthetic data from SONAR's own generators, with only a few attacks per
+            scenario, were used to set the bundled scenarios' detection settings. They are
+            preliminary and not yet independently reviewed, so they say little about which detector
+            is better on real traffic; the records are kept in the
+            <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/specs/trp/assets/sonar-evaluation/README.md">SONAR evaluation</a>
+            folder. A rigorous comparison on labelled lab data, against the RCF detectors RADAR uses
+            and other mechanisms, remains future work.
+          </p>
+          <div class="chips">
+            <span class="chip">sonar evaluate</span>
+            <span class="chip">mvad · pca · ewma</span>
+            <span class="chip">calibration</span>
+            <span class="chip">sonar export</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>SONAR anomalies as Wazuh alerts, delivered once</h3>
+          <p>
+            SONAR now reports anomalies to the Wazuh manager, which raises them as alerts (rules
+            100500 to 100503), so rules, integrations and RADAR scenarios can act on them. Outputs
+            are configurable sinks (<code>wazuh</code>, <code>datastream</code>,
+            <code>index</code>, <code>jsonl</code>, <code>stdout</code>), each with its own delivery
+            watermark.
+          </p>
+          <p>
+            Each anomaly is delivered once: before, realtime polling stored the same anomaly about
+            288 times over a 24-hour window. Alert searches now page through every matching alert
+            instead of stopping at 10,000, every indexer request has a timeout, and realtime mode
+            retries failed polls with backoff.
+          </p>
+          <div class="chips">
+            <span class="chip">rules 100500–100503</span>
+            <span class="chip">output.sinks</span>
+            <span class="chip">delivery watermark</span>
+            <span class="chip">point-in-time search</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>SONAR model quality and packaging</h3>
+          <p>
+            SONAR no longer saves models that were never trained. Alert volume and quiet periods
+            are now visible to the model (feature schema 2), the categorical vocabulary is fixed at
+            training, and <code>lookback_minutes</code> scores every bucket in the period.
+            <code>detection.threshold</code> is now a 0–1 severity. Models are directories without
+            pickle, SONAR runs from any directory as a standalone package, and the
+            <code>sonar:v0.8</code> image contains only SONAR, no longer the whole repository.
+          </p>
+          <div class="chips">
+            <span class="chip">feature schema 2</span>
+            <span class="chip">no pickle</span>
+            <span class="chip">standalone wheel</span>
+            <span class="chip">sonar:v0.8</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Linux resource utilization and the <code>radar-agent</code> folder</h3>
+          <p>
+            A new RADAR scenario detects anomalous CPU and memory use on Linux endpoints, from
+            collector to active response, with simulation and seeding scripts. SONAR gets a
+            matching scenario that reads the same events and trains one model per host
+            (<code>--agent</code>).
+          </p>
+          <p>
+            Everything installed on endpoints now lives in <code>radar/radar-agent/</code>.
+            Active-response scripts are versioned in <code>ar-scripts.yaml</code>, every endpoint
+            receives all of them, and the GUI's mitigation list is read from the same file.
+          </p>
+          <div class="chips">
+            <span class="chip">linux_resource_utilization</span>
+            <span class="chip">radar-agent</span>
+            <span class="chip">ar-scripts.yaml</span>
+            <span class="chip">--agent</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Specifications and manuals aligned with the code</h3>
+          <p>
+            The specifications and the SONAR and RADAR user manuals now describe the system as it
+            is in this release. Outdated items were rewritten or retired, features not built yet are
+            marked as planned, new items cover parts that had no specification, and traceability
+            from requirements to tests is more complete. Diagrams are now written as code.
+          </p>
+          <div class="chips">
+            <span class="chip">Doorstop</span>
+            <span class="chip">Traceability</span>
+            <span class="chip">Mermaid</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>Upgrading</h3>
+          <table class="detail-table">
+            <thead>
+              <tr><th>Component</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>SONAR</td><td>Retrain every model. Pickled models and models from the old feature schema are refused.</td></tr>
+              <tr><td>SONAR</td><td>Install the rules from <code>sonar/wazuh/</code>, or keep the old behaviour with <code>output.sinks: [index]</code>. Keep <code>output.state_dir</code> on persistent storage.</td></tr>
+              <tr><td>SONAR scenarios</td><td>Remove <code>fill_with_synthetic</code> keys and revisit any <code>threshold</code>: it now applies to the 0–1 severity.</td></tr>
+              <tr><td><code>geoip_detection</code></td><td>Alerts now reach T2 and run <code>firewall-drop</code>. Check <code>global.never_block</code> before deploying.</td></tr>
+              <tr><td><code>suspicious_login</code></td><td>Declare your users' working hours under <code>scenarios.suspicious_login.off_hours</code>, then redeploy the scenario. Redeploying installs rules 210039 to 210041, the anomaly decoder, the off-hours pipeline and its Filebeat step, reloads the Filebeat pipelines, marks the last 45 days, stops the old time-of-day detector and disables its monitor (both are kept).</td></tr>
+              <tr><td><code>off_hour_login</code></td><td>Removed from <code>config.yaml</code> and the GUI; it was never wired to a rule.</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top: 0.9rem">
+            The <a href="https://github.com/AbstractionsLab/idps-escape/blob/main/CHANGELOG.md">changelog</a>
+            lists every upgrade step.
+          </p>
+        </div>
+
+      </div>
+      <!-- /v2.2.0 -->
+
+      <hr class="release-divider">
 
       <!-- ═══════════════════════════════════════════
            v2.1.0
@@ -1188,5 +1446,6 @@
     </div>
   </footer>
 
+  <script src="assets/charts.js" charset="utf-8"></script>
 </body>
 </html>

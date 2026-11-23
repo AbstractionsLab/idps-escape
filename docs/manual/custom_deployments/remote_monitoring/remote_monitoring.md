@@ -1,9 +1,8 @@
-
-## Remote monitoring
+# Remote monitoring
 
 The monitoring of remote end-points can be set up following multiple deployment paradigms.
 
-![DeployEP](../../docs/specs/srs/assets/IDPS-ESCAPE-decision-diagram-EP.png)
+![DeployEP](../../../specs/srs/assets/IDPS-ESCAPE-decision-diagram-EP.png)
 
 Assuming the cental NIDS, HIDS and SIEM to be deployed and endpoint in the same network. We suggest the two most conservative options.
 
@@ -11,18 +10,18 @@ Assuming the cental NIDS, HIDS and SIEM to be deployed and endpoint in the same 
 2. **Hybrid Model**: The hybrid model includes employing a mechanism on the monitored endpoint so that all the incoming and outgoing network traffic from it is mirrored to the centralized monitoring machine. The centralized monitoring machine already has the Suricata service running and a Wazuh agent listening to its logs for network activity in place. 
 The Hybrid Model is lighter.
 
-Notice that, dedicated Wazuh agents are installed on the endpoints that need to be monitored and enrolled with the _Wazuh Manager_ on the centralized monitoring machine. These Wazuh agents will be responsible for monitoring and reporting all the host based activities on the monitored endpoint. The process of installing the agents on any machine is same as above, but only differs for the WAZUH_MANAGER address. In such cases, the WAZUH_MANAGER address will be the IP address of the centralized monitoring machine. 
+Notice that, dedicated Wazuh agents are installed on the endpoints that need to be monitored and enrolled with the _Wazuh Manager_ on the centralized monitoring machine. These Wazuh agents will be responsible for monitoring and reporting all the host based activities on the monitored endpoint. Agents are installed as described in [Onboard an endpoint](../../radar_docs/radar-getting-started.md#3-onboard-an-endpoint) (or the [Wazuh agent installation guide](https://documentation.wazuh.com/current/installation-guide/wazuh-agent/index.html)), the only difference being the WAZUH_MANAGER address. In such cases, the WAZUH_MANAGER address will be the IP address of the centralized monitoring machine. 
 
-### Integrated Model 
-1. [Install Suricata](./suricata/suricata_installation.md#installation-and-configuration-of-suricata)
-1. [Install Wazuh agent](./wazuh/wazuh_agents.md) using address of cental manager.
-1. Follow [integration procedure](integration.md) with local paths.
+### Integrated model 
+1. [Install Suricata](../suricata/suricata_installation.md#installation-and-configuration-of-cyfort-suricata)
+1. [Install Wazuh agent](../../radar_docs/radar-getting-started.md#3-onboard-an-endpoint) using address of cental manager.
+1. Follow [integration procedure](../integration.md) with local paths.
 
-![Integrated Model](./../../docs/specs/larc/assets/IDPS-ESCAPE-EP-integrated.png)
+![Integrated Model](../../../specs/larc/assets/IDPS-ESCAPE-EP-integrated.png)
 
-### Hybrid Model 
+### Hybrid model 
 
-1. [Install Wazuh agent](./wazuh/wazuh_agents.md) using address of cental manager. 
+1. [Install Wazuh agent](../../radar_docs/radar-getting-started.md#3-onboard-an-endpoint) using address of cental manager. 
 
 1. Mirror traffic to central machine to be monitored by central Suricata. Namely, create GRE tunnel from the endpoint to the central monitoring machine running the script [idps-escape-port-mirroring.sh](idps-escape-port-mirroring.sh). The script takes six parameters described below, for simplicity we call `CCserver` which is hosting the Suricata and Wazuh services and their integration, and `end-point` which is the machine in the network that need to be monitored. 
 
@@ -55,4 +54,4 @@ Then finally, the script can be executed as:
 ```
  This creates a GRE tunnel from the source to destination mirroring all incoming and outgoing network traffic to the destination machine. Any malicious activity on the source machine would now be seen through the Wazuh dashboard on the destination machine i.e., the centralized monitoring machine hosting the Suricata and Wazuh integration. 
 
-![Integrated Model](./../../docs/specs/larc/assets/IDPS-ESCAPE-EP-hybrid.png)
+![Hybrid Model](../../../specs/larc/assets/IDPS-ESCAPE-EP-hybrid.png)

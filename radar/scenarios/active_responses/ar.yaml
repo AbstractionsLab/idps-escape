@@ -48,8 +48,10 @@ scenarios:
         - "100902"
         - "100903"
     w_ad: 0.0
-    w_sig: 0.6
-    w_cti: 0.4
+    # No DECIPHER analysis endpoint exists for geoip, so CTI is always 0: its
+    # weight is moved to w_sig, which lets the 0.9-likelihood rules reach T2.
+    w_sig: 1.0
+    w_cti: 0.0
     delta_ad_minutes: 10
     delta_signature_minutes: 1
     signature_impact: 0.6
@@ -71,7 +73,11 @@ scenarios:
   suspicious_login:
     active: false
     ad:
-      rule_ids: []
+      # Off-hours activity: model mode (per-user detector, 210040) and
+      # rule mode (declared schedule, query monitor, 210041; fixed grade).
+      rule_ids:
+        - "210040"
+        - "210041"
     signature:
       rule_ids:
         - "210013"
@@ -87,14 +93,27 @@ scenarios:
     delta_signature_minutes: 1
     signature_impact: 0.7
     signature_likelihood: 
-      - rule_id: [210013, 210030, 210031]
+      - rule_id: [210013, 210022, 210030, 210031]
         weight: 0.6
       - rule_id: [210020, 210021]
         weight: 0.4
+    # Combine each alert with the other detection type's strongest alert for the
+    # same user within window_minutes (linear decay). ad_lead_minutes covers the
+    # detector's shingle: (shingle_size - 1) x detector_interval.
+    fusion:
+      enabled: true
+      window_minutes: 30
+      ad_lead_minutes: 10
+      key:
+        ad: data.entity_keyword
+        signature: [data.dstuser, data.srcuser, data.user, data.username]
     tiers:
-      tier1_min: 0.2
+      tier1_min: 0.15
       tier1_max: 0.33
-      tier2_max: 0.66
+      # A signature alert alone scores at most 0.468, so it reaches T3
+      # (lock_user_linux.sh) only with fused anomaly evidence. An anomaly alert
+      # (max 0.6) can reach T3 with strong CTI but names no IP or user to act on.
+      tier2_max: 0.55
     mitigations_tier2: 
       - firewall-drop
     mitigations_tier3:
@@ -127,6 +146,29 @@ scenarios:
       - terminate_service.sh
     # (/var/ossec/etc/radar-terminable-services, set via --allow-service).
     terminable_services: []
+    allow_mitigation: true
+
+  linux_resource_utilization:
+    active: false
+    ad:
+      rule_ids:
+        - "100321"
+    signature:
+      rule_ids: []
+    w_ad: 0.9
+    w_sig: 0.0
+    w_cti: 0.1
+    delta_ad_minutes: 10
+    delta_signature_minutes: 1
+    signature_impact: 0.0
+    signature_likelihood: 0.0
+    tiers:
+      tier1_min: 0.0
+      tier1_max: 0.33
+      tier2_max: 0.66
+    mitigations_tier2: []
+    mitigations_tier3:
+      - terminate_service.sh
     allow_mitigation: true
 
   scanning_detection:

@@ -2,8 +2,6 @@
 
 **Purpose**: This guide explains how to extend the suspicious login detection framework to support new authentication protocols beyond SSH.
 
-**Last updated**: 2026-02-15
-
 ---
 
 ## Overview
@@ -12,8 +10,8 @@ The suspicious login detection system (SRS-051) is designed with protocol-agnost
 
 ### Current implementation
 
-- **Protocol**: SSH authentication
-- **Rule IDs**: 210012-210022 (failed-burst, impossible-travel, correlation)
+- **Protocol**: SSH authentication, plus Office 365 login failures
+- **Rule IDs**: 210013, 210020–210022 (SSH failed-burst, impossible-travel, correlation); 210030–210031 (O365 login failure, O365 brute force); 210039–210041 for off-hours alerts (AD catch-all, model mode, rule mode)
 - **Base rules**: 5760 (failed), 5715 (success)
 - **Scenario name**: `suspicious_login`
 
@@ -29,11 +27,9 @@ Add a new scenario to `radar/config.yaml`:
 
 ```yaml
 suspicious_login_rdp:
-  container_name: agent.rdp
   index_prefix: wazuh-ad-suspicious-login-rdp
   result_index: opensearch-ad-plugin-result-suspicious-login-rdp
   log_index_pattern: wazuh-ad-suspicious-login-rdp-*
-  dataset_dir: suspicious_login_rdp/dataset
   time_field: "@timestamp"
   shingle_size: 8
   categorical_field: "User ID.keyword"
@@ -44,27 +40,8 @@ suspicious_login_rdp:
   anomaly_grade_threshold: 0.8
   confidence_threshold: 0.85
   
-  # Protocol-specific rule mappings
-  protocol: rdp
-  base_failed_rule: 60122  # Windows RDP authentication failed
-  base_success_rule: 60204  # Windows RDP authentication success
-  
-  # Risk scoring weights
-  w_ad: 0.4
-  w_sig: 0.4
-  w_cti: 0.2
-  risk_threshold: 0.5
-  signature_likelihood: 0.7
-  signature_impact: 0.8
-  
-  # Tier boundaries
-  tiers:
-    tier1_max: 0.33
-    tier2_max: 0.66
-  
-  # Time windows
-  delta_ad_minutes: 10
-  delta_signature_minutes: 1
+  # The Wazuh base rules (60122 failed, 60204 success) are referenced in the rules (step 3), not here.
+  # Risk weights, tiers and time windows are not set here: they go in ar.yaml (step 5).
   
   features:
     - feature_name: login_count
@@ -184,38 +161,56 @@ Add scenario to `radar/scenarios/active_responses/ar.yaml`:
 ```yaml
 scenarios:
   suspicious_login_rdp:
+    active: false
     ad:
-      rule_ids: []  # If you create an OpenSearch AD detector
+      rule_ids: []  # the rule ID of your anomaly-detector alerts, if you create a detector
     signature:
-      rule_ids: [210023, 210024, 210025, 210026, 210027]
-      likelihood:
-        - rule_id: [210023, 210024]
-          weight: 0.6
-        - rule_id: [210025, 210026]
-          weight: 0.8
-        - rule_id: [210027]
-          weight: 0.95
-      impact: 0.8
-    w_ad: 0.4
+      rule_ids: ["210023", "210024", "210025", "210026", "210027"]
+    w_ad: 0.3
     w_sig: 0.4
-    w_cti: 0.2
-    risk_threshold: 0.5
+    w_cti: 0.3
     delta_ad_minutes: 10
     delta_signature_minutes: 1
+    signature_impact: 0.8
+    signature_likelihood:
+      - rule_id: [210023, 210024]
+        weight: 0.6
+      - rule_id: [210025, 210026]
+        weight: 0.8
+      - rule_id: [210027]
+        weight: 0.95
+    # Optional, once ad.rule_ids is set: combine each alert with the other
+    # detection type's strongest alert for the same user.
+    # fusion:
+    #   enabled: true
+    #   window_minutes: 30
+    #   ad_lead_minutes: 10   # (shingle_size - 1) x detector_interval
+    #   key:
+    #     ad: data.entity_keyword
+    #     signature: [data.dstuser, data.srcuser, data.user, data.username]
     tiers:
+      tier1_min: 0.15
       tier1_max: 0.33
-      tier2_max: 0.66
+      tier2_max: 0.55
+    mitigations_tier2:
+      - firewall-drop
+    mitigations_tier3:
+      - firewall-drop
+      - lock_user_linux.sh
+    allow_mitigation: false
 ```
 
-### 6. Create scenario directory structure
+Check that every tier you configure can be reached with your weights; see [Reachable tiers](../radar-tuning.md#reachable-tiers). DECIPHER is only asked for a CTI score for scenarios listed in `DecipherClient.ANALYZE_ENDPOINTS` in `radar_ar.py` (today `suspicious_login` and `scanning_detection`); for any other scenario name the CTI score is 0. With these values, a 210027 alert alone therefore scores at most 0.4 × 0.95 × 0.8 = 0.304 (tier 1). Once a DECIPHER endpoint is mapped for the scenario (step 7), it can reach 0.304 + 0.3 × 1.0 = 0.604, tier 3 on a strong CTI match, without any anomaly evidence. In the shipped `suspicious_login`, a signature alert alone scores at most 0.468 and needs fused anomaly evidence for tier 3. [Combining signature and anomaly alerts](../radar-tuning.md#combining-signature-and-anomaly-alerts-fusion) explains the `fusion` block.
 
-```bash
-cd radar/scenarios
-mkdir -p suspicious_login_rdp/{dataset,decoders,rules,agent_configs}
+### 6. Check the scenario file layout
 
-# Move/copy files to appropriate locations
-mv decoders/suspicious_login_rdp/0320-rdp.xml decoders/
-mv rules/suspicious_login_rdp/a3-suspicious-login-rdp.xml rules/
+Deployment reads each scenario's files from per-type folders named after the scenario, so keep the files where steps 2 to 4 put them:
+
+```
+radar/scenarios/decoders/suspicious_login_rdp/0320-rdp.xml
+radar/scenarios/rules/suspicious_login_rdp/a3-suspicious-login-rdp.xml
+radar/scenarios/ossec/radar-suspicious-login-rdp-ossec-snippet.xml
+radar/scenarios/agent_configs/suspicious_login_rdp/   # optional: the agent group's agent.conf snippet
 ```
 
 ### 7. Update scenario registry
@@ -230,7 +225,7 @@ class SuspiciousLoginRDP(SuspiciousLogin):
         return super().resolve_effective_agent_name(scenario, context_events)
 ```
 
-Then register it:
+Then register it, and map a DECIPHER analyze endpoint if the scenario should get a CTI score (otherwise its CTI score is 0):
 
 ```python
 class Registry:
@@ -241,6 +236,13 @@ class Registry:
             "suspicious_login_rdp": SuspiciousLoginRDP(logger, os_client),
             # ... other scenarios
         }
+
+class DecipherClient:
+    ANALYZE_ENDPOINTS = {
+        "suspicious_login": "/api/v1/analyze/suspicious_login",
+        "suspicious_login_rdp": "/api/v1/analyze/suspicious_login",  # an endpoint DECIPHER serves
+        "scanning_detection": "/api/v1/analyze/suspicious_nt_scanning",
+    }
 ```
 
 ---
@@ -266,14 +268,14 @@ Use Wazuh decoders to normalize these fields during log ingestion.
 1. **Deploy the scenario**:
    ```bash
    cd radar
-   ./build-radar.sh suspicious_login_rdp --agent local --manager local --manager_exists true
+   sudo ./radar.sh build suspicious_login_rdp
    ```
 
 2. **Verify rule files deployed**:
    ```bash
    docker exec -it wazuh.manager bash
-   ls -l /var/ossec/ruleset/rules/a3-suspicious-login-rdp.xml
-   ls -l /var/ossec/ruleset/decoders/0320-rdp.xml
+   ls -l /var/ossec/etc/rules/a3-suspicious-login-rdp.xml
+   ls -l /var/ossec/etc/decoders/0320-rdp.xml
    ```
 
 3. **Test with synthetic data**:
@@ -292,17 +294,17 @@ Use Wazuh decoders to normalize these fields during log ingestion.
    # Check active response log
    docker exec -it wazuh.manager cat /var/ossec/logs/active-responses.log
    
-   # Check RADAR AR log
-   docker exec -it wazuh.manager cat /var/log/radar_ar.log | jq '.scenario'
+   # radar_ar.py writes its own entries to the same file (AR_LOG_FILE); find the scenario it identified
+   docker exec -it wazuh.manager grep 'Scenario identified' /var/ossec/logs/active-responses.log
    ```
 
 ---
 
 ## Common pitfalls
 
-1. **Forgetting GeoIP enrichment**: Impossible travel rules require `radar_country_change_i` and `radar_geo_velocity_kmh` fields. Ensure the GeoIP helper script is deployed and logs are processed.
+1. **Forgetting GeoIP enrichment**: Impossible travel rules require `radar_country_change_i` and `radar_geo_velocity_kmh` fields. Ensure the manager-side enrichment integration (`custom-radar-enrich`, see the [suspicious login manual setup](./suspicious_login_explained.md#manager-side-setup)) is deployed and enriches the protocol's log lines; it parses only SSH lines today.
 
-2. **Rule ID conflicts**: Use a new range for each protocol (SSH: 210012-210022, RDP: 210023-210027, Web: 210028-210032, etc.).
+2. **Rule ID conflicts**: Use a new range for each protocol. SSH uses 210013, 210020–210022, 210030–210031 and 210039–210041; the examples here use 210023–210027 for RDP and 210028 for web. Check `a3-suspicious-login.xml` before picking a range.
 
 3. **Decoder parent mismatches**: Ensure decoder `<parent>` references match the actual log format parent decoder.
 
@@ -312,7 +314,7 @@ Use Wazuh decoders to normalize these fields during log ingestion.
 
 ---
 
-## Example: Web authentication
+## Example: web authentication
 
 For web application logins (e.g., Nginx/Apache with custom JSON logs):
 

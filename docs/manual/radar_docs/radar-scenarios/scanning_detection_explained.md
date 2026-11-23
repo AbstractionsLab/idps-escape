@@ -37,7 +37,7 @@ The primary log source is **Suricata's `eve.json`** event log on the monitored h
    - Rule 100830: The confirmed-scan alert — the only rule in this ruleset bound to active response
    - Rule 100835: An operational alert, raised if the scanning allowlist file cannot be read
 4. **When rule 100830 fires:** Wazuh triggers the configured active response.
-5. **RADAR risk engine** computes a risk score based on rule severity and historical context.
+5. **RADAR risk engine** computes a risk score from the rule's signature likelihood and impact and from DECIPHER's CTI score for the source (`/api/v1/analyze/suspicious_nt_scanning`): 0.7 × (0.9 × 0.6) + 0.3 × CTI. Without CTI that is 0.378 (T2); tier 3 needs a CTI score of at least about 0.94. See [How the risk score is built](../radar-tuning.md#how-the-risk-score-is-built).
 6. **Tier-based mitigation:** If the risk score exceeds the configured thresholds, RADAR automatically sends a notification and applies `firewall-drop`. In the shipped `ar.yaml`, `scanning_detection` ships with `allow_mitigation: false`, so mitigations are planned and logged but not executed until explicitly enabled.
 
 This completes the scanning detection path for the `scanning_detection` scenario.
@@ -52,7 +52,7 @@ This section describes how to manually deploy the **scanning detection scenario*
 - **Suricata** installed on the monitored host and writing `/var/log/suricata/eve.json` with HTTP logging enabled — this is the primary detection source (see [Log source](#log-source) above).
 - Apache or Nginx web server configured with HTTP access logging enabled, for correlation.
 - Network connectivity from Wazuh agent to Wazuh manager.
-- Firewall access on the Wazuh manager to execute `iptables` commands (for active response block operations).
+- Firewall access on the monitored host to execute `iptables` commands: `firewall-drop` runs on the agent that reported the alert, not on the manager.
 
 #### Manager-side setup
 
@@ -75,14 +75,20 @@ Add both inside the `<ruleset>` tag:
 <list>etc/lists/radar_webdav_apps</list>
 ```
 
-3. Copy the scanning detection active-response snippet to the Wazuh configuration, and the `radar_ar.py` dispatcher script the snippet's `radar_ar_scanning` command invokes:
+3. Copy the scanning detection active-response snippet to the Wazuh configuration, and the `radar_ar.py` dispatcher script the snippet's `radar_ar_scanning` command invokes, with its scenario configuration `ar.yaml` and its settings file (`active_responses.env`, only the keys the active response needs, filtered from `/radar/.env`). Without `ar.yaml`, `radar_ar.py` matches no scenario and does nothing; it also holds this scenario's `allowlist_file` and `trusted_proxies`. `--os-url` is the indexer address as the manager reaches it, and `--manager-address` the manager's own address(es), which are never blocked. Keep `AR_RISK_CONFIG=/var/ossec/active-response/bin/ar.yaml` in `.env`, as in `env.example`. The snippet has no `<ossec_config>` wrapper, so append it as a block of its own:
 ```bash
-cat /radar/scenarios/ossec/radar-scanning-detection-ossec-snippet.xml \
+{ echo '<ossec_config>'; cat /radar/scenarios/ossec/radar-scanning-detection-ossec-snippet.xml; echo '</ossec_config>'; } \
    >> /var/ossec/etc/ossec.conf
 
+cd /radar
+PYTHONPATH=/radar python3 -m wazuh_api.ar_env write /var/ossec/active-response/bin/active_responses.env \
+  --env-file /radar/.env --os-url https://<indexer-host>:9200 --manager-address <manager-ip>
 cp /radar/scenarios/active_responses/radar_ar.py /var/ossec/active-response/bin/radar_ar.py
-chmod 750 /var/ossec/active-response/bin/radar_ar.py
-chown root:wazuh /var/ossec/active-response/bin/radar_ar.py
+cp /radar/scenarios/active_responses/ar.yaml /var/ossec/active-response/bin/ar.yaml
+chown root:wazuh /var/ossec/active-response/bin/active_responses.env /var/ossec/active-response/bin/radar_ar.py /var/ossec/active-response/bin/ar.yaml
+chmod 0440 /var/ossec/active-response/bin/active_responses.env
+chmod 0750 /var/ossec/active-response/bin/radar_ar.py
+chmod 0640 /var/ossec/active-response/bin/ar.yaml
 ```
 
 4. Copy the agent configuration to the manager's scenario-specific group, rather than the fleet-wide `default` group, so only endpoints assigned to `scanning_detection` receive it:

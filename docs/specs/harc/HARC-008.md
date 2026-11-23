@@ -1,16 +1,15 @@
 ---
-active: true
+active: false
 derived: false
 level: 2.5
-links:
-- MRS-007: hXM-PkC-g29wtz-Qe3MbM2viHIYzarGh2jFtSD-7N18=
+links: []
 normative: true
 ref: ''
-reviewed: PUwjgsepOMynZc4eGIAPhfzy_9_xWsvoisiRqlTL2Vo=
+reviewed: S3QayfYlAkGlgdNZjQ5Uv8YP6EBbdNmLbypjxPlv3rk=
 ---
 
 # RADAR deployment: Local Agent and Local Manager mode
 
-The diagram below illustrates the RADAR build-time and run-time architecture for a deployment in which both the Wazuh Manager and the Wazuh agent are hosted locally using Docker containers.
+> **Status: obsolete.** RADAR no longer runs Wazuh agents as local Docker containers: the agent containers and their compose file were removed in v2.0.0, and endpoints are onboarded with `radar/radar-agent/bootstrap-agent.sh` (see HARC-007).
 
-![RADAR architecture in Local Agent and Local Manager mode](assets/RADAR-deployment-modes-local-local.drawio.png "RADAR: Local Agent and Local Manager"){: width="70%"}
+This mode covered a deployment in which both the Wazuh Manager and the Wazuh agent are hosted locally using Docker containers. The diagram was removed with the deployment mode.

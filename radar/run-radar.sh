@@ -6,7 +6,11 @@ usage() {
 Usage:
   $0 <scenario> [--ingest true|false]
 
-Scenarios: suspicious_login | geoip_detection | log_volume | scanning_detection
+Scenarios: suspicious_login | geoip_detection | log_volume | scanning_detection |
+           linux_resource_utilization
+
+--ingest true seeds history for scenarios that ship
+scenarios/ingest_scripts/<scenario>/wazuh_ingest.py (log_volume, suspicious_login, linux_resource_utilization).
 EOF
   exit 2
 }
@@ -21,6 +25,13 @@ while [[ $# -gt 0 ]]; do
     *) usage ;;
   esac
 done
+
+if [[ "$INGEST" == "true" && ! -f "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scenarios/ingest_scripts/${SCENARIO_NAME}/wazuh_ingest.py" ]]; then
+  echo "[ERROR] --ingest true: scenario '${SCENARIO_NAME}' has no ingest script" >&2
+  echo "        (scenarios/ingest_scripts/${SCENARIO_NAME}/wazuh_ingest.py). Re-run with --ingest false;" >&2
+  echo "        the detector then builds its baseline from live data." >&2
+  exit 2
+fi
 
 if [[ -f Dockerfile.radar-cli ]]; then
   echo ">>> Building radar-cli image..."
@@ -52,6 +63,17 @@ if [[ -n "$WEBHOOK_URL_DECLARED" ]]; then
 fi
 
 cli_env
+off_hours() {
+  docker run --rm \
+    -v "$PWD/config.yaml:/app/config.yaml:ro" \
+    "${CLI_ENV[@]}" \
+  radar-cli:latest python off_hours.py "$@"
+}
+# The pipeline must exist before the synthetic ingest names it.
+if [[ "$SCENARIO_NAME" == "suspicious_login" ]]; then
+  off_hours deploy
+fi
+
 if [[ "$INGEST" == "true" ]]; then
   docker run --rm \
     -v "$PWD/${SCENARIO_NAME}/dataset:/app/${SCENARIO_NAME}/dataset" \
@@ -60,12 +82,27 @@ if [[ "$INGEST" == "true" ]]; then
   radar-cli:latest python "${SCENARIO_NAME}"/wazuh_ingest.py
 fi
 
+# Flag archive events indexed before the pipeline existed (model mode trains on them).
+if [[ "$SCENARIO_NAME" == "suspicious_login" ]]; then
+  off_hours backfill
+fi
+
+if [[ -n "$WEBHOOK_URL_RESOLVED" ]]; then export WEBHOOK_URL="$WEBHOOK_URL_RESOLVED"; fi
+
+# suspicious_login has no generic detector: off_hours.py runs its off-hours
+# consumers (rule-mode monitor, model-mode detector and monitor) and stops the
+# detectors they replace. It runs after the backfill, so model mode trains on flagged history.
+if [[ "$SCENARIO_NAME" == "suspicious_login" ]]; then
+  cli_env
+  off_hours monitors
+  exit 0
+fi
+
 DET_ID="$(docker run --rm \
   -v "$PWD/config.yaml:/app/config.yaml:ro" \
   "${CLI_ENV[@]}" \
   radar-cli:latest python detector.py "${SCENARIO_NAME}")"
 
-if [[ -n "$WEBHOOK_URL_RESOLVED" ]]; then export WEBHOOK_URL="$WEBHOOK_URL_RESOLVED"; fi
 cli_env
 MON_ID="$(docker run --rm \
   -v "$PWD/config.yaml:/app/config.yaml:ro" \

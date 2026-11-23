@@ -21,15 +21,15 @@ The detection process is implemented using these components:
 
 ---
 
-### Active Response Analysis
+### Active response analysis
 
 Active responses handle detected suspicious events:
 
 - **Email Notification (`/radar/scenarios/active_responses/radar_ar.py`)**
     - Sends alert emails when a scenario rule is triggered.
-- **Service / connection termination (`/radar/scenarios/active_responses/terminate_service.sh`)**, at tier 3
+- **Service / connection termination (`/radar/radar-agent/active_responses/terminate_service_v1.sh`)**, at tier 3
     - Stops the alert's service only if it is listed both in `terminable_services` in `ar.yaml` and in the agent's `/var/ossec/etc/radar-terminable-services` (written by `bootstrap-agent.sh --allow-service <name>`). Both are empty by default, so no service is stopped until you configure them.
-    - Otherwise kills the processes holding TCP connections to the alert's remote IP.
+    - Its other mode, killing the processes holding TCP connections to the alert's source IP, never applies here: anomaly alerts carry no source IP, so without an allowlisted service tier 3 notifies without mitigating.
     - Core services (`wazuh-*`, `sshd`, `auditd`, `systemd-*`, firewall and syslog) are never stopped. See [Mitigations](../radar-tuning.md#mitigations).
 
 ### Manual setup
@@ -101,7 +101,7 @@ And paste the content of `/radar/scenarios/agent_configs/log_volume/radar-log-vo
 
 4. Install the `terminate_service.sh` mitigation and the list of services it may stop (it needs `jq`):
 ```bash
-cp /radar/scenarios/active_responses/terminate_service.sh /var/ossec/active-response/bin/terminate_service.sh
+cp /radar/radar-agent/active_responses/terminate_service_v1.sh /var/ossec/active-response/bin/terminate_service.sh
 chown root:wazuh /var/ossec/active-response/bin/terminate_service.sh
 chmod 0750 /var/ossec/active-response/bin/terminate_service.sh
 
@@ -116,17 +116,23 @@ chmod 0640 /var/ossec/etc/radar-terminable-services
 systemctl restart wazuh-agent
 ```
 
-A logrotate config is recommended too, to keep `/var/log/radar/log_volume_metric.log` from growing unbounded.
+A logrotate config is recommended too, to keep `/var/log/radar/log_volume_metric.log` from growing unbounded. `bootstrap-agent.sh` installs `/radar/radar-agent/collectors/log_volume/radar-log-volume.logrotate` as `/etc/logrotate.d/radar-log-volume`; copy it there for a manual setup.
 
 #### Manager-side configuration
 
 1. Copy the files in `/radar/scenarios/decoders/log_volume` into the `/var/ossec/etc/decoders/`
 2. Copy the files in `/radar/scenarios/rules/log_volume` into the `/var/ossec/etc/rules/`
-3. Configure active response scripts.
+3. Configure active response scripts: the dispatcher, its scenario configuration `ar.yaml`, and the settings file it reads (`active_responses.env`, only the keys the active response needs, filtered from `/radar/.env`). Without `ar.yaml`, `radar_ar.py` matches no scenario and does nothing. `--os-url` is the indexer address as the manager reaches it, and `--manager-address` the manager's own address(es), which are never blocked. Keep `AR_RISK_CONFIG=/var/ossec/active-response/bin/ar.yaml` in `.env`, as in `env.example`.
 ```
+cd /radar
+PYTHONPATH=/radar python3 -m wazuh_api.ar_env write /var/ossec/active-response/bin/active_responses.env \
+  --env-file /radar/.env --os-url https://<indexer-host>:9200 --manager-address <manager-ip>
 cp /radar/scenarios/active_responses/radar_ar.py /var/ossec/active-response/bin/radar_ar.py
-chmod 750 /var/ossec/active-response/bin/radar_ar.py
-chown root:wazuh /var/ossec/active-response/bin/radar_ar.py
+cp /radar/scenarios/active_responses/ar.yaml /var/ossec/active-response/bin/ar.yaml
+chown root:wazuh /var/ossec/active-response/bin/active_responses.env /var/ossec/active-response/bin/radar_ar.py /var/ossec/active-response/bin/ar.yaml
+chmod 0440 /var/ossec/active-response/bin/active_responses.env
+chmod 0750 /var/ossec/active-response/bin/radar_ar.py
+chmod 0640 /var/ossec/active-response/bin/ar.yaml
 ```
 4. Configure commands and active responses by copying the content of `/radar/scenarios/ossec/radar-log-volume-ossec-snippet.xml` into the end of `/var/ossec/etc/ossec.conf` under `<ossec_config>` tag.
 5. Restart the manager:
@@ -134,9 +140,9 @@ chown root:wazuh /var/ossec/active-response/bin/radar_ar.py
 /var/ossec/bin/wazuh-control restart
 ```
 
-#### Wazuh Dashboard / Opensearch
+#### Wazuh dashboard / OpenSearch
 
-##### Create the Anomaly Detector
+##### Create the anomaly detector
 
 1. Ensure that `data.log_bytes` in index `wazuh-ad-log-volume-*` is a numerical field in **Index Management** Menu.
 2. **Navigate** in Wazuh Dashboards to **OpenSearch Plugins ➔ Anomaly Detection**.
@@ -145,21 +151,24 @@ chown root:wazuh /var/ossec/active-response/bin/radar_ar.py
     - **Description:** “Monitor log volume per endpoint”
     - **Index:** `wazuh-ad-log-volume-*`
     - **Time field:** `@timestamp`
-    - **Detection interval:** `5m` (with `1m` window delay)
+    - **Detection interval:** `1m` (with `1m` window delay), per `config.yaml`
+    - **Shingle size:** `8`
     - **Detector type:** Real-time (continuous)
     - **Custom result index:** opensearch-ad-plugin-result-log-volume (!important)
 
 ---
 
-##### Define Features
+##### Define features
 
 | Feature name | Method | Field | Notes |
 | --- | --- | --- | --- |
-| `max_log_bytes` | `max` | `data.log_bytes` | Maximum value of the log_bytes in the given detection interval |
+| `log_volume_max` | `max` | `data.log_bytes` | Maximum value of the log_bytes in the given detection interval |
+
+`config.yaml` also sets two `IGNORE_ANOMALY` rules on `log_volume_max` (`ACTUAL_OVER_EXPECTED_RATIO` ≤ 0.001 and `EXPECTED_OVER_ACTUAL_RATIO` ≤ 0.2); add them under the detector's suppression rules to match the automated setup.
 
 ---
 
-##### Enable Categorical Field (per-endpoint modelling)
+##### Enable categorical field (per-endpoint modelling)
 
 Under **Categorical field**, select the agent identifier `agent.name.keyword`.
 
@@ -169,7 +178,7 @@ This ensures each endpoint gets its own statistical model.
 
 ---
 
-##### Saving & Validation
+##### Saving & validation
 
 Click **Next** to **Review**.
 
@@ -177,30 +186,25 @@ Click **Next** to **Review**.
 - Click **Create** to finalize.
 
 
-### Monitor and Webhook
+### Monitor and webhook
 
-#### Create Webhook
+#### Create webhook
 
-This [webhook](/radar/webhook/README.md) is a simple Flask application that receives the monitor's payload and appends a single line to `/var/log/ad_alerts.log`. To deploy the webhook in the Wazuh manager:
+This [webhook](/radar/webhook/README.md) is a small Flask application that receives the monitor's payload and appends one line per anomalous agent to `/var/log/ad_alerts.log`. It runs in its own container, `ad-webhook` (`radar/docker-compose.webhook.yml`), together with a Wazuh agent that enrols with the manager as `ad-webhook` and ships `/var/log/ad_alerts.log` (`radar/webhook/ad-ossec.conf`). `build-radar.sh` builds, enrols and starts it. `radar_ar.py` only acts on anomaly alerts read from `/var/log/ad_alerts.log` by the agent named `WEBHOOK_AGENT_NAME` (default `ad-webhook`), so don't run the webhook on the manager or watch that file from the manager's own `ossec.conf`: those alerts would be dropped as untrusted.
 
-1. Copy the [ad_alerts_webhook.py](/radar/webhook/ad_alerts_webhook.py) file from this repository into the Wazuh manager to a custom wazuh_webhook directory.
-2. Ensure execution permissions: 
+To start the container by hand, from `radar/`:
+
+1. Set `WEBHOOK_SHARED_SECRET` in `.env` (this generates one if it is unset), and check `WAZUH_MANAGER_ADDRESS`, `WAZUH_AGENT_VERSION` (the manager's version) and `WEBHOOK_AGENT_NAME`:
 ```bash
-chmod +x ad_alerts_webhook.py
+python3 -m wazuh_api.envfile ensure-secret WEBHOOK_SHARED_SECRET .env
 ```
-3. Run under a python3:
+2. Build and start it. On the first start the agent enrols with the manager's enrollment password on port 1515, passed as `WAZUH_REGISTRATION_TOKEN`; `build-radar.sh` mints a short-lived one with `radar_deploy/manager-mint-token.sh`. Once enrolled, it is no longer needed.
 ```bash
-python3 ad_alerts_webhook.py
+WAZUH_REGISTRATION_TOKEN=<enrollment-password> docker compose -f docker-compose.webhook.yml up -d --build
 ```
-4. The resulted log file should be monitored by Wazuh, thus `/var/ossec/etc/ossec.conf` needs to be configured:
-```xml
-<localfile>
-    <log_format>syslog</log_format>
-    <location>/var/log/ad_alerts.log</location>
-</localfile>
-```
+3. The webhook listens on `WEBHOOK_INTERNAL_PORT` (default `8080`), published on `WEBHOOK_BIND_ADDRESS`. Only the indexer needs to reach it.
 
-#### Create an OpenSearch Monitor
+#### Create an OpenSearch monitor
 
 In `log_volume-detector` Anomaly overview, set up alert: 
 
@@ -210,20 +214,18 @@ In `log_volume-detector` Anomaly overview, set up alert:
     - **Severity:** High
     - **Condition:**
     
-    When choosing thresholds for firing alerts, you must balance **sensitivity** (catching real threats) against **precision** (avoiding false positives). A balanced strategy is to require:
-    
-    - **anomaly_grade ≥ 0.5:** captures the upper quintile of deviations without triggering on mild fluctuations, and
-    - **confidence ≥ 0.5:** ensures the model has seen enough data to trust its grade.
+    `anomaly_grade ≥ 0.01` and `confidence ≥ 0.01` (the shipped `anomaly_grade_threshold`/`confidence_threshold` in `config.yaml`). Raising them trades sensitivity (catching real threats) for precision (fewer false positives); see [Anomaly detector sensitivity](../radar-tuning.md#anomaly-detector-sensitivity).
     
 3. Before following with an action, create a Notification Channel in Wazuh. Go to Menu, navigate to Notifications under Explore. And create a Channel:
     - **Name**: RADAR
     - **Channel type:** Custom webhook
     - **Method:** POST
-    - **Webhook URL:** [http://\<wazuh-manager\>:8080/notify]
+    - **Webhook URL:** `http://<webhook-host>:8080/notify` (the `WEBHOOK_URL` in `.env`, as the indexer reaches the `ad-webhook` container)
+    - **Header:** `X-RADAR-Webhook-Token` set to the `WEBHOOK_SHARED_SECRET` value. The webhook rejects requests without it.
 4. **Action**
     - **Action name:** `RADAR`
     - **Channel**: RADAR
-    - **Message (must be JSON)**
+    - **Message (must be JSON)**. This minimal form reports the highest-graded agent only:
         
         ```
         {
@@ -235,8 +237,14 @@ In `log_volume-detector` Anomaly overview, set up alert:
           },
           "entity": "{{ctx.results.0.hits.hits.0._source.entity.0.value}}",
           "periodStart": "{{ctx.periodStart}}",
-          "periodEnd":   "{{ctx.periodEnd}}"
+          "periodEnd":   "{{ctx.periodEnd}}",
+          "anomaly_grade": "{{ctx.results.0.hits.hits.0._source.anomaly_grade}}",
+          "anomaly_confidence": "{{ctx.results.0.hits.hits.0._source.confidence}}",
+          "dataStart": "{{ctx.results.0.hits.hits.0._source.data_start_time}}",
+          "dataEnd": "{{ctx.results.0.hits.hits.0._source.data_end_time}}"
         }
         ```
         
 When the condition is met, this monitor will send structured JSON to the webhook.
+
+The monitor that `run-radar.sh log_volume` creates uses a fuller message, which adds an `anomalies` list so that every anomalous agent in a run gets its own alert (see the [webhook README](/radar/webhook/README.md#request)). Prefer it over a hand-made monitor.

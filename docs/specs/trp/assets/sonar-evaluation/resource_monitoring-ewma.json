@@ -1,0 +1,498 @@
+{
+  "format": "sonar-evaluation/1",
+  "sonar_version": "2.1.0",
+  "test_labels": "resource/test_labels.json",
+  "validation_labels": "resource/validation_labels.json",
+  "tolerance_minutes": 1.0,
+  "event_types": [
+    "cpu_spike",
+    "memory_leak",
+    "fork_bomb"
+  ],
+  "max_false_alarms_per_day": 5.0,
+  "scenario": "resource_monitoring",
+  "backend": "ewma",
+  "train_file": "resource/training.json",
+  "training_buckets": 1440,
+  "training_seconds": 0.0,
+  "context_buckets": 2,
+  "validation_file": "resource/validation.json",
+  "test_file": "resource/test.json",
+  "detector": "sonar/ewma",
+  "calibration": {
+    "threshold": null,
+    "min_consecutive": 1,
+    "within_false_alarm_budget": true,
+    "max_false_alarms_per_day": 5.0,
+    "validation": {
+      "events": 12,
+      "detected": 8,
+      "alarms": 8,
+      "true_alarms": 8,
+      "false_alarms": 0,
+      "days": 1.999,
+      "precision": 1.0,
+      "recall": 0.6667,
+      "f1": 0.8,
+      "mean_delay_minutes": 1.9,
+      "false_alarms_per_day": 0.0,
+      "outcomes": [
+        {
+          "id": "memory_leak_1",
+          "type": "memory_leak",
+          "start": "2024-12-10T03:49:00Z",
+          "end": "2024-12-10T04:49:00Z",
+          "detected": false,
+          "delay_minutes": null
+        },
+        {
+          "id": "cpu_spike_1",
+          "type": "cpu_spike",
+          "start": "2024-12-10T05:54:00Z",
+          "end": "2024-12-10T06:28:00Z",
+          "detected": true,
+          "delay_minutes": 2.0
+        },
+        {
+          "id": "cpu_spike_2",
+          "type": "cpu_spike",
+          "start": "2024-12-10T10:01:00Z",
+          "end": "2024-12-10T10:25:00Z",
+          "detected": true,
+          "delay_minutes": 1.0
+        },
+        {
+          "id": "memory_leak_2",
+          "type": "memory_leak",
+          "start": "2024-12-10T14:14:00Z",
+          "end": "2024-12-10T15:14:00Z",
+          "detected": false,
+          "delay_minutes": null
+        },
+        {
+          "id": "fork_bomb_1",
+          "type": "fork_bomb",
+          "start": "2024-12-10T18:55:00Z",
+          "end": "2024-12-10T19:00:00Z",
+          "detected": true,
+          "delay_minutes": 2.0
+        },
+        {
+          "id": "memory_leak_3",
+          "type": "memory_leak",
+          "start": "2024-12-10T21:26:00Z",
+          "end": "2024-12-10T22:26:00Z",
+          "detected": false,
+          "delay_minutes": null
+        },
+        {
+          "id": "fork_bomb_2",
+          "type": "fork_bomb",
+          "start": "2024-12-11T01:33:00Z",
+          "end": "2024-12-11T01:39:00Z",
+          "detected": true,
+          "delay_minutes": 2.0
+        },
+        {
+          "id": "fork_bomb_3",
+          "type": "fork_bomb",
+          "start": "2024-12-11T06:25:00Z",
+          "end": "2024-12-11T06:35:00Z",
+          "detected": true,
+          "delay_minutes": 2.0
+        },
+        {
+          "id": "fork_bomb_4",
+          "type": "fork_bomb",
+          "start": "2024-12-11T08:47:00Z",
+          "end": "2024-12-11T08:55:00Z",
+          "detected": true,
+          "delay_minutes": 2.0
+        },
+        {
+          "id": "memory_leak_4",
+          "type": "memory_leak",
+          "start": "2024-12-11T12:51:00Z",
+          "end": "2024-12-11T13:51:00Z",
+          "detected": false,
+          "delay_minutes": null
+        },
+        {
+          "id": "cpu_spike_3",
+          "type": "cpu_spike",
+          "start": "2024-12-11T16:26:00Z",
+          "end": "2024-12-11T17:07:00Z",
+          "detected": true,
+          "delay_minutes": 2.0
+        },
+        {
+          "id": "cpu_spike_4",
+          "type": "cpu_spike",
+          "start": "2024-12-11T20:56:00Z",
+          "end": "2024-12-11T21:36:00Z",
+          "detected": true,
+          "delay_minutes": 2.0
+        }
+      ],
+      "ignored_events": 0,
+      "unscored_events": 0
+    }
+  },
+  "runs": [
+    {
+      "name": "test (configured)",
+      "threshold": null,
+      "min_consecutive": 3,
+      "metrics": {
+        "events": 12,
+        "detected": 8,
+        "alarms": 8,
+        "true_alarms": 8,
+        "false_alarms": 0,
+        "days": 1.999,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "mean_delay_minutes": 2.0,
+        "false_alarms_per_day": 0.0,
+        "outcomes": [
+          {
+            "id": "memory_leak_1",
+            "type": "memory_leak",
+            "start": "2024-12-13T02:37:00Z",
+            "end": "2024-12-13T03:37:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "fork_bomb_1",
+            "type": "fork_bomb",
+            "start": "2024-12-13T05:59:00Z",
+            "end": "2024-12-13T06:06:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "fork_bomb_2",
+            "type": "fork_bomb",
+            "start": "2024-12-13T11:25:00Z",
+            "end": "2024-12-13T11:32:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_1",
+            "type": "cpu_spike",
+            "start": "2024-12-13T14:50:00Z",
+            "end": "2024-12-13T15:11:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_2",
+            "type": "cpu_spike",
+            "start": "2024-12-13T17:59:00Z",
+            "end": "2024-12-13T18:38:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_3",
+            "type": "cpu_spike",
+            "start": "2024-12-13T22:57:00Z",
+            "end": "2024-12-13T23:32:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "fork_bomb_3",
+            "type": "fork_bomb",
+            "start": "2024-12-14T02:35:00Z",
+            "end": "2024-12-14T02:40:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_2",
+            "type": "memory_leak",
+            "start": "2024-12-14T06:08:00Z",
+            "end": "2024-12-14T07:08:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "cpu_spike_4",
+            "type": "cpu_spike",
+            "start": "2024-12-14T08:47:00Z",
+            "end": "2024-12-14T09:31:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_3",
+            "type": "memory_leak",
+            "start": "2024-12-14T12:58:00Z",
+            "end": "2024-12-14T13:58:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "fork_bomb_4",
+            "type": "fork_bomb",
+            "start": "2024-12-14T17:44:00Z",
+            "end": "2024-12-14T17:53:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_4",
+            "type": "memory_leak",
+            "start": "2024-12-14T21:58:00Z",
+            "end": "2024-12-14T22:58:00Z",
+            "detected": false,
+            "delay_minutes": null
+          }
+        ],
+        "ignored_events": 0,
+        "unscored_events": 0
+      }
+    },
+    {
+      "name": "validation (calibrated)",
+      "threshold": null,
+      "min_consecutive": 1,
+      "metrics": {
+        "events": 12,
+        "detected": 8,
+        "alarms": 8,
+        "true_alarms": 8,
+        "false_alarms": 0,
+        "days": 1.999,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "mean_delay_minutes": 1.9,
+        "false_alarms_per_day": 0.0,
+        "outcomes": [
+          {
+            "id": "memory_leak_1",
+            "type": "memory_leak",
+            "start": "2024-12-10T03:49:00Z",
+            "end": "2024-12-10T04:49:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "cpu_spike_1",
+            "type": "cpu_spike",
+            "start": "2024-12-10T05:54:00Z",
+            "end": "2024-12-10T06:28:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_2",
+            "type": "cpu_spike",
+            "start": "2024-12-10T10:01:00Z",
+            "end": "2024-12-10T10:25:00Z",
+            "detected": true,
+            "delay_minutes": 1.0
+          },
+          {
+            "id": "memory_leak_2",
+            "type": "memory_leak",
+            "start": "2024-12-10T14:14:00Z",
+            "end": "2024-12-10T15:14:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "fork_bomb_1",
+            "type": "fork_bomb",
+            "start": "2024-12-10T18:55:00Z",
+            "end": "2024-12-10T19:00:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_3",
+            "type": "memory_leak",
+            "start": "2024-12-10T21:26:00Z",
+            "end": "2024-12-10T22:26:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "fork_bomb_2",
+            "type": "fork_bomb",
+            "start": "2024-12-11T01:33:00Z",
+            "end": "2024-12-11T01:39:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "fork_bomb_3",
+            "type": "fork_bomb",
+            "start": "2024-12-11T06:25:00Z",
+            "end": "2024-12-11T06:35:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "fork_bomb_4",
+            "type": "fork_bomb",
+            "start": "2024-12-11T08:47:00Z",
+            "end": "2024-12-11T08:55:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_4",
+            "type": "memory_leak",
+            "start": "2024-12-11T12:51:00Z",
+            "end": "2024-12-11T13:51:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "cpu_spike_3",
+            "type": "cpu_spike",
+            "start": "2024-12-11T16:26:00Z",
+            "end": "2024-12-11T17:07:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_4",
+            "type": "cpu_spike",
+            "start": "2024-12-11T20:56:00Z",
+            "end": "2024-12-11T21:36:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          }
+        ],
+        "ignored_events": 0,
+        "unscored_events": 0
+      }
+    },
+    {
+      "name": "test (calibrated)",
+      "threshold": null,
+      "min_consecutive": 1,
+      "metrics": {
+        "events": 12,
+        "detected": 8,
+        "alarms": 8,
+        "true_alarms": 8,
+        "false_alarms": 0,
+        "days": 1.999,
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "mean_delay_minutes": 2.0,
+        "false_alarms_per_day": 0.0,
+        "outcomes": [
+          {
+            "id": "memory_leak_1",
+            "type": "memory_leak",
+            "start": "2024-12-13T02:37:00Z",
+            "end": "2024-12-13T03:37:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "fork_bomb_1",
+            "type": "fork_bomb",
+            "start": "2024-12-13T05:59:00Z",
+            "end": "2024-12-13T06:06:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "fork_bomb_2",
+            "type": "fork_bomb",
+            "start": "2024-12-13T11:25:00Z",
+            "end": "2024-12-13T11:32:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_1",
+            "type": "cpu_spike",
+            "start": "2024-12-13T14:50:00Z",
+            "end": "2024-12-13T15:11:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_2",
+            "type": "cpu_spike",
+            "start": "2024-12-13T17:59:00Z",
+            "end": "2024-12-13T18:38:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "cpu_spike_3",
+            "type": "cpu_spike",
+            "start": "2024-12-13T22:57:00Z",
+            "end": "2024-12-13T23:32:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "fork_bomb_3",
+            "type": "fork_bomb",
+            "start": "2024-12-14T02:35:00Z",
+            "end": "2024-12-14T02:40:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_2",
+            "type": "memory_leak",
+            "start": "2024-12-14T06:08:00Z",
+            "end": "2024-12-14T07:08:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "cpu_spike_4",
+            "type": "cpu_spike",
+            "start": "2024-12-14T08:47:00Z",
+            "end": "2024-12-14T09:31:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_3",
+            "type": "memory_leak",
+            "start": "2024-12-14T12:58:00Z",
+            "end": "2024-12-14T13:58:00Z",
+            "detected": false,
+            "delay_minutes": null
+          },
+          {
+            "id": "fork_bomb_4",
+            "type": "fork_bomb",
+            "start": "2024-12-14T17:44:00Z",
+            "end": "2024-12-14T17:53:00Z",
+            "detected": true,
+            "delay_minutes": 2.0
+          },
+          {
+            "id": "memory_leak_4",
+            "type": "memory_leak",
+            "start": "2024-12-14T21:58:00Z",
+            "end": "2024-12-14T22:58:00Z",
+            "detected": false,
+            "delay_minutes": null
+          }
+        ],
+        "ignored_events": 0,
+        "unscored_events": 0
+      }
+    }
+  ],
+  "anomaly_confidence": 1.0
+}

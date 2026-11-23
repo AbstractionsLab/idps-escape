@@ -1,0 +1,240 @@
+{
+  "format": "sonar-evaluation/1",
+  "sonar_version": "2.1.0",
+  "test_labels": "auth/test_labels.json",
+  "validation_labels": "auth/validation_labels.json",
+  "tolerance_minutes": 15.0,
+  "event_types": [
+    "privilege_escalation"
+  ],
+  "max_false_alarms_per_day": 5.0,
+  "scenario": "privilege_escalation",
+  "backend": "pca",
+  "train_file": "auth/training.json",
+  "training_buckets": 1344,
+  "training_seconds": 0.0,
+  "context_buckets": 2,
+  "validation_file": "auth/validation.json",
+  "test_file": "auth/test.json",
+  "detector": "sonar/pca",
+  "calibration": {
+    "threshold": null,
+    "min_consecutive": 1,
+    "within_false_alarm_budget": true,
+    "max_false_alarms_per_day": 5.0,
+    "validation": {
+      "events": 4,
+      "detected": 4,
+      "alarms": 4,
+      "true_alarms": 4,
+      "false_alarms": 0,
+      "days": 9.979,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mean_delay_minutes": 18.5,
+      "false_alarms_per_day": 0.0,
+      "outcomes": [
+        {
+          "id": "privilege_escalation_1",
+          "type": "privilege_escalation",
+          "start": "2024-12-23T02:53:00Z",
+          "end": "2024-12-23T03:04:00Z",
+          "detected": true,
+          "delay_minutes": 22.0
+        },
+        {
+          "id": "privilege_escalation_2",
+          "type": "privilege_escalation",
+          "start": "2024-12-25T07:31:00Z",
+          "end": "2024-12-25T07:42:00Z",
+          "detected": true,
+          "delay_minutes": 14.0
+        },
+        {
+          "id": "privilege_escalation_3",
+          "type": "privilege_escalation",
+          "start": "2024-12-28T08:39:00Z",
+          "end": "2024-12-28T08:50:00Z",
+          "detected": true,
+          "delay_minutes": 21.0
+        },
+        {
+          "id": "privilege_escalation_4",
+          "type": "privilege_escalation",
+          "start": "2024-12-29T08:43:00Z",
+          "end": "2024-12-29T08:54:00Z",
+          "detected": true,
+          "delay_minutes": 17.0
+        }
+      ],
+      "ignored_events": 12,
+      "unscored_events": 0
+    }
+  },
+  "runs": [
+    {
+      "name": "test (configured)",
+      "threshold": 0.35,
+      "min_consecutive": 1,
+      "metrics": {
+        "events": 4,
+        "detected": 4,
+        "alarms": 4,
+        "true_alarms": 4,
+        "false_alarms": 0,
+        "days": 9.979,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "mean_delay_minutes": 13.0,
+        "false_alarms_per_day": 0.0,
+        "outcomes": [
+          {
+            "id": "privilege_escalation_1",
+            "type": "privilege_escalation",
+            "start": "2025-01-03T01:01:00Z",
+            "end": "2025-01-03T01:12:00Z",
+            "detected": true,
+            "delay_minutes": 14.0
+          },
+          {
+            "id": "privilege_escalation_2",
+            "type": "privilege_escalation",
+            "start": "2025-01-05T04:00:00Z",
+            "end": "2025-01-05T04:11:00Z",
+            "detected": true,
+            "delay_minutes": 15.0
+          },
+          {
+            "id": "privilege_escalation_3",
+            "type": "privilege_escalation",
+            "start": "2025-01-08T19:21:00Z",
+            "end": "2025-01-08T19:32:00Z",
+            "detected": true,
+            "delay_minutes": 9.0
+          },
+          {
+            "id": "privilege_escalation_4",
+            "type": "privilege_escalation",
+            "start": "2025-01-10T03:31:00Z",
+            "end": "2025-01-10T03:42:00Z",
+            "detected": true,
+            "delay_minutes": 14.0
+          }
+        ],
+        "ignored_events": 12,
+        "unscored_events": 0
+      }
+    },
+    {
+      "name": "validation (calibrated)",
+      "threshold": null,
+      "min_consecutive": 1,
+      "metrics": {
+        "events": 4,
+        "detected": 4,
+        "alarms": 4,
+        "true_alarms": 4,
+        "false_alarms": 0,
+        "days": 9.979,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "mean_delay_minutes": 18.5,
+        "false_alarms_per_day": 0.0,
+        "outcomes": [
+          {
+            "id": "privilege_escalation_1",
+            "type": "privilege_escalation",
+            "start": "2024-12-23T02:53:00Z",
+            "end": "2024-12-23T03:04:00Z",
+            "detected": true,
+            "delay_minutes": 22.0
+          },
+          {
+            "id": "privilege_escalation_2",
+            "type": "privilege_escalation",
+            "start": "2024-12-25T07:31:00Z",
+            "end": "2024-12-25T07:42:00Z",
+            "detected": true,
+            "delay_minutes": 14.0
+          },
+          {
+            "id": "privilege_escalation_3",
+            "type": "privilege_escalation",
+            "start": "2024-12-28T08:39:00Z",
+            "end": "2024-12-28T08:50:00Z",
+            "detected": true,
+            "delay_minutes": 21.0
+          },
+          {
+            "id": "privilege_escalation_4",
+            "type": "privilege_escalation",
+            "start": "2024-12-29T08:43:00Z",
+            "end": "2024-12-29T08:54:00Z",
+            "detected": true,
+            "delay_minutes": 17.0
+          }
+        ],
+        "ignored_events": 12,
+        "unscored_events": 0
+      }
+    },
+    {
+      "name": "test (calibrated)",
+      "threshold": null,
+      "min_consecutive": 1,
+      "metrics": {
+        "events": 4,
+        "detected": 4,
+        "alarms": 4,
+        "true_alarms": 4,
+        "false_alarms": 0,
+        "days": 9.979,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "mean_delay_minutes": 13.0,
+        "false_alarms_per_day": 0.0,
+        "outcomes": [
+          {
+            "id": "privilege_escalation_1",
+            "type": "privilege_escalation",
+            "start": "2025-01-03T01:01:00Z",
+            "end": "2025-01-03T01:12:00Z",
+            "detected": true,
+            "delay_minutes": 14.0
+          },
+          {
+            "id": "privilege_escalation_2",
+            "type": "privilege_escalation",
+            "start": "2025-01-05T04:00:00Z",
+            "end": "2025-01-05T04:11:00Z",
+            "detected": true,
+            "delay_minutes": 15.0
+          },
+          {
+            "id": "privilege_escalation_3",
+            "type": "privilege_escalation",
+            "start": "2025-01-08T19:21:00Z",
+            "end": "2025-01-08T19:32:00Z",
+            "detected": true,
+            "delay_minutes": 9.0
+          },
+          {
+            "id": "privilege_escalation_4",
+            "type": "privilege_escalation",
+            "start": "2025-01-10T03:31:00Z",
+            "end": "2025-01-10T03:42:00Z",
+            "detected": true,
+            "delay_minutes": 14.0
+          }
+        ],
+        "ignored_events": 12,
+        "unscored_events": 0
+      }
+    }
+  ],
+  "anomaly_confidence": 1.0
+}

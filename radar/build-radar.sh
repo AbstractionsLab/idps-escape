@@ -8,7 +8,8 @@ Usage:
   build-radar.sh --core-only
 
 Scenarios:
-  suspicious_login | geoip_detection | log_volume | scanning_detection
+  suspicious_login | geoip_detection | log_volume | scanning_detection |
+  linux_resource_utilization
 
 Flags:
   --core-only           Bring up the Wazuh manager/indexer/dashboard stack
@@ -84,7 +85,7 @@ if ! docker ps --format '{{.Names}}' | grep -qx "$MANAGER_CONTAINER"; then
   PIPELINE_HOST_PATH="$(python3 -m wazuh_api.cli manager-volume-path "$PIPELINE_CONTAINER_PATH" --container wazuh.manager 2>/dev/null)" || true
   if [[ -z "$PIPELINE_HOST_PATH" ]]; then
     echo "[!] volumes.yml has no bind mount for $PIPELINE_CONTAINER_PATH on service wazuh.manager" >&2
-    echo "    Add that mapping (see radar-getting-started.md's \"Configure volume mappings\" section) and re-run." >&2
+    echo "    Add that mapping (see radar-getting-started.md's \"Working with an existing Wazuh installation\" section) and re-run." >&2
     exit 1
   fi
   if [[ ! -e "$PIPELINE_HOST_PATH" || -d "$PIPELINE_HOST_PATH" || ! -s "$PIPELINE_HOST_PATH" ]]; then

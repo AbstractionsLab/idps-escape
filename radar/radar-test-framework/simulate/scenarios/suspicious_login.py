@@ -9,8 +9,9 @@ Cases, and what each one should produce:
                  Poland->USA->Australia                 -> 210021 (level 10)
   failed_travel  3 failed logins,
                  France->USA->Australia                 -> 210020 (level 10)
-  composite      baseline login, burst, then a
-                 geo-impossible success within 300s     -> 210022 (level 12)
+  composite      baseline login (stamped 24h earlier),
+                 burst, then a geo-impossible success
+                 within 300s                            -> 210022 (level 12)
   benign         two successful logins, same
                  region, 1h apart                       -> nothing
 """
@@ -31,6 +32,9 @@ CONFIG = {
     "fail_threshold": 5,
     "fail_margin": 1,
     "burst_window_seconds": 60,
+    "baseline_age_hours": 24,
+    "composite_success_delay_seconds": 30,
+    "alert_settle_seconds": 30,
     "case_gap_seconds": 2,
     "sudo_tee": False,
 }
@@ -111,13 +115,19 @@ def _line(user, srcip, outcome, ts, cfg):
 
 
 class Emitter:
-    def __init__(self, log_path, sudo_tee, cfg):
+    def __init__(self, log_path, sudo_tee, cfg, sleep=None):
         self.log_path = log_path
         self.sudo_tee = sudo_tee
         self.cfg = cfg
+        self.sleep = sleep or time.sleep
 
-    def send(self, user, srcip, outcome, ts):
+    def send(self, user, srcip, outcome, ts=None):
+        """Write one line; without ts it is stamped with the current time."""
+        ts = ts if ts is not None else dt.datetime.now()
         _append(_line(user, srcip, outcome, ts, self.cfg), self.log_path, self.sudo_tee)
+
+    def pause(self, seconds):
+        self.sleep(seconds)
 
 
 def case_burst(em, cfg):
@@ -126,10 +136,11 @@ def case_burst(em, cfg):
     window = cfg["burst_window_seconds"]
     print(f"burst: {n} failed logins in {window}s, same user -> expect 210013 at level 8")
     step = max(1, window // (n + 1))
-    base = dt.datetime.now()
-    for i, ip in enumerate(BURST_IPS[:n]):
-        em.send(user, ip, "fail", base + dt.timedelta(seconds=i * step))
-    em.send(user, BURST_IPS[0], "success", base + dt.timedelta(seconds=n * step))
+    print(f"    writing one line every {step}s (about {n * step}s)...")
+    for ip in BURST_IPS[:n]:
+        em.send(user, ip, "fail")
+        em.pause(step)
+    em.send(user, BURST_IPS[0], "success")
 
 
 def case_travel(em, cfg):
@@ -156,13 +167,16 @@ def case_composite(em, cfg):
     window = cfg["burst_window_seconds"]
     print("composite: baseline login, failed burst, then a geo-impossible success within 300s -> expect 210022 at level 12")
     step = max(1, window // (n + 1))
-    base = dt.datetime.now()
-    em.send(user, COMPOSITE_BASELINE_IP, "success", base)
-    burst_start = base + dt.timedelta(seconds=5)
-    for i, ip in enumerate(COMPOSITE_BURST_IPS[:n]):
-        em.send(user, ip, "fail", burst_start + dt.timedelta(seconds=i * step))
-    success_ts = burst_start + dt.timedelta(seconds=n * step + 30)
-    em.send(user, COMPOSITE_SUCCESS_IP, "success", success_ts)
+    delay = cfg["composite_success_delay_seconds"]
+    baseline_ts = dt.datetime.now() - dt.timedelta(hours=cfg["baseline_age_hours"])
+    em.send(user, COMPOSITE_BASELINE_IP, "success", baseline_ts)
+    print(f"    writing one line every {step}s, then the success after {delay}s (about {n * step + delay}s)...")
+    em.pause(step)
+    for ip in COMPOSITE_BURST_IPS[:n]:
+        em.send(user, ip, "fail")
+        em.pause(step)
+    em.pause(max(0, delay - step))
+    em.send(user, COMPOSITE_SUCCESS_IP, "success")
 
 
 def case_benign(em, cfg):
@@ -218,6 +232,12 @@ def _fmt_present(present):
     if not present:
         return "(none)"
     return ", ".join(f"{p['rule']} (level {p['level']})" for p in present)
+
+
+def _settled(ended_at, cfg):
+    """End of the window to search: alerts appear only after enrichment."""
+    end = dt.datetime.fromisoformat(ended_at) + dt.timedelta(seconds=cfg["alert_settle_seconds"])
+    return end.isoformat()
 
 
 def _print_case_hint(name, started_at, ended_at):
@@ -303,7 +323,7 @@ def main():
     for i, name in enumerate(requested):
         started_at = dt.datetime.now().astimezone().isoformat()
         CASES[name](em, cfg)
-        ended_at = dt.datetime.now().astimezone().isoformat()
+        ended_at = _settled(dt.datetime.now().astimezone().isoformat(), cfg)
         _print_case_hint(name, started_at, ended_at)
 
         verified = _confirm_verified(name) if interactive else None

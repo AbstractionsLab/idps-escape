@@ -1,34 +1,279 @@
 """
 Feature extraction and preprocessing for Wazuh alerts.
+
+Feature schema 2. A feature matrix has one row per time bucket on a regular grid
+(empty buckets included) and these columns, in this order:
+
+- ``alert_count``: number of alerts in the bucket.
+- each ``numeric_fields`` entry: mean over the alerts in the bucket that carry the field.
+- ``<field>__max`` for each ``max_numeric_fields`` entry: maximum over those alerts.
+- each enabled derived feature: number of alerts in the bucket for which it holds.
+- ``<field>__<value>`` for each value in the categorical vocabulary, plus
+  ``<field>__other`` for every value outside it: number of alerts with that value.
+
+The column set depends only on the FeatureConfig and the vocabulary, never on the
+alerts, so a model and the detection data always agree on it.
 """
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-
 import logging
+import math
+from collections import Counter
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+
 import pandas as pd
 
 from sonar.config import FeatureConfig
 
 logger = logging.getLogger(__name__)
 
+# Version of the feature-matrix layout. Bump it whenever the columns built from the same
+# alerts and FeatureConfig change, so that models trained on an older layout are refused.
+FEATURE_SCHEMA_VERSION = 2
+
+ALERT_COUNT = "alert_count"
+OTHER_SUFFIX = "other"
+NUMERIC_FILL_MODES = ("zero", "ffill")
+COUNT_TRANSFORMS = ("none", "log1p")
+
+
+# ---------- Derived features ----------
+
+
+def _groups(alert: Dict[str, Any]) -> List[str]:
+    groups = (alert.get("rule") or {}).get("groups") or []
+    return [str(g) for g in groups] if isinstance(groups, (list, tuple)) else [str(groups)]
+
+
+def _has_group(alert: Dict[str, Any], *names: str) -> bool:
+    groups = _groups(alert)
+    return any(name in groups for name in names)
+
+
+def _to_float(value: Any) -> float:
+    """Convert a field value to float; NaN when missing or not numeric."""
+    if value is None or isinstance(value, bool):
+        return math.nan
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return math.nan
+
+
+def _level(alert: Dict[str, Any]) -> float:
+    level = _to_float((alert.get("rule") or {}).get("level"))
+    return 0.0 if math.isnan(level) else level
+
+
+def _data_value(alert: Dict[str, Any], key: str) -> float:
+    value = _to_float((alert.get("data") or {}).get(key))
+    return 0.0 if math.isnan(value) else value
+
+
+# Name -> predicate on one alert. Each enabled feature becomes a per-bucket count of the
+# alerts for which the predicate holds. Order here is the column order.
+DERIVED_FEATURES: Dict[str, Callable[[Dict[str, Any]], bool]] = {
+    # Authentication
+    "is_auth_failure": lambda a: _has_group(a, "failed_login", "authentication_failed", "invalid_login"),
+    "is_auth_success": lambda a: _has_group(a, "authentication_success", "session_opened"),
+    "is_brute_force": lambda a: _has_group(a, "brute_force"),
+    # Privilege escalation
+    "is_privilege_event": lambda a: _has_group(a, "sudo", "su", "privilege_escalation", "account_changed"),
+    # Severity (Wazuh level 10+ is high, 12+ critical)
+    "is_high_severity": lambda a: _level(a) >= 10,
+    "is_critical_severity": lambda a: _level(a) >= 12,
+    # Remote access
+    "is_ssh_event": lambda a: _has_group(a, "ssh", "sshd"),
+    "is_windows_logon": lambda a: _has_group(a, "windows_logon", "windows", "win_logon"),
+    # Resource utilisation (data block of Wazuh's general_health_check decoder)
+    "is_cpu_high": lambda a: _data_value(a, "cpu_usage_%") >= 80.0,
+    "is_cpu_critical": lambda a: _data_value(a, "cpu_usage_%") >= 95.0,
+    "is_memory_high": lambda a: _data_value(a, "memory_usage_%") >= 80.0,
+    "is_memory_critical": lambda a: _data_value(a, "memory_usage_%") >= 95.0,
+    "is_high_load": lambda a: _data_value(a, "1min_loadAverage") >= 4.0,
+}
+
+
+_GROUPS = ("rule.groups",)
+
+# Alert fields each derived feature reads. Alert search requests only the fields features
+# need, so a predicate that reads a field not listed here silently sees it as missing.
+DERIVED_FEATURE_FIELDS: Dict[str, Tuple[str, ...]] = {
+    "is_auth_failure": _GROUPS,
+    "is_auth_success": _GROUPS,
+    "is_brute_force": _GROUPS,
+    "is_privilege_event": _GROUPS,
+    "is_high_severity": ("rule.level",),
+    "is_critical_severity": ("rule.level",),
+    "is_ssh_event": _GROUPS,
+    "is_windows_logon": _GROUPS,
+    "is_cpu_high": ("data.cpu_usage_%",),
+    "is_cpu_critical": ("data.cpu_usage_%",),
+    "is_memory_high": ("data.memory_usage_%",),
+    "is_memory_critical": ("data.memory_usage_%",),
+    "is_high_load": ("data.1min_loadAverage",),
+}
+
+
+def resolve_derived_features(setting: Any) -> List[str]:
+    """
+    Turn the ``derived_features`` setting into the list of enabled feature names.
+
+    Args:
+        setting: ``True`` (all), ``False``/``None`` (none) or a list of names.
+
+    Raises:
+        ValueError: On an unknown feature name.
+    """
+    if setting is True:
+        return list(DERIVED_FEATURES)
+    if not setting:
+        return []
+    if isinstance(setting, str):
+        setting = [setting]
+    unknown = [name for name in setting if name not in DERIVED_FEATURES]
+    if unknown:
+        raise ValueError(f"Unknown derived feature(s) {unknown}; available: {list(DERIVED_FEATURES)}")
+    return [name for name in DERIVED_FEATURES if name in set(setting)]
+
+
+# ---------- Categorical vocabulary ----------
+
+
+def _sanitize(value: Any) -> str:
+    """Make a category value safe for a column name (alphanumerics kept, the rest '_')."""
+    return "".join(c if c.isalnum() else "_" for c in str(value))
+
+
+@dataclass
+class FeatureVocabulary:
+    """
+    Top-k values per categorical field, fitted on training data and stored in the model.
+
+    Detection reuses it, so values unseen in training are counted in ``<field>__other``
+    instead of creating or dropping columns.
+    """
+
+    categories: Dict[str, List[str]] = field(default_factory=dict)
+
+    @staticmethod
+    def column_name(field_path: str, value: Any) -> str:
+        """Column for one category value of a field."""
+        safe = _sanitize(value)
+        if safe == OTHER_SUFFIX:
+            safe = f"{OTHER_SUFFIX}_value"  # keep apart from the <field>__other bucket
+        return f"{field_path}__{safe}"
+
+    @staticmethod
+    def other_column(field_path: str) -> str:
+        """Column that counts values outside the vocabulary."""
+        return f"{field_path}__{OTHER_SUFFIX}"
+
+    def columns(self, fields: Sequence[str]) -> List[str]:
+        """Ordered, de-duplicated columns for the given categorical fields."""
+        cols: List[str] = []
+        for field_path in fields:
+            for value in self.categories.get(field_path, []):
+                col = self.column_name(field_path, value)
+                if col not in cols:
+                    cols.append(col)
+            cols.append(self.other_column(field_path))
+        return cols
+
+    def column_for(self, field_path: str, value: Any) -> str:
+        """Column that counts this value: its own if in the vocabulary, else ``__other``."""
+        if str(value) in self._lookup().get(field_path, ()):
+            return self.column_name(field_path, value)
+        return self.other_column(field_path)
+
+    def _lookup(self) -> Dict[str, set]:
+        cached = getattr(self, "_lookup_cache", None)
+        if cached is None:
+            cached = {f: set(values) for f, values in self.categories.items()}
+            object.__setattr__(self, "_lookup_cache", cached)
+        return cached
+
+    @classmethod
+    def fit(cls, alerts: Sequence[Dict[str, Any]], fields: Sequence[str], top_k: int) -> "FeatureVocabulary":
+        """
+        Keep the ``top_k`` most frequent values of each field (all values if ``top_k <= 0``).
+
+        Ties are broken by value, so the vocabulary is deterministic.
+        """
+        categories: Dict[str, List[str]] = {}
+        for field_path in fields:
+            counts: Counter = Counter()
+            for alert in alerts:
+                for value in category_values(alert, field_path):
+                    counts[value] += 1
+            ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+            if top_k and top_k > 0:
+                ranked = ranked[:top_k]
+            categories[field_path] = [value for value, _ in ranked]
+            if not ranked:
+                logger.warning("Categorical field '%s' has no values in the training alerts", field_path)
+        return cls(categories=categories)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialisable form for the model file."""
+        return {"categories": {f: list(v) for f, v in self.categories.items()}}
+
+    @classmethod
+    def from_dict(cls, data: Optional[Dict[str, Any]]) -> "FeatureVocabulary":
+        """Inverse of ``to_dict``."""
+        return cls(categories={f: [str(v) for v in values] for f, values in ((data or {}).get("categories") or {}).items()})
+
+
+def get_nested_field(alert: Dict[str, Any], path: str) -> Any:
+    """Retrieve a dotted-path field; None if any part is missing."""
+    cur: Any = alert
+    for part in path.split("."):
+        if not isinstance(cur, dict):
+            return None
+        cur = cur.get(part)
+        if cur is None:
+            return None
+    return cur
+
+
+def category_values(alert: Dict[str, Any], field_path: str) -> List[str]:
+    """Category values of an alert field: each list element, or the single value."""
+    value = get_nested_field(alert, field_path)
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return [str(v) for v in value if v is not None]
+    return [str(value)]
+
+
+# ---------- Feature builder ----------
+
 
 class WazuhFeatureBuilder:
-    """
-    Converts raw Wazuh alerts into a multivariate time-series DataFrame.
+    """Converts raw Wazuh alerts into a multivariate time-series DataFrame (feature schema 2)."""
 
-    - index: timestamp buckets
-    - columns: engineered numeric features (counts, aggregates, etc.)
-    """
-
-    def __init__(self, cfg: FeatureConfig):
+    def __init__(self, cfg: FeatureConfig, vocabulary: Optional[FeatureVocabulary] = None):
         """
         Initialize feature builder.
 
         Args:
             cfg: FeatureConfig instance with feature specifications.
+            vocabulary: Categorical vocabulary. Pass the model's at detection time; when None,
+                ``build_timeseries`` fits one on the first alerts it receives.
+
+        Raises:
+            ValueError: On an unknown derived feature, fill mode or count transform.
         """
         self.cfg = cfg
+        self.vocabulary = vocabulary
+        self.derived = resolve_derived_features(getattr(cfg, "derived_features", True))
+        self.numeric_fill = getattr(cfg, "numeric_fill", "zero") or "zero"
+        if self.numeric_fill not in NUMERIC_FILL_MODES:
+            raise ValueError(f"numeric_fill must be one of {NUMERIC_FILL_MODES}; got '{self.numeric_fill}'")
+        self.count_transform = getattr(cfg, "count_transform", "none") or "none"
+        if self.count_transform not in COUNT_TRANSFORMS:
+            raise ValueError(f"count_transform must be one of {COUNT_TRANSFORMS}; got '{self.count_transform}'")
 
     @staticmethod
     def _parse_timestamp(ts: str) -> datetime:
@@ -58,313 +303,155 @@ class WazuhFeatureBuilder:
 
         # Otherwise, try ISO parsing and normalize timezone offsets like +0000 -> +00:00
         normalized_ts = ts
-        # If timezone is like +0000 or -0500 (no colon), insert colon
-        if len(normalized_ts) >= 5 and (normalized_ts[-5] in ('+', '-')):
-            if ':' not in normalized_ts[-6:]:
-                normalized_ts = normalized_ts[:-2] + ':' + normalized_ts[-2:]
+        if len(normalized_ts) >= 5 and (normalized_ts[-5] in ("+", "-")):
+            if ":" not in normalized_ts[-6:]:
+                normalized_ts = normalized_ts[:-2] + ":" + normalized_ts[-2:]
         try:
             dt = datetime.fromisoformat(normalized_ts)
             if dt.tzinfo is None:
-                # Assume UTC if no tzinfo provided
                 dt = dt.replace(tzinfo=timezone.utc)
             return dt
         except ValueError as e:
             raise ValueError(f"Invalid timestamp format: '{ts}'") from e
 
-    def _extract_single_alert_features(
-        self, alert: Dict[str, Any]
-    ) -> Dict[str, float]:
-        """
-        Extract low-level numeric features from a single alert.
+    # Kept for callers that used the methods on the builder.
+    _get_nested_field = staticmethod(get_nested_field)
+    _sanitize_cat = staticmethod(_sanitize)
 
-        Includes both raw numeric fields and derived security-relevant features.
+    @property
+    def _numeric_fields(self) -> List[str]:
+        return list(dict.fromkeys(self.cfg.numeric_fields))
+
+    @property
+    def _max_fields(self) -> List[str]:
+        return list(dict.fromkeys(getattr(self.cfg, "max_numeric_fields", ()) or ()))
+
+    @property
+    def _categorical_fields(self) -> List[str]:
+        return list(dict.fromkeys(getattr(self.cfg, "categorical_fields", ()) or ()))
+
+    def required_source_fields(self) -> List[str]:
+        """
+        The alert fields the features are computed from, for source filtering at search time.
+
+        ``timestamp``, the numeric, max and categorical fields, and the fields read by the
+        enabled derived features.
+        """
+        fields = ["timestamp", *self._numeric_fields, *self._max_fields, *self._categorical_fields]
+        for name in self.derived:
+            fields.extend(DERIVED_FEATURE_FIELDS[name])
+        return list(dict.fromkeys(fields))
+
+    def fit_vocabulary(self, alerts: Sequence[Dict[str, Any]]) -> FeatureVocabulary:
+        """Fit and store the categorical vocabulary on these alerts."""
+        self.vocabulary = FeatureVocabulary.fit(alerts, self._categorical_fields, int(getattr(self.cfg, "categorical_top_k", 0) or 0))
+        return self.vocabulary
+
+    def count_columns(self) -> List[str]:
+        """Columns aggregated as per-bucket counts."""
+        vocab = self.vocabulary or FeatureVocabulary()
+        return [ALERT_COUNT] + self.derived + vocab.columns(self._categorical_fields)
+
+    def columns(self) -> List[str]:
+        """The full, ordered column list for this config and vocabulary."""
+        vocab = self.vocabulary or FeatureVocabulary()
+        return [ALERT_COUNT] + self._numeric_fields + [f"{f}__max" for f in self._max_fields] + self.derived + vocab.columns(self._categorical_fields)
+
+    def _grid(self, first_ts: pd.Timestamp, last_ts: pd.Timestamp, start: Optional[datetime], end: Optional[datetime]) -> pd.DatetimeIndex:
+        """Bucket start times: from start (or the first alert) up to end (exclusive) or the last alert."""
+        freq = f"{int(self.cfg.bucket_minutes)}min"
+        first = _utc(start).floor(freq) if start is not None else first_ts.floor(freq)
+        if end is not None:
+            return pd.date_range(first, _utc(end), freq=freq, inclusive="left")
+        return pd.date_range(first, last_ts.floor(freq), freq=freq)
+
+    def build_timeseries(self, alerts: List[Dict[str, Any]], start: Optional[datetime] = None, end: Optional[datetime] = None) -> pd.DataFrame:
+        """
+        Aggregate alerts into a regular grid of time buckets.
 
         Args:
-            alert: Raw Wazuh alert document.
+            alerts: Raw Wazuh alert documents.
+            start: First bucket is the one containing ``start``. When None, the bucket of the
+                first alert (training uses this, so history before the first alert is not
+                learned as silence).
+            end: Buckets start before ``end``. When None, up to the bucket of the last alert.
 
         Returns:
-            Dictionary of numeric features for this alert.
+            DataFrame indexed by bucket start (UTC) with ``self.columns()``; empty if no alert
+            has a valid timestamp.
         """
-        feats: Dict[str, float] = {}
-
-        # Extract all configured numeric fields using dot-notation
-        for field_path in self.cfg.numeric_fields:
-            val = self._get_nested_field(alert, field_path)
-            if val is not None and isinstance(val, (int, float, str)):
-                try:
-                    feats[field_path] = float(val)
-                except (ValueError, TypeError):
-                    feats[field_path] = 0.0
-            else:
-                feats[field_path] = 0.0
-
-        # Derived features for attack detection (if enabled)
-        if getattr(self.cfg, "derived_features", True):
-            feats.update(self._extract_derived_features(alert))
-
-        return feats
-
-    def _extract_derived_features(
-        self, alert: Dict[str, Any]
-    ) -> Dict[str, float]:
-        """
-        Extract derived security-relevant features from alert content.
-
-        These features help detect attack patterns like brute force,
-        lateral movement, and privilege escalation.
-
-        Args:
-            alert: Raw Wazuh alert document.
-
-        Returns:
-            Dictionary of derived numeric features.
-        """
-        derived: Dict[str, float] = {}
-        rule = alert.get("rule", {})
-        groups = rule.get("groups", [])
-
-        # Authentication pattern indicators
-        derived["is_auth_failure"] = 1.0 if any(
-            g in groups for g in ("failed_login", "authentication_failed", "invalid_login")
-        ) else 0.0
-        
-        derived["is_auth_success"] = 1.0 if any(
-            g in groups for g in ("authentication_success", "session_opened")
-        ) else 0.0
-
-        derived["is_brute_force"] = 1.0 if "brute_force" in groups else 0.0
-
-        # Privilege escalation indicators
-        derived["is_privilege_event"] = 1.0 if any(
-            g in groups for g in ("sudo", "su", "privilege_escalation", "account_changed")
-        ) else 0.0
-
-        # High severity indicator (level >= 10 is typically critical)
-        level = rule.get("level", 0)
-        derived["is_high_severity"] = 1.0 if level >= 10 else 0.0
-        derived["is_critical_severity"] = 1.0 if level >= 12 else 0.0
-
-        # Network/SSH related
-        derived["is_ssh_event"] = 1.0 if "ssh" in groups or "sshd" in groups else 0.0
-
-        # Windows logon events
-        derived["is_windows_logon"] = 1.0 if any(
-            g in groups for g in ("windows_logon", "windows", "win_logon")
-        ) else 0.0
-
-        # Resource utilization thresholds (for linux_resource_monitoring use case).
-        # Values come from the data block decoded by Wazuh's general_health_check decoder.
-        data = alert.get("data", {})
-        try:
-            cpu = float(data.get("cpu_usage_%", 0) or 0)
-        except (TypeError, ValueError):
-            cpu = 0.0
-        try:
-            mem = float(data.get("memory_usage_%", 0) or 0)
-        except (TypeError, ValueError):
-            mem = 0.0
-        try:
-            load1 = float(data.get("1min_loadAverage", 0) or 0)
-        except (TypeError, ValueError):
-            load1 = 0.0
-
-        derived["is_cpu_high"] = 1.0 if cpu >= 80.0 else 0.0
-        derived["is_cpu_critical"] = 1.0 if cpu >= 95.0 else 0.0
-        derived["is_memory_high"] = 1.0 if mem >= 80.0 else 0.0
-        derived["is_memory_critical"] = 1.0 if mem >= 95.0 else 0.0
-        derived["is_high_load"] = 1.0 if load1 >= 4.0 else 0.0
-
-        return derived
-
-    def _get_nested_field(self, alert: Dict[str, Any], path: str):
-        """Retrieve a nested field using dot-notation. Returns None if missing."""
-        cur = alert
-        for part in path.split("."):
-            if not isinstance(cur, dict):
-                return None
-            cur = cur.get(part)
-            if cur is None:
-                return None
-        return cur
-
-    @staticmethod
-    def _sanitize_cat(s: str) -> str:
-        """Sanitize a category label into a safe column name fragment."""
-        # Keep alphanumeric and replace others with underscore
-        return "".join([c if c.isalnum() else "_" for c in str(s)])
-
-    def build_timeseries(
-        self, alerts: List[Dict[str, Any]]
-    ) -> pd.DataFrame:
-        """
-        Aggregate alerts into time buckets and return a multivariate time series.
-
-        For each bucket and each feature, we sum or average as appropriate.
-        Here we simply compute the average per bucket for each numeric feature.
-
-        Args:
-            alerts: List of raw Wazuh alert documents.
-
-        Returns:
-            DataFrame with time index and numeric feature columns.
-        """
-        if not alerts:
-            return pd.DataFrame()
-
-        rows = []
+        parsed = []
         for alert in alerts:
             ts_str = alert.get("timestamp")
             if not ts_str:
                 continue
-            
             try:
-                ts = self._parse_timestamp(ts_str)
+                parsed.append((self._parse_timestamp(ts_str), alert))
             except ValueError as e:
-                # Log and skip malformed timestamps
-                logger.warning("Skipping alert with invalid timestamp '%s' in alert: %s", ts_str, e)
-                continue
-
-            feats = self._extract_single_alert_features(alert)
-            # Extract categorical fields (if configured) into a per-alert string
-            for field in getattr(self.cfg, "categorical_fields", tuple()):
-                val = self._get_nested_field(alert, field)
-                if val is None:
-                    logger.debug(f"Categorical field '{field}' not found in alert")
-                    continue
-                # If the field is a list, join using '|' so pandas get_dummies can split
-                if isinstance(val, (list, tuple)):
-                    joined_val = "|".join([str(x) for x in val if x is not None])
-                    feats[f"_cat__{field}"] = joined_val
-                    logger.debug(f"Extracted categorical field '{field}' (list): {joined_val}")
-                else:
-                    feats[f"_cat__{field}"] = str(val)
-                    logger.debug(f"Extracted categorical field '{field}' (string): {val}")
-
-            feats["timestamp"] = ts
-            rows.append(feats)
-
-        if not rows:
+                logger.warning("Skipping alert with invalid timestamp '%s': %s", ts_str, e)
+        if not parsed:
             return pd.DataFrame()
 
-        df = pd.DataFrame(rows)
-        df.set_index("timestamp", inplace=True)
+        if self._categorical_fields and self.vocabulary is None:
+            self.fit_vocabulary([a for _, a in parsed])
+        vocab = self.vocabulary or FeatureVocabulary()
 
-        # Handle categorical one-hot encoding if configured
-        categorical_cols = []
-        logger.info(f"Processing {len(getattr(self.cfg, 'categorical_fields', tuple()))} categorical field(s)")
-        for field in getattr(self.cfg, "categorical_fields", tuple()):
-            col_name = f"_cat__{field}"
-            if col_name not in df.columns:
-                logger.warning(f"Categorical field '{field}' not found in DataFrame columns")
-                continue
-            s = df[col_name].fillna("")
-            # Create dummies; drop any empty-string columns
-            dummies = s.astype(str).str.get_dummies(sep="|")
-            if "" in dummies.columns:
-                dummies = dummies.drop(columns=[""])
+        value_fields = list(dict.fromkeys(self._numeric_fields + self._max_fields))
+        count_rows, value_rows = [], []
+        for _, alert in parsed:
+            counts = {ALERT_COUNT: 1.0}
+            for name in self.derived:
+                counts[name] = 1.0 if DERIVED_FEATURES[name](alert) else 0.0
+            for field_path in self._categorical_fields:
+                for value in category_values(alert, field_path):
+                    col = vocab.column_for(field_path, value)
+                    counts[col] = counts.get(col, 0.0) + 1.0
+            count_rows.append(counts)
+            value_rows.append({f: _to_float(get_nested_field(alert, f)) for f in value_fields})
 
-            # If there are no categories for this field, skip
-            if dummies.shape[1] == 0:
-                logger.warning(f"No categories found for field '{field}' after one-hot encoding")
-                continue
+        index = pd.DatetimeIndex([ts for ts, _ in parsed]).tz_convert("UTC")
+        count_cols = self.count_columns()
+        counts_df = pd.DataFrame(count_rows, index=index).reindex(columns=count_cols, fill_value=0.0).fillna(0.0).sort_index()
+        values_df = pd.DataFrame(value_rows, index=index, columns=value_fields, dtype=float).sort_index()
 
-            # Sanitize column names and prepare rename mapping
-            rename_map = {}
-            for c in dummies.columns:
-                safe = self._sanitize_cat(c)
-                rename_map[c] = f"{field}__{safe}"
+        rule = f"{int(self.cfg.bucket_minutes)}min"
+        parts = [counts_df.resample(rule, origin="epoch").sum()]
+        if self._numeric_fields:
+            parts.append(values_df[self._numeric_fields].resample(rule, origin="epoch").mean())
+        if self._max_fields:
+            parts.append(values_df[self._max_fields].resample(rule, origin="epoch").max().rename(columns={f: f"{f}__max" for f in self._max_fields}))
+        agg = pd.concat(parts, axis=1)
+        agg = agg.loc[:, ~agg.columns.duplicated()]
 
-            dummies = dummies.rename(columns=rename_map)
-            # Cast dummies to float so downstream resample/mean works
-            dummies = dummies.astype(float)
-            logger.info(f"Created {dummies.shape[1]} one-hot encoded columns for field '{field}'")
+        grid = self._grid(index.min(), index.max(), start, end)
+        agg = agg.reindex(grid)
 
-            # Keep top-k categories, aggregate the rest into <field>__other
-            top_k = max(0, int(getattr(self.cfg, "categorical_top_k", 0)))
-            if top_k > 0 and dummies.shape[1] > top_k:
-                counts = dummies.sum().sort_values(ascending=False)
-                top_cols = counts.index[:top_k]
-                other_cols = [c for c in dummies.columns if c not in top_cols]
-                dummies[ f"{field}__other"] = dummies[other_cols].sum(axis=1)
-                dummies = dummies[top_cols.tolist() + [f"{field}__other"]]
-                logger.info(f"Applied top-{top_k} filtering for field '{field}': kept {len(top_cols)} categories + '__other'")
+        agg[count_cols] = agg[count_cols].fillna(0.0)
+        if self.count_transform == "log1p":
+            agg[count_cols] = agg[count_cols].apply(lambda s: s.map(math.log1p))
 
-            # Attach dummies to original DataFrame (per-alert level)
-            df = pd.concat([df, dummies], axis=1)
-            # Drop the original string column to avoid object dtype during aggregation
-            if col_name in df.columns:
-                df = df.drop(columns=[col_name])
+        value_cols = self._numeric_fields + [f"{f}__max" for f in self._max_fields]
+        if value_cols:
+            if self.numeric_fill == "ffill":
+                agg[value_cols] = agg[value_cols].ffill()
+            agg[value_cols] = agg[value_cols].fillna(0.0)
 
-            categorical_cols.extend(dummies.columns.tolist())
-
-        logger.info(f"Total categorical columns after processing: {len(categorical_cols)}")
-        if categorical_cols:
-            logger.debug(f"Categorical columns: {categorical_cols[:10]}{'...' if len(categorical_cols) > 10 else ''}")
-
-        # Resample into fixed buckets (e.g., every 5 minutes)
-        rule = f"{self.cfg.bucket_minutes}min"
-        # Operate only on numeric columns to avoid aggregation errors on object dtypes
-        numeric_df = df.select_dtypes(include=['number']).copy()
-        # For numeric columns, you can choose sum/mean/max — here: mean
-        agg_df = numeric_df.resample(rule).mean().sort_index()
-
-        # Per-bucket max columns for fields listed in max_numeric_fields.
-        # Each produces a <field>__max column alongside the default mean.
-        max_cols_added: List[str] = []
-        max_numeric_fields = list(getattr(self.cfg, "max_numeric_fields", []) or [])
-        if max_numeric_fields:
-            valid_max_fields = [f for f in max_numeric_fields if f in numeric_df.columns]
-            if valid_max_fields:
-                max_df = numeric_df[valid_max_fields].resample(rule).max().sort_index()
-                rename_map = {f: f"{f}__max" for f in valid_max_fields}
-                max_df = max_df.rename(columns=rename_map)
-                agg_df = pd.concat([agg_df, max_df], axis=1)
-                max_cols_added = list(rename_map.values())
-                logger.info("Added %d per-bucket max column(s): %s", len(max_cols_added), max_cols_added)
-            else:
-                logger.warning("max_numeric_fields configured but none present in data: %s", max_numeric_fields)
-
-        # Collect derived feature columns (those added by _extract_derived_features)
-        derived_feature_names = [
-            "is_auth_failure", "is_auth_success", "is_brute_force",
-            "is_privilege_event", "is_high_severity", "is_critical_severity",
-            "is_ssh_event", "is_windows_logon",
-            "is_cpu_high", "is_cpu_critical",
-            "is_memory_high", "is_memory_critical",
-            "is_high_load",
-        ]
-        derived_cols = [c for c in agg_df.columns if c in derived_feature_names]
-
-        # Ensure consistent column order / names
-        for col in self.cfg.numeric_fields:
-            if col not in agg_df.columns:
-                agg_df[col] = 0.0
-
-        # Ensure max columns are present (fill 0.0 if a bucket had no data)
-        for col in max_cols_added:
-            if col not in agg_df.columns:
-                agg_df[col] = 0.0
-
-        # Ensure categorical columns present and ordered after numerics
-        for col in categorical_cols:
-            if col not in agg_df.columns:
-                agg_df[col] = 0.0
-
-        # Build final column order: numeric fields + max fields + derived features + categorical columns
-        final_cols = list(self.cfg.numeric_fields) + max_cols_added + derived_cols + categorical_cols
-        # Only include columns that exist in the DataFrame
-        final_cols = [c for c in final_cols if c in agg_df.columns]
+        result = agg[self.columns()].astype(float)
+        result.index.name = "timestamp"
         logger.info(
-            f"Final feature set: {len(self.cfg.numeric_fields)} numeric + "
-            f"{len(max_cols_added)} max + {len(derived_cols)} derived + "
-            f"{len(categorical_cols)} categorical = {len(final_cols)} total"
+            "Feature matrix: %d buckets x %d columns (%d numeric, %d max, %d derived, %d categorical), %d empty buckets",
+            len(result),
+            result.shape[1],
+            len(self._numeric_fields),
+            len(self._max_fields),
+            len(self.derived),
+            len(vocab.columns(self._categorical_fields)),
+            int((result[ALERT_COUNT] == 0).sum()),
         )
-        agg_df = agg_df[final_cols]
+        return result
 
-        # Drop rows that are all NaN
-        agg_df = agg_df.dropna(how="all")
 
-        # Simple NA handling: fill remaining NaN with 0
-        agg_df = agg_df.fillna(0.0)
-
-        return agg_df
+def _utc(value: datetime) -> pd.Timestamp:
+    """Timestamp in UTC; naive values are taken as UTC."""
+    ts = pd.Timestamp(value)
+    return ts.tz_localize("UTC") if ts.tzinfo is None else ts.tz_convert("UTC")

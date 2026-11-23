@@ -23,7 +23,8 @@ scenarios/
 │   ├── geoip_detection/   # Geographic access control rules
 │   ├── log_volume/        # OpenSearch AD integration rules
 │   ├── suspicious_login/  # Credential attack detection rules
-│   └── scanning_detection/ # Web scanning and injection detection rules
+│   ├── scanning_detection/ # Web scanning and injection detection rules
+│   └── linux_resource_utilization/ # OpenSearch AD integration rules (CPU/memory)
 └── templates/             # Index templates for OpenSearch
 ```
 
@@ -53,7 +54,9 @@ Contains custom log decoders organized by scenario. Decoders parse incoming log 
 - **`geoip_detection/`**: Decoders for GeoIP-based detection scenarios
 - **`log_volume/`**: Decoders for log volume anomaly detection
 - **`suspicious_login/`**: Contains `0310-ssh.xml` - a customized SSH decoder that extracts velocity/location change and geographic information from SSH logs
+- **`0001-ad-common.xml`** (in `log_volume/`, `linux_resource_utilization/` and `suspicious_login/`): decodes the anomaly alert lines that the webhook writes to `/var/log/ad_alerts.log`. The three copies must stay identical, because every scenario that is deployed installs it under the same name
 - **`scanning_detection/`**: Uses Wazuh's built-in decoder for HTTP field extraction
+- **`linux_resource_utilization/`**: Decodes the local `resource_usage_metric` collector output (`cpu=<pct> mem=<pct>`) into `cpu_usage_pct`/`mem_usage_pct` fields for the CPU/memory anomaly detector
 
 Decoders transform unstructured log messages into structured events that rules can analyze.
 
@@ -62,7 +65,8 @@ Decoders transform unstructured log messages into structured events that rules c
 Contains scripts for populating the Wazuh indexer with data:
 
 - **`log_volume/wazuh_ingest.py`**: Ingests custom event datasets into OpenSearch to accelerate detector initialization and model training
-- **`suspicious_login/wazuh_ingest.py`**: Ingestion script for authentication log datasets
+- **`suspicious_login/wazuh_ingest.py`**: Synthetic archive history for the off-hours detectors (shift workers alice, bob, oscar; administrator trent with evening work and one burst), written through the `radar-off-hours` pipeline
+- **`linux_resource_utilization/wazuh_ingest.py`**: Seeds CPU/memory history for the agents already reporting metrics, so the detector has a baseline
 
 These scripts are essential for testing scenarios with demo datasets and for training ML models before production deployment.
 
@@ -85,6 +89,7 @@ These snippets are deployed idempotently by `wazuh_api`'s "marked block" helpers
 Defines data processing pipelines for ingesting and transforming logs:
 
 - **`log_volume/radar-pipeline.txt`**: Contains the `date_index_name` processor configuration that gets injected into Filebeat's Wazuh archives pipeline. This ensures logs are separately indexed with proper time-based index names for the log volume scenario.
+- **`suspicious_login/radar-off-hours-step.json`**: A `pipeline` processor (tag `radar_off_hours`, `ignore_failure`) that `manager-apply-scenario.sh` adds to Filebeat's Wazuh archives pipeline, so archived events pass through the `radar-off-hours` ingest pipeline that `off_hours.py deploy` creates. Undeploying the scenario leaves the step; with the pipeline gone it only skips the flag. See [Off-hours activity](../../docs/manual/radar_docs/radar-scenarios/off-hours-activity.md).
 
 Pipelines modify how data flows from Wazuh through Filebeat into OpenSearch, enabling scenario-specific indexing strategies.
 
@@ -95,8 +100,11 @@ Contains Wazuh detection rules organized by scenario. Each scenario folder inclu
 - **`default/radar_rules.xml`**: Baseline threat detection rules for all deployments (6 rules: IDs 100400–100405). These rules operate on standard Wazuh event formats without requiring custom decoders, manager-side enrichment integrations, or index schema modifications. Current focus: command shell execution detection (PowerShell, CMD.exe, batch scripts), extensible to any threat indicators available in standard events.
 - **`geoip_detection/a2-geoip-detection.xml`**: Rules that trigger on SSH connections from non-whitelisted countries
 - **`log_volume/a1-log-volume.xml`**: Rules that detect anomalous log volume event from webhook
-- **`suspicious_login/a3-suspicious-login.xml`**: Rules that identify suspicious authentication patterns (brute force and impossible travel anomalies)
+- **`suspicious_login/a3-suspicious-login.xml`**: Rules that identify suspicious authentication patterns (brute force and impossible travel anomalies), plus 210039 (AD catch-all), 210040 (off-hours model mode) and 210041 (off-hours rule mode); see [Off-hours activity](../../docs/manual/radar_docs/radar-scenarios/off-hours-activity.md)
 - **`scanning_detection/a4-scanning-detection.xml`**: Rules that detect web scanning, enumeration, and exploitation attempts by analyzing HTTP access logs for high request volumes, known scanner tool User-Agent signatures, and malicious HTTP methods
+- **`linux_resource_utilization/a5-linux-resource-utilization.xml`**: Rules that detect anomalous CPU/memory utilization events from the webhook, mirroring the `log_volume` OpenSearch AD integration pattern
+
+Each anomaly scenario ships a catch-all rule for webhook lines (100300, 100320, 210039), and Wazuh only follows the first one that matches. The scenario rules (100309, 100321, 210040, 210041) therefore attach to the shared `radar_ad_received` group with `if_group`, not to one catch-all with `if_sid`, so that they fire whichever anomaly scenarios are deployed together. Keep this pattern for new anomaly scenarios.
 
 Rules analyze decoded events and generate alerts when suspicious patterns are detected. They integrate with active responses to trigger automated actions.
 

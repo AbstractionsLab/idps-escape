@@ -1,0 +1,209 @@
+/* Charts shared by product-presentation.html and release-notes.html (drawn by charts.js).
+   Series colours were checked with a colour-vision validator against the white chart surface:
+   MVAD, PCA and EWMA stay distinguishable for all pairs, including under colour-vision deficiency. */
+.viz {
+  --viz-1: #00939d;
+  --viz-2: #eb6834;
+  --viz-3: #6250d6;
+  --viz-grid: #e1e9ec;
+  --viz-axis: #b6c8cb;
+  --viz-t0: #edf2f4;
+  --viz-t1: #d2eaec;
+  --viz-t2: #a6d6da;
+  --viz-t3: #63b8bf;
+  min-width: 0;
+  margin: 1rem 0 0.4rem;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: var(--radius-md, 14px);
+  padding: 0.9rem 0.9rem 0.8rem;
+}
+
+.viz-title {
+  margin: 0 0 0.2rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.98rem;
+  color: var(--brand-strong, #065d65);
+}
+
+.viz-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0.35rem 0 0.2rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.84rem;
+  color: var(--muted, #3d6363);
+}
+
+.viz-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.viz-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.viz-scroll {
+  overflow-x: auto;
+}
+
+.viz svg {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+  font-family: Manrope, "Segoe UI", sans-serif;
+}
+
+.viz svg text {
+  font-size: 12px;
+  fill: var(--muted, #3d6363);
+}
+
+.viz svg .t-strong {
+  fill: var(--ink, #17212f);
+  font-weight: 700;
+}
+
+.viz svg .t-small {
+  font-size: 11px;
+}
+
+.viz svg .grid {
+  stroke: var(--viz-grid);
+  stroke-width: 1;
+}
+
+.viz svg .axis {
+  stroke: var(--viz-axis);
+  stroke-width: 1;
+  fill: none;
+}
+
+.viz svg .guide {
+  stroke: var(--muted, #3d6363);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  fill: none;
+}
+
+.viz svg .hit {
+  fill: transparent;
+  cursor: help;
+}
+
+.viz svg .hit:focus {
+  outline: none;
+}
+
+.viz svg .hit:focus-visible {
+  stroke: var(--ink, #17212f);
+  stroke-width: 2;
+}
+
+.viz figcaption,
+.viz .viz-note {
+  margin-top: 0.5rem;
+  color: var(--muted, #3d6363);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.viz details {
+  margin-top: 0.6rem;
+  font-size: 0.86rem;
+}
+
+.viz summary {
+  cursor: pointer;
+  color: var(--brand-strong, #065d65);
+  font-weight: 700;
+}
+
+.viz table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.viz th,
+.viz td {
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--line, #bfe0e2);
+  color: var(--muted, #3d6363);
+}
+
+.viz th {
+  color: var(--brand-strong, #065d65);
+  white-space: nowrap;
+}
+
+.viz td.num {
+  text-align: right;
+}
+
+.viz-tip {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  max-width: 280px;
+  background: #17212f;
+  color: #fff;
+  font-family: Manrope, "Segoe UI", sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(6, 50, 55, 0.3);
+}
+
+.viz-tip[hidden] {
+  display: none;
+}
+
+.viz-tip b {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.stat {
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: var(--radius-sm, 10px);
+  padding: 0.8rem 0.9rem;
+}
+
+.stat strong {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.5rem;
+  color: var(--brand-strong, #065d65);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  color: var(--muted, #3d6363);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 760px) {
+  .stat-row {
+    grid-template-columns: 1fr;
+  }
+}

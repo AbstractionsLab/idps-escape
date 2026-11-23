@@ -1,66 +1,48 @@
-# Wazuh Anomaly Detection Webhook
+# Wazuh anomaly detection webhook
 
-Here we describe a small Flask webhook service that receives anomaly alerts from an OpenSearch AD Monitor and writes concise, timestamped lines to a local log file. These entries can then be ingested by Wazuh (via a `localfile` block) for decoding, rule matching, and active response.
+A small Flask service that receives anomaly alerts from the OpenSearch AD monitors that RADAR creates, and writes one line per anomalous entity to `/var/log/ad_alerts.log`. A Wazuh agent in the same container ships that file to the manager, where the `opensearch_ad` decoders and the AD scenario rules (100309, 100321, 210040, 210041) turn each line into an alert.
 
-## Features
+RADAR builds, enrols and starts this container itself (`docker-compose.webhook.yml`, container `ad-webhook`), and `run-radar.sh` creates the monitors and the notification channel that call it. You don't need to configure anything by hand.
 
-- **HTTP endpoint** (`POST /notify`) for OpenSearch alert callbacks  
-- **Timezone conversion**: converts the AD monitor’s UTC `periodStart` / `periodEnd` into your local time  
-- **Simple, human-readable log format** written to `/var/log/ad_alerts.log`  
-- **Lightweight**: pure Python + Flask, no external dependencies beyond Flask  
+## Request
 
-## Prerequisites
+`POST /notify` with the header `X-RADAR-Webhook-Token: <WEBHOOK_SHARED_SECRET>`. Requests without the right token get `401`.
 
-- **Python 3.8+**  
-- **Flask**   
-- Write permissions to `/var/log/ad_alerts.log`
+The body is the JSON that `message_template()` in [monitor.py](../anomaly_detector/monitor.py) renders:
 
-## Installation
+- `trigger.name`, `periodStart` and `periodEnd`: the trigger and the monitor run window.
+- `anomalies`: one entry per anomalous entity (up to `monitor_max_entities` in `config.yaml`, default 5), each with `entity`, `anomaly_grade`, `anomaly_confidence`, `dataStart` and `dataEnd`. The last two are the anomaly's own data window, in epoch milliseconds. The list ends with `null`.
+- `entity`, `anomaly_grade`, `anomaly_confidence`, `dataStart`, `dataEnd` at the top level: the highest-graded entry, kept for older webhooks.
 
-1. **Clone or copy** `ad_alerts_webhook.py` onto your webhook host (e.g. the Wazuh manager or a separate app server).  
-2. **Install dependencies (ideally in a virtual environment)**:
-    ```bash
-    pip3 install flask
-    ```
-3. **Ensure log file exists** and is writable by the webhook process:
-    ```bash
-    sudo touch /var/log/ad_alerts.log
-    sudo chmod 664 /var/log/ad_alerts.log
-    ```
+A body without `anomalies`, as sent by monitors created before RADAR 2.2.0, is still accepted and gives one line.
 
-## Configuration
+The off-hours rule-mode monitor (`off_hours.py`, trigger `SuspiciousLogin-OffHours-Rule-Detected`) sends the same body, with `dataStart`/`dataEnd` as ISO times (first and last off-hours event) and two more keys per entry: `off_hours_count` (an integer) and `schedule_group`. They are written after the data window, and only when both are valid:
 
-Edit the top of `ad_alerts_webhook.py` if you need to change:
-
-- `LOG_FILE` — path to the log file  
-- `HOST` / `PORT` — which interface and port Flask should bind to  
-
-By default, the script runs on `0.0.0.0:8080`.
-
-## Running the Webhook
-```bash
-python3 ad_alerts_webhook.py
+```
+Nov 21 10:30:02 ad-webhook ad_alert: OpenSearchAD SuspiciousLogin-OffHours-Rule-Detected: entity="arash", start="2026-11-21T10:20:00Z", end="2026-11-21T10:30:00Z", anomaly_grade="1.0", anomaly_confidence="1.0" data_start="2026-11-21T10:21:03.100Z", data_end="2026-11-21T10:24:00.721Z" off_hours_count="21", schedule_group="synthetic_day"
 ```
 
-## Wazuh Monitor configuration
+The `opensearch_ad_detector` sibling decoder in `0001-ad-common.xml` reads them into `data.off_hours_count` and `data.schedule_group`.
 
-In your OpenSearch AD Monitor, configure a Webhook action with:
+## Output
 
-- URL: http://<webhook-host>:8080/notify
-- Payload: 
+One line per entity, highest grade first, at most one per entity:
+
 ```
-{
-  "monitor": {
-    "name": "{{ctx.monitor.name}}"
-  },
-  "trigger": {
-    "name": "{{ctx.trigger.name}}"
-  },
-  "entity": "{{ctx.results.0.hits.hits.0._source.entity.0.value}}",
-  "periodStart": "{{ctx.periodStart}}",
-  "periodEnd":   "{{ctx.periodEnd}}",
-  "anomaly_grade": "{{ctx.results.0.hits.hits.0._source.anomaly_grade}}", 
-  "anomaly_confidence": "{{ctx.results.0.hits.hits.0._source.confidence}}"
-}
+Nov 20 07:06:12 ad-webhook ad_alert: OpenSearchAD LinuxResourceUtilization-Anomaly-Detected: entity="edge.vm", start="2026-11-20T07:05:00Z", end="2026-11-20T07:06:00Z", anomaly_grade="0.82", anomaly_confidence="0.91" data_start="2026-11-20T07:00:00.000Z", data_end="2026-11-20T07:01:00.000Z"
 ```
-When the Monitor fires, OpenSearch will send exactly that JSON to your webhook.
+
+`data_start`/`data_end` are appended in UTC only when the monitor sent a usable data window. Entries that fail validation are skipped; the request is rejected with `400` only when no entry is usable. The response reports how many lines were written.
+
+## Settings
+
+Environment variables of the container:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `WEBHOOK_SHARED_SECRET` | none (required) | Token every request must carry |
+| `WEBHOOK_INTERNAL_PORT` | `8080` | Listening port |
+| `AD_ALERTS_LOG` | `/var/log/ad_alerts.log` | Output file |
+| `WEBHOOK_AGENT_NAME` | `ad-webhook` | Name the container's Wazuh agent enrols with |
+
+RADAR trusts anomaly alerts only when they come from this file on this agent. See [Firewall rules to enforce](../README.md#firewall-rules-to-enforce) for the firewall rule that limits port 8080 to the indexer.

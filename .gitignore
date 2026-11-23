@@ -185,7 +185,16 @@ adbox/assets/detector_models
 *.pkl
 *.pt
 
+# SONAR models (one directory per model) and delivery watermarks: local state
+sonar/models/*
+!sonar/models/.gitkeep
+
 adboxv2/model/mvad_model.pkl
 
 payloads/
 
+# Ansible vault
+host_vars/*.yml
+
+# Mermaid renders written by docs/specs/SpecEngine/c5mermaid.py during publish (regenerated from the item fences)
+docs/specs/*/assets/*-[0-9][0-9][0-9]-????????????.svg

@@ -1,0 +1,29 @@
+<decoder name="opensearch_ad">
+  <program_name>^ad_alert$</program_name>
+  <prematch>OpenSearchAD</prematch>
+</decoder>
+
+<decoder name="opensearch_ad_detector">
+  <parent>opensearch_ad</parent>
+  <regex offset="after_parent">\s*(\S+):\s*entity="(\S+)",\s*start="(\S+)",\s*end="(\S+)",\s*anomaly_grade="(\S+)",\s*anomaly_confidence="(\S+)"</regex>
+  <order>detector_name,entity_keyword,period_start,period_end,anomaly_grade,anomaly_confidence</order>
+</decoder>
+
+<!-- Sibling decoder (same name): the anomaly's own data window, which newer
+     webhooks append after anomaly_confidence. Lines without it still decode
+     through the decoder above; these two fields are then simply absent.
+     Keep this file identical in every scenario that ships it. -->
+<decoder name="opensearch_ad_detector">
+  <parent>opensearch_ad</parent>
+  <regex>data_start="(\S+)",\s*data_end="(\S+)"</regex>
+  <order>data_start,data_end</order>
+</decoder>
+
+<!-- Sibling decoder (same name): off-hours rule-mode alerts (suspicious_login)
+     carry the number of off-hours events and the user's schedule group. Other
+     AD alerts don't, and these two fields are then simply absent. -->
+<decoder name="opensearch_ad_detector">
+  <parent>opensearch_ad</parent>
+  <regex>off_hours_count="(\d+)",\s*schedule_group="(\S+)"</regex>
+  <order>off_hours_count,schedule_group</order>
+</decoder>

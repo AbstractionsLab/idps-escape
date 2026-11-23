@@ -9,16 +9,26 @@ wazuh:
   base_url: "https://localhost:9200"
   username: "admin"
   password: "SecretPassword"
-  verify_ssl: false  # Set to CA bundle path in production
+  # false: no certificate check; true: system trust store; or a CA bundle path, such as
+  # the Wazuh root CA (/etc/wazuh-indexer/certs/root-ca.pem on the indexer host)
+  verify_ssl: false
   alerts_index_pattern: "wazuh-alerts-*"
   anomalies_index: "wazuh-anomalies-mvad"
+  timeout_seconds: 30
+  max_alerts: 2000000  # alert searches page through every match up to this cap
+  exclude_rule_groups: ["sonar"]  # never read SONAR's own alerts ([] to disable)
 
 # Multivariate Anomaly Detector (MVAD) model configuration defaults
 # These can be overridden in scenario files
 mvad:
   sliding_window: 200
   device: "cpu"  # Use "cuda" for GPU acceleration if available
-  extra_params: {}
+  # Any MultiADConfig field of the MVAD library. interval: 1 trains on every window
+  # position (the library default of 10 skips 9 in 10), so 7 days of 5-minute buckets
+  # give 1100 gradient steps. Training needs at least 1010 buckets from the first alert (empty buckets count).
+  extra_params:
+    interval: 1
+  min_gradient_steps: 500  # warn when training would perform fewer optimiser updates
 
 # Feature extraction defaults
 # These can be overridden in scenario files
@@ -33,9 +43,41 @@ features:
 # Debug/offline mode configuration (for testing without Wazuh instance)
 debug:
   enabled: false
-  data_dir: "./test_data/synthetic_alerts"  # Relative to sonar/ directory
+  data_dir: "test_data/synthetic_alerts"  # relative to this file (the packaged debug data)
   training_data_file: "normal_baseline.json"
   detection_data_file: "with_anomalies.json"
 
-# Path where trained model will be saved/loaded
-model_path: "./model/mvad_model.pkl"
+# Where anomalies go (see docs/manual/sonar_docs/data-shipping-guide.md)
+output:
+  # wazuh: events for the Wazuh manager (rules 100500-100519); datastream: the scenario's
+  # data stream in the indexer (also added by --ship); index: the legacy anomalies index;
+  # jsonl, stdout: local files and output
+  sinks: [wazuh]
+  fallback: none           # none, datastream or index: takes what a sink rejected
+  debug_sinks: [stdout]    # used instead of sinks with --debug
+  wazuh:
+    # file: SONAR on the manager host, appending to a file the manager reads
+    #   (<localfile> with log_format json, see sonar/wazuh/ossec-localfile.xml)
+    # api: SONAR on a dedicated host, posting to the server API (POST /events)
+    transport: file
+    file_path: /var/log/sonar/anomalies.json
+    api_url: https://localhost:55000
+    api_username: sonar      # a user whose role allows only event:ingest
+    api_password: ""         # empty: read SONAR_WAZUH_API_PASSWORD
+    verify_ssl: false        # or the CA bundle of the API certificate
+    severity_medium: 0.5     # severity bands matched by rules 100501-100503
+    severity_high: 0.8
+
+# Models: <models_dir>/<model_name>/ (a directory with metadata.json and the backend's state).
+# A relative models_dir is relative to the file that sets it. Unset, it is models/ in the SONAR
+# home: $SONAR_HOME, else sonar/ in a source checkout, else ~/.sonar.
+# models_dir: /var/lib/sonar/models
+model_name: sonar          # scenarios use their model_name, or their name
+backend: mvad              # detector trained by `sonar train`: mvad, pca or ewma (baseline)
+pca:                       # settings of the pca backend
+  window: 3                # buckets that score a bucket (the bucket and the 2 before it)
+  variance: 0.95           # share of the training variance the principal components keep
+  z_threshold: 4.0         # robust z-score of a window's distance from which a bucket is anomalous
+ewma:                      # settings of the ewma backend
+  alpha: 0.5               # EWMA smoothing (1 = none)
+  z_threshold: 4.0         # robust z-score from which a bucket is anomalous

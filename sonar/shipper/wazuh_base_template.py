@@ -27,6 +27,9 @@ OBJECT = "object"
 # SONAR template naming
 SONAR_BASE_TEMPLATE_NAME = "sonar_stream_template"
 SONAR_ANOMALY_PATTERN = "sonar_anomalies"
+# Per-scenario templates overlap the generic sonar_anomalies_* templates (priority 1 and 2),
+# and OpenSearch rejects overlapping templates with equal priority.
+SCENARIO_TEMPLATE_PRIORITY = 3
 SONAR_INDEX_PATTERNS = [
     SONAR_ANOMALY_PATTERN + "_*",
 ]
@@ -44,8 +47,10 @@ SONAR_BASE_TEMPLATE = {
         },
         MAPPINGS: {
             PROPERTIES: {
+                "anomaly_id": {TYPE: KEYWORD},
                 "is_anomaly": {TYPE: BOOLEAN},
                 "anomaly_score": {TYPE: FLOAT},
+                "anomaly_confidence": {TYPE: FLOAT},
                 "threshold": {TYPE: FLOAT},
                 "scenario_name": {TYPE: KEYWORD},
                 "detection_timestamp": {TYPE: "date"},
@@ -67,17 +72,25 @@ MVAD_COMPONENT = {
     TEMPLATE: {
         MAPPINGS: {
             PROPERTIES: {
+                "model_name": {TYPE: KEYWORD},
                 "mvad_score": {TYPE: FLOAT},
                 "mvad_severity": {TYPE: FLOAT},
                 "mvad_threshold": {TYPE: FLOAT},
                 "sliding_window": {TYPE: "integer"},
                 "bucket_minutes": {TYPE: "integer"},
-                "lookback_minutes": {TYPE: "integer"},
-                "top_contributors": {
+                # Field names must match MVADPostProcessor.build_wazuh_anomaly_docs (sonar/pipeline.py)
+                "mvad_interpretation": {
                     TYPE: OBJECT,
                     PROPERTIES: {
                         "variable": {TYPE: KEYWORD},
                         "contribution": {TYPE: FLOAT},
+                        "value": {TYPE: FLOAT},
+                    },
+                },
+                "data": {
+                    TYPE: OBJECT,
+                    PROPERTIES: {
+                        "lookback_minutes": {TYPE: "integer"},
                     },
                 },
                 "context": {
@@ -92,40 +105,3 @@ MVAD_COMPONENT = {
         }
     }
 }
-
-# Scenario-specific feature component template name pattern
-SCENARIO_COMPONENT_NAME = "component_template_sonar_{scenario_id}"
-
-
-def get_scenario_component(scenario_name: str, features: dict) -> dict:
-    """
-    Generate scenario-specific template component with dynamic feature fields.
-
-    Args:
-        scenario_name: Name of the scenario (e.g., 'brute_force', 'lateral_movement').
-        features: Dict mapping feature names to their types (e.g., {'rule.level': 'float'}).
-
-    Returns:
-        Template component definition for the scenario.
-    """
-    properties = {}
-    for feature_name, feature_type in features.items():
-        safe_name = feature_name.replace(".", "_")
-        properties[f"feature_{safe_name}"] = {TYPE: feature_type}
-
-    return {
-        TEMPLATE: {
-            MAPPINGS: {
-                PROPERTIES: {
-                    "scenario_features": {TYPE: OBJECT, PROPERTIES: properties},
-                    "scenario_metadata": {
-                        TYPE: OBJECT,
-                        PROPERTIES: {
-                            "scenario_name": {TYPE: KEYWORD},
-                            "scenario_version": {TYPE: KEYWORD},
-                        },
-                    },
-                }
-            }
-        }
-    }

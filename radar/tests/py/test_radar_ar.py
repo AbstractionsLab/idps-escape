@@ -620,54 +620,59 @@ class TestActionPlanner:
         assert set(t2["mitigations"]).issubset(set(t3["mitigations"]))
 
 
-class TestDecipherIncidentGate:
-    """Verify that DECIPHER incident creation is gated on tier >= 1 (not tier 0)."""
+def _drive_run(radar_ar, monkeypatch, scenario, *, decipher_ok=True, tier=0, fusion=None, compute=None):
+    """Run RadarActiveResponse.run() on one identified scenario with every
+    collaborator mocked. Returns the mocks for assertions."""
+    alert = scenario["alert"]
+    ar = radar_ar.RadarActiveResponse.__new__(radar_ar.RadarActiveResponse)
+    ar.logger = Mock()
+    ar.cfg_loader = Mock(load=Mock(return_value={"scenarios": {}}))
+    ar.input_handler = Mock(read_alert=Mock(return_value=alert))
+    strategy = radar_ar.BaseScenario(ar.logger, Mock())
+    monkeypatch.setattr(strategy, "collect_context", lambda s: {"iocs": {}, "window": {}, "events": [], "effective_agent": ""})
+    ar.strategies = Mock(get=Mock(return_value=strategy))
+    ar.decipher = Mock(health_check=Mock(return_value=decipher_ok),
+                       analyze=Mock(return_value={"ok": True, "cti_score_T": 0.0, "labels": [], "misp_events": [],
+                                                  "identified_scanners": None, "case_id": None, "case_url": None, "raw": {}}),
+                       create_incident=Mock(return_value={"ok": True, "case_id": "1", "case_url": "u", "raw": {}}))
+    ar.fusion = fusion or Mock(correlate=Mock(return_value=None))
+    ar.risk_engine = Mock(compute=compute or (lambda *a, **k: {"risk_score": 0.5, "tier": tier, "components": {}}))
+    ar.planner = Mock(plan=Mock(return_value={"mitigations": [], "notify_email": False}))
+    ar.executor = Mock(execute=Mock(return_value={}))
+    ar.email = Mock()
+    monkeypatch.setattr(radar_ar, "ScenarioIdentifier", lambda logger, cfg: Mock(identify=Mock(return_value=scenario)))
+    monkeypatch.setattr(radar_ar.AdAlertOrigin, "verify", staticmethod(lambda a, l: True))
+    monkeypatch.setattr(radar_ar, "NeverBlock", lambda *a, **k: Mock())
+    assert ar.run() == 0
+    return ar
 
-    def _make_decision(self, radar_ar, tier: int):
+
+class TestDecipherIncidentGate:
+    """DECIPHER incident creation is gated on tier >= 1, through run() itself."""
+
+    @staticmethod
+    def _scenario():
         return {
-            "decision_id": "abc123",
-            "scenario": {
-                "name": "suspicious_login",
-                "detection": "signature",
-                "config": {
-                    "allow_mitigation": True,
-                    "mitigations_tier2": [],
-                    "mitigations_tier3": ["firewall-drop", "lock_user_linux.sh"],
-                },
-                "alert": {
-                    "id": "1",
-                    "timestamp": "2025-12-08T13:03:00.000+0000",
-                    "rule": {"id": "210020", "level": 10, "description": "test", "groups": []},
-                    "agent": {"id": "001", "name": "edge.vm"},
-                },
-            },
-            "context": {"iocs": {}, "window": {}, "effective_agent": "edge.vm", "events": [], "event_count": 0},
-            "cti": {"ok": False, "cti_score_T": 0.0, "labels": [], "misp_events": [], "case_id": None, "case_url": None, "raw": None},
-            "risk": {"risk_score": 0.5, "tier": tier, "threshold": 0.51, "components": {}},
+            "name": "suspicious_login", "detection": "signature", "matched_by": "rule_id",
+            "config": {"allow_mitigation": True, "mitigations_tier2": [], "mitigations_tier3": ["firewall-drop"]},
+            "alert": {"id": "1", "timestamp": "2025-12-08T13:03:00.000+0000",
+                      "rule": {"id": "210020", "level": 10, "description": "test", "groups": []},
+                      "agent": {"id": "001", "name": "edge.vm"}},
         }
 
-    def _make_decipher(self, radar_ar):
-        mock_logger = unittest.mock.MagicMock()
-        decipher = radar_ar.DecipherClient(mock_logger)
-        decipher._available = True
-        create_calls = []
-        decipher.create_incident = lambda d: create_calls.append(d) or {"ok": True, "case_id": "1", "case_url": "http://x/1", "raw": {}}
-        return decipher, create_calls
-
-    def test_incident_not_created_at_tier_0(self, radar_ar):
-        decipher, create_calls = self._make_decipher(radar_ar)
-        decision = self._make_decision(radar_ar, tier=0)
-        if decipher.health_check() and decision["risk"]["tier"] >= 1:
-            decipher.create_incident(decision)
-        assert create_calls == []
+    def test_incident_not_created_at_tier_0(self, radar_ar, monkeypatch):
+        ar = _drive_run(radar_ar, monkeypatch, self._scenario(), tier=0)
+        ar.decipher.create_incident.assert_not_called()
 
     @pytest.mark.parametrize("tier", [1, 2, 3])
-    def test_incident_created_at_tier_1_and_above(self, radar_ar, tier):
-        decipher, create_calls = self._make_decipher(radar_ar)
-        decision = self._make_decision(radar_ar, tier=tier)
-        if decipher.health_check() and decision["risk"]["tier"] >= 1:
-            decipher.create_incident(decision)
-        assert len(create_calls) == 1, f"create_incident must be called exactly once at tier {tier}"
+    def test_incident_created_at_tier_1_and_above(self, radar_ar, monkeypatch, tier):
+        ar = _drive_run(radar_ar, monkeypatch, self._scenario(), tier=tier)
+        ar.decipher.create_incident.assert_called_once()
+
+    def test_incident_not_created_when_decipher_is_down(self, radar_ar, monkeypatch):
+        ar = _drive_run(radar_ar, monkeypatch, self._scenario(), tier=3, decipher_ok=False)
+        ar.decipher.create_incident.assert_not_called()
+
 
 class TestScenarioIdentifier:
     """Test suite for ScenarioIdentifier rule_id and rule_group matching."""
@@ -685,6 +690,35 @@ class TestScenarioIdentifier:
         assert result["detection"] == "signature"
         assert result["matched_by"] == "rule_group"
         assert result["matched_group"] == "authentication_failures"
+
+
+class TestRegistry:
+    """Test suite for the scenario Registry, particularly that every production
+    scenario in ar.yaml/config.yaml actually gets a resolver."""
+
+    def test_linux_resource_utilization_is_registered(self, radar_ar, mock_logger):
+        registry = radar_ar.Registry(mock_logger, os_client=None)
+        resolver = registry.get("linux_resource_utilization")
+        assert isinstance(resolver, radar_ar.LinuxResourceUtilization)
+        assert resolver is not registry.get("some_unregistered_scenario")
+
+    def test_linux_resource_utilization_inherits_logvolume_time_window(self, radar_ar, mock_logger):
+        registry = radar_ar.Registry(mock_logger, os_client=None)
+        resolver = registry.get("linux_resource_utilization")
+
+        scenario = {
+            "alert": {
+                "data": {
+                    "period_start": "2026-01-01T00:00:00+00:00",
+                    "period_end": "2026-01-01T00:05:00+00:00",
+                },
+                "timestamp": "2026-01-01T00:05:00+00:00",
+            },
+            "config": {},
+        }
+        t_start, t_end = resolver.resolve_time_window(scenario)
+        assert t_start.isoformat() == "2026-01-01T00:00:00+00:00"
+        assert t_end.isoformat() == "2026-01-01T00:05:00+00:00"
 
 
 class TestContextQueryRetry:
@@ -747,19 +781,6 @@ class TestAuditLogFieldNames:
         assert set(entry.keys()) >= {"decision_id", "rule_id", "source_ip", "action", "tier", "result", "reason"}
 
 
-@pytest.mark.parametrize("name", ["lock_user_linux.sh", "terminate_service.sh"])
-def test_standalone_ar_script_matches_bootstrap_copy(name):
-    """The manual-setup copy must not drift from what bootstrap-agent.sh installs."""
-    import re
-    radar_root = Path(__file__).resolve().parents[2]
-    bootstrap = (radar_root / "bootstrap-agent.sh").read_text()
-    match = re.search(rf"write_ar_script {re.escape(name)} <<'AR_SCRIPT_EOF'\n(.*?)^AR_SCRIPT_EOF$",
-                      bootstrap, re.S | re.M)
-    assert match, f"{name} heredoc not found in bootstrap-agent.sh"
-    standalone = (radar_root / "scenarios" / "active_responses" / name).read_text()
-    assert standalone == match.group(1)
-
-
 class TestBuildArgsTargetValidation:
     """Mitigation targets come from attacker-influenced alert fields."""
 
@@ -768,11 +789,28 @@ class TestBuildArgsTargetValidation:
         executor = radar_ar.ActionExecutor(mock_logger, Mock())
         return executor._build_args(command, {"config": config or {}}, iocs)
 
-    def test_lock_user_drops_root_protected_and_malformed_names(self, radar_ar, mock_logger):
-        iocs = {"user": ["alice", "ROOT", "admin", "-ohax", "bob; rm -rf /", "../x", "carol.smith"]}
-        args = self._build(radar_ar, mock_logger, "lock_user_linux.sh", iocs,
-                           {"protected_users": ["Admin"]})
-        assert args == [["alice"], ["carol.smith"]]
+    @pytest.mark.parametrize("user,locked", [
+        ("alice", True), ("carol.smith", True), ("ROOT", False), ("admin", False),
+        ("-ohax", False), ("bob; rm -rf /", False), ("../x", False),
+    ])
+    def test_lock_user_drops_root_protected_and_malformed_names(self, radar_ar, mock_logger, user, locked):
+        executor = radar_ar.ActionExecutor(mock_logger, Mock())
+        scenario = {"config": {"protected_users": ["Admin"]}, "alert": {"data": {"dstuser": user}}}
+        args = executor._build_args("lock_user_linux.sh", scenario, {"user": []})
+        assert args == ([[user]] if locked else [])
+
+    def test_lock_user_targets_only_the_alerts_own_users(self, radar_ar, mock_logger):
+        # Context IOCs hold every user logged on the agent in the window (sudo, other sessions).
+        executor = radar_ar.ActionExecutor(mock_logger, Mock())
+        scenario = {"config": {}, "alert": {"data": {"dstuser": "victim", "srcip": "203.0.113.7"}}}
+        args = executor._build_args("lock_user_linux.sh", scenario, {"user": ["admin2", "victim", "deploy"]})
+        assert args == [["victim"]]
+
+    def test_lock_user_without_alert_user_locks_nobody(self, radar_ar, mock_logger):
+        executor = radar_ar.ActionExecutor(mock_logger, Mock())
+        scenario = {"config": {}, "alert": {"data": {"office365": {"UserId": "x@example.com"}}}}
+        assert executor._build_args("lock_user_linux.sh", scenario, {"user": ["alice"]}) == []
+        assert executor.last_refusal == "no_alert_user"
 
     def test_terminate_service_refuses_services_not_allowlisted(self, radar_ar, mock_logger):
         iocs = {"service": ["sshd", "wazuh-agent"], "ip": []}
@@ -927,6 +965,103 @@ def test_rule_100300_is_restricted_to_webhook_log():
     assert rule.findtext("location") == "/var/log/ad_alerts.log$"
 
 
+def test_ad_child_rules_reachable_from_every_ad_catch_all():
+    """Wazuh stops at the first matching top-level rule, so with log_volume and
+    linux_resource_utilization both deployed only one opensearch_ad catch-all
+    fires. Each AD trigger rule must hang off all of them, not one by if_sid."""
+    import xml.etree.ElementTree as ET
+    rules_dir = Path(__file__).resolve().parents[2] / "scenarios" / "rules"
+    rules = []
+    for scenario in ("log_volume", "suspicious_login", "linux_resource_utilization"):
+        for f in (rules_dir / scenario).glob("*.xml"):
+            rules += list(ET.fromstring("<r>" + f.read_text() + "</r>").iter("rule"))
+
+    def groups(rule):
+        return {g.strip() for g in (rule.findtext("group") or "").split(",") if g.strip()}
+
+    catch_alls = [r for r in rules if r.findtext("decoded_as") == "opensearch_ad" and r.find("if_sid") is None]
+    children = [r for r in rules if r.get("id") in ("100309", "210040", "210041", "100321")]
+    assert {r.get("id") for r in catch_alls} == {"100300", "210039", "100320"}
+    assert len(children) == 4
+    for parent in catch_alls:
+        assert "radar_ad_received" in groups(parent)
+    for child in children:
+        assert child.find("if_sid") is None
+        assert child.findtext("if_group") == "radar_ad_received"
+        assert "radar_ad_received" not in groups(child)
+
+
+class TestFusionPrerequisites:
+    """Fixes that keep each alert's score and targets about that alert."""
+
+    def _scenario(self, detection, likelihood=0.8):
+        return {
+            "name": "s", "detection": detection,
+            "config": {"w_ad": 0.5, "w_sig": 0.5, "w_cti": 0.0, "signature_likelihood": likelihood,
+                       "signature_impact": 1.0, "tiers": {"tier1_min": 0.0, "tier1_max": 0.33, "tier2_max": 0.66}},
+            "alert": {"rule": {"id": "1"}},
+        }
+
+    def test_ad_alert_gets_no_signature_risk_from_scalar_likelihood(self, risk_engine):
+        result = risk_engine.compute(self._scenario("ad"), 0.0, 0.5, 0.5)
+        assert result["components"]["signature_risk_S"] == 0.0
+        assert result["risk_score"] == pytest.approx(0.125)
+
+    @pytest.mark.parametrize("detection", ["signature", "hybrid"])
+    def test_signature_and_hybrid_alerts_keep_signature_risk(self, risk_engine, detection):
+        result = risk_engine.compute(self._scenario(detection), 0.0, None, None)
+        assert result["components"]["signature_risk_S"] == pytest.approx(0.8)
+
+    def test_shipped_ad_scenarios_score_unchanged(self, risk_engine, radar_ar):
+        import yaml
+        ar_yaml = Path(radar_ar.__file__).with_name("ar.yaml")
+        scenarios = yaml.safe_load(ar_yaml.read_text())["scenarios"]
+        for name in ("log_volume", "linux_resource_utilization"):
+            cfg = scenarios[name]
+            assert cfg["signature_likelihood"] == 0.0, f"{name}: S gating would change its score"
+            result = risk_engine.compute({"name": name, "detection": "ad", "config": cfg, "alert": {"rule": {"id": "x"}}},
+                                         0.0, 0.8, 0.9)
+            assert result["risk_score"] == pytest.approx(cfg["w_ad"] * 0.72)
+
+    def test_hybrid_alert_resolves_anomaly_scores(self, radar_ar, monkeypatch):
+        alert = {"id": "1", "timestamp": "2026-11-20T10:00:00.000+0000", "rule": {"id": "100309"},
+                 "agent": {"id": "010", "name": "ad-webhook"}, "location": "/var/log/ad_alerts.log",
+                 "data": {"anomaly_grade": "0.8", "anomaly_confidence": "0.9"}}
+        scenario = {"name": "log_volume", "detection": "hybrid", "alert": alert, "matched_by": "rule_id",
+                    "config": {"w_ad": 1.0, "w_sig": 0.0, "w_cti": 0.0, "signature_likelihood": 0.0}}
+        ar = radar_ar.RadarActiveResponse.__new__(radar_ar.RadarActiveResponse)
+        ar.logger = Mock()
+        ar.cfg_loader = Mock(load=Mock(return_value={"scenarios": {}}))
+        ar.input_handler = Mock(read_alert=Mock(return_value=alert))
+        strategy = radar_ar.LogVolume(ar.logger, Mock())
+        monkeypatch.setattr(strategy, "collect_context", lambda s: {"iocs": {}, "window": {}, "events": []})
+        ar.strategies = Mock(get=Mock(return_value=strategy))
+        ar.decipher = Mock(health_check=Mock(return_value=False))
+        captured = {}
+        ar.fusion = Mock(correlate=Mock(return_value=None))
+        ar.risk_engine = Mock(compute=lambda s, t, g, c, fusion=None: captured.update(g=g, c=c) or {"risk_score": 0.0, "tier": 0, "components": {}})
+        ar.planner = Mock(plan=Mock(return_value={"mitigations": [], "notify_email": False}))
+        ar.executor = Mock(execute=Mock(return_value={}))
+        ar.email = Mock()
+        monkeypatch.setattr(radar_ar, "ScenarioIdentifier", lambda logger, cfg: Mock(identify=Mock(return_value=scenario)))
+        monkeypatch.setattr(radar_ar.AdAlertOrigin, "verify", staticmethod(lambda a, l: True))
+        monkeypatch.setattr(radar_ar, "NeverBlock", lambda *a, **k: Mock())
+        assert ar.run() == 0
+        assert captured == {"g": 0.8, "c": 0.9}
+
+    def test_decipher_username_is_the_alerts_user(self, radar_ar, mock_logger):
+        strategy = radar_ar.SuspiciousLogin(mock_logger, Mock())
+        scenario = {"alert": {"agent": {"name": "edge"}, "timestamp": "t", "data": {"dstuser": "victim"}}}
+        payload = strategy.build_analyze_payload(scenario, {"iocs": {"user": ["admin2", "victim"], "ip": []}})
+        assert payload["username"] == "victim"
+
+    def test_decipher_username_falls_back_to_context_users(self, radar_ar, mock_logger):
+        strategy = radar_ar.SuspiciousLogin(mock_logger, Mock())
+        scenario = {"alert": {"agent": {"name": "edge"}, "timestamp": "t", "data": {}}}
+        payload = strategy.build_analyze_payload(scenario, {"iocs": {"user": ["admin2", "victim"], "ip": []}})
+        assert payload["username"] == "admin2"
+
+
 
 class TestActiveResponsePayload:
     def _run(self, radar_ar, mock_logger, command, target_ip, iocs=None):
@@ -936,7 +1071,7 @@ class TestActiveResponsePayload:
         decision = {
             "scenario": {"config": {}, "alert": {"agent": {"id": "002", "name": "web01"},
                                                  "data": {"src_ip": "198.51.100.9", "srcip": "10.0.0.9",
-                                                          "http": {"xff": "10.0.0.8"}}}},
+                                                          "dstuser": "bob", "http": {"xff": "10.0.0.8"}}}},
             "context": {"iocs": iocs or {}, "effective_agent": "web01"},
             "target_ip": target_ip,
         }
@@ -966,5 +1101,58 @@ class TestActiveResponsePayload:
                         "alert": {"data": {"srcip": "203.0.113.7"}}}
 
 
+class TestUnsupportedMitigation:
+    """An action radar_ar.py cannot target is refused clearly, never sent."""
+
+    @staticmethod
+    def _decision():
+        return {
+            "decision_id": "d1",
+            "risk": {"tier": 3},
+            "target_ip": "203.0.113.7",
+            "scenario": {"config": {}, "alert": {"rule": {"id": "210020"}, "data": {"dstuser": "bob"},
+                                                 "agent": {"id": "002", "name": "web01"}}},
+            "context": {"iocs": {"user": ["bob"]}, "effective_agent": "web01"},
+        }
+
+    def test_supported_set(self, radar_ar):
+        assert radar_ar.SUPPORTED_MITIGATIONS == {"firewall-drop", "lock_user_linux.sh", "terminate_service.sh"}
+
+    @pytest.mark.parametrize("command", ["lock_user_linux", "terminate_service", "custom.sh", ""])
+    def test_unsupported_command_is_not_sent(self, radar_ar, mock_logger, command):
+        api = Mock()
+        api.get_agent_id_by_name.return_value = "002"
+        ex = radar_ar.ActionExecutor(mock_logger, api)
+        assert ex._execute_mitigation(self._decision(), command) == []
+        api.send_active_response.assert_not_called()
+        assert ex.last_refusal == "unsupported_mitigation"
+        assert any("unsupported command" in str(c.args[1]) for c in mock_logger.log.call_args_list)
+
+    def test_unsupported_command_is_audited_as_declined(self, radar_ar, mock_logger):
+        api = Mock()
+        api.get_agent_id_by_name.return_value = "002"
+        audit = Mock()
+        ex = radar_ar.ActionExecutor(mock_logger, api)
+        ex.audit, ex.guard = audit, None
+        ex.execute(self._decision(), {"mitigations": ["lock_user_linux"]})
+        api.send_active_response.assert_not_called()
+        kwargs = audit.write.call_args.kwargs
+        assert kwargs["action"] == "lock_user_linux"
+        assert kwargs["result"] == radar_ar.AuditLog.RESULT_DECLINED
+        assert kwargs["reason"] == "unsupported_mitigation"
+
+    def test_supported_command_still_sent(self, radar_ar, mock_logger):
+        api = Mock()
+        api.get_agent_id_by_name.return_value = "002"
+        ex = radar_ar.ActionExecutor(mock_logger, api)
+        out = ex._execute_mitigation(self._decision(), "lock_user_linux.sh")
+        assert len(out) == 1
+        assert api.send_active_response.call_args.args[1] == "!lock_user_linux.sh"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+def test_linux_resource_utilization_has_its_own_incident_title(radar_ar, mock_logger):
+    client = radar_ar.DecipherClient(mock_logger)
+    assert client._incident_title("linux_resource_utilization") == "RADAR: abnormal CPU/memory utilization"

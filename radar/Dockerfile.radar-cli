@@ -15,16 +15,17 @@ RUN mkdir -p /app \
  && mkdir -p /app/insider_threat \
  && mkdir -p /app/malware_communication \
  && mkdir -p /app/suspicious_login \
+ && mkdir -p /app/linux_resource_utilization \
  && useradd -r -u 999 -g root -d /nonexistent -s /usr/sbin/nologin appuser \
  && chown -R appuser:root /app \
  && chmod -R 550 /app \
- && pip install --no-cache-dir requests PyYAML
+ && pip install --no-cache-dir requests PyYAML tzdata
 
 WORKDIR /app
 
-COPY --chown=appuser:root --chmod=440 anomaly_detector/detector.py anomaly_detector/monitor.py anomaly_detector/webhook.py config.yaml ./
+COPY --chown=appuser:root --chmod=440 anomaly_detector/detector.py anomaly_detector/monitor.py anomaly_detector/webhook.py anomaly_detector/off_hours.py config.yaml ./
 COPY --chown=appuser:root --chmod=440 scenarios/ingest_scripts/suspicious_login/wazuh_ingest.py ./suspicious_login/
 COPY --chown=appuser:root --chmod=440 scenarios/ingest_scripts/log_volume/wazuh_ingest.py ./log_volume/
+COPY --chown=appuser:root --chmod=440 scenarios/ingest_scripts/linux_resource_utilization/wazuh_ingest.py ./linux_resource_utilization/
 
 USER appuser
-
