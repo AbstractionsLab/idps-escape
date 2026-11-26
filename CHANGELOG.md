@@ -1,3 +1,8 @@
+# 2.2.1 (2026-11-26)
+
+- Update product presentation website with interactive feature simulation widgets
+- Add interactive product presentation slide deck
+
 # 2.2.0 (2026-11-23)
 
 - **Upgrading from 2.1.0**:

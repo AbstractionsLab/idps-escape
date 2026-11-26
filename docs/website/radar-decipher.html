@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IDPS-ESCAPE | RADAR and DECIPHER</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="assets/charts.css" rel="stylesheet">
+  <link href="assets/radar-decipher.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef1f5;
+      --surface: #ffffff;
+      --surface-alt: #f0fafa;
+      --ink: #17212f;
+      --muted: #3d6363;
+      --line: #bfe0e2;
+      --brand: #0d8b94;
+      --brand-strong: #065d65;
+      --accent: #e12f56;
+      --warn: #a4471d;
+      --warn-bg: #fdf1ea;
+      --ok: #13874f;
+      --shadow: 0 12px 40px rgba(6, 50, 55, 0.12);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-snap-type: y proximity;
+      scroll-padding-top: 64px;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 10% -10%, #c8f0f2 0, transparent 40%),
+        radial-gradient(circle at 90% 0, #d1f0e8 0, transparent 35%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--ink);
+      font-family: Manrope, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: min(1160px, calc(100vw - 2.4rem));
+      margin: 0 auto;
+    }
+
+    /* ── Top bar with deck controls ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+      background: rgba(238, 241, 245, 0.86);
+      border-bottom: 1px solid rgba(213, 223, 236, 0.8);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem 0;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      color: var(--brand-strong);
+      text-decoration: none;
+    }
+
+    .brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .deck-pos {
+      margin-left: auto;
+      font-size: 0.86rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .deck-ctl {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--brand-strong);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.38rem 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn:hover:not(:disabled) { border-color: var(--brand); }
+    .btn:disabled { opacity: 0.45; cursor: default; }
+    .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+    .btn-primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+
+    .progress {
+      height: 3px;
+      background: var(--brand);
+      width: 0;
+      transition: width 0.25s ease;
+    }
+
+    /* ── Slides ── */
+    .slide {
+      min-height: calc(100vh - 60px);
+      padding-block: 3.2rem 3rem;
+      display: flex;
+      align-items: center;
+      scroll-snap-align: start;
+      border-bottom: 1px solid rgba(191, 224, 226, 0.5);
+    }
+
+    .slide > .container { width: min(1160px, calc(100vw - 2.4rem)); }
+
+    .slide[data-tech] { background: rgba(255, 255, 255, 0.45); }
+
+    .kicker {
+      display: inline-flex;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--brand);
+      margin-bottom: 0.6rem;
+    }
+
+    .tag-tech {
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: #fff;
+      background: var(--brand-strong);
+      border-radius: 999px;
+      padding: 0.12rem 0.55rem;
+    }
+
+    h1, h2, h3 { font-family: "Space Grotesk", sans-serif; line-height: 1.15; }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      margin: 0 0 1rem;
+      color: var(--ink);
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+      margin: 0 0 0.6rem;
+    }
+
+    .lead {
+      font-size: clamp(1.02rem, 1.6vw, 1.2rem);
+      color: var(--muted);
+      max-width: 62ch;
+      margin: 0 0 1.4rem;
+    }
+
+    .takeaway {
+      margin-top: 1.2rem;
+      font-weight: 700;
+      color: var(--brand-strong);
+      border-left: 4px solid var(--brand);
+      padding: 0.2rem 0 0.2rem 0.8rem;
+      max-width: 70ch;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 { margin: 0 0 0.4rem; font-size: 1.05rem; color: var(--brand-strong); }
+    .card p, .card li { color: var(--muted); font-size: 0.95rem; }
+    .card ul { padding-left: 1.1rem; margin: 0.3rem 0 0; }
+
+    code {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.88em;
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.05rem 0.3rem;
+    }
+
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      background: #17212f;
+      color: #e6f3f4;
+      border-radius: var(--radius-sm);
+      padding: 0.9rem 1rem;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    pre code { background: none; border: 0; padding: 0; color: inherit; }
+    pre .c { color: #8fb7ba; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th { background: var(--surface-alt); color: var(--brand-strong); font-size: 0.84rem; }
+    td.num { font-variant-numeric: tabular-nums; }
+
+    .note {
+      background: var(--surface-alt);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 1rem;
+    }
+
+    .two > * { min-width: 0; }
+
+    .two.wide-left { grid-template-columns: 1.5fr 1fr; }
+    .two.wide-right { grid-template-columns: 0.8fr 1.4fr; }
+    .stack { display: grid; gap: 1.2rem; }
+    .stack h3 { margin: 0 0 0.5rem; }
+
+    /* ── MAPE-K close ── */
+    .mapek {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .mapek .card { box-shadow: none; padding: 0.8rem; }
+    .mapek .card h3 { font-size: 0.98rem; }
+    .mapek .card p { margin: 0; font-size: 0.86rem; }
+    .mapek .k { border-color: var(--brand); background: var(--surface-alt); }
+
+    .shot img {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      display: block;
+    }
+
+    .shot figcaption { font-size: 0.86rem; color: var(--muted); margin-top: 0.4rem; }
+    figure { margin: 0; }
+
+    a { color: var(--brand-strong); }
+
+    .hint { font-size: 0.9rem; color: var(--muted); }
+    .hint kbd {
+      font-family: inherit;
+      font-size: 0.8rem;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      padding: 0 0.35rem;
+      background: var(--surface);
+    }
+
+    @media (max-width: 960px) {
+      .two, .two.wide-left, .two.wide-right { grid-template-columns: 1fr; }
+      .mapek { grid-template-columns: 1fr 1fr; }
+      .slide { min-height: auto; }
+      .deck-pos { margin-left: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="product-presentation.html">
+        <img src="assets/1D1B2_LOG_IDPS-ESCAPE-400x400.png" alt="">
+        <span>IDPS-ESCAPE</span>
+      </a>
+      <span class="deck-pos" id="deck-pos" aria-live="polite"></span>
+      <div class="deck-ctl">
+        <label class="switch" title="Show or skip the slides marked Technical">
+          <input type="checkbox" id="tech-toggle" checked>
+          <span>Technical slides</span>
+        </label>
+        <button class="btn" id="deck-prev" type="button" aria-label="Previous slide">←</button>
+        <button class="btn" id="deck-next" type="button" aria-label="Next slide">→</button>
+      </div>
+    </div>
+    <div class="progress" id="deck-progress"></div>
+  </header>
+
+  <main>
+    <!-- 1. Title -->
+    <section class="slide" id="title" data-title="RADAR and DECIPHER">
+      <div class="container">
+        <div class="kicker">IDPS-ESCAPE v2.2.0</div>
+        <h1>From alert to response, with threat intelligence in the loop</h1>
+        <p class="lead">
+          RADAR detects with signature rules and with its own anomaly detectors, built on Random Cut
+          Forest (RCF). It combines the two into a scored, tiered response. DECIPHER, part of
+          SATRAP-DL, adds MISP threat intelligence to that score and opens the Flowintel case.
+        </p>
+        <p class="hint">
+          Present with <kbd>←</kbd> <kbd>→</kbd> or <kbd>Page Up</kbd> <kbd>Page Down</kbd>.
+          Slides marked <span class="tag-tech">Technical</span> go deeper and can be skipped with the switch at the top.
+        </p>
+      </div>
+    </section>
+
+    <!-- 2. Big picture -->
+    <section class="slide" id="big-picture" data-title="Two kinds of detection, one decision">
+      <div class="container">
+        <div class="kicker">The big picture</div>
+        <h2>Two kinds of detection, one decision</h2>
+        <p class="lead">
+          RADAR ships signature rules for Wazuh and anomaly detectors that learn each host's or
+          user's normal behaviour. Both end up as Wazuh alerts, and RADAR decides how serious each
+          one is and what to do. DECIPHER adds what the threat-intelligence community knows about
+          the indicators, then records the incident.
+        </p>
+        <figure class="viz">
+          <div data-viz="arch"></div>
+          <figcaption>
+            Hover or focus a box for its role. The dashed response path is opt-in: mitigation runs only
+            where a scenario sets <code>allow_mitigation: true</code>. SONAR runs as a separate process
+            and can push anomaly events to Wazuh, but it is not yet integrated with RADAR.
+          </figcaption>
+        </figure>
+        <div class="viz">
+          <h3 class="viz-title">RADAR scenarios by kind of detection</h3>
+          <div data-viz="scenario-types"></div>
+          <p class="viz-note">Hover a scenario for its weights, detectors and DECIPHER endpoint. Hybrid scenarios combine both kinds through fusion.</p>
+        </div>
+        <p class="takeaway">Signatures catch what is known, RCF detectors catch what is unusual, and fusion lets the two support each other.</p>
+      </div>
+    </section>
+
+    <!-- 2T. Everything as code -->
+    <section class="slide" id="as-code" data-title="Everything as code" data-tech>
+      <div class="container">
+        <div class="kicker">The big picture <span class="tag-tech">Technical</span></div>
+        <h2>Everything as code</h2>
+        <p class="lead">
+          Every detector, rule and response setting is a file in the repository, and deploying a
+          scenario applies those files. The RADAR GUI edits the same files, so it never drifts from them.
+        </p>
+        <div class="stack">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>What</th><th>Defined in</th><th>Applied by</th></tr></thead>
+              <tbody>
+                <tr><td>Decoders, signature rules, active-response bindings</td><td><code>radar/scenarios/</code> (XML)</td><td><code>radar.sh build</code></td></tr>
+                <tr><td>Anomaly detectors, features, monitors</td><td><code>radar/config.yaml</code></td><td><code>radar.sh run</code></td></tr>
+                <tr><td>Off-hours schedules and modes</td><td><code>radar/config.yaml</code></td><td><code>radar.sh run</code></td></tr>
+                <tr><td>Risk weights, tiers, mitigations, fusion</td><td><code>ar.yaml</code></td><td>scenario deploy, or the GUI</td></tr>
+                <tr><td>Agent collection and groups</td><td><code>radar/scenarios/agent_configs/</code></td><td><code>bootstrap-agent.sh</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3>Anomaly detectors in the shipped config</h3>
+            <div data-viz="detectors"></div>
+            <p class="hint">
+              RCF detectors run in the OpenSearch Anomaly Detection plugin. Their alerting monitors post
+              to RADAR's webhook, which writes alert lines that Wazuh decodes and matches like any other log.
+              Off-hours rule mode needs no model, so its alerts carry a fixed grade and confidence of 1.0.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2T. Contract -->
+    <section class="slide" id="contract" data-title="The RADAR–DECIPHER contract" data-tech>
+      <div class="container">
+        <div class="kicker">The big picture <span class="tag-tech">Technical</span></div>
+        <h2>The RADAR–DECIPHER contract</h2>
+        <p class="lead">Three HTTP calls, all from RADAR's active-response script on the manager. Connection settings come from the RADAR GUI's Connectors page.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Call</th><th>When</th><th>What comes back</th><th>If it fails</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>GET /health</code></td>
+                <td>On each alert, before analyze and before opening a case</td>
+                <td>Reachability</td>
+                <td>Skip CTI and case; continue with T = 0</td>
+              </tr>
+              <tr>
+                <td data-fill="analyze-endpoints"></td>
+                <td>On each alert of <span data-fill="wired-scenarios"></span></td>
+                <td><code>severity</code> → T, matching MISP events, log summary, identified scanners</td>
+                <td>Error logged; T = 0, no case from analyze</td>
+              </tr>
+              <tr>
+                <td><code>POST /api/v1/incident</code></td>
+                <td>When the decision reaches tier 1 or above</td>
+                <td>Flowintel case ID and link, used in the email</td>
+                <td>Error logged; email sent without a link</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">
+          <b>Coverage.</b> DECIPHER can be queried on every alert. Today the analyze call is wired for
+          <span data-fill="wired-scenarios"></span>; other scenarios score with T = 0.
+          Adding one takes an analyze endpoint on DECIPHER, an entry in RADAR's endpoint map and a payload builder for the scenario.
+          Settings: <code>DECIPHER_BASE_URL</code>, <code>DECIPHER_VERIFY_SSL</code>, <code>DECIPHER_TIMEOUT_SEC</code>.
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Journey -->
+    <section class="slide" id="journey" data-title="One alert, end to end">
+      <div class="container">
+        <div class="kicker">Follow one alert</div>
+        <h2>One alert, end to end</h2>
+        <p class="lead">
+          A failed-login burst for <code data-text="example-user">trent</code> in the hybrid
+          <code>suspicious_login</code> scenario, followed through RADAR's MAPE-K loop. Switch
+          DECIPHER off, or turn mitigation off, to see how the outcome changes.
+        </p>
+        <div data-viz="journey"></div>
+        <p class="takeaway" data-text="journey-takeaway">Losing DECIPHER lowers the score, but never stops the pipeline.</p>
+      </div>
+    </section>
+
+    <!-- 3T. Failure modes -->
+    <section class="slide" id="failure-modes" data-title="Failure modes" data-tech>
+      <div class="container">
+        <div class="kicker">Follow one alert <span class="tag-tech">Technical</span></div>
+        <h2>When something fails, the score degrades, not the pipeline</h2>
+        <p class="lead">Each failure has one defined effect, and none of them waits on another system.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Condition</th><th>What RADAR does</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td>No scenario matches the rule</td><td>Logs and exits</td><td>No decision</td></tr>
+              <tr><td>Anomaly alert not from the webhook's log on the webhook agent</td><td>Exits before scoring</td><td>Forged anomaly alerts cannot trigger a response or be fused</td></tr>
+              <tr><td>DECIPHER health check fails</td><td>Skips analyze and case creation</td><td>T = 0; email still sent</td></tr>
+              <tr><td>Analyze errors, or no endpoint for the scenario</td><td>Logs a warning or error</td><td>T = 0</td></tr>
+              <tr><td>Fusion lookup fails, or finds no counterpart</td><td>Scores the alert on its own</td><td>Exactly the single-alert score; fusion can only raise a term</td></tr>
+              <tr><td>R below <code>tier1_min</code></td><td>Logs the decision</td><td>Tier 0: no email, no case</td></tr>
+              <tr><td><code>allow_mitigation: false</code></td><td>Plans, then withholds</td><td>Logged with <code>withheld_reason</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Risk playground -->
+    <section class="slide" id="risk" data-title="What decides the response" >
+      <div class="container">
+        <div class="kicker">The risk score</div>
+        <h2>What decides the response</h2>
+        <p class="lead">
+          Three kinds of evidence, each from 0 to 1: how unusual the behaviour is (A), how bad the
+          matched signature is (S) and what threat intelligence says (T). Each scenario weighs them
+          differently and draws its own tier lines.
+        </p>
+        <div class="card" data-viz="playground"></div>
+        <p class="takeaway">The same evidence can mean different actions in different scenarios. That is configuration, not code.</p>
+      </div>
+    </section>
+
+    <!-- 4T. Terms -->
+    <section class="slide" id="risk-terms" data-title="Where A, S and T come from" data-tech>
+      <div class="container">
+        <div class="kicker">The risk score <span class="tag-tech">Technical</span></div>
+        <h2>Where A, S and T come from</h2>
+        <div class="two wide-right">
+          <div class="card">
+            <h3>R = w<sub>A</sub>·A + w<sub>S</sub>·S + w<sub>T</sub>·T</h3>
+            <ul>
+              <li><b>A = grade × confidence</b> from RADAR's RCF detector, or a fixed grade and confidence (1.0 by default) from an off-hours rule-mode alert. Only anomaly alerts carry it.</li>
+              <li><b>S = likelihood × impact</b>, set per rule ID or rule group in <code>ar.yaml</code>. Only signature alerts carry it.</li>
+              <li><b>T = DECIPHER <code>severity</code></b>, clamped to 0–1.</li>
+              <li><b>Fusion</b> fills the term an alert cannot carry from the strongest recent alert of the other kind on the same user or host, discounted linearly over time. It takes the larger value and never adds.</li>
+              <li><b>Tiers</b>: below <code>tier1_min</code> → 0, below <code>tier1_max</code> → 1, below <code>tier2_max</code> → 2, else 3.</li>
+            </ul>
+            <p>See the <a href="product-presentation.html#fusion">fusion section</a> of the product page for the time-decay curve.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Scenario</th><th>Kind</th><th>w<sub>A</sub></th><th>w<sub>S</sub></th><th>w<sub>T</sub></th><th>Tier lines</th><th>DECIPHER</th></tr></thead>
+              <tbody data-fill="weights-table"></tbody>
+            </table>
+            <p class="hint">
+              Generated from <code>ar.yaml</code>. "Possible" means the scenario gives T a weight but no
+              analyze endpoint is wired yet. "Hybrid" here means a scenario with both signature and anomaly
+              rules. A single alert is scored as <code>hybrid</code> only when one rule ID sits on both sides,
+              which no shipped scenario does.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. CTI -->
+    <section class="slide" id="cti" data-title="What DECIPHER adds">
+      <div class="container">
+        <div class="kicker">Threat intelligence</div>
+        <h2>What DECIPHER adds: the CTI score T</h2>
+        <p class="lead">
+          T expresses how severe a threat is together with how confident we can be in that
+          judgement. DECIPHER computes it over the MISP events that match the alert, using each
+          event's own data and its attributes.
+        </p>
+        <div class="two">
+          <div class="viz">
+            <h3 class="viz-title">What drives T</h3>
+            <div data-viz="cti-factors"></div>
+            <p class="viz-note">Select a factor for what it measures.</p>
+          </div>
+          <figure class="viz">
+            <h3 class="viz-title">What T does to <code>suspicious_login</code></h3>
+            <div data-viz="cti-effect"></div>
+            <figcaption>
+              The burst alone never reaches tier 3 (from <span data-text="t3-line"></span>), whatever T is.
+              Fused with the RCF off-hours anomaly, a CTI score of <span data-text="cti-threshold"></span>
+              or more lifts it there. Hover the plot to read R at any T.
+            </figcaption>
+          </figure>
+        </div>
+        <p class="takeaway">Intelligence from outside the network can raise a response, but on its own it cannot trigger the strongest one.</p>
+      </div>
+    </section>
+
+    <!-- 5T. Analyze payloads -->
+    <section class="slide" id="cti-payloads" data-title="Analyze request and response" data-tech>
+      <div class="container">
+        <div class="kicker">Threat intelligence <span class="tag-tech">Technical</span></div>
+        <h2>Analyze request and response</h2>
+        <div class="two">
+          <div>
+            <h3>Request, <code>suspicious_login</code></h3>
+<pre><code><span class="c">// POST /api/v1/analyze/suspicious_login</span>
+{
+  "title":       "RADAR: suspicious login attempts",
+  "username":    "trent",          <span class="c">// alert's own user fields first</span>
+  "target_host": "srv-01",
+  "src_ips":     ["203.0.113.45"], <span class="c">// from context IOCs</span>
+  "timestamp":   "2026-11-23T02:14:07Z"
+}</code></pre>
+            <h3>Request, <code>scanning_detection</code></h3>
+<pre><code><span class="c">// POST /api/v1/analyze/suspicious_nt_scanning</span>
+{ "src_ip": [...], "uri": [...], "user_agents": [...],
+  "http_method": ..., "target_host": ..., "timestamp": ...,
+  "detection_chain": [[rule_id, description], ...] }</code></pre>
+          </div>
+          <div>
+            <h3>Response fields RADAR reads</h3>
+<pre><code>{
+  "severity": 0.56,               <span class="c">// becomes T, clamped to 0–1</span>
+  "report": {
+    "log_summary":         [...], <span class="c">// labels for the email</span>
+    "misp_events_found":   [...], <span class="c">// copied into the case</span>
+    "identified-scanners": [...]  <span class="c">// scanning only</span>
+  },
+  "created_case": { "id": ..., "link": ... }
+}</code></pre>
+            <div class="note">The analyze payload uses the user named in the alert first. That keeps the CTI lookup on the same subject that a mitigation would act on.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Tier to action -->
+    <section class="slide" id="tiers" data-title="From tier to action">
+      <div class="container">
+        <div class="kicker">The response</div>
+        <h2>From tier to action</h2>
+        <div class="two">
+          <div>
+            <p class="lead">Every tier above 0 leaves a trace an analyst can follow. Containment starts at tier 2, and only where it is switched on.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Tier</th><th>Risk R</th><th>Email</th><th>Flowintel case</th><th><code>suspicious_login</code> mitigation</th></tr></thead>
+                <tbody data-fill="tier-actions"></tbody>
+              </table>
+            </div>
+          </div>
+          <figure class="shot">
+            <a href="assets/RADAR-DECIPHER-Flowintel-integration.png" target="_blank" rel="noopener">
+              <img src="assets/RADAR-DECIPHER-Flowintel-integration.png" alt="Flowintel case list with RADAR incidents opened by DECIPHER">
+            </a>
+            <figcaption>Cases opened by DECIPHER: scenario, detection type, risk tier, CTI breakdown, IOCs and a unique decision ID.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6T. Case anatomy -->
+    <section class="slide" id="case-anatomy" data-title="What a case carries" data-tech>
+      <div class="container">
+        <div class="kicker">The response <span class="tag-tech">Technical</span></div>
+        <h2>What a case carries</h2>
+        <div class="two wide-left">
+<pre><code><span class="c">// POST /api/v1/incident</span>
+{
+  "priority_level": "priority-level:high",
+  "title": "...",
+  "description": {
+    "source": "RADAR",
+    "decision_id": "...",          <span class="c">// same ID in log, email, case</span>
+    "scenario": { "name", "detection_type" },
+    "agent":    { "id", "name" },
+    "alert":    { "id", "rule_id", "rule_level", "rule_description", "rule_groups" },
+    "risk": { "score", "tier", "components": {
+      "anomaly_intensity_A", "anomaly_grade_G", "anomaly_confidence_C",
+      "signature_risk_S", "signature_likelihood_L", "signature_impact_I",
+      "cti_score_T", ... } },
+    "misp_events": [...],
+    "identified_scanners": [...],
+    "iocs": { "ip", "user", "domain", "hash", "service", "asn", "country", "agent" },
+    "extras": { "fusion": {...}, ... }
+  }
+}</code></pre>
+          <div class="card">
+            <h3>Why it is shaped this way</h3>
+            <ul>
+              <li>The full score breakdown lets an analyst see which evidence drove the tier without opening RADAR's logs.</li>
+              <li>When fusion contributed, the counterpart alert is in <code>extras.fusion</code>, so the case shows both alerts.</li>
+              <li>The decision ID ties the case to the active-response log and the email.</li>
+              <li>Tier maps to priority: 1 → low, 2 → medium, 3 → high.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Safety -->
+    <section class="slide" id="safety" data-title="Who can be blocked">
+      <div class="container">
+        <div class="kicker">Safe automation</div>
+        <h2>Who can be blocked</h2>
+        <p class="lead">
+          A wrong block hurts more than a missed one. Every target passes four gates, and anything
+          RADAR is unsure about is declined.
+        </p>
+        <div data-viz="blast"></div>
+        <p class="takeaway">Context and threat intelligence can raise the score. Only the alert itself decides who is acted on.</p>
+      </div>
+    </section>
+
+    <!-- 7T. Safety details -->
+    <section class="slide" id="safety-details" data-title="Guards in detail" data-tech>
+      <div class="container">
+        <div class="kicker">Safe automation <span class="tag-tech">Technical</span></div>
+        <h2>Guards in detail</h2>
+        <div class="two">
+          <div class="card">
+            <h3>Targets</h3>
+            <ul>
+              <li><code>firewall-drop</code> takes the alert's own source IP. With none, it refuses with <code>no_alert_source_ip</code>.</li>
+              <li><code>lock_user_linux.sh</code> takes the alert's own user fields. <code>root</code> and <code>protected_users</code> are skipped.</li>
+              <li><code>terminate_service.sh</code> reads service names from context, bounded by the <code>terminable_services</code> allowlist on both manager and agent.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>never_block and allowlists</h3>
+            <ul>
+              <li>Built in: <span data-fill="never-block"></span>.</li>
+              <li>Added at run time: the manager, OpenSearch and Wazuh API addresses, plus <code>global.never_block</code>.</li>
+              <li>The scanning allowlist is a Wazuh CDB list. If it cannot be read, RADAR declines to block (fail-closed).</li>
+              <li><code>allow_mitigation</code> defaults to false. Keep it off until a scenario is tuned.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Close -->
+    <section class="slide" id="close" data-title="The loop closes in Knowledge">
+      <div class="container">
+        <div class="kicker">Summary</div>
+        <h2>The loop closes in Knowledge</h2>
+        <p class="lead">RADAR runs a MAPE-K loop. DECIPHER feeds it with outside knowledge and keeps the record of what was decided.</p>
+        <div class="mapek">
+          <div class="card"><h3>Monitor</h3><p>RADAR's signature rules and RCF anomaly detectors, all as Wazuh alerts.</p></div>
+          <div class="card"><h3>Analyze</h3><p>Scenario match, context, signature–anomaly fusion, CTI score from DECIPHER.</p></div>
+          <div class="card"><h3>Plan</h3><p>Weighted risk, tier, mitigations allowed by policy.</p></div>
+          <div class="card"><h3>Execute</h3><p>Guarded active response and analyst email.</p></div>
+          <div class="card k"><h3>Knowledge</h3><p>MISP intelligence in, Flowintel cases out, via DECIPHER.</p></div>
+        </div>
+        <p class="takeaway">Signature and RCF anomaly detection, fused and scored with threat intelligence, answered with guarded automation and a case for every decision. All of it defined as code.</p>
+        <p class="hint">
+          More: <a href="product-presentation.html">IDPS-ESCAPE product page</a> ·
+          <a href="https://abstractionslab.github.io/satrap-dl/website/product-presentation.html">SATRAP-DL and DECIPHER</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/charts.js" charset="utf-8"></script>
+  <script src="assets/radar-config.js" charset="utf-8"></script>
+  <script src="assets/radar-decipher.js" charset="utf-8"></script>
+  <script>
+    (function () {
+      var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+      var toggle = document.getElementById("tech-toggle");
+      var pos = document.getElementById("deck-pos");
+      var bar = document.getElementById("deck-progress");
+      var current = 0;
+
+      function visible() {
+        return slides.filter(function (s) { return !s.hidden; });
+      }
+
+      function render() {
+        var v = visible();
+        var i = Math.max(0, v.indexOf(slides[current]));
+        pos.textContent = (i + 1) + " / " + v.length + " · " + (slides[current].getAttribute("data-title") || "");
+        bar.style.width = ((i + 1) / v.length * 100) + "%";
+        document.getElementById("deck-prev").disabled = i === 0;
+        document.getElementById("deck-next").disabled = i === v.length - 1;
+      }
+
+      function go(delta) {
+        var v = visible();
+        var i = v.indexOf(slides[current]);
+        var target = v[Math.max(0, Math.min(v.length - 1, i + delta))];
+        target.scrollIntoView({ block: "start" });
+        current = slides.indexOf(target);
+        history.replaceState(null, "", "#" + target.id);
+        render();
+      }
+
+      // Track the slide nearest the top as the reader scrolls
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { current = slides.indexOf(e.target); render(); }
+        });
+      }, { rootMargin: "-45% 0px -50% 0px" });
+      slides.forEach(function (s) { io.observe(s); });
+
+      function applyTech() {
+        try { localStorage.setItem("rd-tech", toggle.checked ? "1" : "0"); } catch (e) { /* storage blocked */ }
+        slides.forEach(function (s) { if (s.hasAttribute("data-tech")) s.hidden = !toggle.checked; });
+        if (slides[current].hidden) {
+          while (current > 0 && slides[current].hidden) current -= 1;
+        }
+        render();
+      }
+      try { if (localStorage.getItem("rd-tech") === "0") toggle.checked = false; } catch (e) { /* storage blocked */ }
+      toggle.addEventListener("change", applyTech);
+
+      document.getElementById("deck-prev").addEventListener("click", function () { go(-1); });
+      document.getElementById("deck-next").addEventListener("click", function () { go(1); });
+      document.addEventListener("keydown", function (e) {
+        var tag = (e.target.tagName || "").toLowerCase();
+        if (tag === "input" || tag === "select" || tag === "textarea") return;
+        if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); go(1); }
+        else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(-1); }
+        else if (e.key === "Home") { e.preventDefault(); go(-slides.length); }
+        else if (e.key === "End") { e.preventDefault(); go(slides.length); }
+      });
+
+      if (location.hash) {
+        var start = slides.findIndex(function (s) { return "#" + s.id === location.hash; });
+        if (start >= 0) current = start;
+      }
+      applyTech();
+    })();
+  </script>
+</body>
+</html>

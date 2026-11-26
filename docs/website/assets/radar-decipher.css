@@ -1,0 +1,320 @@
+/* Interactive RADAR components drawn by radar-decipher.js: architecture, scenario kinds,
+   the one-alert journey, the risk playground, the CTI panels and the blast-radius gates.
+   Shared by radar-decipher.html (the deck) and product-presentation.html (embedded sections).
+   Page-level layout (slides, cards, tables) stays in each page. Colours fall back to the
+   site palette so the components look the same on either page. */
+
+.rd-note {
+  background: var(--surface-alt, #f0fafa);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: var(--radius-sm, 10px);
+  padding: 0.7rem 0.9rem;
+  color: var(--muted, #3d6363);
+  font-size: 0.92rem;
+}
+
+.rd-takeaway {
+  margin-top: 1rem;
+  font-weight: 700;
+  color: var(--brand-strong, #065d65);
+  border-left: 4px solid var(--brand, #0d8b94);
+  padding: 0.2rem 0 0.2rem 0.8rem;
+  max-width: 70ch;
+}
+
+/* ── Buttons and switches ── */
+.j-btn {
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--brand-strong, #065d65);
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: 999px;
+  padding: 0.38rem 0.85rem;
+  cursor: pointer;
+}
+
+.j-btn:hover:not(:disabled) { border-color: var(--brand, #0d8b94); }
+.j-btn:disabled { opacity: 0.45; cursor: default; }
+.j-btn-primary { background: var(--brand, #0d8b94); border-color: var(--brand, #0d8b94); color: #fff; }
+
+.j-btn:focus-visible, .chip-btn:focus-visible, .j-rail button:focus-visible { outline: 2px solid var(--brand, #0d8b94); outline-offset: 2px; }
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--brand-strong, #065d65);
+  cursor: pointer;
+}
+
+.switch input { accent-color: var(--brand, #0d8b94); width: 1rem; height: 1rem; }
+
+.viz-flat { box-shadow: none; margin: 0.4rem 0 0; }
+.viz-flat svg { min-width: 380px; max-width: 720px; margin: 0 auto; }
+
+.j-body > *, .blast > *, .cti-grid > * { min-width: 0; }
+
+/* ── Journey ── */
+.j-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
+  align-items: center;
+  margin-bottom: 0.9rem;
+}
+
+.j-toggles {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.j-rail {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.j-rail button {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-top: 4px solid var(--viz-axis, #b6c8cb);
+  border-radius: 10px;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.05rem;
+  min-height: 100%;
+}
+
+.j-rail button[data-phase="Monitor"] { border-top-color: #6250d6; }
+.j-rail button[data-phase="Analyze"] { border-top-color: #00939d; }
+.j-rail button[data-phase="Knowledge"] { border-top-color: #13874f; }
+.j-rail button[data-phase="Plan"] { border-top-color: #eb6834; }
+.j-rail button[data-phase="Execute"] { border-top-color: #e12f56; }
+
+.j-rail .j-num { font-size: 0.72rem; color: var(--muted, #3d6363); }
+.j-rail .j-label { font-weight: 800; font-size: 0.86rem; line-height: 1.2; }
+.j-rail .j-phase { font-size: 0.7rem; color: var(--muted, #3d6363); }
+.j-rail button.is-done { background: var(--surface-alt, #f0fafa); }
+.j-rail button.is-current { background: var(--brand-strong, #065d65); border-color: var(--brand-strong, #065d65); color: #fff; }
+.j-rail button.is-current .j-num,
+.j-rail button.is-current .j-phase { color: #d2eaec; }
+
+.j-body {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.j-card {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: var(--radius-md, 14px);
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow, 0 12px 40px rgba(6, 50, 55, 0.12));
+  min-height: 14rem;
+}
+
+.j-card.is-warn { border-color: #f0b99c; background: var(--warn-bg, #fdf1ea); }
+.j-card-phase { font-size: 0.8rem; font-weight: 700; color: var(--brand, #0d8b94); }
+.j-card h3 { margin: 0.3rem 0 0.5rem; font-size: 1.35rem; }
+.j-card p { color: var(--muted, #3d6363); margin: 0 0 0.8rem; font-size: 1rem; }
+.j-code { display: inline-block; white-space: normal; }
+
+.j-side-title { font-weight: 800; font-size: 0.88rem; color: var(--brand-strong, #065d65); margin-bottom: 0.2rem; }
+
+.j-outcome {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.9rem;
+  margin: 0.8rem 0 0;
+  font-size: 0.92rem;
+}
+
+.j-outcome dt { color: var(--muted, #3d6363); }
+.j-outcome dd { margin: 0; font-weight: 700; }
+.j-outcome dd.is-warn { color: var(--warn, #a4471d); }
+
+/* ── Playground ── */
+.pg-form {
+  display: grid;
+  grid-template-columns: 1.1fr repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.pg-select, .pg-slider { display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.pg-select span { font-weight: 700; color: var(--brand-strong, #065d65); }
+
+.pg-select select {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: 8px;
+  background: var(--surface, #ffffff);
+}
+
+.pg-slider-head { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; }
+.pg-slider-head i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.pg-slider-head b { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted, #3d6363); font-weight: 600; }
+.pg-slider input { accent-color: var(--brand, #0d8b94); width: 100%; }
+.pg-slider input:disabled { opacity: 0.35; }
+.pg-slider small { color: var(--muted, #3d6363); min-height: 1.2em; }
+.pg-formula { font-variant-numeric: tabular-nums; color: var(--muted, #3d6363); margin: 0.6rem 0 0; }
+.pg-outcome { grid-template-columns: auto 1fr auto 1fr; }
+
+/* ── CTI ── */
+.cti-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.cti-src, .cti-out {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  border-radius: var(--radius-md, 14px);
+  padding: 0.9rem;
+  font-size: 0.88rem;
+  color: var(--muted, #3d6363);
+}
+
+.cti-src { background: var(--surface, #ffffff); border: 1px dashed var(--viz-axis, #b6c8cb); }
+.cti-out { background: var(--brand-strong, #065d65); color: #d2eaec; }
+.cti-src b, .cti-out b { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; color: var(--ink, #17212f); white-space: nowrap; }
+.cti-out b { color: #fff; font-size: 1.5rem; }
+
+.cti-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+
+.cti-group {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: var(--radius-md, 14px);
+  padding: 0.6rem 0.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.cti-group-title { width: 100%; font-weight: 800; font-size: 0.86rem; color: var(--brand-strong, #065d65); }
+
+.chip-btn {
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink, #17212f);
+  background: var(--surface-alt, #f0fafa);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+}
+
+.chip-btn:hover { border-color: var(--brand, #0d8b94); }
+.chip-btn.is-on { background: var(--brand, #0d8b94); border-color: var(--brand, #0d8b94); color: #fff; }
+
+.cti-detail {
+  margin-top: 0.8rem;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-radius: var(--radius-sm, 10px);
+  padding: 0.7rem 0.9rem;
+  color: var(--muted, #3d6363);
+  font-size: 0.92rem;
+  min-height: 5.2rem;
+}
+
+.cti-detail b { color: var(--ink, #17212f); }
+.cti-values { font-weight: 700; color: var(--brand-strong, #065d65); }
+
+/* ── Scenario kinds ── */
+.types {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.types-col {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-content: start;
+  border: 1px solid var(--line, #bfe0e2);
+  border-top: 4px solid var(--viz-2, #eb6834);
+  border-radius: var(--radius-sm, 10px);
+  padding: 0.6rem 0.7rem;
+}
+
+.types-anomaly { border-top-color: var(--viz-3, #6250d6); }
+.types-hybrid { border-top-color: var(--viz-1, #00939d); background: var(--surface-alt, #f0fafa); }
+.types-title { width: 100%; font-weight: 800; font-size: 0.88rem; color: var(--brand-strong, #065d65); }
+.types-chip { cursor: help; font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+
+/* ── Blast radius ── */
+.blast {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.blast-list { display: grid; gap: 0.4rem; justify-items: start; }
+
+.blast-gates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.blast-gates li {
+  display: grid;
+  gap: 0.1rem;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line, #bfe0e2);
+  border-left: 5px solid var(--viz-axis, #b6c8cb);
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.9rem;
+  color: var(--muted, #3d6363);
+  transition: opacity 0.2s ease;
+}
+
+.blast-gates li b { color: var(--ink, #17212f); }
+.blast-gates li.is-pass { border-left-color: var(--ok, #13874f); }
+.blast-gates li.is-stop { border-left-color: var(--accent, #e12f56); background: #fdeef1; }
+.blast-gates li.is-skip { opacity: 0.4; }
+.blast-gates .blast-verdict { font-weight: 800; color: var(--ink, #17212f); }
+.blast-gates .blast-verdict.is-pass { border-left-color: var(--ok, #13874f); background: #eaf6ef; }
+.blast-gates .blast-verdict.is-stop { border-left-color: var(--accent, #e12f56); }
+
+@media (max-width: 960px) {
+  .j-body, .blast, .cti-groups, .types { grid-template-columns: 1fr; }
+  .j-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pg-form { grid-template-columns: 1fr 1fr; }
+  .pg-outcome { grid-template-columns: auto 1fr; }
+}
+
+@media (max-width: 560px) {
+  .pg-form { grid-template-columns: 1fr; }
+  .j-toggles { margin-left: 0; }
+}
+.types-empty { color: var(--muted, #3d6363); font-size: 0.86rem; }

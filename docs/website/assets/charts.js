@@ -328,6 +328,9 @@
     "fusion-tiers": drawFusionTiers
   };
 
+  // Shared with radar-decipher.js so both pages use one tooltip and one SVG style
+  window.IdpsCharts = { svgEl: svgEl, htmlEl: htmlEl, fmt: fmt, fillTip: fillTip, placeTip: placeTip, hideTip: hideTip, bindTip: bindTip };
+
   function init() {
     document.querySelectorAll("[data-chart]").forEach(function (host) {
       var draw = DRAW[host.getAttribute("data-chart")];

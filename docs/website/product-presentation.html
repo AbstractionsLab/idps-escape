@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link href="assets/charts.css" rel="stylesheet">
+  <link href="assets/radar-decipher.css" rel="stylesheet">
   <style>
     :root {
       --bg: #eef1f5;
@@ -41,6 +42,11 @@
       font-family: Manrope, "Segoe UI", sans-serif;
       line-height: 1.5;
       scroll-behavior: smooth;
+    }
+
+    /* Keep anchored headings clear of the sticky top bar */
+    html {
+      scroll-padding-top: 5rem;
     }
 
     .container {
@@ -111,6 +117,51 @@
     .topnav a:hover {
       border-color: var(--line);
       background: var(--surface);
+    }
+
+    .nav-group {
+      position: relative;
+      display: flex;
+    }
+
+    /* Opens on hover and on keyboard focus; the padding bridges the gap so the pointer can reach it */
+    .nav-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      z-index: 30;
+      padding-top: 0.35rem;
+      min-width: 17rem;
+    }
+
+    .nav-menu::before {
+      content: "";
+      position: absolute;
+      inset: 0.35rem 0 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      z-index: -1;
+    }
+
+    .nav-group:hover .nav-menu,
+    .nav-group:focus-within .nav-menu {
+      display: grid;
+      padding: 0.75rem 0.4rem 0.4rem;
+      gap: 0.1rem;
+    }
+
+    .topnav .nav-menu a {
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+    }
+
+    .topnav .nav-menu a:hover,
+    .topnav .nav-menu a:focus-visible {
+      background: var(--surface-alt);
+      border-color: transparent;
     }
 
     .hero {
@@ -558,12 +609,22 @@
       </a>
       <nav class="topnav" aria-label="Page sections">
         <a href="#value">Value</a>
+        <div class="nav-group">
+          <a href="#how-it-works" class="nav-group-link">How it works <span aria-hidden="true">▾</span></a>
+          <div class="nav-menu" aria-label="How it works">
+            <a href="#how-it-works">Two kinds of detection, one decision</a>
+            <a href="#one-alert">One alert, end to end</a>
+            <a href="#risk-score">What decides the response</a>
+            <a href="#fusion">Signature and anomaly fusion</a>
+            <a href="#threat-intelligence">What DECIPHER adds: the CTI score T</a>
+          </div>
+        </div>
         <a href="#features">Features</a>
         <a href="#scenarios">Scenarios</a>
-        <a href="#fusion">Fusion</a>
         <a href="#gallery">Screens</a>
         <a href="#workflow">Workflow</a>
         <a href="release-notes.html">What's new</a>
+        <a href="radar-decipher.html">Full deck</a>
       </nav>
     </div>
   </header>
@@ -584,6 +645,7 @@
           <div class="cta-row">
             <a class="btn btn-primary" href="https://github.com/AbstractionsLab/idps-escape/blob/main/radar/README.md">Open quick start</a>
             <a class="btn btn-secondary" href="https://github.com/AbstractionsLab/idps-escape/blob/main/docs/manual/README.md">Browse user manual</a>
+            <a class="btn btn-secondary" href="#how-it-works">See how it works ↓</a>
           </div>
           <div class="metrics" aria-label="Product metrics">
             <div class="metric">
@@ -606,6 +668,132 @@
         </div>
         <div class="hero-visual">
           <img src="assets/SONAR-Dashboard.png" alt="SONAR anomaly detection dashboard">
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works">
+      <div class="container">
+        <div class="section-head">
+          <h2>Two kinds of detection, one decision</h2>
+          <div class="section-kicker">The big picture</div>
+        </div>
+        <p class="section-lead">
+          RADAR ships signature rules for Wazuh and anomaly detectors, built on Random Cut Forest (RCF),
+          that learn each host's or user's normal behaviour. Both end up as Wazuh alerts, and RADAR decides
+          how serious each one is and what to do. DECIPHER adds what the threat-intelligence community knows
+          about the indicators, then records the incident. All of it is defined as code in the repository.
+        </p>
+        <figure class="viz">
+          <div data-viz="arch"></div>
+          <figcaption>
+            Hover or focus a box for its role. The dashed response path is opt-in: mitigation runs only where a
+            scenario sets <code>allow_mitigation: true</code>. SONAR runs as a separate process and can push
+            anomaly events to Wazuh, but it is not yet integrated with RADAR.
+          </figcaption>
+        </figure>
+        <div class="viz">
+          <h3 class="viz-title">RADAR scenarios by kind of detection</h3>
+          <div data-viz="scenario-types"></div>
+          <p class="viz-note">Hover a scenario for its weights, detectors and DECIPHER endpoint. Hybrid scenarios combine both kinds through fusion.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="one-alert">
+      <div class="container">
+        <div class="section-head">
+          <h2>One alert, end to end</h2>
+          <div class="section-kicker">Follow one alert</div>
+        </div>
+        <p class="section-lead">
+          A failed-login burst for <code data-text="example-user">trent</code> in the hybrid
+          <code>suspicious_login</code> scenario, followed through RADAR's MAPE-K loop. Switch DECIPHER off,
+          or turn mitigation off, to see how the outcome changes.
+        </p>
+        <div data-viz="journey"></div>
+        <p class="rd-takeaway" data-text="journey-takeaway">Losing DECIPHER lowers the score, but never stops the pipeline.</p>
+      </div>
+    </section>
+
+    <section id="risk-score">
+      <div class="container">
+        <div class="section-head">
+          <h2>What decides the response</h2>
+          <div class="section-kicker">The risk score</div>
+        </div>
+        <p class="section-lead">
+          Three kinds of evidence, each from 0 to 1: how unusual the behaviour is (A), how bad the matched
+          signature is (S) and what threat intelligence says (T). Each scenario weighs them differently and
+          draws its own tier lines, all set in <code>ar.yaml</code>.
+        </p>
+        <div class="viz" data-viz="playground"></div>
+      </div>
+    </section>
+
+    <section id="fusion">
+      <div class="container">
+        <div class="section-head">
+          <h2>Signature and anomaly fusion</h2>
+          <div class="section-kicker">New in v2.2.0</div>
+        </div>
+        <p class="section-lead">
+          A failed-login burst and off-hours activity by the same user are stronger evidence
+          together than apart. RADAR combines them as they arrive: each alert looks back for the
+          strongest alert of the other kind on the same user or host and uses it for the evidence it
+          cannot carry itself. Nothing waits for a counterpart. A missing anomaly never lowers a
+          score, and a counterpart never changes what is blocked or locked.
+        </p>
+        <div class="viz-pair">
+          <figure class="viz">
+            <h3 class="viz-title">How much a counterpart counts</h3>
+            <div data-chart="fusion-weight"></div>
+            <figcaption>
+              Weight 1 inside the anomaly's data window, extended back by <code>ad_lead_minutes</code>,
+              falling linearly to 0 at <code>window_minutes</code> from it. Shown with the shipped
+              <code>suspicious_login</code> settings and a 5-minute data window. Hover the plot to
+              read the weight at any time.
+            </figcaption>
+          </figure>
+          <figure class="viz">
+            <h3 class="viz-title">What it does to <code>suspicious_login</code> tiers</h3>
+            <div data-chart="fusion-tiers"></div>
+            <figcaption>
+              A signature alert alone peaks at 0.468. Combined with an off-hours alert and CTI
+              evidence it reaches T3, where only the user named in the alert is locked. Hover a
+              marker for its breakdown.
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="threat-intelligence">
+      <div class="container">
+        <div class="section-head">
+          <h2>What DECIPHER adds: the CTI score T</h2>
+          <div class="section-kicker">Threat intelligence</div>
+        </div>
+        <p class="section-lead">
+          T expresses how severe a threat is together with how confident we can be in that judgement.
+          DECIPHER computes it over the MISP events that match the alert, using each event's own data and
+          its attributes. More detail, including the request and case formats, is in the <a href="radar-decipher.html">full RADAR and DECIPHER deck</a>.
+        </p>
+        <div class="viz-pair">
+          <div class="viz">
+            <h3 class="viz-title">What drives T</h3>
+            <div data-viz="cti-factors"></div>
+            <p class="viz-note">Select a factor for what it measures.</p>
+          </div>
+          <figure class="viz">
+            <h3 class="viz-title">What T does to <code>suspicious_login</code></h3>
+            <div data-viz="cti-effect"></div>
+            <figcaption>
+              The burst alone never reaches tier 3 (from <span data-text="t3-line"></span>), whatever T is.
+              Fused with the RCF off-hours anomaly, a CTI score of <span data-text="cti-threshold"></span>
+              or more lifts it there. Hover the plot to read R at any T.
+            </figcaption>
+          </figure>
         </div>
       </div>
     </section>
@@ -770,43 +958,6 @@
       </div>
     </section>
 
-    <section id="fusion">
-      <div class="container">
-        <div class="section-head">
-          <h2>Signature and anomaly fusion</h2>
-          <div class="section-kicker">New in v2.2.0</div>
-        </div>
-        <p class="section-lead">
-          A failed-login burst and off-hours activity by the same user are stronger evidence
-          together than apart. RADAR combines them as they arrive: each alert looks back for the
-          strongest alert of the other kind on the same user or host and uses it for the evidence it
-          cannot carry itself. Nothing waits for a counterpart. A missing anomaly never lowers a
-          score, and a counterpart never changes what is blocked or locked.
-        </p>
-        <div class="viz-pair">
-          <figure class="viz">
-            <h3 class="viz-title">How much a counterpart counts</h3>
-            <div data-chart="fusion-weight"></div>
-            <figcaption>
-              Weight 1 inside the anomaly's data window, extended back by <code>ad_lead_minutes</code>,
-              falling linearly to 0 at <code>window_minutes</code> from it. Shown with the shipped
-              <code>suspicious_login</code> settings and a 5-minute data window. Hover the plot to
-              read the weight at any time.
-            </figcaption>
-          </figure>
-          <figure class="viz">
-            <h3 class="viz-title">What it does to <code>suspicious_login</code> tiers</h3>
-            <div data-chart="fusion-tiers"></div>
-            <figcaption>
-              A signature alert alone peaks at 0.468. Combined with an off-hours alert and CTI
-              evidence it reaches T3, where only the user named in the alert is locked. Hover a
-              marker for its breakdown.
-            </figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
     <section id="gallery">
       <div class="container">
         <div class="section-head">
@@ -960,6 +1111,8 @@
   </div>
 
   <script src="assets/charts.js" charset="utf-8"></script>
+  <script src="assets/radar-config.js" charset="utf-8"></script>
+  <script src="assets/radar-decipher.js" charset="utf-8"></script>
   <script>
     (function () {
       var lightbox = document.getElementById("lightbox");
